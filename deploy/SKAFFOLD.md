@@ -1,6 +1,6 @@
 # Skaffold integration — DyingStar Admin
 
-The game stack is deployed from the **kubernetes** repo (`StarDeception` local dev) with modules such as `horizon`, `service-persistence`, `service-resourcesdynamic`, `godotserver`, `keycloak`, and `livekit`.
+The DyingStar game stack is deployed from **[`../kubernetes`](../../kubernetes)** — see [KUBERNETES.md](./KUBERNETES.md) for ports, realms, and DNS.
 
 The admin panel is a **separate BFF + SPA** that must run in the same namespace so it can reach cluster services.
 

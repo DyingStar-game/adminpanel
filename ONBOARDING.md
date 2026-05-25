@@ -31,22 +31,30 @@ All service URLs live in `packages/backend/.env`. The frontend **never** reads t
 
 | Variable | Description |
 |----------|-------------|
-| `SERVERS` | JSON array: `id`, `name`, `url` (public), `persistenceUrl`, `wsUrl`, `keycloakRealm` (internal) |
+| `SERVERS` | JSON array: `id`, `name`, `environment` (`production` \| `testing`), `url` (public), `persistenceUrl`, `wsUrl`, `keycloakRealm` (internal). See `packages/backend/config/servers.example.json` |
 | `KEYCLOAK_BASE_URL` | Keycloak base URL (cluster network) |
 | `KEYCLOAK_ADMIN_SECRET` | Admin client secret (empty = demo users) |
 | `GITHUB_TOKEN` | Optional — higher GitHub API rate limit for prop descriptors |
 | `CORS_ORIGIN` | Frontend origin (default `http://localhost:5173`) |
 
-### Minikube example
+### Game servers (DyingStar launcher ids)
+
+| Id | Name | Environment | Status |
+|----|------|-------------|--------|
+| `universe` | Universe | production | Stack currently offline |
+| `universe-testing` | Universe Testing | testing | Live — default selection in the admin UI |
+
+Example entry:
 
 ```json
 {
-  "id": "srv1",
-  "name": "Sandbox",
-  "url": "https://sandbox.dyingstar-game.local",
-  "persistenceUrl": "http://service-persistence.default.svc.cluster.local",
-  "wsUrl": "ws://service-ws.default.svc.cluster.local:9100",
-  "keycloakRealm": "dyingstar-sandbox"
+  "id": "universe-testing",
+  "name": "Universe Testing",
+  "environment": "testing",
+  "url": "https://dyingstar-game.com",
+  "persistenceUrl": "http://service-persistence:3001",
+  "wsUrl": "ws://service-persistence:9100",
+  "keycloakRealm": "dyingstar"
 }
 ```
 
@@ -60,7 +68,7 @@ Read [ARCHITECTURE.md](./ARCHITECTURE.md) in full. Short summary:
 
 - **Frontend** → only `VITE_API_URL` + `X-Server-Id` header on scoped routes
 - **Backend** → HTTP/WebSocket clients to persistence, Keycloak, etc.
-- **Public server API** → `{ id, name, url }` only
+- **Public server API** → `{ id, name, url, environment? }` only
 
 ## 5. Internationalization (UI)
 

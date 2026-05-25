@@ -76,23 +76,29 @@ export const resourcesDynamicClient = {
       return { count: 1, instances: [{ id: 'mock-horizon-1', status: 'running' }], reachable: false };
     }
 
-    const requestUrl = buildActiveHorizonsUrl(serverId, url);
-    try {
-      const res = await fetch(requestUrl, {
-        headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(5000),
-      });
-      if (!res.ok) {
-        console.warn(`resourcesDynamic ${res.status} for ${requestUrl}`);
-        return { count: 0, instances: [], reachable: false };
+    const pathsToTry = [
+      buildActiveHorizonsUrl(serverId, url),
+      `${url.replace(/\/$/, '')}/api/horizons?serverId=${encodeURIComponent(serverId)}`,
+      `${url.replace(/\/$/, '')}/horizons/active?server=${encodeURIComponent(serverId)}`,
+    ];
+
+    for (const requestUrl of pathsToTry) {
+      try {
+        const res = await fetch(requestUrl, {
+          headers: { Accept: 'application/json' },
+          signal: AbortSignal.timeout(5000),
+        });
+        if (!res.ok) continue;
+        const data = await res.json();
+        const parsed = parseActiveHorizonsPayload(data);
+        return { ...parsed, reachable: true };
+      } catch {
+        /* try next path */
       }
-      const data = await res.json();
-      const parsed = parseActiveHorizonsPayload(data);
-      return { ...parsed, reachable: true };
-    } catch (err) {
-      console.warn(`resourcesDynamic unreachable (${requestUrl}):`, (err as Error).message);
-      return { count: 0, instances: [], reachable: false };
     }
+
+    console.warn(`resourcesDynamic: no active horizons endpoint matched for server ${serverId}`);
+    return { count: 0, instances: [], reachable: false };
   },
 
   /**

@@ -1,3 +1,5 @@
+import type { ServerEnvironment } from '@dyingstar/shared';
+
 /**
  * Backend-only server configuration (cluster service URLs).
  * Never serialized to the frontend as-is; use {@link ServerPublic} via config/servers.
@@ -9,6 +11,7 @@ export interface ServerConfig {
   name: string;
   /** Public or logical game server URL shown in the UI. */
   url: string;
+  environment?: ServerEnvironment;
   services: {
     /** HTTP API for persistence items (service-persistence httpPort, typically 3001). */
     persistence: string;
@@ -32,6 +35,7 @@ export interface ServerConfigRaw {
   id: string;
   name: string;
   url?: string;
+  environment?: ServerEnvironment;
   persistenceUrl: string;
   wsUrl: string;
   keycloakRealm: string;
@@ -54,6 +58,7 @@ export function normalizeServerConfig(
     id: raw.id,
     name: raw.name,
     url: raw.url ?? raw.persistenceUrl,
+    environment: raw.environment,
     services: {
       persistence: raw.persistenceUrl,
       websocket: raw.wsUrl,

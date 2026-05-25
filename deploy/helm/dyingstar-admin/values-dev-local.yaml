@@ -11,7 +11,7 @@ backend:
     CORS_ORIGIN: http://localhost:5173
     KEYCLOAK_BASE_URL: http://keycloak:8080
     RESOURCES_DYNAMIC_URL: http://service-resourcesdynamic:3001
-    SERVERS: '[{"id":"sandbox","name":"Sandbox","url":"https://sandbox.dyingstar-game.local","persistenceUrl":"http://service-persistence:3001","wsUrl":"ws://service-persistence:9100","keycloakRealm":"dyingstar-sandbox","resourcesDynamicUrl":"http://service-resourcesdynamic:3001","horizonUrl":"http://horizon:7040"}]'
+    SERVERS: '[{"id":"universe-testing","name":"Universe Testing","environment":"testing","url":"https://dyingstar-game.com","persistenceUrl":"http://service-persistence:3001","wsUrl":"ws://service-persistence:9100","keycloakRealm":"dyingstar","resourcesDynamicUrl":"http://service-resourcesdynamic:3001","horizonUrl":"http://horizon:7040","godotserverUrl":"http://godotserver:8980"},{"id":"universe","name":"Universe","environment":"production","url":"https://server.dyingstar-game.space","persistenceUrl":"http://service-persistence:3001","wsUrl":"ws://service-persistence:9100","keycloakRealm":"dyingstar","resourcesDynamicUrl":"http://service-resourcesdynamic:3001","horizonUrl":"http://horizon:7040","godotserverUrl":"http://godotserver:8980"}]'
 
 frontend:
   image:

@@ -6,6 +6,9 @@ import {
 } from '../domain/server.types.js';
 import { env } from './env.js';
 
+/** Default scoped server when `X-Server-Id` is omitted (live test stack). */
+export const DEFAULT_SERVER_ID = 'universe-testing';
+
 /**
  * Parses the `SERVERS` environment variable JSON array.
  * @returns Raw server entries or empty array on parse failure.
@@ -40,11 +43,23 @@ export function getServerById(id: string): ServerConfig | undefined {
 }
 
 /**
+ * @returns Default server for scoped routes when no `X-Server-Id` is sent.
+ */
+export function getDefaultServer(): ServerConfig | undefined {
+  return getServerById(DEFAULT_SERVER_ID) ?? serverConfigs[0];
+}
+
+/**
  * @param server - Internal server config.
  * @returns Public DTO safe for the frontend.
  */
 export function toPublicServer(server: ServerConfig): ServerPublic {
-  return { id: server.id, name: server.name, url: server.url };
+  return {
+    id: server.id,
+    name: server.name,
+    url: server.url,
+    environment: server.environment,
+  };
 }
 
 /**

@@ -2,7 +2,7 @@
  * Aggregated dashboard status and per-server connectivity probes.
  */
 import type { ConnectivityResponse, StatusResponse } from '@dyingstar/shared';
-import { getAllServers, getServerById } from '../config/servers.js';
+import { getAllServers, getDefaultServer, getServerById } from '../config/servers.js';
 import { env } from '../config/env.js';
 import { persistenceClient } from '../clients/persistence.client.js';
 import { wsClient } from '../clients/ws.client.js';
@@ -41,7 +41,7 @@ export async function getGlobalStatus(activeServerId?: string): Promise<StatusRe
     }),
   );
 
-  const active = activeServerId ? getServerById(activeServerId) : servers[0];
+  const active = activeServerId ? getServerById(activeServerId) : getDefaultServer();
   const itemsCount = active ? await persistenceClient.count(active.services.persistence) : 0;
 
   let activeHorizonCount = 0;

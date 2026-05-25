@@ -77,7 +77,8 @@ Open **http://localhost:5173** for the UI (not port 3000 — that is the API onl
 
 - [ONBOARDING.md](./ONBOARDING.md) — setup, env vars, conventions
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — BFF layout, mesh (resourcesdynamic), Kubernetes
-- [deploy/SKAFFOLD.md](./deploy/SKAFFOLD.md) — integration with StarDeception Skaffold modules
+- [deploy/KUBERNETES.md](./deploy/KUBERNETES.md) — mapping to `../kubernetes` (ports, namespaces, realms)
+- [deploy/SKAFFOLD.md](./deploy/SKAFFOLD.md) — Skaffold module for admin panel
 
 ### Translations
 

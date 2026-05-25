@@ -48,14 +48,21 @@ export interface PaginatedItemsResponse {
   page_size: number;
 }
 
+/** Game environment kind (matches launcher env ids). */
+export type ServerEnvironment = 'production' | 'testing';
+
 /**
  * Server metadata exposed to the frontend.
  * Does not include internal service URLs (persistence, WebSocket, Keycloak).
  */
 export interface ServerPublic {
+  /** Stable id — `universe` (prod) or `universe-testing` (test). */
   id: string;
   name: string;
+  /** Public game / status URL shown in the admin UI. */
   url: string;
+  /** Optional label for environment badges in the UI. */
+  environment?: ServerEnvironment;
 }
 
 export type MissionType = 'exploration' | 'combat' | 'delivery' | 'social';

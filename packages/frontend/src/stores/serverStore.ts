@@ -2,6 +2,19 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ServerPublic } from '@dyingstar/shared';
 
+/** Default when no prior selection — matches the live test stack (launcher: universe-testing). */
+const DEFAULT_ACTIVE_SERVER_ID = 'universe-testing';
+
+function resolveActiveServerId(
+  servers: ServerPublic[],
+  current: string | null,
+): string | null {
+  if (servers.length === 0) return null;
+  if (current && servers.some((s) => s.id === current)) return current;
+  const preferred = servers.find((s) => s.id === DEFAULT_ACTIVE_SERVER_ID);
+  return preferred?.id ?? servers[0]?.id ?? null;
+}
+
 interface ServerState {
   servers: ServerPublic[];
   activeServerId: string | null;
@@ -18,11 +31,9 @@ export const useServerStore = create<ServerState>()(
       activeServerId: null,
       /** Replaces the server list and keeps or resets the active id if it is no longer valid. */
       setServers: (servers) => {
-        const current = get().activeServerId;
-        const valid = servers.some((s) => s.id === current);
         set({
           servers,
-          activeServerId: valid ? current : (servers[0]?.id ?? null),
+          activeServerId: resolveActiveServerId(servers, get().activeServerId),
         });
       },
       /** Sets the active server by id. */

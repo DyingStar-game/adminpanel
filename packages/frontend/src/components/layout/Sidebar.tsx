@@ -14,6 +14,7 @@ import { cn } from '@/lib/cn';
 import { useServerStore } from '@/stores/serverStore';
 import { Select } from '@/components/ui';
 import { useI18n } from '@/hooks/useI18n';
+import { serverSelectLabel } from '@/lib/serverDisplay';
 
 /** Fixed left navigation with server selector and grouped route links. */
 export function Sidebar() {
@@ -72,7 +73,7 @@ export function Sidebar() {
           {servers.length === 0 && <option value="">{t('nav.noServer')}</option>}
           {servers.map((s) => (
             <option key={s.id} value={s.id}>
-              {s.name}
+              {serverSelectLabel(s, t)}
             </option>
           ))}
         </Select>

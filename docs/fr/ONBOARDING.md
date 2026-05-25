@@ -31,21 +31,27 @@ Le fichier `packages/backend/.env` contient **toutes** les URLs de services. Le 
 
 | Variable | Description |
 |----------|-------------|
-| `SERVERS` | JSON : `id`, `name`, `url` (publique), `persistenceUrl`, `wsUrl`, `keycloakRealm` (internes) |
+| `SERVERS` | JSON : `id`, `name`, `environment` (`production` \| `testing`), `url`, `persistenceUrl`, `wsUrl`, `keycloakRealm`. Voir `packages/backend/config/servers.example.json` |
 | `KEYCLOAK_BASE_URL` | URL Keycloak (réseau cluster) |
 | `KEYCLOAK_ADMIN_SECRET` | Secret admin (vide = données démo) |
 | `GITHUB_TOKEN` | Optionnel — prop descriptors |
 
-Exemple Minikube :
+Serveurs DyingStar (ids launcher) :
+
+| Id | Nom | Environnement |
+|----|-----|---------------|
+| `universe` | Universe | production (hors ligne actuellement) |
+| `universe-testing` | Universe Testing | test (actif — sélection par défaut) |
 
 ```json
 {
-  "id": "srv1",
-  "name": "Sandbox",
-  "url": "https://sandbox.dyingstar-game.local",
-  "persistenceUrl": "http://service-persistence.default.svc.cluster.local",
-  "wsUrl": "ws://service-ws.default.svc.cluster.local:9100",
-  "keycloakRealm": "dyingstar-sandbox"
+  "id": "universe-testing",
+  "name": "Universe Testing",
+  "environment": "testing",
+  "url": "https://dyingstar-game.com",
+  "persistenceUrl": "http://service-persistence:3001",
+  "wsUrl": "ws://service-persistence:9100",
+  "keycloakRealm": "dyingstar"
 }
 ```
 
@@ -57,7 +63,7 @@ Lire [ARCHITECTURE.md](./ARCHITECTURE.md). Résumé :
 
 - **Frontend** → `VITE_API_URL` + header `X-Server-Id`
 - **Backend** → clients HTTP/WS vers persistence, Keycloak, etc.
-- **API publique serveurs** → `{ id, name, url }` seulement
+- **API publique serveurs** → `{ id, name, url, environment? }` seulement
 
 ## 5. Internationalisation
 

@@ -15,6 +15,7 @@ import type { StatusResponse } from '@dyingstar/shared';
 import { useServerStore } from '@/stores/serverStore';
 import { useServerId } from '@/hooks/useApi';
 import { useI18n } from '@/hooks/useI18n';
+import { serverEnvironmentLabel } from '@/lib/serverDisplay';
 
 /** Lists configured game servers with player and active Horizon counts from the BFF. */
 export function ServersPage() {
@@ -42,6 +43,7 @@ export function ServersPage() {
             <TableHead>
               <TableRow>
                 <TableHeader>{t('servers.server')}</TableHeader>
+                <TableHeader>{t('servers.environment')}</TableHeader>
                 <TableHeader>ID</TableHeader>
                 <TableHeader>{t('servers.horizon')}</TableHeader>
                 <TableHeader>{t('servers.players')}</TableHeader>
@@ -49,9 +51,20 @@ export function ServersPage() {
               </TableRow>
             </TableHead>
             <tbody>
-              {servers.map((s) => (
+              {servers.map((s) => {
+                const envLabel = serverEnvironmentLabel(s.environment, t);
+                return (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium text-ds-text">{s.name}</TableCell>
+                  <TableCell>
+                    {envLabel ? (
+                      <Badge variant={s.environment === 'production' ? 'warning' : 'success'}>
+                        {envLabel}
+                      </Badge>
+                    ) : (
+                      '—'
+                    )}
+                  </TableCell>
                   <TableCell className="font-mono text-xs text-ds-muted">{s.id}</TableCell>
                   <TableCell>{status?.activeHorizonByServer?.[s.name] ?? '—'}</TableCell>
                   <TableCell>{status?.playersByServer?.[s.name] ?? '—'}</TableCell>
@@ -59,7 +72,8 @@ export function ServersPage() {
                     {s.url}
                   </TableCell>
                 </TableRow>
-              ))}
+              );
+              })}
             </tbody>
           </Table>
         </CardContent>
