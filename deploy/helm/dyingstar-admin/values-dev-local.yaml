@@ -1,0 +1,22 @@
+namespace: dyingstar-dev-local
+
+backend:
+  image:
+    repository: dyingstar-admin-backend
+    tag: dev
+    pullPolicy: Never
+  service:
+    port: 3000
+  env:
+    CORS_ORIGIN: http://localhost:5173
+    KEYCLOAK_BASE_URL: http://keycloak:8080
+    RESOURCES_DYNAMIC_URL: http://service-resourcesdynamic:3001
+    SERVERS: '[{"id":"sandbox","name":"Sandbox","url":"https://sandbox.dyingstar-game.local","persistenceUrl":"http://service-persistence:3001","wsUrl":"ws://service-persistence:9100","keycloakRealm":"dyingstar-sandbox","resourcesDynamicUrl":"http://service-resourcesdynamic:3001","horizonUrl":"http://horizon:7040"}]'
+
+frontend:
+  image:
+    repository: dyingstar-admin-frontend
+    tag: dev
+    pullPolicy: Never
+  service:
+    port: 80
