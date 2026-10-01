@@ -50,15 +50,29 @@ export interface OrbitEdge {
 }
 
 export const ORBIT = {
-  parentRadius: 230,
-  clusterRadius: 230,
-  refRadius: 420,
   childRadius: 150,
-  /** An open cluster moves outwards so its children fan outside the ring. */
-  openClusterRadius: 400,
   /** Children shown around an open cluster per page. */
   pageSize: 8,
 } as const;
+
+/** Below this many clusters, an open cluster has no neighbour to clear and stays on the ring. */
+const CROWDED_CLUSTERS = 4;
+
+/**
+ * Distances adapted to the number of clusters: compact when there are few, wider when many
+ * (adjacent clusters keep room for their label), so the fitted view has no large empty areas.
+ */
+export function orbitRadii(clusterCount: number) {
+  const cluster = Math.min(260, 170 + 15 * Math.max(0, clusterCount - 3));
+  const parent = 180;
+  return {
+    parent,
+    cluster,
+    /** An open cluster moves outwards only when neighbours would overlap its children. */
+    openCluster: clusterCount >= CROWDED_CLUSTERS ? cluster + 160 : cluster,
+    ref: Math.max(cluster, parent) + 120,
+  };
+}
 
 const rad = (deg: number) => (deg * Math.PI) / 180;
 const polar = (cx: number, cy: number, r: number, deg: number) => ({
@@ -74,6 +88,7 @@ function spread(count: number, from: number, to: number): number[] {
 }
 
 export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: OrbitEdge[] } {
+  const radii = orbitRadii(input.clusters.length);
   const centerId = input.center.uuid;
   const nodes: OrbitNode[] = [{ id: centerId, kind: 'center', x: 0, y: 0, entity: input.center }];
   const edges: OrbitEdge[] = [];
@@ -83,7 +98,7 @@ export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: Orb
     nodes.push({
       id: input.parent.uuid,
       kind: 'parent',
-      ...polar(0, 0, ORBIT.parentRadius, -90),
+      ...polar(0, 0, radii.parent, -90),
       entity: input.parent,
     });
     edges.push({
@@ -100,7 +115,7 @@ export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: Orb
     const angle = clusterAngles[i] ?? 0;
     const id = `cluster:${cluster.objectType}`;
     const open = input.open?.objectType === cluster.objectType;
-    const position = polar(0, 0, open ? ORBIT.openClusterRadius : ORBIT.clusterRadius, angle);
+    const position = polar(0, 0, open ? radii.openCluster : radii.cluster, angle);
     nodes.push({
       id,
       kind: 'cluster',
@@ -148,7 +163,7 @@ export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: Orb
     nodes.push({
       id: ref.uuid,
       kind: 'ref',
-      ...polar(0, 0, ORBIT.refRadius, refAngles[i] ?? -140),
+      ...polar(0, 0, radii.ref, refAngles[i] ?? -140),
       entity: ref,
       path: ref.path,
     });

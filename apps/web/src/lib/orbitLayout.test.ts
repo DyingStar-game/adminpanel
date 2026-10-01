@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ORBIT, orbitLayout, type OrbitEntity } from './orbitLayout';
+import { ORBIT, orbitLayout, orbitRadii, type OrbitEntity } from './orbitLayout';
 
 const entity = (uuid: string, objectType = 'vehicle'): OrbitEntity => ({
   uuid,
@@ -8,6 +8,15 @@ const entity = (uuid: string, objectType = 'vehicle'): OrbitEntity => ({
 });
 const distance = (a: { x: number; y: number }, b: { x: number; y: number }) =>
   Math.hypot(a.x - b.x, a.y - b.y);
+
+describe('orbitRadii', () => {
+  it('stays compact with few clusters and widens with many', () => {
+    expect(orbitRadii(1).cluster).toBeLessThan(orbitRadii(10).cluster);
+    // A lone open cluster has no neighbour: it stays on the ring.
+    expect(orbitRadii(1).openCluster).toBe(orbitRadii(1).cluster);
+    expect(orbitRadii(10).openCluster).toBeGreaterThan(orbitRadii(10).cluster);
+  });
+});
 
 describe('orbitLayout', () => {
   it('places the centre, the parent above and clusters around', () => {
@@ -26,13 +35,13 @@ describe('orbitLayout', () => {
     expect(nodes.find((n) => n.id === 'p')).toMatchObject({
       kind: 'parent',
       x: 0,
-      y: -ORBIT.parentRadius,
+      y: -orbitRadii(2).parent,
     });
     for (const id of ['cluster:vehicle_component', 'cluster:box']) {
       const node = nodes.find((n) => n.id === id);
-      expect(node && Math.round(distance(node, { x: 0, y: 0 }))).toBe(ORBIT.clusterRadius);
+      expect(node && Math.round(distance(node, { x: 0, y: 0 }))).toBe(orbitRadii(2).cluster);
       // Clusters stay below the parent's direction.
-      expect(node && node.y).toBeGreaterThan(-ORBIT.clusterRadius);
+      expect(node && node.y).toBeGreaterThan(-orbitRadii(2).cluster);
     }
     expect(edges.map((e) => e.kind).sort()).toEqual(['cluster', 'cluster', 'parent']);
   });
@@ -50,7 +59,7 @@ describe('orbitLayout', () => {
     const cluster = nodes.find((n) => n.id === 'cluster:box');
     const kids = nodes.filter((n) => n.kind === 'child');
     expect(cluster).toMatchObject({ open: true });
-    expect(cluster && Math.round(distance(cluster, { x: 0, y: 0 }))).toBe(ORBIT.openClusterRadius);
+    expect(cluster && Math.round(distance(cluster, { x: 0, y: 0 }))).toBe(orbitRadii(1).cluster);
     expect(kids).toHaveLength(8);
     if (!cluster) throw new Error('cluster missing');
     kids.forEach((kid) => expect(Math.round(distance(kid, cluster))).toBe(ORBIT.childRadius));
