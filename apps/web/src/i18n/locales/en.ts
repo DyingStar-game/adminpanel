@@ -6,6 +6,7 @@ export const en = {
   topBar: {
     searchPlaceholder: 'Go to a UUID…',
     newItem: 'New item',
+    home: 'Back to the explorer',
     server: 'Game server',
     noServer: 'No server configured',
   },

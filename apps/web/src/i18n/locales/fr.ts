@@ -8,6 +8,7 @@ export const fr: Translations = {
   topBar: {
     searchPlaceholder: 'Aller à un UUID…',
     newItem: 'Nouvel objet',
+    home: "Retour à l'explorateur",
     server: 'Serveur de jeu',
     noServer: 'Aucun serveur configuré',
   },

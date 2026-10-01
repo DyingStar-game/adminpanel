@@ -33,6 +33,9 @@ function RootLayout() {
       <AppShell
         topBar={
           <TopBar
+            onHome={() =>
+              void navigate({ to: '/explorer', search: { parent: '', scope: 'level', page: 1 } })
+            }
             onSearch={(query) => void search(query)}
             // Creation arrives with write operations (lot 1, step 8).
             onCreate={() => toast(t('topBar.newItem'))}

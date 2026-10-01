@@ -15,8 +15,9 @@ const servers = [
 const renderTopBar = () => {
   server.use(http.get('*/api/servers', () => HttpResponse.json({ servers })));
   const onSearch = vi.fn();
-  renderWithProviders(<TopBar onSearch={onSearch} onCreate={vi.fn()} />);
-  return { onSearch };
+  const onHome = vi.fn();
+  renderWithProviders(<TopBar onHome={onHome} onSearch={onSearch} onCreate={vi.fn()} />);
+  return { onSearch, onHome };
 };
 
 describe('TopBar', () => {
@@ -25,6 +26,14 @@ describe('TopBar', () => {
 
     expect(await screen.findByText('Universe Testing')).toBeInTheDocument();
     expect(usePreferences.getState().serverId).toBe('universe-testing');
+  });
+
+  it('goes back to the explorer from the brand', async () => {
+    const { onHome } = renderTopBar();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Back to the explorer' }));
+
+    expect(onHome).toHaveBeenCalledOnce();
   });
 
   it('forwards searches', async () => {

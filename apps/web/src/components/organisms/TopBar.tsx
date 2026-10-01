@@ -12,12 +12,14 @@ import { LOCALES, type Locale } from '@/i18n';
 import { usePreferences } from '@/stores/preferences';
 
 interface TopBarProps {
+  /** Brand click: back to the main view (explorer). */
+  onHome: () => void;
   onSearch: (query: string) => void;
   onCreate: () => void;
 }
 
 /** Application header from the mock-up: brand, game server, search, live, theme, language. */
-export function TopBar({ onSearch, onCreate }: TopBarProps) {
+export function TopBar({ onHome, onSearch, onCreate }: TopBarProps) {
   const { t } = useTranslation();
   const { live, setLive, locale, setLocale, setTheme } = usePreferences();
   const resolved = useResolvedTheme();
@@ -26,10 +28,18 @@ export function TopBar({ onSearch, onCreate }: TopBarProps) {
   return (
     <header className="flex h-12 shrink-0 items-center gap-2.5 border-b bg-background pr-3 pl-4">
       <div className="flex min-w-0 items-center gap-2 text-[13px]">
-        <BrandMark />
-        <span className="font-semibold tracking-tight">{t('app.brand')}</span>
-        <span className="text-fg-3">/</span>
-        <span className="font-medium">{t('app.section')}</span>
+        <button
+          type="button"
+          onClick={onHome}
+          aria-label={t('topBar.home')}
+          title={t('topBar.home')}
+          className="flex items-center gap-2 rounded-md px-1 py-0.5 hover:bg-surface-3"
+        >
+          <BrandMark />
+          <span className="font-semibold tracking-tight">{t('app.brand')}</span>
+          <span className="text-fg-3">/</span>
+          <span className="font-medium">{t('app.section')}</span>
+        </button>
         <OptionSelect
           label={t('topBar.server')}
           value={selected?.id}
