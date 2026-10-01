@@ -81,6 +81,14 @@ export const en = {
     implicitHint:
       'Single star system: planets have no parent yet and orbit this star implicitly (ADR 0008).',
   },
+  orbit: {
+    graph: 'Orbit',
+    more_one: '+{{count}} more',
+    more_other: '+{{count}} more',
+    reference: 'uuid reference',
+    hint: 'click: inspect · double-click: centre',
+    center: 'Centre graph',
+  },
   live: {
     on: 'Live · 2 s',
     off: 'Paused',

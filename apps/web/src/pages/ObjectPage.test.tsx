@@ -10,7 +10,12 @@ const renderPage = (uuid: string) => {
   const onNavigate = vi.fn();
   const onOpenInExplorer = vi.fn();
   renderWithProviders(
-    <ObjectPage uuid={uuid} onNavigate={onNavigate} onOpenInExplorer={onOpenInExplorer} />,
+    <ObjectPage
+      uuid={uuid}
+      onNavigate={onNavigate}
+      onOpenInExplorer={onOpenInExplorer}
+      onOpenOrbit={vi.fn()}
+    />,
   );
   return { onNavigate, onOpenInExplorer };
 };

@@ -83,6 +83,14 @@ export const fr: Translations = {
     implicitHint:
       "Système à une seule étoile : les planètes n'ont pas encore de parent et orbitent implicitement autour de cette étoile (ADR 0008).",
   },
+  orbit: {
+    graph: 'Orbite',
+    more_one: '+{{count}} autre',
+    more_other: '+{{count}} autres',
+    reference: 'référence uuid',
+    hint: 'clic : inspecter · double-clic : centrer',
+    center: 'Centrer le graphe',
+  },
   live: {
     on: 'Live · 2 s',
     off: 'En pause',

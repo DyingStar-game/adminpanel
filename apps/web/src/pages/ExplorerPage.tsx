@@ -15,10 +15,11 @@ interface ExplorerPageProps {
   onSearchChange: (search: ExplorerSearch) => void;
   /** Opens the object page of an item. */
   onOpen: (uuid: string) => void;
+  onOrbit: (uuid: string) => void;
 }
 
 /** Explorer (mock-up 1b): lazy tree, paginated table of a level or type, inspector. */
-export function ExplorerPage({ search, onSearchChange, onOpen }: ExplorerPageProps) {
+export function ExplorerPage({ search, onSearchChange, onOpen, onOrbit }: ExplorerPageProps) {
   const { t } = useTranslation();
   const goToItem = useGoToItem();
   const expand = useExplorerTree((s) => s.expand);
@@ -85,6 +86,7 @@ export function ExplorerPage({ search, onSearchChange, onOpen }: ExplorerPagePro
           uuid={search.selected}
           onNavigate={(uuid) => void navigate(uuid)}
           onOpen={onOpen}
+          onOrbit={onOrbit}
         />
       }
     />

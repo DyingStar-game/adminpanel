@@ -14,6 +14,9 @@ function ObjectRoute() {
           : navigate({ to: '/explorer', search: { parent: '', scope: 'level', page: 1 } }))
       }
       onOpenInExplorer={(item) => void navigate({ to: '/explorer', search: searchForItem(item) })}
+      onOpenOrbit={(target) =>
+        void navigate({ to: '/orbit/$uuid', params: { uuid: target }, search: { page: 1 } })
+      }
     />
   );
 }

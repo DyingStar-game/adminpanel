@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ExpandIcon } from 'lucide-react';
+import { ExpandIcon, LocateFixedIcon, NetworkIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Item } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
@@ -19,10 +19,14 @@ interface InspectorProps {
   onNavigate: (uuid: string) => void;
   /** Opens the full object page. */
   onOpen: (uuid: string) => void;
+  /** Opens the orbit view centred on the item (omitted when already there). */
+  onOrbit?: (uuid: string) => void;
+  /** Inside the orbit view: centres the graph on the item (mock-up 1a). */
+  onCenter?: (uuid: string) => void;
 }
 
 /** Right panel: identity, relations, children summary and properties by channel. */
-export function Inspector({ uuid, onNavigate, onOpen }: InspectorProps) {
+export function Inspector({ uuid, onNavigate, onOpen, onOrbit, onCenter }: InspectorProps) {
   const { t } = useTranslation();
   const query = useItem(uuid);
 
@@ -30,10 +34,24 @@ export function Inspector({ uuid, onNavigate, onOpen }: InspectorProps) {
   if (query.isPending) return <Placeholder>{t('inspector.loading')}</Placeholder>;
   if (query.isError) return <Placeholder>{t('inspector.error')}</Placeholder>;
   if (!query.data) return <Placeholder>{t('inspector.notFound', { uuid })}</Placeholder>;
-  return <ItemDetails item={query.data} onNavigate={onNavigate} onOpen={onOpen} />;
+  return (
+    <ItemDetails
+      item={query.data}
+      onNavigate={onNavigate}
+      onOpen={onOpen}
+      onOrbit={onOrbit}
+      onCenter={onCenter}
+    />
+  );
 }
 
-function ItemDetails({ item, onNavigate, onOpen }: { item: Item } & Omit<InspectorProps, 'uuid'>) {
+function ItemDetails({
+  item,
+  onNavigate,
+  onOpen,
+  onOrbit,
+  onCenter,
+}: { item: Item } & Omit<InspectorProps, 'uuid'>) {
   const { t } = useTranslation();
   const data = item.object_data;
   const definitions = useDefinitions();
@@ -60,6 +78,18 @@ function ItemDetails({ item, onNavigate, onOpen }: { item: Item } & Omit<Inspect
             </Badge>
           )}
           <span className="flex-1" />
+          {onCenter && (
+            <Button variant="outline" size="xs" onClick={() => onCenter(item.object_uuid)}>
+              <LocateFixedIcon />
+              {t('orbit.center')}
+            </Button>
+          )}
+          {onOrbit && (
+            <Button variant="outline" size="xs" onClick={() => onOrbit(item.object_uuid)}>
+              <NetworkIcon />
+              {t('objectPage.orbit')}
+            </Button>
+          )}
           <Button variant="outline" size="xs" onClick={() => onOpen(item.object_uuid)}>
             <ExpandIcon />
             {t('inspector.open')}

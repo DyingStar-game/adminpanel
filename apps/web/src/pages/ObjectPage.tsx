@@ -21,10 +21,11 @@ interface ObjectPageProps {
   /** Opens another item's page. */
   onNavigate: (uuid: string) => void;
   onOpenInExplorer: (item: Item) => void;
+  onOpenOrbit: (uuid: string) => void;
 }
 
 /** Full detail of one entity (mock-up 1c, ADR 0008). */
-export function ObjectPage({ uuid, onNavigate, onOpenInExplorer }: ObjectPageProps) {
+export function ObjectPage({ uuid, onNavigate, onOpenInExplorer, onOpenOrbit }: ObjectPageProps) {
   const { t } = useTranslation();
   const query = useItem(uuid);
 
@@ -32,7 +33,12 @@ export function ObjectPage({ uuid, onNavigate, onOpenInExplorer }: ObjectPagePro
   if (query.isError) return <Message>{t('inspector.error')}</Message>;
   if (!query.data) return <Message>{t('inspector.notFound', { uuid })}</Message>;
   return (
-    <ObjectDetails item={query.data} onNavigate={onNavigate} onOpenInExplorer={onOpenInExplorer} />
+    <ObjectDetails
+      item={query.data}
+      onNavigate={onNavigate}
+      onOpenInExplorer={onOpenInExplorer}
+      onOpenOrbit={onOpenOrbit}
+    />
   );
 }
 
@@ -40,6 +46,7 @@ function ObjectDetails({
   item,
   onNavigate,
   onOpenInExplorer,
+  onOpenOrbit,
 }: Omit<ObjectPageProps, 'uuid'> & { item: Item }) {
   const { t } = useTranslation();
   const definitions = useDefinitions();
@@ -86,8 +93,7 @@ function ObjectDetails({
               <CompassIcon />
               {t('objectPage.explorer')}
             </Button>
-            {/* Orbit view arrives in lot 1, step 6. */}
-            <Button variant="outline" size="sm" disabled title={t('objectPage.orbitSoon')}>
+            <Button variant="outline" size="sm" onClick={() => onOpenOrbit(item.object_uuid)}>
               <NetworkIcon />
               {t('objectPage.orbit')}
             </Button>

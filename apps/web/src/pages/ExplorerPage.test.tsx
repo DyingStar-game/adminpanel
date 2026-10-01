@@ -21,6 +21,7 @@ function renderExplorer(initial: Partial<ExplorerSearch> = {}) {
     return (
       <ExplorerPage
         onOpen={vi.fn()}
+        onOrbit={vi.fn()}
         search={search}
         onSearchChange={(next) => {
           onChange(next);
