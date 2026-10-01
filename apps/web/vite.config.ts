@@ -16,6 +16,9 @@ export default defineConfig({
     host: true,
     port: 5173,
     strictPort: true,
+    // File events are unreliable through the Docker bind mount (missed edits served stale
+    // modules): the dev container turns polling on with VITE_WATCH_POLLING.
+    watch: process.env.VITE_WATCH_POLLING === 'true' ? { usePolling: true, interval: 300 } : {},
     proxy: {
       '/api': BFF_URL,
       '/health': BFF_URL,

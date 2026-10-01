@@ -13,6 +13,9 @@ x-node-service: &node-service
     - pnpm_store:/home/node/.pnpm-store
   environment:
     COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+    # Vite and tsx watch the bind mount by polling: native file events get lost through it.
+    VITE_WATCH_POLLING: 'true'
+    CHOKIDAR_USEPOLLING: 'true'
     PATH: /home/node/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
     npm_config_store_dir: /home/node/.pnpm-store
   env_file:
