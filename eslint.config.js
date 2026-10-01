@@ -41,6 +41,18 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'cn',
+              message: "shadcn's `cn` package: use `@/lib/cn` (clsx + tailwind-merge, ADR 0010).",
+            },
+            { name: 'next-themes', message: 'The theme lives in the preferences store.' },
+          ],
+        },
+      ],
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'boundaries/dependencies': [
         'error',
@@ -68,6 +80,8 @@ export default tseslint.config(
         'error',
         {
           paths: [
+            { name: 'cn', message: 'Use `@/lib/cn` (clsx + tailwind-merge, ADR 0010).' },
+            { name: 'next-themes', message: 'The theme lives in the preferences store.' },
             {
               name: '@tanstack/react-query',
               message: 'Atoms and molecules must stay pure: fetch data in organisms or pages.',
@@ -78,7 +92,8 @@ export default tseslint.config(
     },
   },
   {
-    files: ['apps/web/src/routes/**/*.tsx'],
+    // shadcn/ui primitives export their variants next to the component.
+    files: ['apps/web/src/routes/**/*.tsx', 'apps/web/src/components/ui/**/*.tsx'],
     rules: { 'react-refresh/only-export-components': 'off' },
   },
   prettier,

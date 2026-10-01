@@ -27,6 +27,7 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 | Testers profile (build + serve on :3000) | `make start` / `make stop` |
 | Production image | `make image` |
 | Logs, shell, status | `make logs`, `make shell`, `make status` |
+| Add a shadcn/ui primitive | `make pnpm ARGS="--filter @dyingstar-admin/web exec shadcn add <name>"`, then replace `from "cn"` by `from "@/lib/cn"` (lint enforces it) |
 
 `make help` lists every target.
 

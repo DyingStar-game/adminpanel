@@ -1,1 +1,126 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/geist';
+@import '@fontsource-variable/geist-mono';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Design tokens from the Claude Design mock-up (docs/design/persistence), ADR 0014.
+ * shadcn variables are mapped onto the mock-up palette; extra tokens cover what the
+ * mock-up needs beyond shadcn (secondary surfaces, strong border, link, live flash…).
+ */
+:root {
+  /* Mock-up palette */
+  --ds-bg: #ffffff;
+  --ds-bg-2: #fafafa;
+  --ds-bg-3: #f4f4f5;
+  --ds-line: #e4e4e7;
+  --ds-line-2: #d4d4d8;
+  --ds-fg: #09090b;
+  --ds-fg-2: #52525b;
+  --ds-fg-3: #71717a;
+  --ds-acc: #4f46e5;
+  --ds-acc-bg: #eef2ff;
+  --ds-flash: #fef08a;
+  --ds-danger: #dc2626;
+  --ds-ok: #16a34a;
+  --ds-dot: #e4e4e7;
+
+  /* shadcn variables */
+  --background: var(--ds-bg);
+  --foreground: var(--ds-fg);
+  --card: var(--ds-bg);
+  --card-foreground: var(--ds-fg);
+  --popover: var(--ds-bg);
+  --popover-foreground: var(--ds-fg);
+  --primary: var(--ds-fg);
+  --primary-foreground: var(--ds-bg);
+  --secondary: var(--ds-bg-3);
+  --secondary-foreground: var(--ds-fg);
+  --muted: var(--ds-bg-3);
+  --muted-foreground: var(--ds-fg-3);
+  --accent: var(--ds-bg-3);
+  --accent-foreground: var(--ds-fg);
+  --destructive: var(--ds-danger);
+  --border: var(--ds-line);
+  --input: var(--ds-line);
+  --ring: var(--ds-acc);
+  --radius: 0.5rem;
+}
+
+.dark {
+  --ds-bg: #09090b;
+  --ds-bg-2: #0f0f12;
+  --ds-bg-3: #1c1c1f;
+  --ds-line: #27272a;
+  --ds-line-2: #3f3f46;
+  --ds-fg: #fafafa;
+  --ds-fg-2: #a1a1aa;
+  --ds-fg-3: #8b8b94;
+  --ds-acc: #a5b4fc;
+  --ds-acc-bg: #1e1b4b;
+  --ds-flash: #713f12;
+  --ds-danger: #f87171;
+  --ds-ok: #4ade80;
+  --ds-dot: #1f1f23;
+}
+
+@theme inline {
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+  --font-heading: var(--font-sans);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Mock-up extras, e.g. `bg-surface-2`, `text-fg-2`, `border-line-strong`, `text-link`. */
+  --color-surface-2: var(--ds-bg-2);
+  --color-surface-3: var(--ds-bg-3);
+  --color-line-strong: var(--ds-line-2);
+  --color-fg-2: var(--ds-fg-2);
+  --color-fg-3: var(--ds-fg-3);
+  --color-link: var(--ds-acc);
+  --color-link-bg: var(--ds-acc-bg);
+  --color-flash: var(--ds-flash);
+  --color-success: var(--ds-ok);
+  --color-grid-dot: var(--ds-dot);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans antialiased;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
