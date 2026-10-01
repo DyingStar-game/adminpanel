@@ -57,7 +57,7 @@ export function HierarchyTree(props: HierarchyTreeProps) {
 
 function ItemList({ filter, ...props }: NodeProps & { filter: ListFilter }) {
   const { t } = useTranslation();
-  const query = useItemsInfinite(filter, TREE_PAGE_SIZE);
+  const query = useItemsInfinite(filter, TREE_PAGE_SIZE, true, { live: true });
   if (query.isPending) return <LoadingRow depth={props.depth} />;
   if (query.isError) return <InfoRow depth={props.depth}>{t('tree.error')}</InfoRow>;
   const items = query.data.pages.flatMap((page) => page.items);
@@ -83,7 +83,7 @@ function ItemNode({ item, ...props }: NodeProps & { item: Item }) {
   const { t } = useTranslation();
   const expanded = useExplorerTree((s) => !!s.expanded[item.object_uuid]);
   const toggle = useExplorerTree((s) => s.toggle);
-  const counts = useChildrenCounts(item.object_uuid, expanded);
+  const counts = useChildrenCounts(item.object_uuid, expanded, { live: true });
   const selected = props.selectedId === item.object_uuid;
 
   return (

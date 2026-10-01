@@ -25,7 +25,7 @@ interface ChildTab {
 /** Children of an item, one tab per type (profile order first), each tab paginated. */
 export function ChildrenTabs({ item, onSelect, onNavigate }: ChildrenTabsProps) {
   const { t } = useTranslation();
-  const counts = useChildrenCounts(item.object_uuid);
+  const counts = useChildrenCounts(item.object_uuid, true, { live: true });
   const profile = profileFor(item.object_type);
   const [pages, setPages] = useState<Record<string, number>>({});
 

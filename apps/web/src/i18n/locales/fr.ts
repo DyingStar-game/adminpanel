@@ -93,6 +93,8 @@ export const fr: Translations = {
     center: 'Centrer le graphe',
   },
   live: {
+    updated: 'mis à jour à {{time}}',
+    freshness: 'Les données live reflètent la dernière sauvegarde du jeu, pas son état instantané.',
     on: 'Live · 2 s',
     off: 'En pause',
     toggle: 'Activer ou suspendre le live',

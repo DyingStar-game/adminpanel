@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 interface LiveToggleProps {
   live: boolean;
   onToggle: () => void;
-  labels: { on: string; off: string; toggle: string };
+  /** `hint` explains how fresh live data is (shown as tooltip). */
+  labels: { on: string; off: string; toggle: string; hint: string };
 }
 
 /** Live refresh switch (ADR 0009). */
@@ -15,6 +16,7 @@ export function LiveToggle({ live, onToggle, labels }: LiveToggleProps) {
       size="sm"
       aria-pressed={live}
       aria-label={labels.toggle}
+      title={labels.hint}
       onClick={onToggle}
     >
       <LiveDot live={live} />

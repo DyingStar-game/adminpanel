@@ -55,7 +55,12 @@ export function TopBar({ onHome, onSearch, onCreate }: TopBarProps) {
       <LiveToggle
         live={live}
         onToggle={() => setLive(!live)}
-        labels={{ on: t('live.on'), off: t('live.off'), toggle: t('live.toggle') }}
+        labels={{
+          on: t('live.on'),
+          off: t('live.off'),
+          toggle: t('live.toggle'),
+          hint: t('live.freshness'),
+        }}
       />
       <ThemeToggle
         resolved={resolved}

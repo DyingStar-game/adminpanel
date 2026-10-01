@@ -9,6 +9,7 @@ import {
 } from '@dyingstar-admin/schemas';
 import { ApiError, apiGet } from '@/lib/api';
 import { usePreferences } from '@/stores/preferences';
+import { useLiveInterval } from './useLive';
 
 /** Filters of a children / list query. `parentId: ''` targets roots. */
 export interface ListFilter {
@@ -56,12 +57,19 @@ export function useDefinitions() {
   });
 }
 
-export function useItem(uuid: string | undefined) {
+/** Polling opt-in: only the data on screen is refreshed live (ADR 0009). */
+export interface LiveOption {
+  live?: boolean;
+}
+
+export function useItem(uuid: string | undefined, { live = false }: LiveOption = {}) {
   const serverId = useServerId();
+  const refetchInterval = useLiveInterval('entity', live);
   return useQuery({
     queryKey: queryKeys.item(serverId, uuid ?? ''),
     queryFn: () => fetchItem(serverId, uuid ?? ''),
     enabled: !!serverId && !!uuid,
+    refetchInterval,
   });
 }
 
@@ -78,20 +86,34 @@ export function useItems(uuids: string[]) {
   });
 }
 
-export function useItemsPage(filter: ListFilter, page: number, pageSize: number) {
+export function useItemsPage(
+  filter: ListFilter,
+  page: number,
+  pageSize: number,
+  { live = false }: LiveOption = {},
+) {
   const serverId = useServerId();
+  const refetchInterval = useLiveInterval('list', live);
   return useQuery({
     queryKey: queryKeys.list(serverId, filter, page, pageSize),
     queryFn: () => apiGet(listPath(filter, page, pageSize), PaginatedItemsSchema, { serverId }),
     enabled: !!serverId,
     placeholderData: keepPreviousData,
+    refetchInterval,
   });
 }
 
 /** "Load more" listing used by tree levels (ADR 0005). */
-export function useItemsInfinite(filter: ListFilter, pageSize: number, enabled = true) {
+export function useItemsInfinite(
+  filter: ListFilter,
+  pageSize: number,
+  enabled = true,
+  { live = false }: LiveOption = {},
+) {
   const serverId = useServerId();
+  const refetchInterval = useLiveInterval('list', live);
   return useInfiniteQuery({
+    refetchInterval,
     queryKey: queryKeys.infinite(serverId, filter, pageSize),
     queryFn: ({ pageParam }) =>
       apiGet(listPath(filter, pageParam, pageSize), PaginatedItemsSchema, { serverId }),
@@ -114,9 +136,15 @@ export function useAncestors(uuid: string | undefined) {
   });
 }
 
-export function useChildrenCounts(uuid: string | undefined, enabled = true) {
+export function useChildrenCounts(
+  uuid: string | undefined,
+  enabled = true,
+  { live = false }: LiveOption = {},
+) {
   const serverId = useServerId();
+  const refetchInterval = useLiveInterval('counts', live);
   return useQuery({
+    refetchInterval,
     queryKey: queryKeys.childrenCounts(serverId, uuid ?? ''),
     queryFn: () =>
       apiGet(

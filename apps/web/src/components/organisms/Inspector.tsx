@@ -5,10 +5,12 @@ import type { Item } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
 import { TypeDot } from '@/components/atoms/TypeDot';
 import { PropertyRow } from '@/components/molecules/PropertyRow';
+import { UpdatedAt } from '@/components/molecules/UpdatedAt';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useChildrenCounts, useDefinitions, useItem } from '@/hooks/queries';
+import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { itemLabel } from '@/lib/itemLabel';
 import { PropertySections, SectionTitle } from './PropertySections';
@@ -28,7 +30,7 @@ interface InspectorProps {
 /** Right panel: identity, relations, children summary and properties by channel. */
 export function Inspector({ uuid, onNavigate, onOpen, onOrbit, onCenter }: InspectorProps) {
   const { t } = useTranslation();
-  const query = useItem(uuid);
+  const query = useItem(uuid, { live: true });
 
   if (!uuid) return <Placeholder>{t('inspector.empty')}</Placeholder>;
   if (query.isPending) return <Placeholder>{t('inspector.loading')}</Placeholder>;
@@ -37,6 +39,7 @@ export function Inspector({ uuid, onNavigate, onOpen, onOrbit, onCenter }: Inspe
   return (
     <ItemDetails
       item={query.data}
+      updatedAt={query.dataUpdatedAt}
       onNavigate={onNavigate}
       onOpen={onOpen}
       onOrbit={onOrbit}
@@ -51,13 +54,18 @@ function ItemDetails({
   onOpen,
   onOrbit,
   onCenter,
-}: { item: Item } & Omit<InspectorProps, 'uuid'>) {
+  updatedAt,
+}: { item: Item; updatedAt: number } & Omit<InspectorProps, 'uuid'>) {
   const { t } = useTranslation();
   const data = item.object_data;
   const definitions = useDefinitions();
-  const definition = definitions.data?.definitions.find((d) => d.type === item.object_type);
-  const counts = useChildrenCounts(item.object_uuid);
+  // undefined while loading, null when the type has no definition.
+  const definition = definitions.data
+    ? (definitions.data.definitions.find((d) => d.type === item.object_type) ?? null)
+    : undefined;
+  const counts = useChildrenCounts(item.object_uuid, true, { live: true });
   const { refs, parentId, parentTarget, resolveRef } = useItemRefs(item);
+  const changed = useChangedKeys(data, item.object_uuid);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -96,6 +104,7 @@ function ItemDetails({
           </Button>
         </div>
         <h2 className="text-lg leading-tight font-semibold tracking-tight">{itemLabel(item)}</h2>
+        <UpdatedAt at={updatedAt} />
         <MonoText tone="subtle" className="text-[11px] leading-relaxed break-all">
           {item.object_uuid}
           {typeof data.scenename === 'string' && (
@@ -131,6 +140,7 @@ function ItemDetails({
             definition={definition}
             resolveRef={resolveRef}
             onNavigate={onNavigate}
+            changed={changed}
           />
         </div>
       </ScrollArea>

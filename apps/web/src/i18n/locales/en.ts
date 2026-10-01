@@ -91,6 +91,8 @@ export const en = {
     center: 'Centre graph',
   },
   live: {
+    updated: 'updated {{time}}',
+    freshness: 'Live data is as fresh as the last save by the game, not the instant game state.',
     on: 'Live · 2 s',
     off: 'Paused',
     toggle: 'Toggle live refresh',

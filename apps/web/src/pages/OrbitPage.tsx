@@ -45,7 +45,7 @@ const toEntity = (item: Item): OrbitEntity => ({
 /** Orbit view centred on one entity (ADR 0008): never a global map, always one entity. */
 export function OrbitPage(props: OrbitPageProps) {
   const { t } = useTranslation();
-  const query = useItem(props.uuid);
+  const query = useItem(props.uuid, { live: true });
 
   if (query.isPending) return <Message>{t('inspector.loading')}</Message>;
   if (query.isError) return <Message>{t('inspector.error')}</Message>;
@@ -62,7 +62,7 @@ function Orbit({
   onOpenInExplorer,
 }: OrbitPageProps & { item: Item }) {
   const { t } = useTranslation();
-  const counts = useChildrenCounts(item.object_uuid);
+  const counts = useChildrenCounts(item.object_uuid, true, { live: true });
   const ancestors = useAncestors(item.object_uuid);
   const { refs, parentTarget, parentId, resolveRef } = useItemRefs(item);
   const openType =
@@ -73,6 +73,7 @@ function Orbit({
     { parentId: item.object_uuid, objectType: openType },
     search.page,
     ORBIT.pageSize,
+    { live: true },
   );
   const openTotal = counts.data?.byType.find((c) => c.object_type === openType)?.total ?? 0;
 

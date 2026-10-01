@@ -12,6 +12,7 @@ import type { RefTarget } from '@/components/molecules/UuidLink';
 import { ValueView } from '@/components/molecules/ValueView';
 import { Button } from '@/components/ui/button';
 import { useAncestors, useDefinitions, useItem, useItemsPage } from '@/hooks/queries';
+import { useChangedRows } from '@/hooks/useChanges';
 import { useRefResolver } from '@/hooks/useRefResolver';
 import { cn } from '@/lib/cn';
 import { itemLabel, shortUuid } from '@/lib/itemLabel';
@@ -43,6 +44,7 @@ export interface ItemsTableProps {
 }
 
 const features = tableFeatures({});
+const uuidOf = (item: Item) => item.object_uuid;
 const helper = createColumnHelper<typeof features, Item>();
 
 /**
@@ -75,6 +77,7 @@ export function ItemsTable(props: ItemsTableProps) {
     scope === 'type' ? { objectType } : { parentId, objectType },
     page,
     TABLE_PAGE_SIZE,
+    { live: true },
   );
   const definitions = useDefinitions();
   const extraKeys = tableColumnsFor(objectType);
@@ -90,6 +93,12 @@ export function ItemsTable(props: ItemsTableProps) {
         )
       : items;
   }, [query.data, filter]);
+  // Rows that appeared or changed since the previous refresh of this page (ADR 0009).
+  const changedRows = useChangedRows(
+    query.data?.items,
+    `${scope}|${parentId}|${objectType ?? ''}|${page}`,
+    uuidOf,
+  );
 
   const resolveRef = useRefResolver(
     useMemo(
@@ -258,8 +267,9 @@ export function ItemsTable(props: ItemsTableProps) {
               aria-selected={row.original.object_uuid === selectedId}
               onClick={() => props.onSelect(row.original)}
               className={cn(
-                'grid h-[34px] cursor-pointer items-center gap-3 border-b px-5 text-[12.5px] hover:bg-surface-3',
+                'grid h-[34px] cursor-pointer items-center gap-3 border-b px-5 text-[12.5px] transition-colors duration-700 hover:bg-surface-3',
                 row.original.object_uuid === selectedId && 'bg-link-bg',
+                changedRows.has(row.original.object_uuid) && 'bg-flash',
               )}
               style={{ gridTemplateColumns: grid }}
             >

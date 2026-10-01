@@ -5,6 +5,7 @@ import { MonoText } from '@/components/atoms/MonoText';
 import { TypeDot } from '@/components/atoms/TypeDot';
 import { CrumbTrail } from '@/components/molecules/CrumbTrail';
 import { RawJson } from '@/components/molecules/RawJson';
+import { UpdatedAt } from '@/components/molecules/UpdatedAt';
 import { ChildrenTabs } from '@/components/organisms/ChildrenTabs';
 import { HeadlineFacts } from '@/components/organisms/HeadlineFacts';
 import { PropertySections } from '@/components/organisms/PropertySections';
@@ -13,6 +14,7 @@ import { ObjectPageLayout } from '@/components/templates/ObjectPageLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAncestors, useDefinitions, useItem } from '@/hooks/queries';
+import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { itemLabel } from '@/lib/itemLabel';
 
@@ -27,7 +29,7 @@ interface ObjectPageProps {
 /** Full detail of one entity (mock-up 1c, ADR 0008). */
 export function ObjectPage({ uuid, onNavigate, onOpenInExplorer, onOpenOrbit }: ObjectPageProps) {
   const { t } = useTranslation();
-  const query = useItem(uuid);
+  const query = useItem(uuid, { live: true });
 
   if (query.isPending) return <Message>{t('inspector.loading')}</Message>;
   if (query.isError) return <Message>{t('inspector.error')}</Message>;
@@ -35,6 +37,7 @@ export function ObjectPage({ uuid, onNavigate, onOpenInExplorer, onOpenOrbit }: 
   return (
     <ObjectDetails
       item={query.data}
+      updatedAt={query.dataUpdatedAt}
       onNavigate={onNavigate}
       onOpenInExplorer={onOpenInExplorer}
       onOpenOrbit={onOpenOrbit}
@@ -47,12 +50,17 @@ function ObjectDetails({
   onNavigate,
   onOpenInExplorer,
   onOpenOrbit,
-}: Omit<ObjectPageProps, 'uuid'> & { item: Item }) {
+  updatedAt,
+}: Omit<ObjectPageProps, 'uuid'> & { item: Item; updatedAt: number }) {
   const { t } = useTranslation();
   const definitions = useDefinitions();
-  const definition = definitions.data?.definitions.find((d) => d.type === item.object_type);
+  // undefined while loading, null when the type has no definition.
+  const definition = definitions.data
+    ? (definitions.data.definitions.find((d) => d.type === item.object_type) ?? null)
+    : undefined;
   const ancestors = useAncestors(item.object_uuid);
   const { refs, parentId, parentTarget, resolveRef, profile } = useItemRefs(item);
+  const changed = useChangedKeys(item.object_data, item.object_uuid);
   const isMoon =
     !!profile?.moonWhenParentIs &&
     parentTarget?.status === 'found' &&
@@ -102,9 +110,17 @@ function ObjectDetails({
             {item.object_uuid}
             {typeof item.object_data.scenename === 'string' && ` · ${item.object_data.scenename}`}
           </MonoText>
+          <UpdatedAt at={updatedAt} />
         </header>
       }
-      headline={<HeadlineFacts item={item} resolveRef={resolveRef} onNavigate={onNavigate} />}
+      headline={
+        <HeadlineFacts
+          item={item}
+          resolveRef={resolveRef}
+          onNavigate={onNavigate}
+          changed={changed}
+        />
+      }
       relations={
         <RelationsList
           parentId={parentId}
@@ -120,6 +136,7 @@ function ObjectDetails({
           definition={definition}
           resolveRef={resolveRef}
           onNavigate={onNavigate}
+          changed={changed}
         />
       }
       raw={<RawJson value={item} copyLabel={t('objectPage.copy')} />}

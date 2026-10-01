@@ -3,16 +3,18 @@ import type { Item } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
 import { ProfileValue } from '@/components/molecules/ProfileValue';
 import type { RefTarget } from '@/components/molecules/UuidLink';
+import { cn } from '@/lib/cn';
 import { profileFor } from '@/lib/profiles';
 
 interface HeadlineFactsProps {
   item: Item;
   resolveRef: (uuid: string) => RefTarget;
   onNavigate: (uuid: string) => void;
+  changed?: ReadonlySet<string>;
 }
 
 /** Key facts of a profiled type (e.g. speed, engine, limiter for a vehicle). */
-export function HeadlineFacts({ item, resolveRef, onNavigate }: HeadlineFactsProps) {
+export function HeadlineFacts({ item, resolveRef, onNavigate, changed }: HeadlineFactsProps) {
   const { t } = useTranslation();
   const profile = profileFor(item.object_type);
   const data = item.object_data;
@@ -24,7 +26,10 @@ export function HeadlineFacts({ item, resolveRef, onNavigate }: HeadlineFactsPro
       {facts.map((keys) => (
         <div
           key={keys.join('+')}
-          className="flex flex-col gap-1 rounded-lg border bg-background px-3 py-2.5"
+          className={cn(
+            'flex flex-col gap-1 rounded-lg border bg-background px-3 py-2.5 transition-colors duration-700',
+            keys.some((key) => changed?.has(key)) && 'bg-flash',
+          )}
         >
           <MonoText tone="subtle" className="text-[11px]">
             {keys.join(' / ')}
