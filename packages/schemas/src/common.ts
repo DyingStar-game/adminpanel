@@ -24,6 +24,7 @@ export const ErrorCode = {
   unknownServer: 'UNKNOWN_SERVER',
   notFound: 'NOT_FOUND',
   alreadyExists: 'ALREADY_EXISTS',
+  unknownObjectType: 'UNKNOWN_OBJECT_TYPE',
   editConflict: 'EDIT_CONFLICT',
   upstreamRejected: 'UPSTREAM_REJECTED',
   upstreamError: 'UPSTREAM_ERROR',

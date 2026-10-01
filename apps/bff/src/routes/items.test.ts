@@ -141,7 +141,7 @@ describe('POST /api/items/exists', () => {
 
 describe('POST /api/items', () => {
   const box = {
-    object_type: 'box',
+    object_type: 'planet',
     object_uuid: '11111111-2222-3333-4444-555555555555',
     object_data: { parent_id: ids.planet },
   };
@@ -163,6 +163,18 @@ describe('POST /api/items', () => {
     expect(res.status).toBe(409);
     expect(await res.json()).toMatchObject({ error: 'ALREADY_EXISTS' });
     expect(persistence.items.get(ids.vehicle)?.object_type).toBe('vehicle');
+  });
+
+  it('refuses an object type without definition', async () => {
+    const { request, persistence } = buildApp();
+
+    const res = await request('/api/items', json({ ...box, object_type: 'spaceship' }));
+
+    expect(res.status).toBe(400);
+    const body = await read(res);
+    expect(body).toMatchObject({ error: 'UNKNOWN_OBJECT_TYPE' });
+    expect(body.details.allowed).toContain('vehicle');
+    expect(persistence.items.has(box.object_uuid)).toBe(false);
   });
 
   it('validates the body', async () => {
@@ -227,6 +239,31 @@ describe('PUT /api/items/:uuid', () => {
     );
 
     expect(persistence.items.get(ids.vehicle)?.object_data.speed).toBe(0);
+  });
+
+  it('refuses to switch an item to an unknown type', async () => {
+    const { request, persistence } = buildApp();
+
+    const res = await request(
+      `/api/items/${ids.vehicle}`,
+      put({ object_type: 'spaceship', base: stored(persistence), changes: {} }),
+    );
+
+    expect(res.status).toBe(400);
+    expect(await read(res)).toMatchObject({ error: 'UNKNOWN_OBJECT_TYPE' });
+  });
+
+  it('keeps an item editable when its own type has no definition', async () => {
+    const { request, persistence } = buildApp();
+    const rock = persistence.items.get(ids.rock);
+
+    const res = await request(
+      `/api/items/${ids.rock}`,
+      put({ object_type: 'miningrock', base: rock?.object_data, changes: { weight: 1 } }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(persistence.items.get(ids.rock)?.object_data.weight).toBe(1);
   });
 
   it('returns 404 instead of creating an unknown item (persistence PUT is an upsert)', async () => {

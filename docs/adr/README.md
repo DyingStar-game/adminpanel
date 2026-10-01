@@ -29,3 +29,4 @@ using lightweight ADRs ([Michael Nygard format](https://cognitect.com/blog/2011/
 | [0012](./0012-docker-makefile-tooling.md) | Local tooling and Docker: Makefile + compose | Accepted | 2026-10-01 |
 | [0013](./0013-testing-strategy.md) | Testing strategy: Vitest, Testing Library, MSW | Accepted | 2026-10-01 |
 | [0014](./0014-atomic-design-shadcn.md) | Frontend components: atomic design on top of shadcn/ui | Accepted | 2026-10-01 |
+| [0015](./0015-unknown-object-types-refused-on-write.md) | Unknown object types are refused on write | Accepted | 2026-10-01 |

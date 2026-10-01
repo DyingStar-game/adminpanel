@@ -51,6 +51,19 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
   const total = async (query: Omit<ListItemsQuery, 'page' | 'page_size'>) =>
     (await list({ ...query, page: 1, page_size: 1 })).total;
 
+  /**
+   * Persistence stores any `object_type` (no check in services/persistence): writes are only
+   * allowed for types that have a definition (ADR 0015). No definition at all = no restriction.
+   */
+  async function assertKnownType(objectType: string): Promise<void> {
+    const types = (await definitions.list()).definitions.map((d) => d.type);
+    if (types.length > 0 && !types.includes(objectType)) {
+      throw new ApiError(400, ErrorCode.unknownObjectType, `Unknown object_type "${objectType}"`, {
+        allowed: types,
+      });
+    }
+  }
+
   async function getOrThrow(uuid: string): Promise<Item> {
     const item = await get(uuid);
     if (!item) throw notFound(`Item ${uuid} not found`);
@@ -125,6 +138,7 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
 
     /** Creates an item, refusing to overwrite an existing one (persistence POST is an upsert). */
     async create(item: CreateItem): Promise<Item> {
+      await assertKnownType(item.object_type);
       if (await client.get(item.object_uuid)) {
         throw new ApiError(409, ErrorCode.alreadyExists, `Item ${item.object_uuid} already exists`);
       }
@@ -137,6 +151,8 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
     async update(uuid: string, objectType: string, edit: EditRequest): Promise<Item> {
       const latest = await client.get(uuid);
       if (!latest) throw notFound(`Item ${uuid} not found`);
+      // An item whose type lost its definition stays editable as long as it keeps its type.
+      if (objectType !== latest.object_type) await assertKnownType(objectType);
       const { data, conflicts } = mergeEdit(latest.object_data, edit);
       if (conflicts.length > 0) {
         throw new ApiError(

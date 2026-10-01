@@ -3,6 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-10-01
 - **Scope:** Manage persistence
+- **Amended by:** [ADR 0015](./0015-unknown-object-types-refused-on-write.md) (unknown `object_type` is now `invalid`)
 
 ## Context
 
@@ -26,11 +27,12 @@ Without an exact existence check, a POST on an existing UUID can overwrite data 
   `{ object_type, object_uuid?, object_data }`.
 - **Preview before sending**, each row gets a status:
   - `invalid` — not an object, missing `object_type`, `object_data` not an object,
-    malformed `object_uuid`, `object_data.uuid` / `type` inconsistent with the item;
+    malformed `object_uuid`, `object_data.uuid` / `type` inconsistent with the item,
+    `object_type` without definition (ADR 0015);
   - `new` — UUID absent (generated) or unknown on the server;
   - `conflict` — UUID already exists; the user chooses *skip* (default) or *overwrite* (PUT),
     per row or for all;
-  - warnings (non-blocking) — unknown `object_type`, properties not declared in the type
+  - warnings (non-blocking) — properties not declared in the type
     definition ([ADR 0006](./0006-object-type-definitions.md)), `parent_id` not found on the
     server nor in the file, duplicate UUID inside the file (blocking).
 - **Conflict detection is exact**: existence is checked against the full UUID set
