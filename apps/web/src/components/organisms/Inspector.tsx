@@ -1,27 +1,28 @@
-import { useMemo, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { ExpandIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Item } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
 import { TypeDot } from '@/components/atoms/TypeDot';
 import { PropertyRow } from '@/components/molecules/PropertyRow';
-import { UuidLink, type RefTarget } from '@/components/molecules/UuidLink';
-import { ValueView } from '@/components/molecules/ValueView';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useChildrenCounts, useDefinitions, useItem } from '@/hooks/queries';
-import { useRefResolver } from '@/hooks/useRefResolver';
-import { groupByChannel } from '@/lib/channels';
-import { formatDistance } from '@/lib/format';
+import { useItemRefs } from '@/hooks/useItemRefs';
 import { itemLabel } from '@/lib/itemLabel';
-import { collectUuids } from '@/lib/valueShape';
+import { PropertySections, SectionTitle } from './PropertySections';
+import { RelationsList } from './RelationsList';
 
 interface InspectorProps {
   uuid: string | undefined;
   onNavigate: (uuid: string) => void;
+  /** Opens the full object page. */
+  onOpen: (uuid: string) => void;
 }
 
 /** Right panel: identity, relations, children summary and properties by channel. */
-export function Inspector({ uuid, onNavigate }: InspectorProps) {
+export function Inspector({ uuid, onNavigate, onOpen }: InspectorProps) {
   const { t } = useTranslation();
   const query = useItem(uuid);
 
@@ -29,35 +30,16 @@ export function Inspector({ uuid, onNavigate }: InspectorProps) {
   if (query.isPending) return <Placeholder>{t('inspector.loading')}</Placeholder>;
   if (query.isError) return <Placeholder>{t('inspector.error')}</Placeholder>;
   if (!query.data) return <Placeholder>{t('inspector.notFound', { uuid })}</Placeholder>;
-  return <ItemDetails item={query.data} onNavigate={onNavigate} />;
+  return <ItemDetails item={query.data} onNavigate={onNavigate} onOpen={onOpen} />;
 }
 
-function ItemDetails({ item, onNavigate }: { item: Item; onNavigate: (uuid: string) => void }) {
-  const { t, i18n } = useTranslation();
+function ItemDetails({ item, onNavigate, onOpen }: { item: Item } & Omit<InspectorProps, 'uuid'>) {
+  const { t } = useTranslation();
   const data = item.object_data;
-  const parentId = data.parent_id || undefined;
   const definitions = useDefinitions();
   const definition = definitions.data?.definitions.find((d) => d.type === item.object_type);
   const counts = useChildrenCounts(item.object_uuid);
-
-  const refs = useMemo(
-    () =>
-      Object.entries(data)
-        .filter(([key]) => key !== 'parent_id')
-        .flatMap(([key, value]) => collectUuids(value, key))
-        .filter((ref) => ref.uuid !== item.object_uuid),
-    [data, item.object_uuid],
-  );
-  const resolveOthers = useRefResolver(
-    useMemo(() => [...refs.map((r) => r.uuid), ...(parentId ? [parentId] : [])], [refs, parentId]),
-  );
-  // `object_data.uuid` repeats the item's own UUID: no need to fetch it.
-  const resolveRef = (uuid: string): RefTarget =>
-    uuid === item.object_uuid
-      ? { status: 'found', label: itemLabel(item), objectType: item.object_type }
-      : resolveOthers(uuid);
-  const parentTarget = parentId ? resolveRef(parentId) : null;
-  const sections = groupByChannel(data, definition);
+  const { refs, parentId, parentTarget, resolveRef } = useItemRefs(item);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -77,6 +59,11 @@ function ItemDetails({ item, onNavigate }: { item: Item; onNavigate: (uuid: stri
               {t('inspector.orphan')}
             </Badge>
           )}
+          <span className="flex-1" />
+          <Button variant="outline" size="xs" onClick={() => onOpen(item.object_uuid)}>
+            <ExpandIcon />
+            {t('inspector.open')}
+          </Button>
         </div>
         <h2 className="text-lg leading-tight font-semibold tracking-tight">{itemLabel(item)}</h2>
         <MonoText tone="subtle" className="text-[11px] leading-relaxed break-all">
@@ -93,28 +80,13 @@ function ItemDetails({ item, onNavigate }: { item: Item; onNavigate: (uuid: stri
       <ScrollArea className="min-h-0 flex-1">
         <div className="pb-5">
           <SectionTitle title={t('inspector.relations')} />
-          <PropertyRow name="parent_id">
-            {parentId && parentTarget ? (
-              <UuidLink
-                uuid={parentId}
-                target={parentTarget}
-                onNavigate={onNavigate}
-                missingLabel={t('value.brokenLink')}
-              />
-            ) : (
-              <MonoText tone="subtle">{t('inspector.root')}</MonoText>
-            )}
-          </PropertyRow>
-          {refs.map((ref) => (
-            <PropertyRow key={ref.path} name={ref.path}>
-              <UuidLink
-                uuid={ref.uuid}
-                target={resolveRef(ref.uuid)}
-                onNavigate={onNavigate}
-                missingLabel={t('value.brokenLink')}
-              />
-            </PropertyRow>
-          ))}
+          <RelationsList
+            parentId={parentId}
+            parentTarget={parentTarget}
+            refs={refs}
+            resolveRef={resolveRef}
+            onNavigate={onNavigate}
+          />
           <PropertyRow name={t('inspector.children')}>
             <span className="text-xs leading-relaxed text-fg-2">
               {counts.isPending
@@ -124,48 +96,14 @@ function ItemDetails({ item, onNavigate }: { item: Item; onNavigate: (uuid: stri
                   : counts.data.byType.map((c) => `${c.object_type} ${c.total}`).join(' · ')}
             </span>
           </PropertyRow>
-
-          {sections.map((section) => (
-            <div key={section.zone ?? 'undeclared'}>
-              <SectionTitle
-                title={
-                  section.zone === null
-                    ? t('inspector.undeclared')
-                    : t('inspector.zone', { zone: section.zone })
-                }
-                meta={
-                  section.zone === null
-                    ? t('inspector.notReplicated')
-                    : `${formatDistance(section.distance ?? 0, i18n.language)} · ${section.frequency} Hz`
-                }
-              />
-              {section.keys.map((key) => (
-                <PropertyRow key={key} name={key}>
-                  <ValueView
-                    value={data[key]}
-                    name={key}
-                    resolveRef={resolveRef}
-                    onNavigate={onNavigate}
-                  />
-                </PropertyRow>
-              ))}
-            </div>
-          ))}
+          <PropertySections
+            item={item}
+            definition={definition}
+            resolveRef={resolveRef}
+            onNavigate={onNavigate}
+          />
         </div>
       </ScrollArea>
-    </div>
-  );
-}
-
-function SectionTitle({ title, meta }: { title: string; meta?: string }) {
-  return (
-    <div className="flex items-baseline justify-between px-4.5 pt-4.5 pb-1.5">
-      <span className="text-[11px] font-medium tracking-[.06em] text-fg-3 uppercase">{title}</span>
-      {meta && (
-        <MonoText tone="subtle" className="text-[11px]">
-          {meta}
-        </MonoText>
-      )}
     </div>
   );
 }

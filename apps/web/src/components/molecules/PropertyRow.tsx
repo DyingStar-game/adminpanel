@@ -8,15 +8,24 @@ interface PropertyRowProps {
   changed?: boolean;
   /** Extra marker next to the key, e.g. "not replicated". */
   hint?: ReactNode;
+  /** Wider key column, for long reference paths. */
+  wide?: boolean;
 }
 
 /** Key / value line of the inspector and object page. */
-export function PropertyRow({ name, children, changed = false, hint }: PropertyRowProps) {
+export function PropertyRow({
+  name,
+  children,
+  changed = false,
+  hint,
+  wide = false,
+}: PropertyRowProps) {
   return (
     <div
       data-changed={changed || undefined}
       className={cn(
-        'grid min-h-[30px] grid-cols-[120px_minmax(0,1fr)] items-center gap-2.5 px-4.5 transition-colors duration-700',
+        'grid min-h-[30px] items-center gap-2.5 px-4.5 transition-colors duration-700',
+        wide ? 'grid-cols-[190px_minmax(0,1fr)]' : 'grid-cols-[120px_minmax(0,1fr)]',
         changed && 'bg-flash',
       )}
     >

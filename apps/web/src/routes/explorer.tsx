@@ -6,7 +6,11 @@ function ExplorerRoute() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: '/explorer' });
   return (
-    <ExplorerPage search={search} onSearchChange={(next) => void navigate({ search: next })} />
+    <ExplorerPage
+      search={search}
+      onSearchChange={(next) => void navigate({ search: next })}
+      onOpen={(uuid) => void navigate({ to: '/items/$uuid', params: { uuid } })}
+    />
   );
 }
 

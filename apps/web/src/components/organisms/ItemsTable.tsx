@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { ListFilterIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createColumnHelper, tableFeatures, useTable } from '@tanstack/react-table';
@@ -8,18 +8,21 @@ import { TypeDot } from '@/components/atoms/TypeDot';
 import { CrumbTrail, type Crumb } from '@/components/molecules/CrumbTrail';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { Pagination } from '@/components/molecules/Pagination';
+import type { RefTarget } from '@/components/molecules/UuidLink';
 import { ValueView } from '@/components/molecules/ValueView';
 import { Button } from '@/components/ui/button';
 import { useAncestors, useDefinitions, useItem, useItemsPage } from '@/hooks/queries';
 import { useRefResolver } from '@/hooks/useRefResolver';
 import { cn } from '@/lib/cn';
 import { itemLabel, shortUuid } from '@/lib/itemLabel';
-import { tableColumnsFor } from '@/lib/tableColumns';
+import { profileFor, tableColumnsFor } from '@/lib/profiles';
 import { collectUuids } from '@/lib/valueShape';
 
 /** Rows per table page, as in the mock-up. */
 export const TABLE_PAGE_SIZE = 50;
 const ALL_TYPES = '__all__';
+/** Profile column showing planet / moon (ADR 0008). */
+const KIND_COLUMN = '@kind';
 
 export type TableScope = 'level' | 'type';
 
@@ -34,15 +37,38 @@ export interface ItemsTableProps {
   onPageChange: (page: number) => void;
   onSelect: (item: Item) => void;
   onNavigate: (uuid: string) => void;
-  onFilterChange: (filter: { objectType: string | undefined; scope: TableScope }) => void;
+  onFilterChange?: (filter: { objectType: string | undefined; scope: TableScope }) => void;
+  /** Inside another page (object page tabs): no breadcrumb, type picker or scope switch. */
+  embedded?: boolean;
 }
 
 const features = tableFeatures({});
 const helper = createColumnHelper<typeof features, Item>();
 
+/**
+ * Position shown in tables, as Horizon computes it (ds_genericprops `get_position`): first
+ * orbital sample when `positions[]` exists, else `position`.
+ */
+function displayPosition(item: Item): unknown {
+  const { positions, position } = item.object_data;
+  return Array.isArray(positions) && positions.length > 0 ? positions[0] : position;
+}
+
+/** `planet` profile rule: a planet whose parent is a planet is a moon. */
+function celestialKind(
+  item: Item,
+  moonParentType: string | undefined,
+  resolveRef: (uuid: string) => RefTarget,
+): 'planet' | 'moon' {
+  const parentId = item.object_data.parent_id;
+  if (!parentId || !moonParentType) return 'planet';
+  const parent = resolveRef(parentId);
+  return parent.status === 'found' && parent.objectType === moonParentType ? 'moon' : 'planet';
+}
+
 /** Paginated table of one level or one type, with page-local filtering (mock-up 1b). */
 export function ItemsTable(props: ItemsTableProps) {
-  const { parentId, objectType, scope, page, selectedId } = props;
+  const { parentId, objectType, scope, page, selectedId, embedded = false } = props;
   const { t } = useTranslation();
   const [filter, setFilter] = useState('');
   const query = useItemsPage(
@@ -52,6 +78,7 @@ export function ItemsTable(props: ItemsTableProps) {
   );
   const definitions = useDefinitions();
   const extraKeys = tableColumnsFor(objectType);
+  const moonParentType = profileFor(objectType)?.moonWhenParentIs;
 
   const rows = useMemo(() => {
     const items = query.data?.items ?? [];
@@ -66,11 +93,16 @@ export function ItemsTable(props: ItemsTableProps) {
 
   const resolveRef = useRefResolver(
     useMemo(
-      () =>
-        rows
+      () => [
+        ...rows
           .flatMap((item) => extraKeys.flatMap((key) => collectUuids(item.object_data[key])))
           .map((r) => r.uuid),
-      [rows, extraKeys],
+        // The planet / moon column needs each row's parent type.
+        ...(moonParentType
+          ? rows.map((item) => item.object_data.parent_id).filter((id): id is string => !!id)
+          : []),
+      ],
+      [rows, extraKeys, moonParentType],
     ),
   );
 
@@ -94,15 +126,20 @@ export function ItemsTable(props: ItemsTableProps) {
         ...extraKeys.map((key) =>
           helper.display({
             id: key,
-            header: key,
-            cell: ({ row }) => (
-              <ValueView
-                value={row.original.object_data[key]}
-                name={key}
-                resolveRef={resolveRef}
-                onNavigate={props.onNavigate}
-              />
-            ),
+            header: key === KIND_COLUMN ? t('table.kind') : key,
+            cell: ({ row }) =>
+              key === KIND_COLUMN ? (
+                <MonoText tone="muted">
+                  {t(`profile.${celestialKind(row.original, moonParentType, resolveRef)}`)}
+                </MonoText>
+              ) : (
+                <ValueView
+                  value={row.original.object_data[key]}
+                  name={key}
+                  resolveRef={resolveRef}
+                  onNavigate={props.onNavigate}
+                />
+              ),
           }),
         ),
         helper.display({
@@ -110,7 +147,7 @@ export function ItemsTable(props: ItemsTableProps) {
           header: 'position',
           cell: ({ row }) => (
             <ValueView
-              value={row.original.object_data.position}
+              value={displayPosition(row.original)}
               name="position"
               resolveRef={resolveRef}
               onNavigate={props.onNavigate}
@@ -118,7 +155,7 @@ export function ItemsTable(props: ItemsTableProps) {
           ),
         }),
       ]),
-    [extraKeys, objectType, resolveRef, props.onNavigate, t],
+    [extraKeys, objectType, resolveRef, props.onNavigate, t, moonParentType],
   );
 
   const table = useTable({ features, columns, data: rows });
@@ -128,11 +165,14 @@ export function ItemsTable(props: ItemsTableProps) {
     { value: ALL_TYPES, label: t('table.allTypes') },
     ...(definitions.data?.definitions ?? []).map((d) => ({ value: d.type, label: d.type })),
   ];
+  const onFilterChange = props.onFilterChange;
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
       <div className="flex flex-col gap-2.5 border-b px-5 pt-3.5 pb-3">
-        {scope === 'level' && <LevelCrumbs parentId={parentId} onNavigate={props.onNavigate} />}
+        {scope === 'level' && !embedded && (
+          <LevelCrumbs parentId={parentId} onNavigate={props.onNavigate} />
+        )}
         <div className="flex flex-wrap items-center gap-2.5">
           {objectType ? <TypeDot objectType={objectType} className="size-2.5" /> : null}
           <span className="font-mono text-base font-semibold">
@@ -140,19 +180,21 @@ export function ItemsTable(props: ItemsTableProps) {
           </span>
           <span className="text-xs text-fg-3">{t('table.count', { count: total })}</span>
           <span className="flex-1" />
-          <OptionSelect
-            label={t('table.type')}
-            value={objectType ?? ALL_TYPES}
-            options={typeOptions}
-            onChange={(value) =>
-              props.onFilterChange({
-                objectType: value === ALL_TYPES ? undefined : value,
-                scope: value === ALL_TYPES ? 'level' : scope,
-              })
-            }
-            className="w-40 font-mono"
-          />
-          {objectType && (
+          {!embedded && onFilterChange && (
+            <OptionSelect
+              label={t('table.type')}
+              value={objectType ?? ALL_TYPES}
+              options={typeOptions}
+              onChange={(value) =>
+                onFilterChange({
+                  objectType: value === ALL_TYPES ? undefined : value,
+                  scope: value === ALL_TYPES ? 'level' : scope,
+                })
+              }
+              className="w-40 font-mono"
+            />
+          )}
+          {objectType && !embedded && onFilterChange && (
             <div
               className="flex rounded-md border p-0.5"
               role="group"
@@ -164,7 +206,7 @@ export function ItemsTable(props: ItemsTableProps) {
                   size="xs"
                   variant={scope === value ? 'secondary' : 'ghost'}
                   aria-pressed={scope === value}
-                  onClick={() => props.onFilterChange({ objectType, scope: value })}
+                  onClick={() => onFilterChange({ objectType, scope: value })}
                 >
                   {value === 'level'
                     ? t('table.scopeLevel')
@@ -245,7 +287,7 @@ export function ItemsTable(props: ItemsTableProps) {
   );
 }
 
-/** Breadcrumb of the listed level: root, its ancestors, then the level itself. */
+/** Breadcrumb of the listed level: roots, its ancestors, then the level itself. */
 function LevelCrumbs({
   parentId,
   onNavigate,
@@ -276,6 +318,6 @@ function LevelCrumbs({
   return <CrumbTrail crumbs={crumbs} onSelect={onNavigate} />;
 }
 
-function Empty({ children }: { children: React.ReactNode }) {
+function Empty({ children }: { children: ReactNode }) {
   return <div className="px-5 py-10 text-center text-sm text-fg-3">{children}</div>;
 }

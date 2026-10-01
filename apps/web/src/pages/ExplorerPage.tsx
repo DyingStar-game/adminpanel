@@ -13,10 +13,12 @@ import { groupNodeId, useExplorerTree } from '@/stores/explorerTree';
 interface ExplorerPageProps {
   search: ExplorerSearch;
   onSearchChange: (search: ExplorerSearch) => void;
+  /** Opens the object page of an item. */
+  onOpen: (uuid: string) => void;
 }
 
 /** Explorer (mock-up 1b): lazy tree, paginated table of a level or type, inspector. */
-export function ExplorerPage({ search, onSearchChange }: ExplorerPageProps) {
+export function ExplorerPage({ search, onSearchChange, onOpen }: ExplorerPageProps) {
   const { t } = useTranslation();
   const goToItem = useGoToItem();
   const expand = useExplorerTree((s) => s.expand);
@@ -78,7 +80,13 @@ export function ExplorerPage({ search, onSearchChange }: ExplorerPageProps) {
           }
         />
       }
-      inspector={<Inspector uuid={search.selected} onNavigate={(uuid) => void navigate(uuid)} />}
+      inspector={
+        <Inspector
+          uuid={search.selected}
+          onNavigate={(uuid) => void navigate(uuid)}
+          onOpen={onOpen}
+        />
+      }
     />
   );
 }

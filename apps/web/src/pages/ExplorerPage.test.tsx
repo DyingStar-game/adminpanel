@@ -20,6 +20,7 @@ function renderExplorer(initial: Partial<ExplorerSearch> = {}) {
     });
     return (
       <ExplorerPage
+        onOpen={vi.fn()}
         search={search}
         onSearchChange={(next) => {
           onChange(next);
@@ -73,7 +74,8 @@ describe('ExplorerPage', () => {
     expect(await screen.findByRole('heading', { name: /vehicle 4e9a9ff9/ })).toBeInTheDocument();
     // The parent shows in Relations and as the `parent_id` property of its channel.
     expect(await within(inspector()).findAllByRole('button', { name: /SandBox/ })).toHaveLength(2);
-    expect(await within(inspector()).findByText(/missing item/)).toBeInTheDocument();
+    // The dangling component shows in Relations and in the `components` property.
+    expect(await within(inspector()).findAllByText(/missing item/)).toHaveLength(2);
     expect(screen.getByText('Zone 0')).toBeInTheDocument();
     expect(screen.getByText('Not declared')).toBeInTheDocument();
     expect(screen.getByText('not replicated')).toBeInTheDocument();
