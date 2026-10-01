@@ -53,9 +53,14 @@ export function ChildrenTabs({ item, onSelect, onNavigate }: ChildrenTabsProps) 
 
   return (
     <Tabs defaultValue={tabs[0]?.key}>
-      <TabsList className="flex-wrap">
+      {/* Many child types (e.g. a planet): tabs wrap and the list grows with them. */}
+      <TabsList className="h-auto flex-wrap justify-start gap-0.5 group-data-horizontal/tabs:h-auto">
         {tabs.map((tab) => (
-          <TabsTrigger key={tab.key} value={tab.key} className="gap-1.5 font-mono text-xs">
+          <TabsTrigger
+            key={tab.key}
+            value={tab.key}
+            className="h-7 flex-none gap-1.5 font-mono text-xs"
+          >
             <TypeDot objectType={tab.objectType} />
             {tab.objectType}
             {tab.total !== null && <span className="text-fg-3">{tab.total}</span>}
