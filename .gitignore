@@ -4,57 +4,35 @@ node_modules/
 
 # Build outputs
 dist/
-build/
 *.tsbuildinfo
 
-# Environment & secrets (keep .env.example tracked)
+# Environment (keep .env.sample tracked)
 .env
 .env.*
-!.env.example
+!.env.sample
 
 # Logs
-logs/
 *.log
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Test / coverage
 coverage/
-.nyc_output/
 
-# Vite / tooling cache
+# Tooling cache
 .vite/
 .cache/
-.turbo/
 .eslintcache
 
-# OS
+# OS / editors
 .DS_Store
 Thumbs.db
-
-# Editors / IDEs
 .idea/
 .vscode/*
 !.vscode/extensions.json
-!.vscode/settings.json
 *.swp
-*.swo
-*~
-
-# Backend runtime / dev data (seed.json is committed)
-packages/backend/data/missions.json
-packages/backend/data/mock-items.json
 
 # Docker (local overrides only)
 docker-compose.override.yml
 
-# Skaffold / Helm local render (optional generated files)
+# Helm local render
 deploy/helm/**/charts/
 deploy/helm/**/Chart.lock
-
-# Misc
-*.local
-*.pem
-*.key

@@ -1,0 +1,47 @@
+# Node.js version (must match .nvmrc)
+x-node-image: &node-image 'node:24.21.0'
+
+x-node-service: &node-service
+  image: *node-image
+  # Run as the image's `node` user (uid 1000) so files created in the bind mount stay owned by
+  # the host user. pnpm is provided by corepack (pinned through `packageManager`), enabled in
+  # the user's own bin directory since the container does not run as root.
+  user: node
+  working_dir: /app
+  volumes:
+    - ..:/app
+    - pnpm_store:/home/node/.pnpm-store
+  environment:
+    COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+    PATH: /home/node/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    npm_config_store_dir: /home/node/.pnpm-store
+  env_file:
+    - path: ../.env.local
+      required: false
+
+services:
+  # Testers profile: install, build and serve the production bundle on :3000.
+  app:
+    <<: *node-service
+    command: >
+      sh -c "
+        mkdir -p /home/node/.local/bin && corepack enable --install-directory /home/node/.local/bin &&
+        pnpm install &&
+        pnpm build &&
+        STATIC_DIR=../web/dist pnpm start
+      "
+    ports:
+      - '3000:3000'
+
+  # Developers profile: idle container, commands run with `make pnpm <cmd>`.
+  dev:
+    <<: *node-service
+    command: sh -c "mkdir -p /home/node/.local/bin && corepack enable --install-directory /home/node/.local/bin && tail -f /dev/null"
+    ports:
+      - '5173:5173'
+      - '3000:3000'
+    tty: true
+    stdin_open: true
+
+volumes:
+  pnpm_store:

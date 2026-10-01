@@ -1,0 +1,8 @@
+pnpm-lock.yaml
+**/dist
+**/coverage
+apps/web/src/routeTree.gen.ts
+docs/design
+# Documentation is formatted by hand (ADR tables); legacy deploy files are rewritten in step 10.
+*.md
+deploy
