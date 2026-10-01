@@ -65,6 +65,11 @@ describe('OrbitPage', () => {
     expect(await node('ddurieux')).toBeInTheDocument();
     // The dangling component reference is drawn, flagged as missing.
     expect(await node('deadbeef')).toBeInTheDocument();
+    // Components are children: shown by the vehicle_component cluster, not as references.
+    const labels = within(screen.getByRole('region', { name: 'Orbit' }))
+      .queryAllByRole('group', { hidden: true })
+      .map((el) => el.getAttribute('aria-label'));
+    expect(labels).not.toContain('Slot_FL');
   });
 
   it('opens a cluster and fans its children out', async () => {

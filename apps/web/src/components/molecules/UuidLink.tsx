@@ -5,7 +5,7 @@ import { cn } from '@/lib/cn';
 export type RefTarget =
   | { status: 'loading' }
   | { status: 'missing' }
-  | { status: 'found'; label: string; objectType: string };
+  | { status: 'found'; label: string; objectType: string; parentId?: string | null | undefined };
 
 interface UuidLinkProps {
   uuid: string;

@@ -19,6 +19,7 @@ export function useRefResolver(uuids: string[]): (uuid: string) => RefTarget {
           status: 'found',
           label: itemLabel(result.data),
           objectType: result.data.object_type,
+          parentId: result.data.object_data.parent_id,
         });
       }
     });

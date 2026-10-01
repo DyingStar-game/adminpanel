@@ -93,17 +93,22 @@ function Orbit({
               hasMore: search.page * ORBIT.pageSize < openTotal,
             }
           : null,
-      refs: refs.map((ref) => {
+      refs: refs.flatMap((ref) => {
         const target = resolveRef(ref.uuid);
-        return target.status === 'found'
-          ? { uuid: ref.uuid, path: ref.path, label: target.label, objectType: target.objectType }
-          : {
-              uuid: ref.uuid,
-              path: ref.path,
-              label: shortUuid(ref.uuid),
-              objectType: ref.expectedType ?? 'unknown',
-              missing: target.status === 'missing',
-            };
+        // A reference to one of the centre's children (e.g. a vehicle's components) is already
+        // represented by its type cluster: not drawn twice. Dangling references stay visible.
+        if (target.status === 'found' && target.parentId === item.object_uuid) return [];
+        return [
+          target.status === 'found'
+            ? { uuid: ref.uuid, path: ref.path, label: target.label, objectType: target.objectType }
+            : {
+                uuid: ref.uuid,
+                path: ref.path,
+                label: shortUuid(ref.uuid),
+                objectType: ref.expectedType ?? 'unknown',
+                missing: target.status === 'missing',
+              },
+        ];
       }),
     });
   }, [
