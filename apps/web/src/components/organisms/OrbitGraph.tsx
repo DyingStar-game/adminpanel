@@ -233,6 +233,19 @@ function Graph({
         type: 'straight',
         style: edgeStyle[edge.kind],
         focusable: false,
+        ...(edge.label
+          ? {
+              label: edge.label,
+              labelStyle: {
+                fill: 'var(--ds-fg-2)',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 11,
+              },
+              labelBgStyle: { fill: 'var(--ds-bg)' },
+              labelBgPadding: [4, 2] as [number, number],
+              labelBgBorderRadius: 3,
+            }
+          : {}),
       })),
     [edges],
   );

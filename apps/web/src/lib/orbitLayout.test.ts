@@ -66,23 +66,26 @@ describe('orbitLayout', () => {
     expect(nodes.some((n) => n.kind === 'more')).toBe(true);
   });
 
-  it('adds references once, without duplicating entities already shown', () => {
+  it('draws an entity referenced several times once, with every role on its edge', () => {
     const { nodes, edges } = orbitLayout({
       center: entity('c'),
       parent: entity('p', 'planet'),
       clusters: [],
       open: null,
       refs: [
-        { ...entity('pilot', 'player'), path: 'pilot_uuid' },
-        { ...entity('pilot', 'player'), path: 'seats.SeatDriver' },
-        { ...entity('p', 'planet'), path: 'spawn' },
+        { ...entity('pilot', 'player'), path: 'pilot_uuid', role: 'pilot' },
+        { ...entity('pilot', 'player'), path: 'seats.SeatDriver', role: 'SeatDriver' },
+        { ...entity('p', 'planet'), path: 'spawn', role: 'spawn' },
       ],
     });
 
     const refNodes = nodes.filter((n) => n.kind === 'ref');
     expect(refNodes.map((n) => n.id)).toEqual(['pilot']);
+    expect(refNodes[0]).toMatchObject({ roles: ['pilot', 'SeatDriver'] });
     // Never on the parent's vertical axis.
     expect(refNodes[0]?.x).not.toBe(0);
-    expect(edges.filter((e) => e.kind === 'ref')).toHaveLength(1);
+    const refEdges = edges.filter((e) => e.kind === 'ref');
+    expect(refEdges).toHaveLength(1);
+    expect(refEdges[0]?.label).toBe('pilot · SeatDriver');
   });
 });

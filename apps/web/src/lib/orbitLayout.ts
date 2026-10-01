@@ -17,8 +17,11 @@ export interface OrbitInput {
   clusters: { objectType: string; total: number }[];
   /** The cluster currently opened, with the page of children loaded for it. */
   open: { objectType: string; items: OrbitEntity[]; hasMore: boolean } | null;
-  /** Outgoing references (pilot, seats, components…), already resolved. */
-  refs: (OrbitEntity & { path: string })[];
+  /**
+   * Outgoing references (pilot, seats, components…), already resolved. `role` names the
+   * reference on the graph (e.g. `pilot`, `SeatDriver`).
+   */
+  refs: (OrbitEntity & { path: string; role: string })[];
 }
 
 export type OrbitNode =
@@ -29,7 +32,8 @@ export type OrbitNode =
       x: number;
       y: number;
       entity: OrbitEntity;
-      path?: string;
+      /** References only: every role under which the centre points to this entity. */
+      roles?: string[];
     }
   | {
       id: string;
@@ -47,6 +51,8 @@ export interface OrbitEdge {
   source: string;
   target: string;
   kind: 'parent' | 'cluster' | 'child' | 'ref';
+  /** References only: roles joined, e.g. `pilot · SeatDriver`. */
+  label?: string;
 }
 
 export const ORBIT = {
@@ -152,22 +158,34 @@ export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: Orb
   });
 
   // References on the outer upper arcs, left and right of the parent's axis, skipping
-  // entities already shown (the parent, children of the open cluster).
+  // entities already shown (the parent, children of the open cluster). An entity referenced
+  // several times (pilot and driver seat) is one node whose edge lists every role.
   const shown = new Set(nodes.map((n) => n.id));
-  const refs = input.refs.filter(
-    (ref, i, all) => !shown.has(ref.uuid) && all.findIndex((r) => r.uuid === ref.uuid) === i,
-  );
+  const grouped = new Map<string, { entity: OrbitEntity; roles: string[] }>();
+  for (const ref of input.refs) {
+    if (shown.has(ref.uuid)) continue;
+    const entry = grouped.get(ref.uuid) ?? { entity: ref, roles: [] };
+    if (!entry.roles.includes(ref.role)) entry.roles.push(ref.role);
+    grouped.set(ref.uuid, entry);
+  }
+  const refs = [...grouped.values()];
   const left = Math.ceil(refs.length / 2);
   const refAngles = [...spread(left, -175, -112), ...spread(refs.length - left, -68, -5)];
-  refs.forEach((ref, i) => {
+  refs.forEach(({ entity, roles }, i) => {
     nodes.push({
-      id: ref.uuid,
+      id: entity.uuid,
       kind: 'ref',
       ...polar(0, 0, radii.ref, refAngles[i] ?? -140),
-      entity: ref,
-      path: ref.path,
+      entity,
+      roles,
     });
-    edges.push({ id: `ref:${ref.path}`, source: centerId, target: ref.uuid, kind: 'ref' });
+    edges.push({
+      id: `ref:${entity.uuid}`,
+      source: centerId,
+      target: entity.uuid,
+      kind: 'ref',
+      label: roles.join(' · '),
+    });
   });
 
   return { nodes, edges };

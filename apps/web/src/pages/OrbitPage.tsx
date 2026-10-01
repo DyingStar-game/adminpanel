@@ -14,7 +14,17 @@ import { useItemRefs } from '@/hooks/useItemRefs';
 import { itemLabel, shortUuid } from '@/lib/itemLabel';
 import { ORBIT, orbitLayout, type OrbitEntity } from '@/lib/orbitLayout';
 import type { OrbitSearch } from '@/lib/orbitSearch';
-import { orderChildTypes, profileFor } from '@/lib/profiles';
+import { orderChildTypes, profileFor, relationFor, type TypeProfile } from '@/lib/profiles';
+
+/**
+ * Name of a reference on the graph: the profile label for a fixed path (`pilot_uuid` → pilot),
+ * the slot name for a wildcard one (`seats.SeatDriver` → SeatDriver), else the raw path.
+ */
+function referenceRole(profile: TypeProfile | null, path: string): string {
+  const relation = relationFor(profile, path);
+  if (!relation) return path;
+  return relation.path.includes('*') ? (path.split('.').at(-1) ?? path) : relation.label;
+}
 
 interface OrbitPageProps {
   uuid: string;
@@ -98,12 +108,20 @@ function Orbit({
         // A reference to one of the centre's children (e.g. a vehicle's components) is already
         // represented by its type cluster: not drawn twice. Dangling references stay visible.
         if (target.status === 'found' && target.parentId === item.object_uuid) return [];
+        const role = referenceRole(profile, ref.path);
         return [
           target.status === 'found'
-            ? { uuid: ref.uuid, path: ref.path, label: target.label, objectType: target.objectType }
+            ? {
+                uuid: ref.uuid,
+                path: ref.path,
+                role,
+                label: target.label,
+                objectType: target.objectType,
+              }
             : {
                 uuid: ref.uuid,
                 path: ref.path,
+                role,
                 label: shortUuid(ref.uuid),
                 objectType: ref.expectedType ?? 'unknown',
                 missing: target.status === 'missing',
