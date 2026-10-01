@@ -2,8 +2,7 @@ import { defineProject } from 'vitest/config';
 
 export default defineProject({
   test: {
-    name: 'bff',
+    name: 'testing',
     environment: 'node',
-    setupFiles: ['./src/test/setup.ts'],
   },
 });

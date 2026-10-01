@@ -1,0 +1,447 @@
+{
+  "source": "DyingStar-game/horizonserver ds_genericprops/props @ develop 74e5c86",
+  "definitions": [
+    {
+      "type": "box",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 150.0,
+          "frequency": 30.0,
+          "properties": ["position", "rotation", "opened", "parent_id"]
+        },
+        {
+          "zone": 1,
+          "distance": 151.0,
+          "frequency": 15.0,
+          "properties": ["led_state"]
+        },
+        {
+          "zone": 3,
+          "distance": 152.0,
+          "frequency": 2.0,
+          "properties": ["qrcode", "symbol", "parcel_number", "weight"]
+        },
+        {
+          "zone": 6,
+          "distance": 153.0,
+          "frequency": 3.0,
+          "properties": ["scenename"]
+        }
+      ]
+    },
+    {
+      "type": "building",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 10000.0,
+          "frequency": 5.0,
+          "properties": ["position", "rotation", "parent_id", "apartments"]
+        },
+        {
+          "zone": 6,
+          "distance": 10001.0,
+          "frequency": 3.0,
+          "properties": ["scenename"]
+        }
+      ]
+    },
+    {
+      "type": "cargo_depot",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 400.0,
+          "frequency": 30.0,
+          "properties": [
+            "position",
+            "rotation",
+            "parent_id",
+            "reception_players",
+            "reception_owner",
+            "storage_shelves",
+            "pnj_reception_deposited_item",
+            "pnj_box_temp_zones"
+          ]
+        },
+        {
+          "zone": 6,
+          "distance": 403.0,
+          "frequency": 1.0,
+          "properties": ["scenename", "max_distance_to_reception", "pnj_zones", "is_pnj_workplace"]
+        }
+      ]
+    },
+    {
+      "type": "city",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 200000.0,
+          "frequency": 30.0,
+          "properties": ["position", "rotation", "parent_id"]
+        },
+        {
+          "zone": 6,
+          "distance": 200001.0,
+          "frequency": 3.0,
+          "properties": ["scenename"]
+        }
+      ]
+    },
+    {
+      "type": "crate_container",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 150.0,
+          "frequency": 30.0,
+          "properties": ["position", "rotation", "scenename", "parent_id"]
+        },
+        {
+          "zone": 6,
+          "distance": 150.0,
+          "frequency": 3.0,
+          "properties": ["scenename", "content"]
+        }
+      ]
+    },
+    {
+      "type": "mining_depot",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 300.0,
+          "frequency": 30.0,
+          "properties": ["position", "rotation", "scenename", "parent_id"]
+        },
+        {
+          "zone": 6,
+          "distance": 301.0,
+          "frequency": 5.0,
+          "properties": ["scenename", "data"]
+        }
+      ]
+    },
+    {
+      "type": "miningrock",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 200.0,
+          "frequency": 30.0,
+          "lod": [
+            {
+              "distance": 100.0,
+              "frequency": 30.0
+            },
+            {
+              "distance": 200.0,
+              "frequency": 10.0
+            }
+          ],
+          "properties": ["position", "rotation", "parent_id", "can_be_breakable", "inert_density"]
+        },
+        {
+          "zone": 6,
+          "distance": 203.0,
+          "frequency": 3.0,
+          "properties": [
+            "scenename",
+            "fractures",
+            "kick",
+            "mineral_id",
+            "host_rock_id",
+            "weight",
+            "blocs",
+            "ore_seed",
+            "mineral_id",
+            "host_rock_id"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "miningzone",
+      "channels": [
+        {
+          "zone": 6,
+          "distance": 1203.0,
+          "frequency": 1.0,
+          "properties": [
+            "position",
+            "rotation",
+            "scenename",
+            "parent_id",
+            "zone_size",
+            "rock_count",
+            "min_spacing",
+            "weight_small",
+            "weight_medium",
+            "weight_large",
+            "richness",
+            "richness_spread",
+            "mineral_id",
+            "generated",
+            "last_generation_datetime"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "planet",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 2000000000.0,
+          "frequency": 1.0,
+          "properties": ["name", "positions", "rotations", "from_timestamp", "parent_id", "state"]
+        },
+        {
+          "zone": 6,
+          "distance": 2000000001.0,
+          "frequency": 1.0,
+          "properties": ["scenename"]
+        }
+      ]
+    },
+    {
+      "type": "player",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 200.0,
+          "frequency": 30.0,
+          "lod": [
+            {
+              "distance": 30.0,
+              "frequency": 15.0
+            },
+            {
+              "distance": 100.0,
+              "frequency": 5.0
+            },
+            {
+              "distance": 200.0,
+              "frequency": 2.0
+            }
+          ],
+          "properties": [
+            "position",
+            "rotation",
+            "velocity",
+            "action",
+            "tools",
+            "head",
+            "head_yaw",
+            "stance",
+            "floating",
+            "seat",
+            "perforating",
+            "carrying",
+            "flashlight",
+            "carry_prompt",
+            "scenename",
+            "name",
+            "parent_id",
+            "spawn_appartment_id",
+            "is_npc",
+            "conversation",
+            "npc_arrived"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "poi_village",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 150.0,
+          "frequency": 30.0,
+          "properties": ["position", "rotation", "parent_id"]
+        },
+        {
+          "zone": 6,
+          "distance": 10000.0,
+          "frequency": 1.0,
+          "properties": [
+            "is_spawned",
+            "spawn_requested",
+            "spawn_scene",
+            "radius_m",
+            "population",
+            "type",
+            "name",
+            "scenename"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "shelf",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 150.0,
+          "frequency": 30.0,
+          "properties": ["position", "rotation", "shelf_slots_occupied", "parent_id"]
+        },
+        {
+          "zone": 6,
+          "distance": 153.0,
+          "frequency": 3.0,
+          "properties": ["scenename"]
+        }
+      ]
+    },
+    {
+      "type": "spawnbuilding",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 10000.0,
+          "frequency": 5.0,
+          "properties": [
+            "position",
+            "rotation",
+            "parent_id",
+            "x_spacing",
+            "z_spacing",
+            "y_spacing",
+            "total",
+            "available",
+            "cols",
+            "rows",
+            "floors",
+            "spawn_point",
+            "apartments",
+            "poi_uuid"
+          ]
+        },
+        {
+          "zone": 6,
+          "distance": 10001.0,
+          "frequency": 3.0,
+          "properties": ["scenename", "name"]
+        }
+      ]
+    },
+    {
+      "type": "star",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 400000000000.0,
+          "frequency": 1.0,
+          "properties": ["name", "positions", "rotations", "from_timestamp", "parent_id"]
+        },
+        {
+          "zone": 6,
+          "distance": 400000000001.0,
+          "frequency": 1.0,
+          "properties": ["scenename"]
+        }
+      ]
+    },
+    {
+      "type": "station",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 200000.0,
+          "frequency": 30.0,
+          "properties": ["position", "rotation", "parent_id"]
+        },
+        {
+          "zone": 6,
+          "distance": 200001.0,
+          "frequency": 3.0,
+          "properties": ["scenename"]
+        }
+      ]
+    },
+    {
+      "type": "storagewarehouse",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 10000.0,
+          "frequency": 5.0,
+          "properties": ["position", "rotation", "parent_id"]
+        },
+        {
+          "zone": 6,
+          "distance": 10001.0,
+          "frequency": 3.0,
+          "properties": ["scenename"]
+        }
+      ]
+    },
+    {
+      "type": "vehicle_component",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 150.0,
+          "frequency": 30.0,
+          "properties": ["position", "rotation", "scenename", "parent_id", "slot_id", "weight"]
+        },
+        {
+          "zone": 6,
+          "distance": 150.0,
+          "frequency": 3.0,
+          "properties": ["scenename", "slot_id"]
+        }
+      ]
+    },
+    {
+      "type": "vehicle",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 200.0,
+          "frequency": 30.0,
+          "lod": [
+            {
+              "distance": 100.0,
+              "frequency": 30.0
+            },
+            {
+              "distance": 200.0,
+              "frequency": 10.0
+            }
+          ],
+          "properties": [
+            "position",
+            "rotation",
+            "pilot_uuid",
+            "steering",
+            "speed",
+            "handbrake",
+            "headlights",
+            "engine",
+            "doors",
+            "seats",
+            "components",
+            "limiter_on",
+            "limiter_kmh"
+          ]
+        },
+        {
+          "zone": 1,
+          "distance": 100.0,
+          "frequency": 1.0,
+          "properties": ["horn", "horn_special", "mass", "cargo_mass", "suspension", "odometer_km"]
+        },
+        {
+          "zone": 6,
+          "distance": 200.0,
+          "frequency": 1.0,
+          "properties": ["scenename", "parent_id"]
+        }
+      ]
+    }
+  ]
+}

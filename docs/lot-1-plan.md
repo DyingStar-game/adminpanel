@@ -40,13 +40,13 @@ All item routes take the target game server from the `X-Server-Id` header.
 | GET | `/health` | Healthcheck (Docker) |
 | GET | `/api/servers` | Public server list `{ id, name, environment }` — no internal URL |
 | GET | `/api/definitions` · `/api/definitions/:type` | `*_def.json` from GitHub, cached, bundled fallback (ADR 0006) |
-| GET | `/api/items` | `parent_id`, `object_type`, `scenename`, `page`, `page_size` — passthrough, validated |
+| GET | `/api/items` | `parent_id`, `object_type`, `scenename`, `page`, `page_size` — validated; `object_type` must be a known definition type |
 | GET | `/api/items/:uuid` | 404 mapped from persistence |
 | GET | `/api/items/:uuid/ancestors` | Walks `parent_id` up, depth guard (ADR 0005) |
 | GET | `/api/items/:uuid/children-counts` | Count per known type, lazy (ADR 0005, 0008) |
 | POST | `/api/items/exists` | `{ uuids[] }` → existing subset, exact (ADR 0004) |
 | POST | `/api/items` | Existence check first → **409** if present (ADR 0004) |
-| PUT | `/api/items/:uuid` | `{ base, changes }` → re-read + field-level merge, conflict report (ADR 0009) |
+| PUT | `/api/items/:uuid` | `{ object_type, base, changes, removed, force }` → re-read + field-level merge, **409** `EDIT_CONFLICT` with the conflicting keys (ADR 0009); 404 on unknown item (no upsert) |
 | DELETE | `/api/items/:uuid` | Error mapping without fake 404 |
 
 Identical concurrent GETs are coalesced with a short-lived cache (ADR 0009).
