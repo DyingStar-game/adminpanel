@@ -21,7 +21,9 @@ export function PropertyRow({ name, children, changed = false, hint }: PropertyR
       )}
     >
       <span className="flex min-w-0 items-center gap-1 truncate font-mono text-[11.5px] text-fg-2">
-        <span className="truncate">{name}</span>
+        <span className="truncate" title={name}>
+          {name}
+        </span>
         {hint}
       </span>
       <div className="min-w-0">{children}</div>

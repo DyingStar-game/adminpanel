@@ -62,7 +62,7 @@ export function ValueView({ value, name, resolveRef, onNavigate }: ValueViewProp
       );
     case 'vec3':
       return (
-        <MonoText>
+        <MonoText className="block truncate" title="x, y, z">
           {fixed(shape.value.x)}, {fixed(shape.value.y)}, {fixed(shape.value.z)}
         </MonoText>
       );

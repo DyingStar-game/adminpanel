@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./testing": "./src/testing.ts"
+  },
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=../../.env.local src/index.ts",
     "build": "esbuild src/index.ts --bundle --platform=node --target=node24 --format=esm --outfile=dist/index.mjs",

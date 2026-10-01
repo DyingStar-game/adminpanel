@@ -17,7 +17,7 @@ const view = (value: unknown, name?: string, onNavigate = vi.fn()) =>
 describe('ValueView', () => {
   it('renders vectors and quaternions compactly', () => {
     view({ x: 1.23456, y: 0, z: -2 });
-    expect(screen.getByText('1.235, 0, -2')).toBeInTheDocument();
+    expect(screen.getByTitle('x, y, z')).toHaveTextContent('1.235, 0, -2');
 
     view({ w: 1, x: 0, y: 0, z: 0 });
     expect(screen.getByTitle('w, x, y, z')).toHaveTextContent('1, 0, 0, 0');

@@ -1,0 +1,130 @@
+import { keepPreviousData, useInfiniteQuery, useQueries, useQuery } from '@tanstack/react-query';
+import {
+  AncestorsResponseSchema,
+  ChildrenCountsResponseSchema,
+  DefinitionsResponseSchema,
+  ItemSchema,
+  PaginatedItemsSchema,
+  type Item,
+} from '@dyingstar-admin/schemas';
+import { ApiError, apiGet } from '@/lib/api';
+import { usePreferences } from '@/stores/preferences';
+
+/** Filters of a children / list query. `parentId: ''` targets roots. */
+export interface ListFilter {
+  parentId?: string | undefined;
+  objectType?: string | undefined;
+}
+
+const listPath = ({ parentId, objectType }: ListFilter, page: number, pageSize: number) => {
+  const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
+  if (parentId !== undefined) params.set('parent_id', parentId);
+  if (objectType) params.set('object_type', objectType);
+  return `/api/items?${params}`;
+};
+
+/** Query keys, all scoped by game server so switching server never mixes data. */
+export const queryKeys = {
+  definitions: ['definitions'] as const,
+  item: (serverId: string | null, uuid: string) => ['item', serverId, uuid] as const,
+  list: (serverId: string | null, filter: ListFilter, page: number, pageSize: number) =>
+    ['items', serverId, filter, page, pageSize] as const,
+  infinite: (serverId: string | null, filter: ListFilter, pageSize: number) =>
+    ['items-infinite', serverId, filter, pageSize] as const,
+  ancestors: (serverId: string | null, uuid: string) => ['ancestors', serverId, uuid] as const,
+  childrenCounts: (serverId: string | null, uuid: string) =>
+    ['children-counts', serverId, uuid] as const,
+};
+
+const useServerId = () => usePreferences((s) => s.serverId);
+
+/** Fetches one item; resolves to null when it does not exist. */
+export async function fetchItem(serverId: string | null, uuid: string): Promise<Item | null> {
+  try {
+    return await apiGet(`/api/items/${encodeURIComponent(uuid)}`, ItemSchema, { serverId });
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null;
+    throw error;
+  }
+}
+
+export function useDefinitions() {
+  return useQuery({
+    queryKey: queryKeys.definitions,
+    queryFn: () => apiGet('/api/definitions', DefinitionsResponseSchema),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useItem(uuid: string | undefined) {
+  const serverId = useServerId();
+  return useQuery({
+    queryKey: queryKeys.item(serverId, uuid ?? ''),
+    queryFn: () => fetchItem(serverId, uuid ?? ''),
+    enabled: !!serverId && !!uuid,
+  });
+}
+
+/** Several items at once (reference resolution); results keep the input order. */
+export function useItems(uuids: string[]) {
+  const serverId = useServerId();
+  return useQueries({
+    queries: uuids.map((uuid) => ({
+      queryKey: queryKeys.item(serverId, uuid),
+      queryFn: () => fetchItem(serverId, uuid),
+      enabled: !!serverId,
+      staleTime: 30_000,
+    })),
+  });
+}
+
+export function useItemsPage(filter: ListFilter, page: number, pageSize: number) {
+  const serverId = useServerId();
+  return useQuery({
+    queryKey: queryKeys.list(serverId, filter, page, pageSize),
+    queryFn: () => apiGet(listPath(filter, page, pageSize), PaginatedItemsSchema, { serverId }),
+    enabled: !!serverId,
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** "Load more" listing used by tree levels (ADR 0005). */
+export function useItemsInfinite(filter: ListFilter, pageSize: number, enabled = true) {
+  const serverId = useServerId();
+  return useInfiniteQuery({
+    queryKey: queryKeys.infinite(serverId, filter, pageSize),
+    queryFn: ({ pageParam }) =>
+      apiGet(listPath(filter, pageParam, pageSize), PaginatedItemsSchema, { serverId }),
+    initialPageParam: 1,
+    getNextPageParam: (last) =>
+      last.page * last.page_size < last.total ? last.page + 1 : undefined,
+    enabled: enabled && !!serverId,
+  });
+}
+
+export function useAncestors(uuid: string | undefined) {
+  const serverId = useServerId();
+  return useQuery({
+    queryKey: queryKeys.ancestors(serverId, uuid ?? ''),
+    queryFn: () =>
+      apiGet(`/api/items/${encodeURIComponent(uuid ?? '')}/ancestors`, AncestorsResponseSchema, {
+        serverId,
+      }),
+    enabled: !!serverId && !!uuid,
+  });
+}
+
+export function useChildrenCounts(uuid: string | undefined, enabled = true) {
+  const serverId = useServerId();
+  return useQuery({
+    queryKey: queryKeys.childrenCounts(serverId, uuid ?? ''),
+    queryFn: () =>
+      apiGet(
+        `/api/items/${encodeURIComponent(uuid ?? '')}/children-counts`,
+        ChildrenCountsResponseSchema,
+        { serverId },
+      ),
+    enabled: enabled && !!serverId && !!uuid,
+    staleTime: 30_000,
+  });
+}
