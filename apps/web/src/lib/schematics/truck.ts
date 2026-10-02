@@ -3,7 +3,7 @@ import type { SchematicSchema } from './schema';
 
 /**
  * Ground truck: cab with two seats, cargo bed, four component compartments (today four
- * `engine_t1` engines). `suspension` (one value per wheel) is left aside until its mapping
+ * `engine_t1` engines): FL / FR at the top of the bed, RL / RR at its bottom. `suspension` (one value per wheel) is left aside until its mapping
  * is known (ADR 0016).
  */
 export const truck: z.input<typeof SchematicSchema> = {
@@ -26,8 +26,8 @@ export const truck: z.input<typeof SchematicSchema> = {
     { at: [7.5, 4.5], path: 'seats.SeatPassenger', label: 'passenger' },
   ],
   bays: [
-    { at: [0.6, 3], path: 'components.Slot_FL', label: 'FL' },
-    { at: [11.4, 3], path: 'components.Slot_FR', label: 'FR' },
+    { at: [0.6, 10.5], path: 'components.Slot_FL', label: 'FL' },
+    { at: [11.4, 10.5], path: 'components.Slot_FR', label: 'FR' },
     { at: [0.6, 16], path: 'components.Slot_RL', label: 'RL' },
     { at: [11.4, 16], path: 'components.Slot_RR', label: 'RR' },
   ],
