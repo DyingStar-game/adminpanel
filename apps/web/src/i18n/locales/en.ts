@@ -262,7 +262,7 @@ export const en = {
     canvas: 'Planetary map',
     types: 'Types',
     toggle: 'Show {{type}}',
-    search: 'Search the map (name, UUID, type)',
+    search: 'Search (name, UUID, type)',
     noMatch: 'No item matches.',
     hidden: 'hidden',
     cluster_one: '{{count}} item',

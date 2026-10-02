@@ -265,7 +265,7 @@ export const fr: Translations = {
     canvas: 'Carte planétaire',
     types: 'Types',
     toggle: 'Afficher {{type}}',
-    search: 'Rechercher sur la carte (nom, UUID, type)',
+    search: 'Rechercher (nom, UUID, type)',
     noMatch: 'Aucun élément ne correspond.',
     hidden: 'masqué',
     cluster_one: '{{count}} élément',

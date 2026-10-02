@@ -77,7 +77,7 @@ describe('MapPage', () => {
     const { onSearchChange } = renderMap(ids.planet);
 
     await userEvent.type(
-      await screen.findByRole('combobox', { name: 'Search the map (name, UUID, type)' }),
+      await screen.findByRole('combobox', { name: 'Search (name, UUID, type)' }),
       'ddur',
     );
     await userEvent.click(await screen.findByRole('option', { name: /ddurieux/ }));

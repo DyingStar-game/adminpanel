@@ -30,10 +30,16 @@ export function MapSearch({ search, onPick, labels }: MapSearchProps) {
   const results = query.trim() ? search(query) : [];
 
   return (
-    <Command label={labels.field} shouldFilter={false} className="rounded-lg border bg-background">
+    <Command
+      label={labels.field}
+      shouldFilter={false}
+      // One frame only, as wide as the panels around it: cmdk's padded wrapper and its inner
+      // field frame are flattened onto the field itself.
+      className="overflow-visible bg-transparent p-0 [&_[data-slot=command-input-wrapper]]:p-0 [&_[data-slot=input-group]]:h-9! [&_[data-slot=input-group]]:border-border! [&_[data-slot=input-group]]:bg-background!"
+    >
       <CommandInput value={query} onValueChange={setQuery} placeholder={labels.field} />
       {query.trim() && (
-        <CommandList className="max-h-56">
+        <CommandList className="mt-1 max-h-56 rounded-lg border bg-background">
           <CommandEmpty>{labels.empty}</CommandEmpty>
           {results.map((result) => (
             <CommandItem

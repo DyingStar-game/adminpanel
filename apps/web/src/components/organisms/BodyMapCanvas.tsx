@@ -33,8 +33,8 @@ const MAX_ZOOM = 5;
 /** From this zoom on (1 m ≈ 2 px), every point is drawn: a building's players split. */
 const UNCLUSTER_ZOOM = 1;
 const FLY_SECONDS = 1.2;
-/** Arrow head tip (8 px from its centre) set back to the selected marker's edge (8 px). */
-const HEAD_BACK_PX = 17;
+/** Arrow head tip (8 px from its centre) set back to the selected marker's edge (10 px). */
+const HEAD_BACK_PX = 19;
 
 export interface MapFocus {
   uuid: string;
@@ -82,7 +82,7 @@ function markerIcon(objectType: string, selected: boolean, name: string | null):
   let icon = icons.get(key);
   if (!icon) {
     const square = markerShape(objectType) === 'square';
-    const size = (selected ? 16 : 10) + (square ? 2 : 0);
+    const size = (selected ? 20 : 14) + (square ? 2 : 0);
     const label = name
       ? `<span class="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap text-sm font-semibold leading-none text-foreground [text-shadow:0_0_3px_var(--background),0_0_3px_var(--background),0_0_2px_var(--background)]">${escapeHtml(name)}</span>`
       : '';
@@ -176,17 +176,18 @@ function MetricGrid({ caption }: { caption: (step: string, major: string) => str
   const [grid, setGrid] = useState(measure);
   useMapEvents({ moveend: () => setGrid(measure()), zoomend: () => setGrid(measure()) });
 
+  // Neutral grey (white at low opacity): the palette's lines lean towards blue.
   return (
     <>
       <Polyline
         positions={grid.minor}
         interactive={false}
-        pathOptions={{ weight: 1, className: 'stroke-line-strong [stroke-opacity:0.45]' }}
+        pathOptions={{ weight: 1, className: 'stroke-white/10' }}
       />
       <Polyline
         positions={grid.major}
         interactive={false}
-        pathOptions={{ weight: 1.5, className: 'stroke-fg-3 [stroke-opacity:0.6]' }}
+        pathOptions={{ weight: 1.5, className: 'stroke-white/22' }}
       />
       <div className="pointer-events-none absolute right-2.5 bottom-7 z-[1000] rounded border bg-background/90 px-1.5 py-0.5 font-mono text-2xs text-fg-2">
         {caption(formatDistance(grid.step), formatDistance(grid.step * GRID_MAJOR_EVERY))}

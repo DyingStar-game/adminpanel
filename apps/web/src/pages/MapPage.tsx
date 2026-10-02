@@ -176,12 +176,14 @@ function BodyMap({
       }
       overlays={
         <>
-          <div className="absolute top-3.5 left-14 z-[1000] flex w-85 max-w-[45%] flex-col gap-2">
-            <div className="flex items-center gap-2 rounded-md border bg-background px-2.5 py-1.5">
-              <TypeDot objectType={map.body.object_type} shape="square" />
-              <h1 className="truncate text-sm font-semibold">{t('map.title', { name })}</h1>
-              <span className="flex-1" />
-              <MonoText tone="subtle" className="shrink-0 text-2xs">
+          <div className="absolute top-3.5 left-14 z-[1000] flex w-80 max-w-[40%] flex-col gap-2">
+            {/* Title on its own line (never cut), the count under it. */}
+            <div className="flex flex-col gap-0.5 rounded-lg border bg-background px-3 py-2">
+              <div className="flex items-center gap-2">
+                <TypeDot objectType={map.body.object_type} shape="square" />
+                <h1 className="text-sm font-semibold">{t('map.title', { name })}</h1>
+              </div>
+              <MonoText tone="subtle" className="text-2xs">
                 {t('map.summary', { shown: visible.length, total: map.points.length })}
               </MonoText>
             </div>
