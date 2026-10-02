@@ -165,7 +165,8 @@ export function checkImportFormat(items: unknown[], knownTypes: readonly string[
     const first = firstIndex.get(row.object_uuid);
     if (first === undefined) firstIndex.set(row.object_uuid, row.index);
     else {
-      row.findings.push(error('duplicateUuid', 'object_uuid', { index: first }));
+      // `row`: 1-based number of the first occurrence, as shown to the user.
+      row.findings.push(error('duplicateUuid', 'object_uuid', { row: first + 1 }));
       row.status = 'invalid';
     }
   }

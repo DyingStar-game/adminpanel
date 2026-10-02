@@ -41,13 +41,25 @@ function RootLayout() {
     void navigate({ to: '/explorer', search: searchForItem(item) });
   };
 
-  /** New items go into the level on screen: the listed level, or the item being viewed. */
-  const create = () => {
+  /** Level on screen: the item being viewed, or the listed explorer level. */
+  const levelOnScreen = () => {
     const viewed = itemOfPath(location.pathname);
-    if (viewed) return createItem({ parentId: viewed });
+    if (viewed) return { parentId: viewed, objectType: undefined };
     const explorer = ExplorerSearchSchema.safeParse(location.search);
     const level = explorer.success && explorer.data.scope === 'level' ? explorer.data : null;
-    createItem({ parentId: level?.parent ?? '', objectType: level?.type });
+    return level ? { parentId: level.parent, objectType: level.type } : null;
+  };
+
+  /** New items go into the level on screen. */
+  const create = () => {
+    const level = levelOnScreen();
+    createItem({ parentId: level?.parentId ?? '', objectType: level?.objectType });
+  };
+
+  /** The import gives the level on screen to items without a parent (ADR 0019). */
+  const openImport = () => {
+    const level = levelOnScreen();
+    void navigate({ to: '/import', search: level ? { parent: level.parentId } : {} });
   };
 
   /** Leaves the views of a deleted item: to its parent's page, or the explorer level. */
@@ -73,6 +85,7 @@ function RootLayout() {
             onHome={() => void navigate({ to: '/explorer', search: ROOTS })}
             onSearch={(query) => void search(query)}
             onCreate={create}
+            onImport={openImport}
           />
         }
       >

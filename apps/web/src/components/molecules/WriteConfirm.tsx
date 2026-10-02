@@ -45,8 +45,10 @@ export function WriteConfirm({
           <AlertDialogCancel onClick={onCancel}>{cancelLabel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
+            // `asChild` joins the button's classes without merging them: the destructive look
+            // must win over the default variant's background.
             className={
-              destructive ? 'bg-destructive text-white hover:bg-destructive/90' : undefined
+              destructive ? 'bg-destructive! text-white! hover:bg-destructive/90!' : undefined
             }
           >
             {confirmLabel}

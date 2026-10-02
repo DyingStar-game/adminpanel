@@ -1,4 +1,4 @@
-import { PlusIcon } from 'lucide-react';
+import { PlusIcon, UploadIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BrandMark } from '@/components/atoms/BrandMark';
 import { LiveToggle } from '@/components/molecules/LiveToggle';
@@ -16,10 +16,12 @@ interface TopBarProps {
   onHome: () => void;
   onSearch: (query: string) => void;
   onCreate: () => void;
+  /** Bulk import into the level on screen (ADR 0019). */
+  onImport: () => void;
 }
 
 /** Application header from the mock-up: brand, game server, search, live, theme, language. */
-export function TopBar({ onHome, onSearch, onCreate }: TopBarProps) {
+export function TopBar({ onHome, onSearch, onCreate, onImport }: TopBarProps) {
   const { t } = useTranslation();
   const { live, setLive, locale, setLocale, setTheme } = usePreferences();
   const resolved = useResolvedTheme();
@@ -74,6 +76,10 @@ export function TopBar({ onHome, onSearch, onCreate }: TopBarProps) {
         onChange={setLocale}
         className="w-[62px]"
       />
+      <Button variant="outline" size="sm" onClick={onImport}>
+        <UploadIcon />
+        {t('topBar.import')}
+      </Button>
       <Button size="sm" onClick={onCreate}>
         <PlusIcon />
         {t('topBar.newItem')}

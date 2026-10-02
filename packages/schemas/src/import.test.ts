@@ -121,6 +121,6 @@ describe('checkImportFormat', () => {
   it('flags every repetition of a UUID after its first occurrence', () => {
     const rows = checkImportFormat([item(A), item(B), item(A)], TYPES);
     expect(rows.map((r) => r.status)).toEqual(['new', 'new', 'invalid']);
-    expect(rows[2]?.findings[0]).toMatchObject({ code: 'duplicateUuid', params: { index: 0 } });
+    expect(rows[2]?.findings[0]).toMatchObject({ code: 'duplicateUuid', params: { row: 1 } });
   });
 });

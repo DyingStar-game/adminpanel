@@ -12,7 +12,7 @@ import { usePreferences } from '@/stores/preferences';
 /** Data that a write may affect: refreshed right after it (lists, counts, ancestors, the item). */
 const AFFECTED = ['item', 'items', 'items-infinite', 'children-counts', 'ancestors'];
 
-function useAfterWrite() {
+export function useAfterWrite() {
   const queryClient = useQueryClient();
   return () =>
     Promise.all(AFFECTED.map((key) => queryClient.invalidateQueries({ queryKey: [key] })));

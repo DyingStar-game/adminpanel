@@ -16,7 +16,9 @@ const renderTopBar = () => {
   server.use(http.get('*/api/servers', () => HttpResponse.json({ servers })));
   const onSearch = vi.fn();
   const onHome = vi.fn();
-  renderWithProviders(<TopBar onHome={onHome} onSearch={onSearch} onCreate={vi.fn()} />);
+  renderWithProviders(
+    <TopBar onHome={onHome} onSearch={onSearch} onCreate={vi.fn()} onImport={vi.fn()} />,
+  );
   return { onSearch, onHome };
 };
 
