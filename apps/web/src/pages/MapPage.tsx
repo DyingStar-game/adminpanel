@@ -72,7 +72,11 @@ function BodyMap({
     () => new Set(Object.keys(mapNamed).filter((type) => mapNamed[type])),
     [mapNamed],
   );
-  const [focus, setFocus] = useState<MapFocus | null>(null);
+  // Arriving with an item selected ("show on map"): the map flies to it once fitted.
+  const [focus, setFocus] = useState<MapFocus | null>(() => {
+    const point = map.points.find((p) => p.object_uuid === search.selected);
+    return point ? { uuid: point.object_uuid, nonce: 0, at: [point.y, point.x] } : null;
+  });
 
   const byUuid = useMemo(
     () => new Map(map.points.map((point) => [point.object_uuid, point])),

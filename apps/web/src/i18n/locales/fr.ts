@@ -239,6 +239,7 @@ export const fr: Translations = {
   },
   map: {
     open: 'Carte',
+    showOn: 'Voir sur la carte',
     title: 'Carte de {{name}}',
     canvas: 'Carte planétaire',
     types: 'Types',

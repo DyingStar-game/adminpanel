@@ -4,6 +4,7 @@ import {
   ExpandIcon,
   LocateFixedIcon,
   MapIcon,
+  MapPinIcon,
   NetworkIcon,
   PencilIcon,
   Trash2Icon,
@@ -18,10 +19,10 @@ import { UpdatedAt } from '@/components/molecules/UpdatedAt';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useChildrenCounts, useDefinitions, useItem } from '@/hooks/queries';
+import { useAncestors, useChildrenCounts, useDefinitions, useItem } from '@/hooks/queries';
 import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
-import { hasMap } from '@/lib/bodyMap';
+import { hasMap, mapBodyOf } from '@/lib/bodyMap';
 import { itemLabel } from '@/lib/itemLabel';
 import { SPAWN_DISTANCE, SPAWN_HEIGHT, spawnNextTo } from '@/lib/spawn';
 import { useItemActions } from '@/stores/itemActions';
@@ -35,8 +36,11 @@ interface InspectorProps {
   onOpen: (uuid: string) => void;
   /** Opens the orbit view centred on the item (omitted when already there). */
   onOrbit?: (uuid: string) => void;
-  /** Opens the planetary map of a celestial body (ADR 0018); shown for types having one. */
-  onMap?: (uuid: string) => void;
+  /**
+   * Opens a planetary map (ADR 0018): a body's own map, or the map showing the item selected
+   * ("show on map"), for items the map draws.
+   */
+  onMap?: (body: string, selected?: string) => void;
   /** Inside the orbit view: centres the graph on the item (mock-up 1a). */
   onCenter?: (uuid: string) => void;
 }
@@ -73,6 +77,8 @@ function ItemDetails({
   updatedAt,
 }: { item: Item; updatedAt: number } & Omit<InspectorProps, 'uuid'>) {
   const { t } = useTranslation();
+  const ancestors = useAncestors(onMap ? item.object_uuid : undefined);
+  const mapBody = ancestors.data ? mapBodyOf(item, ancestors.data.ancestors) : null;
   const data = item.object_data;
   const definitions = useDefinitions();
   // undefined while loading, null when the type has no definition.
@@ -114,6 +120,17 @@ function ItemDetails({
             <Button variant="outline" size="xs" onClick={() => onOrbit(item.object_uuid)}>
               <NetworkIcon />
               {t('objectPage.orbit')}
+            </Button>
+          )}
+          {onMap && mapBody && !hasMap(item.object_type) && (
+            <Button
+              variant="outline"
+              size="icon-xs"
+              aria-label={t('map.showOn')}
+              title={t('map.showOn')}
+              onClick={() => onMap(mapBody, item.object_uuid)}
+            >
+              <MapPinIcon />
             </Button>
           )}
           {onMap && hasMap(item.object_type) && (

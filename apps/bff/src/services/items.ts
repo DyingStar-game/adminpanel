@@ -3,6 +3,7 @@ import pLimit from 'p-limit';
 import {
   EditConflictDetailsSchema,
   ErrorCode,
+  MAP_PLACED_THROUGH_PARENT,
   type AncestorsResponse,
   type BodyMapResponse,
   type ChildrenCountsResponse,
@@ -16,7 +17,7 @@ import {
 import type { PersistenceClient } from '../clients/persistence';
 import { ApiError, notFound } from '../lib/errors';
 import type { DefinitionsService } from './definitions';
-import { buildBodyMap, PLACED_THROUGH_PARENT } from './bodyMap';
+import { buildBodyMap } from './bodyMap';
 import { planDuplicate } from './duplicate';
 import { mergeEdit, type EditRequest } from './merge';
 
@@ -223,7 +224,7 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
         const body = await getOrThrow(uuid);
         const [children, ...placedTotals] = await Promise.all([
           total({ parent_id: uuid }),
-          ...PLACED_THROUGH_PARENT.map((type) => total({ object_type: type })),
+          ...MAP_PLACED_THROUGH_PARENT.map((type) => total({ object_type: type })),
         ]);
         const size = placedTotals.reduce((sum, n) => sum + n, children);
         if (size > MAX_MAP_POINTS) {
@@ -236,7 +237,7 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
         }
         const [items, ...placed] = await Promise.all([
           listAll({ parent_id: uuid }),
-          ...PLACED_THROUGH_PARENT.map((type) => listAll({ object_type: type })),
+          ...MAP_PLACED_THROUGH_PARENT.map((type) => listAll({ object_type: type })),
         ]);
         return buildBodyMap(body, items, placed.flat());
       });

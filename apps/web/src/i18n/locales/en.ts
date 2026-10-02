@@ -236,6 +236,7 @@ export const en = {
   },
   map: {
     open: 'Map',
+    showOn: 'Show on map',
     title: 'Map of {{name}}',
     canvas: 'Planetary map',
     types: 'Types',

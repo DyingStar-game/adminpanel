@@ -98,6 +98,12 @@ export type DuplicateRequest = z.input<typeof DuplicateRequestSchema>;
 /** Created copies, the root first, parents before children. */
 export const DuplicateResponseSchema = z.object({ created: z.array(ItemSchema) });
 
+/**
+ * Types drawn on a body map through their parent (players in their building) rather than as
+ * direct children of the body (ADR 0018).
+ */
+export const MAP_PLACED_THROUGH_PARENT = ['player'];
+
 /** One item on a body map (ADR 0018). */
 export const MapPointSchema = z.object({
   object_uuid: z.string(),

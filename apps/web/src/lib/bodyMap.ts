@@ -1,10 +1,29 @@
-import type { MapPoint } from '@dyingstar-admin/schemas';
+import { MAP_PLACED_THROUGH_PARENT, type Item, type MapPoint } from '@dyingstar-admin/schemas';
 import { shortUuid } from './itemLabel';
 import { typeColor } from './objectTypes';
 import { profileFor } from './profiles';
 
 /** Whether items of this type have a planetary map (ADR 0018). */
 export const hasMap = (objectType: string | undefined) => !!profileFor(objectType)?.map?.body;
+
+/**
+ * Body whose map draws this item, or null: a direct child of a celestial body, or an item
+ * placed through its parent (a player in a building standing on the body). `ancestors` go from
+ * the root down to the direct parent. Same rule as the BFF's map (ADR 0018).
+ */
+export function mapBodyOf(item: Item, ancestors: Item[]): string | null {
+  const parent = ancestors.at(-1);
+  if (parent && hasMap(parent.object_type)) return parent.object_uuid;
+  const grandparent = ancestors.at(-2);
+  if (
+    grandparent &&
+    hasMap(grandparent.object_type) &&
+    MAP_PLACED_THROUGH_PARENT.includes(item.object_type)
+  ) {
+    return grandparent.object_uuid;
+  }
+  return null;
+}
 
 /** Whether a type is hidden on the map until the viewer shows it (`miningrock`). */
 export const hiddenByDefault = (objectType: string) => !!profileFor(objectType)?.map?.hidden;

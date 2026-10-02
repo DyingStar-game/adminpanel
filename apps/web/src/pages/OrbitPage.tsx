@@ -34,7 +34,8 @@ interface OrbitPageProps {
   onRecenter: (uuid: string, selected?: string) => void;
   onOpenPage: (uuid: string) => void;
   onOpenInExplorer: (item: Item) => void;
-  onOpenMap: (uuid: string) => void;
+  /** Opens the map of a celestial body, optionally with an item selected on it (ADR 0018). */
+  onOpenMap: (body: string, selected?: string) => void;
 }
 
 const toEntity = (item: Item): OrbitEntity => ({

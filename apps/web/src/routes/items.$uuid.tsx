@@ -17,7 +17,13 @@ function ObjectRoute() {
       onOpenOrbit={(target) =>
         void navigate({ to: '/orbit/$uuid', params: { uuid: target }, search: {} })
       }
-      onOpenMap={(target) => void navigate({ to: '/map/$uuid', params: { uuid: target } })}
+      onOpenMap={(body, selected) =>
+        void navigate({
+          to: '/map/$uuid',
+          params: { uuid: body },
+          search: selected ? { selected } : {},
+        })
+      }
     />
   );
 }

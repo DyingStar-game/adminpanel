@@ -13,9 +13,6 @@ import {
 /** Above this altitude an item is in orbit: listed, not drawn (ADR 0018). */
 export const ORBIT_ALTITUDE = 50_000;
 
-/** Items placed through their parent rather than directly on the body (ADR 0018). */
-export const PLACED_THROUGH_PARENT = ['player'];
-
 const round = (n: number, digits: number) => Number(n.toFixed(digits)) + 0;
 
 const positionOf = (item: Item): V | null => {

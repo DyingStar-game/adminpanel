@@ -16,7 +16,8 @@ interface ExplorerPageProps {
   /** Opens the object page of an item. */
   onOpen: (uuid: string) => void;
   onOrbit: (uuid: string) => void;
-  onMap: (uuid: string) => void;
+  /** Opens the map of a celestial body, optionally with an item selected on it (ADR 0018). */
+  onMap: (body: string, selected?: string) => void;
 }
 
 /** Explorer (mock-up 1b): lazy tree, paginated table of a level or type, inspector. */

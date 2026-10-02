@@ -145,12 +145,36 @@ describe('ObjectPage', () => {
     expect(onOpenMap).toHaveBeenCalledWith(ids.planet);
   });
 
+  it('shows an item on its body map: a planet child, or a player in its building', async () => {
+    useInProcessBff();
+    const { onOpenMap } = renderPage(ids.vehicle);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Show on map' }));
+    expect(onOpenMap).toHaveBeenCalledWith(ids.planet, ids.vehicle);
+  });
+
+  it('shows a player on the map of the body its building stands on', async () => {
+    useInProcessBff();
+    const { onOpenMap } = renderPage(ids.player);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Show on map' }));
+    expect(onOpenMap).toHaveBeenCalledWith(ids.planet, ids.player);
+  });
+
   it('offers no map for other types', async () => {
     useInProcessBff();
     renderPage(ids.vehicle);
 
     await screen.findByRole('heading', { level: 1, name: /vehicle 4e9a9ff9/ });
     expect(screen.queryByRole('button', { name: 'Map' })).not.toBeInTheDocument();
+  });
+
+  it('does not show nested items on a map (components inside a vehicle)', async () => {
+    useInProcessBff();
+    renderPage(ids.wheelFl);
+
+    await screen.findByRole('heading', { level: 1, name: 'Slot_FL' });
+    expect(screen.queryByRole('button', { name: 'Show on map' })).not.toBeInTheDocument();
   });
 
   it('reports an unknown item', async () => {

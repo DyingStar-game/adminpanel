@@ -3,6 +3,7 @@ import {
   CompassIcon,
   CopyIcon,
   MapIcon,
+  MapPinIcon,
   NetworkIcon,
   PencilIcon,
   Trash2Icon,
@@ -26,7 +27,7 @@ import { Button } from '@/components/ui/button';
 import { useAncestors, useDefinitions, useItem } from '@/hooks/queries';
 import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
-import { hasMap } from '@/lib/bodyMap';
+import { hasMap, mapBodyOf } from '@/lib/bodyMap';
 import { itemLabel } from '@/lib/itemLabel';
 import { schematicFor } from '@/lib/schematics';
 import { SPAWN_DISTANCE, SPAWN_HEIGHT, spawnNextTo } from '@/lib/spawn';
@@ -38,7 +39,8 @@ interface ObjectPageProps {
   onNavigate: (uuid: string) => void;
   onOpenInExplorer: (item: Item) => void;
   onOpenOrbit: (uuid: string) => void;
-  onOpenMap: (uuid: string) => void;
+  /** Opens the map of a celestial body, optionally with an item selected on it (ADR 0018). */
+  onOpenMap: (body: string, selected?: string) => void;
 }
 
 /** Full detail of one entity (mock-up 1c, ADR 0008). */
@@ -82,6 +84,7 @@ function ObjectDetails({
     ? (definitions.data.definitions.find((d) => d.type === item.object_type) ?? null)
     : undefined;
   const ancestors = useAncestors(item.object_uuid);
+  const mapBody = ancestors.data ? mapBodyOf(item, ancestors.data.ancestors) : null;
   const { refs, parentId, parentTarget, resolveRef, profile } = useItemRefs(item);
   const changed = useChangedKeys(item.object_data, item.object_uuid);
   const actions = useItemActions();
@@ -146,6 +149,16 @@ function ObjectDetails({
               <Button variant="outline" size="sm" onClick={() => onOpenMap(item.object_uuid)}>
                 <MapIcon />
                 {t('map.open')}
+              </Button>
+            )}
+            {mapBody && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onOpenMap(mapBody, item.object_uuid)}
+              >
+                <MapPinIcon />
+                {t('map.showOn')}
               </Button>
             )}
             {spawn && (

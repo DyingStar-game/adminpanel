@@ -11,7 +11,13 @@ function ExplorerRoute() {
       onSearchChange={(next) => void navigate({ search: next })}
       onOpen={(uuid) => void navigate({ to: '/items/$uuid', params: { uuid } })}
       onOrbit={(uuid) => void navigate({ to: '/orbit/$uuid', params: { uuid }, search: {} })}
-      onMap={(uuid) => void navigate({ to: '/map/$uuid', params: { uuid } })}
+      onMap={(body, selected) =>
+        void navigate({
+          to: '/map/$uuid',
+          params: { uuid: body },
+          search: selected ? { selected } : {},
+        })
+      }
     />
   );
 }
