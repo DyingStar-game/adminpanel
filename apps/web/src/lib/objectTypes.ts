@@ -1,6 +1,7 @@
 /**
- * Colour of each object type, from the Claude Design mock-up. Types without an entry (new
- * definitions such as `poi_village`) get a stable colour derived from their name.
+ * Colour of each object type, from the Claude Design mock-up. Types without an entry get a
+ * stable colour derived from their name. Players, spawn buildings and villages stand side by
+ * side on the planetary map (ADR 0018): green, blue and fuchsia, far apart.
  */
 const TYPE_COLORS: Record<string, string> = {
   star: '#f59e0b',
@@ -8,7 +9,8 @@ const TYPE_COLORS: Record<string, string> = {
   station: '#8b5cf6',
   city: '#6366f1',
   building: '#64748b',
-  spawnbuilding: '#14b8a6',
+  spawnbuilding: '#2563eb',
+  poi_village: '#c026d3',
   cargo_depot: '#f97316',
   storagewarehouse: '#a16207',
   mining_depot: '#ca8a04',

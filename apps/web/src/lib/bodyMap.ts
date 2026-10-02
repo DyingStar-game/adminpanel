@@ -13,6 +13,23 @@ export const hiddenByDefault = (objectType: string) => !!profileFor(objectType)?
 export const isShown = (objectType: string, choices: Record<string, boolean>) =>
   !(choices[objectType] ?? hiddenByDefault(objectType));
 
+/** Structures, drawn as squares on the map; people and vehicles stay round. */
+const STRUCTURE_TYPES = new Set([
+  'spawnbuilding',
+  'poi_village',
+  'cargo_depot',
+  'mining_depot',
+  'miningzone',
+  'building',
+  'city',
+  'storagewarehouse',
+  'station',
+]);
+
+/** Marker shape of a type on the map. */
+export const markerShape = (objectType: string): 'square' | 'round' =>
+  STRUCTURE_TYPES.has(objectType) ? 'square' : 'round';
+
 /** Label of a map point: its name, else type and short UUID (like `itemLabel`). */
 export const pointLabel = (point: MapPoint) =>
   point.name ?? `${point.object_type} ${shortUuid(point.object_uuid)}`;

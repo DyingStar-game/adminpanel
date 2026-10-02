@@ -6,6 +6,8 @@ export interface MapLegendEntry {
   objectType: string;
   count: number;
   shown: boolean;
+  /** Marker shape on the map, repeated in the legend. */
+  shape: 'round' | 'square';
 }
 
 interface MapLegendProps {
@@ -22,7 +24,7 @@ export function MapLegend({ entries, onToggle, labels }: MapLegendProps) {
       <ul className="flex flex-col gap-0.5">
         {entries.map((entry) => (
           <li key={entry.objectType} className="flex items-center gap-2">
-            <TypeDot objectType={entry.objectType} />
+            <TypeDot objectType={entry.objectType} shape={entry.shape} />
             <MonoText className="min-w-0 flex-1 truncate text-[11.5px]">
               {entry.objectType}
             </MonoText>

@@ -17,6 +17,7 @@ import {
   formatLatLon,
   isShown,
   mapLegend,
+  markerShape,
   pointLabel,
   searchPoints,
 } from '@/lib/bodyMap';
@@ -178,6 +179,7 @@ function BodyMap({
               entries={legend.map((entry) => ({
                 ...entry,
                 shown: isShown(entry.objectType, mapHidden),
+                shape: markerShape(entry.objectType),
               }))}
               onToggle={(type, shown) => setMapHidden(type, !shown)}
               labels={{ title: t('map.types'), toggle: (type) => t('map.toggle', { type }) }}

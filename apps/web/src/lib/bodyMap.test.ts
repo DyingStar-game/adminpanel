@@ -9,6 +9,7 @@ import {
   hasMap,
   isShown,
   mapLegend,
+  markerShape,
   pointLabel,
   searchPoints,
   typeMixGradient,
@@ -38,6 +39,15 @@ describe('body map helpers', () => {
     expect(isShown('miningrock', { miningrock: false })).toBe(true);
     expect(isShown('vehicle', {})).toBe(true);
     expect(isShown('vehicle', { vehicle: true })).toBe(false);
+  });
+
+  it('draws structures as squares, people and vehicles as dots', () => {
+    expect(['spawnbuilding', 'poi_village', 'player', 'vehicle'].map(markerShape)).toEqual([
+      'square',
+      'square',
+      'round',
+      'round',
+    ]);
   });
 
   it('counts the types, most numerous first', () => {

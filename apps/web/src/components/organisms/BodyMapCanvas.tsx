@@ -19,6 +19,7 @@ import {
   gridLines,
   gridStep,
   GRID_MAJOR_EVERY,
+  markerShape,
   typeMixGradient,
   type MapLatLng,
 } from '@/lib/bodyMap';
@@ -54,16 +55,20 @@ const toLatLng = (point: MapPoint): MapLatLng => [point.y, point.x];
 const icons = new Map<string, L.DivIcon>();
 /** Type of each dot icon, read back by clusters to colour their ring. */
 const iconTypes = new WeakMap<L.Icon | L.DivIcon, string>();
-/** Coloured dot of a type; selected points get a ring. Cached: one icon per type and state. */
+/**
+ * Coloured marker of a type (square for structures, round otherwise); selected points get a
+ * ring. Cached: one icon per type and state.
+ */
 function dotIcon(objectType: string, selected: boolean): L.DivIcon {
   const key = `${objectType}|${selected}`;
   let icon = icons.get(key);
   if (!icon) {
-    const size = selected ? 16 : 10;
+    const square = markerShape(objectType) === 'square';
+    const size = (selected ? 16 : 10) + (square ? 2 : 0);
     icon = L.divIcon({
       className: '',
       iconSize: [size, size],
-      html: `<span data-type="${objectType}" class="block size-full rounded-full border border-background shadow-sm${
+      html: `<span data-type="${objectType}" class="block size-full ${square ? 'rounded-[2px]' : 'rounded-full'} border border-background shadow-sm${
         selected ? ' ring-2 ring-foreground' : ''
       }" style="background:${typeColor(objectType)}"></span>`,
     });
