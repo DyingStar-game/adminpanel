@@ -32,3 +32,4 @@ using lightweight ADRs ([Michael Nygard format](https://cognitect.com/blog/2011/
 | [0015](./0015-unknown-object-types-refused-on-write.md) | Unknown object types are refused on write | Accepted | 2026-10-01 |
 | [0016](./0016-scene-schematics.md) | Scene schematics: declarative views per `scenename` | Accepted | 2026-10-02 |
 | [0017](./0017-duplicate-items.md) | Duplicating an item, with its children, next to a player | Accepted | 2026-10-02 |
+| [0018](./0018-planetary-map.md) | Planetary map: a 2D view of everything placed on a celestial body | Proposed | 2026-10-02 |
