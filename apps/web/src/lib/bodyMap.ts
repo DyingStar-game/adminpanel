@@ -1,9 +1,4 @@
-import {
-  azimuthalEquidistant,
-  directionOf,
-  type BodyMapResponse,
-  type MapPoint,
-} from '@dyingstar-admin/schemas';
+import type { MapPoint } from '@dyingstar-admin/schemas';
 import { shortUuid } from './itemLabel';
 import { typeColor } from './objectTypes';
 import { profileFor } from './profiles';
@@ -89,58 +84,63 @@ export const formatLatLon = (lat: number, lon: number) =>
 /** Projected position `[north, east]` in metres: Leaflet `CRS.Simple` order. */
 export type MapLatLng = [number, number];
 
-/** At most this many latitude (and longitude) lines over the drawn points. */
-const GRATICULE_LINES = 30;
+/** Target size of a grid cell on screen, in pixels. */
+export const GRID_CELL_PX = 80;
+/** A thick line every this many cells. */
+export const GRID_MAJOR_EVERY = 5;
 
-/** Grid step in degrees giving about `GRATICULE_LINES` lines over `span` degrees. */
-function graticuleStep(span: number): number {
-  const steps = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30];
-  return steps.find((step) => span / step <= GRATICULE_LINES) ?? 30;
+/**
+ * Grid step in metres: the 1-2-5 series value (1 m, 2 m, 5 m, 10 m…) closest above
+ * `GRID_CELL_PX` pixels at this scale, so cells stay about the same size on screen.
+ */
+export function gridStep(metresPerPixel: number): number {
+  const target = metresPerPixel * GRID_CELL_PX;
+  const magnitude = 10 ** Math.floor(Math.log10(target));
+  const step = [1, 2, 5, 10].map((f) => f * magnitude).find((v) => v >= target * 0.75);
+  return Math.max(step ?? 10 * magnitude, 0.1);
+}
+
+/** Visible area in projected metres. */
+export interface MapBounds {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
 }
 
 /**
- * Latitude / longitude lines around the drawn points, projected like them (the projection is
- * the BFF's one, from `center` and `referenceRadius`).
+ * Metric grid lines over `bounds` (ADR 0018): the projection keeps distances, so cells of
+ * `step` metres measure the map. Lines are split between minor and major (every
+ * `GRID_MAJOR_EVERY` steps), aligned on multiples of the step from the map centre.
  */
-export function graticule(map: BodyMapResponse): {
-  lat: number[];
-  lon: number[];
-  lines: MapLatLng[][];
-} {
-  if (map.points.length === 0 || map.referenceRadius === 0) return { lat: [], lon: [], lines: [] };
-  const lats = map.points.map((p) => p.lat);
-  const lons = map.points.map((p) => p.lon);
-  const [minLat, maxLat] = [Math.min(...lats), Math.max(...lats)];
-  const [minLon, maxLon] = [Math.min(...lons), Math.max(...lons)];
-  const step = graticuleStep(Math.max(maxLat - minLat, maxLon - minLon, 0.01));
-  const from = (v: number) => Math.floor(v / step) * step - step;
-  const to = (v: number) => Math.ceil(v / step) * step + step;
-  const range = (a: number, b: number) =>
-    Array.from({ length: Math.round((b - a) / step) + 1 }, (_, i) =>
-      Number((a + i * step).toFixed(6)),
-    );
-  const latLines = range(from(minLat), to(maxLat)).filter((v) => v > -90 && v < 90);
-  const lonLines = range(from(minLon), to(maxLon));
-  const project = azimuthalEquidistant(
-    directionOf(map.center.lat, map.center.lon),
-    map.referenceRadius,
-  );
-  const at = (lat: number, lon: number): MapLatLng => {
-    const { x, y } = project(directionOf(lat, lon));
-    return [y, x];
+export function gridLines(
+  bounds: MapBounds,
+  step: number,
+): { minor: MapLatLng[][]; major: MapLatLng[][] } {
+  const minor: MapLatLng[][] = [];
+  const major: MapLatLng[][] = [];
+  const along = (from: number, to: number) => {
+    const values: number[] = [];
+    for (let i = Math.floor(from / step); i * step <= to; i++) values.push(i);
+    return values;
   };
-  const samples = (a: number, b: number) =>
-    range(a, b).flatMap((v, i, all) =>
-      i === all.length - 1 ? [v] : [0, 0.25, 0.5, 0.75].map((f) => v + f * step),
-    );
-  const [latA, latB] = [latLines[0] ?? minLat, latLines.at(-1) ?? maxLat];
-  const [lonA, lonB] = [lonLines[0] ?? minLon, lonLines.at(-1) ?? maxLon];
-  return {
-    lat: latLines,
-    lon: lonLines,
-    lines: [
-      ...latLines.map((lat) => samples(lonA, lonB).map((lon) => at(lat, lon))),
-      ...lonLines.map((lon) => samples(latA, latB).map((lat) => at(lat, lon))),
-    ],
-  };
+  for (const i of along(bounds.west, bounds.east)) {
+    const line: MapLatLng[] = [
+      [bounds.south, i * step],
+      [bounds.north, i * step],
+    ];
+    (i % GRID_MAJOR_EVERY === 0 ? major : minor).push(line);
+  }
+  for (const i of along(bounds.south, bounds.north)) {
+    const line: MapLatLng[] = [
+      [i * step, bounds.west],
+      [i * step, bounds.east],
+    ];
+    (i % GRID_MAJOR_EVERY === 0 ? major : minor).push(line);
+  }
+  return { minor, major };
 }
+
+/** Distance in metres or kilometres, e.g. `500 m`, `2 km`. */
+export const formatDistance = (metres: number) =>
+  metres >= 1000 ? `${Number((metres / 1000).toFixed(3))} km` : `${Number(metres.toFixed(1))} m`;

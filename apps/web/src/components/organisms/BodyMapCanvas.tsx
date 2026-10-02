@@ -1,12 +1,27 @@
 /// <reference types="leaflet.markercluster" />
-import { memo, useEffect, useMemo, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
-import { MapContainer, Marker, Polyline, ScaleControl, Tooltip, useMap } from 'react-leaflet';
+import {
+  MapContainer,
+  Marker,
+  Polyline,
+  ScaleControl,
+  Tooltip,
+  useMap,
+  useMapEvents,
+} from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.css';
 import type { MapPoint } from '@dyingstar-admin/schemas';
-import { typeMixGradient, type MapLatLng } from '@/lib/bodyMap';
+import {
+  formatDistance,
+  gridLines,
+  gridStep,
+  GRID_MAJOR_EVERY,
+  typeMixGradient,
+  type MapLatLng,
+} from '@/lib/bodyMap';
 import { typeColor } from '@/lib/objectTypes';
 
 /** Zoom levels of `CRS.Simple`: 1 m = 2^zoom px; from a whole region down to a few metres. */
@@ -26,14 +41,12 @@ export interface MapFocus {
 
 interface BodyMapCanvasProps {
   points: MapPoint[];
-  /** Latitude / longitude lines, projected like the points. */
-  graticule: MapLatLng[][];
   selected?: string | undefined;
   focus?: MapFocus | null;
   onSelect: (uuid: string) => void;
   /** Tooltip content of a point (label, type, altitude…). */
   describe: (point: MapPoint) => string;
-  labels: { cluster: (count: number) => string };
+  labels: { cluster: (count: number) => string; grid: (step: string, major: string) => string };
 }
 
 const toLatLng = (point: MapPoint): MapLatLng => [point.y, point.x];
@@ -81,6 +94,51 @@ function FlyTo({ focus }: { focus: MapFocus | null | undefined }) {
       map.flyTo(focus.at, Math.max(map.getZoom(), UNCLUSTER_ZOOM + 1), { duration: FLY_SECONDS });
   }, [map, focus]);
   return null;
+}
+
+/**
+ * Metric grid following the zoom (ADR 0018): cells of a 1-2-5 step in metres, about 80 px on
+ * screen, a thick line every 5 cells, and a caption with the current step.
+ */
+function MetricGrid({ caption }: { caption: (step: string, major: string) => string }) {
+  const map = useMap();
+  const measure = useCallback(() => {
+    const bounds = map.getBounds().pad(0.25);
+    // CRS.Simple: 1 unit (metre) = 2^zoom pixels.
+    const step = gridStep(1 / 2 ** map.getZoom());
+    return {
+      step,
+      ...gridLines(
+        {
+          south: bounds.getSouth(),
+          west: bounds.getWest(),
+          north: bounds.getNorth(),
+          east: bounds.getEast(),
+        },
+        step,
+      ),
+    };
+  }, [map]);
+  const [grid, setGrid] = useState(measure);
+  useMapEvents({ moveend: () => setGrid(measure()), zoomend: () => setGrid(measure()) });
+
+  return (
+    <>
+      <Polyline
+        positions={grid.minor}
+        interactive={false}
+        pathOptions={{ weight: 1, className: 'stroke-line-strong [stroke-opacity:0.45]' }}
+      />
+      <Polyline
+        positions={grid.major}
+        interactive={false}
+        pathOptions={{ weight: 1.5, className: 'stroke-fg-3 [stroke-opacity:0.6]' }}
+      />
+      <div className="pointer-events-none absolute right-2.5 bottom-7 z-[1000] rounded border bg-background/90 px-1.5 py-0.5 font-mono text-[11px] text-fg-2">
+        {caption(formatDistance(grid.step), formatDistance(grid.step * GRID_MAJOR_EVERY))}
+      </div>
+    </>
+  );
 }
 
 const Points = memo(function Points({
@@ -138,7 +196,6 @@ const Points = memo(function Points({
  */
 export function BodyMapCanvas({
   points,
-  graticule,
   selected,
   focus,
   onSelect,
@@ -158,14 +215,7 @@ export function BodyMapCanvas({
       attributionControl={false}
       className="size-full bg-surface-2! font-sans"
     >
-      {graticule.map((line, i) => (
-        <Polyline
-          key={i}
-          positions={line}
-          interactive={false}
-          pathOptions={{ weight: 1, className: 'stroke-line-strong [stroke-opacity:0.7]' }}
-        />
-      ))}
+      <MetricGrid caption={labels.grid} />
       <Points
         points={points}
         selected={selected}

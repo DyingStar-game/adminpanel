@@ -243,6 +243,7 @@ export const en = {
     hidden: 'hidden',
     cluster_one: '{{count}} item',
     cluster_other: '{{count}} items',
+    grid: 'Grid {{step}} · thick lines {{major}}',
     inOrbit: 'In orbit',
     altitude: 'altitude {{value}}',
     via: 'in {{label}}',

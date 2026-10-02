@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import type { BodyMapResponse, MapPoint } from '@dyingstar-admin/schemas';
+import type { MapPoint } from '@dyingstar-admin/schemas';
 import {
   formatAltitude,
   formatLatLon,
-  graticule,
+  formatDistance,
+  gridLines,
+  gridStep,
   hasMap,
   isShown,
   mapLegend,
@@ -80,27 +82,37 @@ describe('body map helpers', () => {
     expect(formatLatLon(22.605108, -130.748103)).toBe('22.605° N · 130.748° W');
   });
 
-  it('draws latitude and longitude lines around the points', () => {
-    const map: BodyMapResponse = {
-      body: { object_uuid: 'p', object_type: 'planet', name: 'SandBox' },
-      referenceRadius: 6_361_633,
-      center: { lat: 22, lon: 130 },
-      points: [
-        { ...point('a', 'player'), lat: 20, lon: 129 },
-        { ...point('b', 'player'), lat: 24, lon: 133 },
-      ],
-      inOrbit: [],
-    };
-    const grid = graticule(map);
-    // 0.2° lines over a 4° span, one step of margin on each side.
-    expect(grid.lat[0]).toBe(19.8);
-    expect(grid.lat.at(-1)).toBe(24.2);
-    expect(grid.lat).toHaveLength(23);
-    expect(grid.lines).toHaveLength(grid.lat.length + grid.lon.length);
-    // The centre's parallel passes through the projection origin.
-    const centreLat = grid.lines[grid.lat.indexOf(22)] ?? [];
-    expect(Math.min(...centreLat.map(([north]) => Math.abs(north)))).toBeLessThan(1000);
+  it('picks a 1-2-5 grid step giving cells of about 80 px', () => {
+    // 1 m per pixel: 80 m wanted, 100 m is the closest series value above 60 m.
+    expect(gridStep(1)).toBe(100);
+    expect(gridStep(0.5)).toBe(50);
+    expect(gridStep(0.02)).toBe(2);
+    // A whole region: 1.5 km per pixel → 120 km wanted → 100 km.
+    expect(gridStep(1500)).toBe(100_000);
+  });
 
-    expect(graticule({ ...map, points: [] }).lines).toEqual([]);
+  it('draws grid lines over the view, a thick one every 5 cells', () => {
+    const { minor, major } = gridLines({ south: -120, west: -30, north: 30, east: 260 }, 50);
+    // Verticals at x = 0, 50 … 250; horizontals at y = -100 … 0 (plus the one below -120).
+    const xs = [...minor, ...major].filter((l) => l[0]?.[1] === l[1]?.[1]).map((l) => l[0]?.[1]);
+    expect(xs).toEqual(expect.arrayContaining([0, 50, 100, 150, 200, 250]));
+    expect(major).toContainEqual([
+      [-120, 250],
+      [30, 250],
+    ]);
+    expect(major).toContainEqual([
+      [0, -30],
+      [0, 260],
+    ]);
+    expect(minor).toContainEqual([
+      [-50, -30],
+      [-50, 260],
+    ]);
+  });
+
+  it('formats grid distances', () => {
+    expect(formatDistance(500)).toBe('500 m');
+    expect(formatDistance(2000)).toBe('2 km');
+    expect(formatDistance(0.5)).toBe('0.5 m');
   });
 });

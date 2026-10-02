@@ -15,7 +15,6 @@ import { ApiError } from '@/lib/api';
 import {
   formatAltitude,
   formatLatLon,
-  graticule,
   isShown,
   mapLegend,
   pointLabel,
@@ -70,7 +69,6 @@ function BodyMap({
     [map.points],
   );
   const legend = useMemo(() => mapLegend(map.points), [map.points]);
-  const lines = useMemo(() => graticule(map).lines, [map]);
   const visible = useMemo(
     () =>
       map.points.filter(
@@ -108,7 +106,10 @@ function BodyMap({
     [byUuid, t],
   );
   const clusterLabels = useMemo(
-    () => ({ cluster: (count: number) => t('map.cluster', { count }) }),
+    () => ({
+      cluster: (count: number) => t('map.cluster', { count }),
+      grid: (step: string, major: string) => t('map.grid', { step, major }),
+    }),
     [t],
   );
   const name = map.body.name ?? map.body.object_type;
@@ -122,7 +123,6 @@ function BodyMap({
         ) : (
           <BodyMapCanvas
             points={visible}
-            graticule={lines}
             selected={search.selected}
             focus={focus}
             onSelect={select}

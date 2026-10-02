@@ -246,6 +246,7 @@ export const fr: Translations = {
     hidden: 'masqué',
     cluster_one: '{{count}} élément',
     cluster_other: '{{count}} éléments',
+    grid: 'Grille {{step}} · traits forts {{major}}',
     inOrbit: 'En orbite',
     altitude: 'altitude {{value}}',
     via: 'dans {{label}}',

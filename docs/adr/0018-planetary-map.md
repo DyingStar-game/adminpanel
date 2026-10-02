@@ -92,6 +92,14 @@ Live data of SandBox (2026-10-02, GET only):
   `Leaflet.markercluster` for grouping. Pan, zoom, fly-to, tooltips and clustering come from the
   library instead of being written here. Colours per type follow the existing type badges.
 
+### Update (2026-10-02): metric grid
+
+At the maintainer's request, the latitude / longitude graticule is replaced by a **metric grid
+following the zoom**: cells of a 1-2-5 step in metres (1 m … 500 km) about 80 px on screen, a
+thick line every 5 cells, and a caption with the current step next to the scale bar. The
+projection keeps distances (below 0.3 % error at the edge of SandBox's region), so the grid
+measures the map at any zoom. Latitude / longitude stay in the tooltips.
+
 ## Consequences
 
 - A body's content becomes visible at a glance; vehicles, buildings and, later, moving players
