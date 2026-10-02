@@ -8,18 +8,34 @@ interface ProfileValueProps extends ValueViewProps {
   renderer: Renderer | undefined;
   /** Whole `object_data`, for renderers pairing keys (positions + rotations). */
   data: ObjectData;
+  /** One line (table cells): named maps are listed inline instead of one entry per line. */
+  compact?: boolean;
 }
 
 const fixed = (n: number) => Number(n.toFixed(3)).toString();
 
 /** Property value with the type profile's renderer, generic `ValueView` otherwise (ADR 0008). */
-export function ProfileValue({ renderer, data, ...props }: ProfileValueProps) {
+export function ProfileValue({ renderer, data, compact = false, ...props }: ProfileValueProps) {
   const { t } = useTranslation();
   const { value } = props;
 
   if (renderer === 'namedMap' && value && typeof value === 'object' && !Array.isArray(value)) {
     const entries = Object.entries(value);
     if (entries.length === 0) return <MonoText tone="subtle">{'{}'}</MonoText>;
+    if (compact) {
+      return (
+        <span className="flex min-w-0 items-center gap-2 overflow-hidden">
+          {entries.map(([key, child]) => (
+            <span key={key} className="flex min-w-0 shrink-0 items-center gap-1">
+              <MonoText tone="subtle" className="text-[10.5px]">
+                {key}
+              </MonoText>
+              <ValueView {...props} value={child} name={key} />
+            </span>
+          ))}
+        </span>
+      );
+    }
     return (
       <div className="flex flex-col gap-0.5 py-1">
         {entries.map(([key, child]) => (

@@ -3,12 +3,14 @@ import { ListFilterIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createColumnHelper, tableFeatures, useTable } from '@tanstack/react-table';
 import type { Item } from '@dyingstar-admin/schemas';
+import { CopyButton } from '@/components/atoms/CopyButton';
 import { MonoText } from '@/components/atoms/MonoText';
 import { TypeDot } from '@/components/atoms/TypeDot';
 import { CrumbTrail, type Crumb } from '@/components/molecules/CrumbTrail';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { Pagination } from '@/components/molecules/Pagination';
 import type { RefTarget } from '@/components/molecules/UuidLink';
+import { ProfileValue } from '@/components/molecules/ProfileValue';
 import { ValueView } from '@/components/molecules/ValueView';
 import { Button } from '@/components/ui/button';
 import { useAncestors, useDefinitions, useItem, useItemsPage } from '@/hooks/queries';
@@ -144,7 +146,13 @@ export function ItemsTable(props: ItemsTableProps) {
         }),
         helper.accessor('object_uuid', {
           header: 'object_uuid',
-          cell: ({ getValue }) => <MonoText tone="subtle">{shortUuid(getValue())}</MonoText>,
+          cell: ({ getValue }) => (
+            <span className="flex items-center gap-1">
+              <MonoText tone="subtle">{shortUuid(getValue())}</MonoText>
+              {/* Copies the full UUID; the column only shows its first characters. */}
+              <CopyButton value={getValue()} />
+            </span>
+          ),
         }),
         ...extraKeys.map((key) =>
           helper.display({
@@ -159,9 +167,12 @@ export function ItemsTable(props: ItemsTableProps) {
                   )}
                 </MonoText>
               ) : (
-                <ValueView
+                <ProfileValue
+                  compact
                   value={row.original.object_data[key]}
                   name={key}
+                  data={row.original.object_data}
+                  renderer={profileFor(objectType)?.renderers[key]}
                   resolveRef={meta.resolveRef}
                   onNavigate={meta.onNavigate}
                 />
@@ -191,7 +202,11 @@ export function ItemsTable(props: ItemsTableProps) {
     data: rows,
     meta: { resolveRef, onNavigate: props.onNavigate, moonParentType },
   });
-  const grid = `minmax(160px,1.4fr) 92px ${extraKeys.map(() => 'minmax(80px,1fr)').join(' ')} minmax(140px,1.2fr)`;
+  const renderers = profileFor(objectType)?.renderers ?? {};
+  // Named maps (e.g. seats) are listed inline: they need a wider column.
+  const columnWidth = (key: string) =>
+    renderers[key] === 'namedMap' ? 'minmax(200px,2fr)' : 'minmax(80px,1fr)';
+  const grid = `minmax(160px,1.4fr) 92px ${extraKeys.map(columnWidth).join(' ')} minmax(140px,1.2fr)`;
   const total = query.data?.total ?? 0;
   const typeOptions = [
     { value: ALL_TYPES, label: t('table.allTypes') },

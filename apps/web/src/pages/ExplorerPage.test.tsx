@@ -65,7 +65,14 @@ describe('ExplorerPage', () => {
     );
     // Profile columns for vehicles, references resolved to the pilot's name.
     expect(await screen.findByRole('columnheader', { name: 'pilot_uuid' })).toBeInTheDocument();
-    expect(await within(table()).findByRole('button', { name: /ddurieux/ })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'parent_id' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'seats' })).toBeInTheDocument();
+    expect(screen.queryByRole('columnheader', { name: 'engine' })).not.toBeInTheDocument();
+    // Seats are listed inline in the row, the parent is a resolved link.
+    expect(await within(table()).findByText('SeatPassenger')).toBeInTheDocument();
+    expect(await within(table()).findByRole('button', { name: /SandBox/ })).toBeInTheDocument();
+    // The pilot shows twice in the row: pilot_uuid and the driver seat.
+    expect(await within(table()).findAllByRole('button', { name: /ddurieux/ })).toHaveLength(2);
   });
 
   it('inspects an item: relations, broken links, channels and undeclared keys', async () => {
@@ -121,6 +128,18 @@ describe('ExplorerPage', () => {
     renderExplorer({ scope: 'type', type: 'vehicle_component' });
 
     expect(await screen.findByText('3 items')).toBeInTheDocument();
+  });
+
+  it('copies the full UUID from the table without selecting the row', async () => {
+    useInProcessBff();
+    const { onChange } = renderExplorer();
+    await within(table()).findByText('SandBox');
+
+    const row = within(table()).getByText('SandBox').closest('[role=row]') as HTMLElement;
+    await userEvent.click(within(row).getByRole('button', { name: 'Copy UUID' }));
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(ids.planet);
+    expect(onChange).not.toHaveBeenCalled();
   });
 
   it('filters the current page locally', async () => {
