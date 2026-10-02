@@ -245,6 +245,7 @@ export const en = {
     cluster_other: '{{count}} items',
     grid: 'Grid {{step}} · thick lines {{major}}',
     names: 'Names of {{type}}',
+    moved: 'Moved {{distance}} · received at {{time}}',
     inOrbit: 'In orbit',
     altitude: 'altitude {{value}}',
     via: 'in {{label}}',

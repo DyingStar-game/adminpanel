@@ -10,8 +10,10 @@ import {
   isShown,
   mapLegend,
   markerShape,
+  movementHeading,
   pointLabel,
   searchPoints,
+  trackMovement,
   typeMixGradient,
 } from './bodyMap';
 
@@ -124,5 +126,29 @@ describe('body map helpers', () => {
     expect(formatDistance(500)).toBe('500 m');
     expect(formatDistance(2000)).toBe('2 km');
     expect(formatDistance(0.5)).toBe('0.5 m');
+  });
+
+  it('remembers the selected item and draws its move once its position changes', () => {
+    const truck = (x: number, y: number) => ({ ...point('t', 'vehicle'), x, y });
+    const first = trackMovement(null, truck(0, 0), 1000);
+    expect(first).toEqual({ uuid: 't', last: [0, 0], movement: null });
+    // Same position on the next refresh: unchanged tracker, nothing drawn.
+    expect(trackMovement(first, truck(0, 0), 6000)).toBe(first);
+
+    const moved = trackMovement(first, truck(300, 400), 61_000);
+    expect(moved?.movement).toEqual({ from: [0, 0], to: [400, 300], at: 61_000, distance: 500 });
+    // The next move starts from the last known position.
+    expect(trackMovement(moved, truck(300, 1400), 121_000)?.movement?.from).toEqual([400, 300]);
+
+    // Another selection starts over; no selection forgets everything.
+    expect(trackMovement(moved, { ...point('p', 'player'), x: 5, y: 5 }, 0)?.movement).toBeNull();
+    expect(trackMovement(moved, undefined, 0)).toBeNull();
+    expect(trackMovement(null, undefined, 0)).toBeNull();
+  });
+
+  it('gives the heading of a move, clockwise from north', () => {
+    expect(movementHeading({ from: [0, 0], to: [10, 0] })).toBe(0);
+    expect(movementHeading({ from: [0, 0], to: [0, 10] })).toBe(90);
+    expect(movementHeading({ from: [0, 0], to: [-10, 0] })).toBe(180);
   });
 });

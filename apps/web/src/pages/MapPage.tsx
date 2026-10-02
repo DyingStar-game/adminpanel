@@ -14,14 +14,18 @@ import { useBodyMap } from '@/hooks/useBodyMap';
 import { ApiError } from '@/lib/api';
 import {
   formatAltitude,
+  formatDistance,
   formatLatLon,
   isShown,
   mapLegend,
   markerShape,
   pointLabel,
   searchPoints,
+  trackMovement,
+  type MovementTracker,
 } from '@/lib/bodyMap';
 import type { MapSearch as MapSearchState } from '@/lib/mapSearch';
+import { typeColor } from '@/lib/objectTypes';
 import { usePreferences } from '@/stores/preferences';
 
 interface MapPageProps {
@@ -50,7 +54,7 @@ export function MapPage(props: MapPageProps) {
     }
     return <Message>{t('map.error')}</Message>;
   }
-  return <BodyMap {...props} map={query.data} />;
+  return <BodyMap {...props} map={query.data} updatedAt={query.dataUpdatedAt} />;
 }
 
 function BodyMap({
@@ -60,7 +64,8 @@ function BodyMap({
   onOpenPage,
   onOpenInExplorer,
   onOpenOrbit,
-}: MapPageProps & { map: BodyMapResponse }) {
+  updatedAt,
+}: MapPageProps & { map: BodyMapResponse; updatedAt: number }) {
   const { t } = useTranslation();
   const { mapHidden, setMapHidden, mapNamed, setMapNamed } = usePreferences();
   const named = useMemo(
@@ -84,6 +89,32 @@ function BodyMap({
           p.object_uuid === search.selected,
       ),
     [map.points, mapHidden, focus?.uuid, search.selected],
+  );
+
+  // Last known position of the selected item (memory only): a new one draws the move. Derived
+  // during render, as React recommends for state following props.
+  const [tracker, setTracker] = useState<MovementTracker | null>(null);
+  const nextTracker = trackMovement(
+    tracker,
+    search.selected ? byUuid.get(search.selected) : undefined,
+    updatedAt,
+  );
+  if (nextTracker !== tracker) setTracker(nextTracker);
+  const move = nextTracker?.movement;
+  const selectedPoint = search.selected ? byUuid.get(search.selected) : undefined;
+  const movement = useMemo(
+    () =>
+      move && selectedPoint
+        ? {
+            move,
+            color: typeColor(selectedPoint.object_type),
+            label: t('map.moved', {
+              distance: formatDistance(move.distance),
+              time: new Date(move.at).toLocaleTimeString(),
+            }),
+          }
+        : null,
+    [move, selectedPoint, t],
   );
 
   const select = useCallback(
@@ -135,6 +166,7 @@ function BodyMap({
             labels={clusterLabels}
             named={named}
             nameOf={pointLabel}
+            movement={movement}
           />
         )
       }

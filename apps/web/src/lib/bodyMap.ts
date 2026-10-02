@@ -161,3 +161,52 @@ export function gridLines(
 /** Distance in metres or kilometres, e.g. `500 m`, `2 km`. */
 export const formatDistance = (metres: number) =>
   metres >= 1000 ? `${Number((metres / 1000).toFixed(3))} km` : `${Number(metres.toFixed(1))} m`;
+
+/** Last move of the selected item, seen between two map refreshes. */
+export interface Movement {
+  from: MapLatLng;
+  to: MapLatLng;
+  /** When the new position was received (ms since epoch). */
+  at: number;
+  /** Straight-line distance in metres (the projection keeps distances). */
+  distance: number;
+}
+
+/** Last known position of the selected item, and its last move. Kept in memory only. */
+export interface MovementTracker {
+  uuid: string;
+  last: MapLatLng;
+  movement: Movement | null;
+}
+
+/**
+ * Follows the selected item between refreshes: a new position becomes the end of a movement
+ * from the previous one. Returns the same tracker when nothing changed (safe to compare), and
+ * starts over when another item is selected.
+ */
+export function trackMovement(
+  tracker: MovementTracker | null,
+  point: MapPoint | undefined,
+  receivedAt: number,
+): MovementTracker | null {
+  if (!point) return null;
+  const position: MapLatLng = [point.y, point.x];
+  if (!tracker || tracker.uuid !== point.object_uuid) {
+    return { uuid: point.object_uuid, last: position, movement: null };
+  }
+  if (tracker.last[0] === position[0] && tracker.last[1] === position[1]) return tracker;
+  return {
+    uuid: point.object_uuid,
+    last: position,
+    movement: {
+      from: tracker.last,
+      to: position,
+      at: receivedAt,
+      distance: Math.hypot(position[0] - tracker.last[0], position[1] - tracker.last[1]),
+    },
+  };
+}
+
+/** Heading of a movement in degrees, clockwise from north (map up). */
+export const movementHeading = ({ from, to }: Pick<Movement, 'from' | 'to'>) =>
+  (Math.atan2(to[1] - from[1], to[0] - from[0]) * 180) / Math.PI;
