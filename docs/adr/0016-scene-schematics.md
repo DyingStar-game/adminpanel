@@ -53,6 +53,13 @@ Option 2.
   matching schematic are unchanged.
 - A test validates every schematic and checks that its paths exist in a sample item.
 
+### Update (2026-10-02): doors swing open
+
+A door is drawn as a leaf hinged at its front end (`at` minus one grid unit): flush with the body
+when closed, swung out by 55° when open, towards the left for doors on the left half of the
+drawing and the right otherwise, with its swing arc and the opening left in the body. How to add
+a schematic is summed up in [`CLAUDE.md`](../../CLAUDE.md) ("Extension points").
+
 ## Consequences
 
 - Adding a model = adding one data file and one line in the index.

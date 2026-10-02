@@ -39,7 +39,9 @@ Disponibles (lot 1, items de persistance) :
   orbital cliquable de ses relations.
 - **Live** : l'objet ouvert se rafraîchit toutes les 2 s, les listes toutes les 5 s, les compteurs
   toutes les 15 s ; mise en pause possible.
-- **Schémas de scène** : une vue de dessus des compartiments d'un véhicule (le camion d'abord).
+- **Schémas de scène** : un dessin vu de dessus par modèle d'objet (`scenename`), lié aux
+  données live : sièges et occupants, compartiments, portes, jauges (le camion d'abord ; chaque
+  nouveau modèle est un fichier déclaratif, voir l'[ADR 0016](../adr/0016-scene-schematics.md)).
 - **Édition** : propriétés validées d'après les définitions de types ; seules les clés modifiées
   sont envoyées, et une valeur changée entre-temps par le jeu demande confirmation avant d'être
   écrasée.

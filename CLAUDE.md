@@ -84,6 +84,31 @@ Check shapes against live data rather than guessing (**GET only**, never POST / 
 - Vehicle `components.Slot_*` are component compartments (not wheels); `seats` map seat names to
   player UUIDs or `""`.
 
+## Extension points
+
+Views adapt to the data through declarative files, validated with Zod at load time:
+
+- **Type profile — per `object_type`** ([ADR 0008](./docs/adr/0008-combined-navigation-type-aware-views.md)),
+  `apps/web/src/lib/profiles/<type>.ts`, registered in `lib/profiles/index.ts`: table columns,
+  headline facts, labelled relations, renderers (`namedMap`, `inlineList`, `angle`,
+  `orbitalSamples`), children order, spawn distance / height, map flags (`map.body`,
+  `map.hidden`). Fields: `lib/profiles/schema.ts`.
+- **Scene schematic — per model `scenename`** ([ADR 0016](./docs/adr/0016-scene-schematics.md)),
+  a top-view drawing of one model bound to live data (the truck today). To add one:
+  1. Look at real items of that model first (`GET /items?scenename=…`) to get the paths.
+  2. Create `apps/web/src/lib/schematics/<model>.ts` on the model of `truck.ts`: exact
+     `scenename` (or a `*` pattern within one path segment), grid `size`, then `shapes`
+     (`body`, `cargo`), `seats`, `bays`, `doors` (a door hinges at its front end and swings out
+     on its side of the drawing) and `readouts` (`gauge`, `toggle`, `value`). Fields:
+     `lib/schematics/schema.ts`; extend this closed vocabulary only when a model needs it.
+  3. Register it in `lib/schematics/index.ts` and add its labels under `schematic.labels.*` in
+     `en.ts` and `fr.ts`.
+  4. `lib/schematics/schematics.test.ts` checks the paths against a sample item: add a fixture
+     with the real shape in `packages/testing/src/fixtures.ts` if the model is not a truck.
+
+The generic organism `SchematicCard` draws any schematic on the object page; nothing else to
+wire.
+
 ## Checking in a browser
 
 Visible changes are checked against the dev servers (`make pnpm dev`) with Playwright in a

@@ -36,7 +36,9 @@ Available (lot 1, persistence items):
   (vehicles, players, planets, stars…), an inspector, and an object page with a clickable orbit
   graph of its relations.
 - **Live**: the open object refreshes every 2 s, lists every 5 s, counts every 15 s; can be paused.
-- **Scene schematics**: a top view of a vehicle's compartments (truck first).
+- **Scene schematics**: a top-view drawing per object model (`scenename`), bound to live data:
+  seats and occupants, component bays, doors, gauges (the truck first; new models are one
+  declarative file each, see [ADR 0016](./docs/adr/0016-scene-schematics.md)).
 - **Editing**: properties validated against the type definitions; only changed keys are sent, and a
   value the game changed meanwhile asks before being overwritten.
 - **Create, duplicate, delete**: creation from the definitions with a scene picker; spawn or
