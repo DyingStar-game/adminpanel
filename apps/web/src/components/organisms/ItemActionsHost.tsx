@@ -2,6 +2,7 @@ import type { Item } from '@dyingstar-admin/schemas';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useItemActions } from '@/stores/itemActions';
 import { DeleteItemDialog } from './DeleteItemDialog';
+import { DuplicateDialog } from './DuplicateDialog';
 import { ItemCreateSheet } from './ItemCreateSheet';
 import { ItemEditSheet } from './ItemEditSheet';
 
@@ -36,6 +37,16 @@ export function ItemActionsHost({ onCreated, onDeleted }: ItemActionsHostProps) 
           )}
         </SheetContent>
       </Sheet>
+      {action?.kind === 'duplicate' && (
+        <DuplicateDialog
+          uuid={action.uuid}
+          onCancel={close}
+          onDuplicated={(item) => {
+            close();
+            onCreated(item);
+          }}
+        />
+      )}
       {action?.kind === 'delete' && (
         <DeleteItemDialog
           uuid={action.uuid}

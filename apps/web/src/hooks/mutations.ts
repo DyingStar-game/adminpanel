@@ -1,5 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ItemSchema, type Item, type UpdateItemRequest } from '@dyingstar-admin/schemas';
+import {
+  DuplicateResponseSchema,
+  ItemSchema,
+  type DuplicateRequest,
+  type Item,
+  type UpdateItemRequest,
+} from '@dyingstar-admin/schemas';
 import { apiSend } from '@/lib/api';
 import { usePreferences } from '@/stores/preferences';
 
@@ -43,6 +49,23 @@ export function useDeleteItem() {
   return useMutation({
     mutationFn: async (uuid: string) => {
       await apiSend('DELETE', itemPath(uuid), { serverId });
+    },
+    onSuccess: afterWrite,
+  });
+}
+
+/** `POST /api/items/:uuid/duplicate` — copies the item and its children (ADR 0017). */
+export function useDuplicateItem() {
+  const serverId = usePreferences((s) => s.serverId);
+  const afterWrite = useAfterWrite();
+  return useMutation({
+    mutationFn: async ({ uuid, ...body }: DuplicateRequest & { uuid: string }) => {
+      const res = await apiSend('POST', `${itemPath(uuid)}/duplicate`, {
+        serverId,
+        body,
+        schema: DuplicateResponseSchema,
+      });
+      return res?.created ?? [];
     },
     onSuccess: afterWrite,
   });

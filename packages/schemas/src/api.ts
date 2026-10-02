@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { UuidSchema } from './common';
-import { ItemSchema, ObjectDataSchema, ObjectTypeSchema } from './persistence';
+import { ItemSchema, ObjectDataSchema, ObjectTypeSchema, Vec3Schema } from './persistence';
 
 /** Game server as exposed to the browser: never any internal URL (ADR 0011). */
 export const PublicServerSchema = z.object({
@@ -83,3 +83,17 @@ export const CreateItemRequestSchema = z.object({
   object_uuid: UuidSchema,
   object_data: ObjectDataSchema,
 });
+
+/** `POST /api/items/:uuid/duplicate` (ADR 0017). */
+export const DuplicateRequestSchema = z.object({
+  /** Parent of the copy (positions are relative to it). */
+  parent_id: z.string(),
+  position: Vec3Schema.optional(),
+  rotation: Vec3Schema.optional(),
+  /** Copy the children too, recursively (references remapped). */
+  children: z.boolean().default(true),
+});
+export type DuplicateRequest = z.input<typeof DuplicateRequestSchema>;
+
+/** Created copies, the root first, parents before children. */
+export const DuplicateResponseSchema = z.object({ created: z.array(ItemSchema) });

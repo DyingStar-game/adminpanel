@@ -107,6 +107,15 @@ describe('ObjectPage', () => {
     expect(action?.kind === 'create' && action.spawn?.nearLabel).toBe('ddurieux');
   });
 
+  it('opens the duplication from the object page', async () => {
+    useInProcessBff();
+    renderPage(ids.vehicle);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Duplicate' }));
+
+    expect(useItemActions.getState().action).toEqual({ kind: 'duplicate', uuid: ids.vehicle });
+  });
+
   it('opens the item in the explorer and reports unknown items', async () => {
     useInProcessBff();
     const { onOpenInExplorer } = renderPage(ids.rock);

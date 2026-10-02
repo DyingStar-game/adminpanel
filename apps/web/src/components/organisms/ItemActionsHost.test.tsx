@@ -7,6 +7,7 @@ import { renderWithProviders } from '@/test/render';
 import { useInProcessBff } from '@/test/bff';
 import { Toaster } from '@/components/ui/sonner';
 import { useItemActions } from '@/stores/itemActions';
+import { usePreferences } from '@/stores/preferences';
 import { ItemActionsHost } from './ItemActionsHost';
 
 function renderHost() {
@@ -173,5 +174,56 @@ describe('ItemActionsHost', () => {
 
     await vi.waitFor(() => expect(onDeleted).toHaveBeenCalled());
     expect(bff.persistence.items.has(ids.vehicle)).toBe(false);
+  });
+
+  it('duplicates an item and its children next to a picked player', async () => {
+    const bff = useInProcessBff();
+    const { onCreated } = renderHost();
+    const before = bff.persistence.items.size;
+    act(() => useItemActions.getState().duplicate(ids.vehicle));
+
+    const dialog = await screen.findByRole('dialog', { name: /Duplicate vehicle 4e9a9ff9/ });
+    await userEvent.click(await within(dialog).findByRole('option', { name: /ddurieux/ }));
+    const placement = within(dialog).getByRole('region', { name: 'Placement of the copy' });
+    expect(within(placement).getByText(/next to ddurieux/)).toBeInTheDocument();
+    expect(within(placement).getByLabelText('parent_id')).toHaveValue(ids.spawnbuilding);
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Duplicate' }));
+
+    await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
+    expect(bff.persistence.items.size).toBe(before + 3);
+    const root = stored(bff, onCreated.mock.calls[0]?.[0].object_uuid);
+    expect(root.object_data).toMatchObject({ parent_id: ids.spawnbuilding, pilot_uuid: '' });
+    // The player is remembered as "me".
+    expect(usePreferences.getState().me).toBe(ids.player);
+  });
+
+  it('places the copy next to any item given by UUID', async () => {
+    useInProcessBff();
+    renderHost();
+    act(() => useItemActions.getState().duplicate(ids.vehicle));
+
+    const dialog = await screen.findByRole('dialog');
+    await userEvent.type(
+      within(dialog).getByRole('textbox', { name: 'or any item UUID' }),
+      ids.spawnbuilding,
+    );
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Use' }));
+
+    expect(await within(dialog).findByText(/next to tarsis_4-1006/)).toBeInTheDocument();
+    expect(within(dialog).getByLabelText('parent_id')).toHaveValue(ids.planet);
+  });
+
+  it('blocks an invalid placement', async () => {
+    useInProcessBff();
+    renderHost();
+    act(() => useItemActions.getState().duplicate(ids.vehicle));
+
+    const dialog = await screen.findByRole('dialog');
+    const x = await within(dialog).findByRole('textbox', { name: 'position x' });
+    await userEvent.clear(x);
+    await userEvent.type(x, 'abc');
+
+    expect(within(dialog).getByRole('button', { name: 'Duplicate' })).toBeDisabled();
   });
 });

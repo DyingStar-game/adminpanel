@@ -26,6 +26,8 @@ export const ErrorCode = {
   alreadyExists: 'ALREADY_EXISTS',
   unknownObjectType: 'UNKNOWN_OBJECT_TYPE',
   editConflict: 'EDIT_CONFLICT',
+  duplicateTooLarge: 'DUPLICATE_TOO_LARGE',
+  duplicatePartial: 'DUPLICATE_PARTIAL',
   upstreamRejected: 'UPSTREAM_REJECTED',
   upstreamError: 'UPSTREAM_ERROR',
   upstreamTimeout: 'UPSTREAM_TIMEOUT',

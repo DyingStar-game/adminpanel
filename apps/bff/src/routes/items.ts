@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import {
   CreateItemRequestSchema,
+  DuplicateRequestSchema,
   ExistsRequestSchema,
   createListItemsQuerySchema,
   UpdateItemRequestSchema,
@@ -28,6 +29,16 @@ export const itemsRoutes = new Hono<ServerContext>()
   )
   .get('/:uuid', validate('param', UuidParam), async (c) =>
     c.json(await c.var.items.get(c.req.valid('param').uuid)),
+  )
+  .post(
+    '/:uuid/duplicate',
+    validate('param', UuidParam),
+    validate('json', DuplicateRequestSchema),
+    async (c) =>
+      c.json(
+        { created: await c.var.items.duplicate(c.req.valid('param').uuid, c.req.valid('json')) },
+        201,
+      ),
   )
   .get('/:uuid/ancestors', validate('param', UuidParam), async (c) =>
     c.json(await c.var.items.ancestors(c.req.valid('param').uuid)),

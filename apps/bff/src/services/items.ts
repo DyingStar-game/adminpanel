@@ -6,6 +6,7 @@ import {
   type AncestorsResponse,
   type ChildrenCountsResponse,
   type CreateItem,
+  type DuplicateRequest,
   type Item,
   type ListItemsQuery,
   type PaginatedItems,
@@ -14,6 +15,7 @@ import {
 import type { PersistenceClient } from '../clients/persistence';
 import { ApiError, notFound } from '../lib/errors';
 import type { DefinitionsService } from './definitions';
+import { planDuplicate } from './duplicate';
 import { mergeEdit, type EditRequest } from './merge';
 
 /** Depth guard when walking `parent_id` up (ADR 0005). */
@@ -23,6 +25,8 @@ const EXISTS_DIRECT_LOOKUP_MAX = 50;
 const SCAN_PAGE_SIZE = 10_000;
 /** Lifetime of the known scenes list (one full scan per refresh). */
 const SCENES_TTL_MS = 5 * 60 * 1000;
+/** Largest subtree duplicated at once (ADR 0017). */
+export const MAX_DUPLICATE = 200;
 
 export interface ItemsServiceOptions {
   client: PersistenceClient;
@@ -148,6 +152,62 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
       const byType = counts.filter((c) => c.total > 0);
       const known = byType.reduce((sum, c) => sum + c.total, 0);
       return { total: all, byType, other: Math.max(all - known, 0) };
+    },
+
+    /**
+     * Duplicates an item, and its descendants when asked, next to a target (ADR 0017).
+     * Parents are created before their children; a failure reports what was already created.
+     */
+    async duplicate(uuid: string, request: DuplicateRequest): Promise<Item[]> {
+      const source = await client.get(uuid);
+      if (!source) throw notFound(`Item ${uuid} not found`);
+      const items = [source];
+      // Breadth-first: parents always come before their children.
+      for (let i = 0; request.children !== false && i < items.length; i++) {
+        const parent = items[i] as Item;
+        for (let page = 1; ; page++) {
+          const res = await client.list({
+            parent_id: parent.object_uuid,
+            page,
+            page_size: SCAN_PAGE_SIZE,
+          });
+          items.push(...res.items);
+          if (items.length > MAX_DUPLICATE) {
+            throw new ApiError(
+              400,
+              ErrorCode.duplicateTooLarge,
+              `Duplicating more than ${MAX_DUPLICATE} items at once is not allowed`,
+              { max: MAX_DUPLICATE },
+            );
+          }
+          if (res.items.length < SCAN_PAGE_SIZE || page * SCAN_PAGE_SIZE >= res.total) break;
+        }
+      }
+      for (const type of new Set(items.map((item) => item.object_type)))
+        await assertKnownType(type);
+
+      const copies = planDuplicate(items, {
+        parentId: request.parent_id,
+        position: request.position,
+        rotation: request.rotation,
+      });
+      const created: Item[] = [];
+      try {
+        for (const copy of copies) created.push(await client.create(copy));
+      } catch (error) {
+        throw new ApiError(
+          502,
+          ErrorCode.duplicatePartial,
+          `Duplication stopped after ${created.length} of ${copies.length} items`,
+          {
+            created: created.map((item) => item.object_uuid),
+            cause: error instanceof Error ? error.message : String(error),
+          },
+        );
+      } finally {
+        reads.clear();
+      }
+      return created;
     },
 
     /** `scenename` values in use, with their type and count, most used first. */

@@ -5,7 +5,8 @@ import type { SpawnPreset } from '@/lib/spawn';
 export type ItemAction =
   | { kind: 'edit'; uuid: string }
   | { kind: 'create'; parentId: string; objectType?: string | undefined; spawn?: SpawnContext }
-  | { kind: 'delete'; uuid: string };
+  | { kind: 'delete'; uuid: string }
+  | { kind: 'duplicate'; uuid: string };
 
 /** Creation next to an entity: its parent, position and yaw, and its label for the UI. */
 export interface SpawnContext {
@@ -22,6 +23,7 @@ interface ItemActionsState {
     spawn?: SpawnContext;
   }) => void;
   remove: (uuid: string) => void;
+  duplicate: (uuid: string) => void;
   close: () => void;
 }
 
@@ -30,5 +32,6 @@ export const useItemActions = create<ItemActionsState>()((set) => ({
   edit: (uuid) => set({ action: { kind: 'edit', uuid } }),
   create: (context) => set({ action: { kind: 'create', ...context } }),
   remove: (uuid) => set({ action: { kind: 'delete', uuid } }),
+  duplicate: (uuid) => set({ action: { kind: 'duplicate', uuid } }),
   close: () => set({ action: null }),
 }));

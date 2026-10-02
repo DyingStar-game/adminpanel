@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ids } from '@dyingstar-admin/testing';
+import { createDataset, ids } from '@dyingstar-admin/testing';
 import { buildApp } from '../test/harness';
 
 const json = (body: unknown) => ({ method: 'POST', body: JSON.stringify(body) });
@@ -318,5 +318,75 @@ describe('GET /api/items/scenes', () => {
       object_type: 'vehicle',
       count: 1,
     });
+  });
+});
+
+describe('POST /api/items/:uuid/duplicate', () => {
+  const duplicate = (body: unknown) => ({ method: 'POST', body: JSON.stringify(body) });
+
+  it('copies the vehicle and its components next to the target, parents first', async () => {
+    const { request, persistence } = buildApp();
+    const before = persistence.items.size;
+
+    const res = await request(
+      `/api/items/${ids.vehicle}/duplicate`,
+      duplicate({ parent_id: ids.spawnbuilding, position: { x: 1, y: 0, z: 2 } }),
+    );
+
+    expect(res.status).toBe(201);
+    const { created } = await read(res);
+    expect(created.map((i: { object_type: string }) => i.object_type)).toEqual([
+      'vehicle',
+      'vehicle_component',
+      'vehicle_component',
+    ]);
+    expect(persistence.items.size).toBe(before + 3);
+    const copy = persistence.items.get(created[0].object_uuid);
+    expect(copy?.object_data).toMatchObject({
+      parent_id: ids.spawnbuilding,
+      position: { x: 1, y: 0, z: 2 },
+      pilot_uuid: '',
+      components: { Slot_FL: created[1].object_uuid, Slot_FR: created[2].object_uuid },
+    });
+    // The original is untouched.
+    expect(persistence.items.get(ids.vehicle)?.object_data.pilot_uuid).toBe(ids.player);
+  });
+
+  it('can copy the item alone', async () => {
+    const { request } = buildApp();
+
+    const res = await request(
+      `/api/items/${ids.vehicle}/duplicate`,
+      duplicate({ parent_id: ids.planet, children: false }),
+    );
+
+    expect((await read(res)).created).toHaveLength(1);
+  });
+
+  it('refuses subtrees larger than the limit', async () => {
+    const dataset = createDataset();
+    for (let i = 0; i < 201; i++) {
+      dataset.push({
+        object_type: 'vehicle_component',
+        object_uuid: `aaaaaaaa-0000-4000-8000-${String(i).padStart(12, '0')}`,
+        object_data: { parent_id: ids.vehicle },
+      });
+    }
+    const { request, persistence } = buildApp({ dataset });
+    const before = persistence.items.size;
+
+    const res = await request(`/api/items/${ids.vehicle}/duplicate`, duplicate({ parent_id: '' }));
+
+    expect(res.status).toBe(400);
+    expect(await read(res)).toMatchObject({ error: 'DUPLICATE_TOO_LARGE' });
+    expect(persistence.items.size).toBe(before);
+  });
+
+  it('answers 404 for an unknown item', async () => {
+    const res = await buildApp().request(
+      '/api/items/unknown/duplicate',
+      duplicate({ parent_id: '' }),
+    );
+    expect(res.status).toBe(404);
   });
 });

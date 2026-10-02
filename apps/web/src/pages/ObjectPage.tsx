@@ -1,4 +1,11 @@
-import { CirclePlusIcon, CompassIcon, NetworkIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import {
+  CirclePlusIcon,
+  CompassIcon,
+  CopyIcon,
+  NetworkIcon,
+  PencilIcon,
+  Trash2Icon,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Item } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
@@ -138,6 +145,10 @@ function ObjectDetails({
                 {t('editor.spawnNext')}
               </Button>
             )}
+            <Button variant="outline" size="sm" onClick={() => actions.duplicate(item.object_uuid)}>
+              <CopyIcon />
+              {t('duplicate.action')}
+            </Button>
             <Button variant="outline" size="sm" onClick={() => actions.edit(item.object_uuid)}>
               <PencilIcon />
               {t('editor.edit')}
