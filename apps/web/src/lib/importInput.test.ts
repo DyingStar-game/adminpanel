@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { IMPORT_MAX_ITEMS } from '@dyingstar-admin/schemas';
 import {
   importSummary,
+  itemRanges,
   normalizeImport,
   overwriteRequest,
   parseImportText,
@@ -104,5 +105,16 @@ describe('importSummary and overwriteRequest', () => {
       removed: ['a'],
       force: true,
     });
+  });
+});
+
+describe('itemRanges', () => {
+  it('gives the lines of every item of the array, or of the single item', () => {
+    const text = '[\n  {"a": 1},\n  {\n    "b": 2\n  }\n]';
+    expect(itemRanges(text)).toEqual([
+      { offset: 4, fromLine: 2, toLine: 2 },
+      { offset: 16, fromLine: 3, toLine: 5 },
+    ]);
+    expect(itemRanges('{"a": 1}')).toEqual([{ offset: 0, fromLine: 1, toLine: 1 }]);
   });
 });

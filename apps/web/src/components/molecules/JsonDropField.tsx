@@ -19,6 +19,8 @@ interface JsonDropFieldProps {
   invalid?: boolean;
   /** Line (1-based) highlighted in the gutter: where the JSON is malformed. */
   errorLine?: number | undefined;
+  /** Line ranges (1-based, inclusive) highlighted in the gutter, e.g. probable duplicates. */
+  highlights?: { fromLine: number; toLine: number }[];
   /** Puts the cursor at this offset and scrolls to it; a new `nonce` asks again. */
   focusAt?: { offset: number; nonce: number } | null;
   labels: { field: string; drop: string; pick: string; placeholder: string };
@@ -37,6 +39,7 @@ export function JsonDropField({
   maxBytes,
   invalid = false,
   errorLine,
+  highlights = [],
   focusAt,
   labels,
 }: JsonDropFieldProps) {
@@ -92,6 +95,8 @@ export function JsonDropField({
             <div
               key={i}
               className={cn(
+                highlights.some((h) => i + 1 >= h.fromLine && i + 1 <= h.toLine) &&
+                  'bg-amber-500/20 text-amber-700 dark:text-amber-400',
                 i + 1 === errorLine &&
                   'rounded-sm bg-destructive/15 font-semibold text-destructive',
               )}

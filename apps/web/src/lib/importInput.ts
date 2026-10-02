@@ -1,4 +1,4 @@
-import { parse, printParseErrorCode, type ParseError } from 'jsonc-parser';
+import { parse, parseTree, printParseErrorCode, type ParseError } from 'jsonc-parser';
 import {
   IMPORT_MAX_BYTES,
   IMPORT_MAX_ITEMS,
@@ -152,4 +152,27 @@ export function overwriteRequest(latest: ObjectData, objectType: string, data: O
     removed: Object.keys(latest).filter((key) => !(key in data)),
     force: true,
   };
+}
+
+/** Where an item sits in the import text: start offset and first / last line (1-based). */
+export interface ItemRange {
+  offset: number;
+  fromLine: number;
+  toLine: number;
+}
+
+/**
+ * Text range of every item of a well-formed import, by row index (an array's elements, or the
+ * single item), so rows can be shown in the JSON field. Empty when the text does not parse.
+ */
+export function itemRanges(text: string): ItemRange[] {
+  const root = parseTree(text, [], { disallowComments: true, allowTrailingComma: false });
+  if (!root) return [];
+  const nodes = root.type === 'array' ? (root.children ?? []) : [root];
+  const lineAt = (offset: number) => text.slice(0, offset).split('\n').length;
+  return nodes.map((node) => ({
+    offset: node.offset,
+    fromLine: lineAt(node.offset),
+    toLine: lineAt(node.offset + node.length),
+  }));
 }

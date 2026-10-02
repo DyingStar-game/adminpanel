@@ -345,6 +345,7 @@ export const en = {
     noRow: 'No item.',
     row: 'Item {{index}}',
     generated: 'generated UUID',
+    showInJson: 'Show in the JSON',
     overwrite: 'Overwrite',
     status: { invalid: 'invalid', new: 'new', conflict: 'exists' },
     outcome: { created: 'created', overwritten: 'overwritten', failed: 'failed' },

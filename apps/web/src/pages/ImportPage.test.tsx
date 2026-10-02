@@ -123,6 +123,42 @@ describe('ImportPage', () => {
     expect(clear).toBeDisabled();
   });
 
+  it('points out probable duplicates in the results and in the JSON', async () => {
+    useInProcessBff();
+    renderWithProviders(<ImportPage search={{}} />);
+    // Same type and name as the fixture's spawn building, elsewhere.
+    paste(
+      JSON.stringify(
+        [
+          truck(NEW),
+          {
+            object_type: 'spawnbuilding',
+            object_uuid: '22222222-2222-4222-8222-222222222222',
+            object_data: {
+              parent_id: ids.planet,
+              name: 'tarsis_4-1006',
+              position: { x: 1, y: 2, z: 3 },
+            },
+          },
+        ],
+        null,
+        2,
+      ),
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Check' }));
+
+    expect(await within(row(2)).findByText(/Probable duplicate/)).toBeInTheDocument();
+    expect(row(2)).toHaveAttribute('data-duplicate', 'true');
+    expect(row(1)).not.toHaveAttribute('data-duplicate');
+
+    await userEvent.click(within(row(2)).getByRole('button', { name: 'Show in the JSON' }));
+    const textarea = field() as HTMLTextAreaElement;
+    expect(textarea).toHaveFocus();
+    expect(textarea.value.slice(textarea.selectionStart)).toMatch(
+      /^\{\s+"object_type": "spawnbuilding"/,
+    );
+  });
+
   it('overwrites existing items when asked', async () => {
     const bff = useInProcessBff();
     renderWithProviders(<ImportPage search={{}} />);

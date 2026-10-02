@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { CircleXIcon, InfoIcon, TriangleAlertIcon } from 'lucide-react';
+import { CircleXIcon, InfoIcon, TextSearchIcon, TriangleAlertIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ImportFinding, ImportRow } from '@dyingstar-admin/schemas';
 import { CopyButton } from '@/components/atoms/CopyButton';
@@ -7,6 +7,7 @@ import { MonoText } from '@/components/atoms/MonoText';
 import { TypeDot } from '@/components/atoms/TypeDot';
 import { Pagination } from '@/components/molecules/Pagination';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import type { ImportOutcome } from '@/hooks/useImport';
@@ -22,9 +23,15 @@ interface ImportResultsProps {
   overwrite: Set<number>;
   onOverwrite: (index: number, overwrite: boolean) => void;
   outcomes: Map<number, ImportOutcome>;
+  /** Puts the cursor on the row's item in the JSON field (when its place is known). */
+  onShowInJson?: ((index: number) => void) | undefined;
 }
 
 const PAGE_SIZE = 50;
+
+/** Rows to point out: a probable duplicate of an item already on the server. */
+export const isProbableDuplicate = (row: ImportRow) =>
+  row.findings.some((f) => f.code === 'possibleDuplicate');
 
 const nameOf = (item: unknown): string | null => {
   const data = (item as { object_data?: { name?: unknown } } | null)?.object_data;
@@ -39,6 +46,7 @@ export function ImportResults({
   overwrite,
   onOverwrite,
   outcomes,
+  onShowInJson,
 }: ImportResultsProps) {
   const { t } = useTranslation();
   const [filter, setFilter] = useState<ImportFilter>('all');
@@ -96,6 +104,7 @@ export function ImportResults({
             overwrite={overwrite.has(row.index)}
             onOverwrite={(value) => onOverwrite(row.index, value)}
             outcome={outcomes.get(row.index)}
+            onShowInJson={onShowInJson && (() => onShowInJson(row.index))}
           />
         ))}
         {pageRows.length === 0 && (
@@ -120,7 +129,9 @@ function ImportRowView({
   overwrite,
   onOverwrite,
   outcome,
+  onShowInJson,
 }: {
+  onShowInJson?: (() => void) | undefined;
   row: ImportRow;
   name: string | null;
   generated: boolean;
@@ -133,7 +144,11 @@ function ImportRowView({
   return (
     <li
       aria-label={t('import.row', { index: row.index + 1 })}
-      className="flex flex-col gap-1.5 px-3 py-2"
+      data-duplicate={isProbableDuplicate(row) || undefined}
+      className={cn(
+        'flex flex-col gap-1.5 px-3 py-2',
+        isProbableDuplicate(row) && 'border-l-4 border-l-amber-500 bg-amber-500/10',
+      )}
     >
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <MonoText tone="subtle" className="w-10 shrink-0 text-[11px]">
@@ -163,6 +178,17 @@ function ImportRowView({
           </span>
         )}
         <span className="flex-1" />
+        {onShowInJson && (
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={t('import.showInJson')}
+            title={t('import.showInJson')}
+            onClick={onShowInJson}
+          >
+            <TextSearchIcon />
+          </Button>
+        )}
         {row.status === 'conflict' && !outcome && (
           <span className="flex items-center gap-1.5">
             <Switch id={switchId} size="sm" checked={overwrite} onCheckedChange={onOverwrite} />

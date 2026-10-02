@@ -349,6 +349,7 @@ export const fr: Translations = {
     noRow: 'Aucun objet.',
     row: 'Objet {{index}}',
     generated: 'UUID généré',
+    showInJson: 'Voir dans le JSON',
     overwrite: 'Écraser',
     status: { invalid: 'invalide', new: 'nouveau', conflict: 'existe' },
     outcome: { created: 'créé', overwritten: 'écrasé', failed: 'échec' },

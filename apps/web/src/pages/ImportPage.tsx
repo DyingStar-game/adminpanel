@@ -10,7 +10,7 @@ import {
 } from '@dyingstar-admin/schemas';
 import { JsonDropField } from '@/components/molecules/JsonDropField';
 import { WriteConfirm } from '@/components/molecules/WriteConfirm';
-import { ImportResults } from '@/components/organisms/ImportResults';
+import { ImportResults, isProbableDuplicate } from '@/components/organisms/ImportResults';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +21,7 @@ import { useImportCheck, useImportRun, type ImportOutcome } from '@/hooks/useImp
 import { useImportDraft } from '@/stores/importDraft';
 import { useWriteTarget } from '@/hooks/useWriteTarget';
 import { cn } from '@/lib/cn';
-import { importSummary, normalizeImport, parseImportText } from '@/lib/importInput';
+import { importSummary, itemRanges, normalizeImport, parseImportText } from '@/lib/importInput';
 import type { ImportSearch } from '@/lib/importSearch';
 
 interface ImportPageProps {
@@ -97,6 +97,16 @@ export function ImportPage({ search }: ImportPageProps) {
   };
 
   const summary = checked ? importSummary(checked.rows) : null;
+  // Where each item sits in the text (unchanged since the check: an edit drops the check).
+  const ranges = useMemo(() => (checked ? itemRanges(text) : []), [checked, text]);
+  const duplicateLines = useMemo(
+    () =>
+      (checked?.rows ?? []).flatMap((row) => {
+        const range = ranges[row.index];
+        return range && isProbableDuplicate(row) ? [range] : [];
+      }),
+    [checked, ranges],
+  );
   const plan = useMemo(
     () =>
       (checked?.rows ?? []).flatMap((row) =>
@@ -182,6 +192,7 @@ export function ImportPage({ search }: ImportPageProps) {
             maxBytes={IMPORT_MAX_BYTES}
             invalid={!!inputError}
             errorLine={inputError?.reason === 'syntax' ? inputError.line : undefined}
+            highlights={duplicateLines}
             focusAt={focusAt}
             labels={{
               field: t('import.field'),
@@ -361,6 +372,10 @@ export function ImportPage({ search }: ImportPageProps) {
                 })
               }
               outcomes={run.outcomes}
+              onShowInJson={(index) => {
+                const range = ranges[index];
+                if (range) setFocusAt({ offset: range.offset, nonce: Date.now() });
+              }}
             />
           </>
         )}
