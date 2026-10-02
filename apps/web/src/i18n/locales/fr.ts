@@ -52,7 +52,7 @@ export const fr: Translations = {
     loading: 'Chargement…',
     error: "Impossible de charger l'objet.",
     notFound:
-      "Objet {{uuid}} introuvable : il a peut-être été supprimé ou recréé par le jeu. Le live est arrêté.",
+      'Objet {{uuid}} introuvable : il a peut-être été supprimé ou recréé par le jeu. Le live est arrêté.',
     relations: 'Relations',
     children: 'enfants',
     noChildren: 'aucun',
