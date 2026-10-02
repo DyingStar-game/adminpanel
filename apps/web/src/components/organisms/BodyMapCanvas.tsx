@@ -78,7 +78,7 @@ function markerIcon(objectType: string, selected: boolean, name: string | null):
     const square = markerShape(objectType) === 'square';
     const size = (selected ? 16 : 10) + (square ? 2 : 0);
     const label = name
-      ? `<span class="pointer-events-none absolute bottom-full left-1/2 mb-0.5 -translate-x-1/2 whitespace-nowrap text-[10.5px] font-medium leading-none text-foreground [text-shadow:0_0_3px_var(--background),0_0_3px_var(--background),0_0_2px_var(--background)]">${escapeHtml(name)}</span>`
+      ? `<span class="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap text-[13px] font-semibold leading-none text-foreground [text-shadow:0_0_3px_var(--background),0_0_3px_var(--background),0_0_2px_var(--background)]">${escapeHtml(name)}</span>`
       : '';
     icon = L.divIcon({
       className: '',
