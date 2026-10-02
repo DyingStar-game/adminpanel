@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { DownloadIcon, RotateCcwIcon, SearchCheckIcon, UploadIcon } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { DownloadIcon, EraserIcon, RotateCcwIcon, SearchCheckIcon, UploadIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import {
@@ -64,11 +64,23 @@ export function ImportPage({ search }: ImportPageProps) {
   const parentOk =
     !useDefaultParent || defaultParent === '' || UuidSchema.safeParse(defaultParent).success;
 
+  // Bumped on every edit: a check answering after the text changed (or was cleared) is dropped.
+  const generation = useRef(0);
+
   const edit = (value: string) => {
+    generation.current += 1;
     setText(value);
     setChecked(null);
     setInputError(null);
     reset();
+  };
+
+  /** Empties the import: text, loaded file, findings, choices and the last run. */
+  const clear = () => {
+    setFileName(null);
+    setOverwrite(new Set());
+    setFocusAt(null);
+    edit('');
   };
 
   const runCheck = async () => {
@@ -86,8 +98,9 @@ export function ImportPage({ search }: ImportPageProps) {
     reset();
     try {
       // The server resolves parent aliases: its items are the ones to send.
+      const started = generation.current;
       const { rows, items } = await check.mutateAsync(normalized.items);
-      setChecked({ ...normalized, items, rows });
+      if (started === generation.current) setChecked({ ...normalized, items, rows });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('import.checkFailed'));
     }
@@ -253,6 +266,10 @@ export function ImportPage({ search }: ImportPageProps) {
               />
             )}
             <span className="flex-1" />
+            <Button variant="outline" onClick={clear} disabled={(!text && !checked) || run.running}>
+              <EraserIcon />
+              {t('import.clear')}
+            </Button>
             <Button
               onClick={() => void runCheck()}
               disabled={!text.trim() || !parentOk || check.isPending || run.running}

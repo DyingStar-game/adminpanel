@@ -303,6 +303,7 @@ export const fr: Translations = {
     },
     defaultParent: 'Niveau des objets sans parent_id',
     rootHint: 'vide = racine, ou l’UUID d’un parent',
+    clear: 'Vider',
     check: 'Vérifier',
     checking: 'Vérification…',
     checkFailed: 'La vérification a échoué.',

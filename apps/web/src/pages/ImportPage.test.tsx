@@ -81,6 +81,23 @@ describe('ImportPage', () => {
     expect(screen.getByRole('button', { name: 'Download the report' })).toBeInTheDocument();
   });
 
+  it('clears the import: text, loaded file and results', async () => {
+    useInProcessBff();
+    renderWithProviders(<ImportPage search={{}} />);
+    const clear = screen.getByRole('button', { name: 'Clear' });
+    expect(clear).toBeDisabled();
+
+    paste(JSON.stringify([truck(NEW)]));
+    await userEvent.click(screen.getByRole('button', { name: 'Check' }));
+    expect(await screen.findByRole('region', { name: 'Checked items' })).toBeInTheDocument();
+
+    await userEvent.click(clear);
+
+    expect(field()).toHaveValue('');
+    expect(screen.queryByRole('region', { name: 'Checked items' })).not.toBeInTheDocument();
+    expect(clear).toBeDisabled();
+  });
+
   it('overwrites existing items when asked', async () => {
     const bff = useInProcessBff();
     renderWithProviders(<ImportPage search={{}} />);

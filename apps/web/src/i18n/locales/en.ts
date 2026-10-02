@@ -299,6 +299,7 @@ export const en = {
     },
     defaultParent: 'Level for items without parent_id',
     rootHint: 'empty = root, or a parent UUID',
+    clear: 'Clear',
     check: 'Check',
     checking: 'Checking…',
     checkFailed: 'The check failed.',
