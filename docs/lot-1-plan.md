@@ -34,7 +34,7 @@ when a step needs a new decision, it is written as a new ADR before coding.
 
 - All steps are done on the working branch `feature/manage-persistence`; one step = one or
   more Conventional Commits (scope = step, e.g. `feat(bff): …`).
-- A step is **done** when: `make pnpm lint`, `make pnpm typecheck` and `make pnpm test` pass,
+- A step is **done** when: `make check` passes (format, lint, typecheck, test, format check),
   the feature is visible in `make start`, EN + FR strings exist, and docs are updated.
 - Tests are written with the code ([ADR 0013](./adr/0013-testing-strategy.md)); MSW fixtures
   follow the real data shapes (roots `parent_id: ""`, quaternion `rotations`, `components` /

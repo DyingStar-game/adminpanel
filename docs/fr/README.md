@@ -98,7 +98,7 @@ Ouvrez **http://localhost:5173** pour l'interface (le port 3000 est l'API du BFF
 Avant de commiter :
 
 ```bash
-make pnpm lint && make pnpm typecheck && make pnpm test && make pnpm format:check
+make check   # formatage, lint, typecheck, tests, vérification du format
 ```
 
 ### Configuration

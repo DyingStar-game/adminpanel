@@ -93,7 +93,7 @@ Open **http://localhost:5173** for the UI (port 3000 is the BFF API). Stop with 
 Before committing:
 
 ```bash
-make pnpm lint && make pnpm typecheck && make pnpm test && make pnpm format:check
+make check   # format, lint, typecheck, test, format check
 ```
 
 ### Configuration
