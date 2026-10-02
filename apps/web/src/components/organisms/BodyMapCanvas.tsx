@@ -6,7 +6,7 @@ import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.css';
 import type { MapPoint } from '@dyingstar-admin/schemas';
-import type { MapLatLng } from '@/lib/bodyMap';
+import { typeMixGradient, type MapLatLng } from '@/lib/bodyMap';
 import { typeColor } from '@/lib/objectTypes';
 
 /** Zoom levels of `CRS.Simple`: 1 m = 2^zoom px; from a whole region down to a few metres. */
@@ -39,6 +39,8 @@ interface BodyMapCanvasProps {
 const toLatLng = (point: MapPoint): MapLatLng => [point.y, point.x];
 
 const icons = new Map<string, L.DivIcon>();
+/** Type of each dot icon, read back by clusters to colour their ring. */
+const iconTypes = new WeakMap<L.Icon | L.DivIcon, string>();
 /** Coloured dot of a type; selected points get a ring. Cached: one icon per type and state. */
 function dotIcon(objectType: string, selected: boolean): L.DivIcon {
   const key = `${objectType}|${selected}`;
@@ -53,6 +55,7 @@ function dotIcon(objectType: string, selected: boolean): L.DivIcon {
       }" style="background:${typeColor(objectType)}"></span>`,
     });
     icons.set(key, icon);
+    iconTypes.set(icon, objectType);
   }
   return icon;
 }
@@ -91,10 +94,14 @@ const Points = memo(function Points({
     () => (cluster: L.MarkerCluster) => {
       const count = cluster.getChildCount();
       const size = count < 10 ? 26 : count < 100 ? 32 : 38;
+      const types = cluster
+        .getAllChildMarkers()
+        .map((marker) => iconTypes.get(marker.options.icon as L.DivIcon) ?? 'unknown');
+      // Coloured ring (share of each type) around the count.
       return L.divIcon({
         className: '',
         iconSize: [size, size],
-        html: `<span aria-label="${labels.cluster(count)}" class="grid size-full place-items-center rounded-full border border-line-strong bg-background/90 font-mono text-[11px] font-semibold text-foreground shadow-sm">${count}</span>`,
+        html: `<span aria-label="${labels.cluster(count)}" class="block size-full rounded-full p-[3px] shadow-sm" style="background:${typeMixGradient(types)}"><span class="grid size-full place-items-center rounded-full bg-background font-mono text-[11px] font-semibold text-foreground">${count}</span></span>`,
       });
     },
     [labels],

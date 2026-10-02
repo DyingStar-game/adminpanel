@@ -5,6 +5,7 @@ import {
   type MapPoint,
 } from '@dyingstar-admin/schemas';
 import { shortUuid } from './itemLabel';
+import { typeColor } from './objectTypes';
 import { profileFor } from './profiles';
 
 /** Whether items of this type have a planetary map (ADR 0018). */
@@ -57,6 +58,26 @@ export function searchPoints(points: MapPoint[], query: string, limit = 8): MapP
     .map((r) => r.point);
 }
 
+/**
+ * Ring of a cluster: one arc per type, proportional to its share, most numerous first
+ * (a CSS `conic-gradient`). A cluster of a single type gets a plain ring of its colour.
+ */
+export function typeMixGradient(objectTypes: string[]): string {
+  const counts = new Map<string, number>();
+  for (const type of objectTypes) counts.set(type, (counts.get(type) ?? 0) + 1);
+  const total = objectTypes.length || 1;
+  let from = 0;
+  const arcs = [...counts]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .map(([type, count]) => {
+      const to = from + (count / total) * 100;
+      const arc = `${typeColor(type)} ${Number(from.toFixed(2))}% ${Number(to.toFixed(2))}%`;
+      from = to;
+      return arc;
+    });
+  return `conic-gradient(${arcs.join(', ')})`;
+}
+
 /** Altitude in metres or kilometres. */
 export const formatAltitude = (metres: number) =>
   Math.abs(metres) >= 10_000 ? `${(metres / 1000).toFixed(1)} km` : `${Math.round(metres)} m`;
@@ -68,10 +89,13 @@ export const formatLatLon = (lat: number, lon: number) =>
 /** Projected position `[north, east]` in metres: Leaflet `CRS.Simple` order. */
 export type MapLatLng = [number, number];
 
-/** Grid step in degrees giving a handful of lines over `span` degrees. */
+/** At most this many latitude (and longitude) lines over the drawn points. */
+const GRATICULE_LINES = 30;
+
+/** Grid step in degrees giving about `GRATICULE_LINES` lines over `span` degrees. */
 function graticuleStep(span: number): number {
   const steps = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30];
-  return steps.find((step) => span / step <= 12) ?? 30;
+  return steps.find((step) => span / step <= GRATICULE_LINES) ?? 30;
 }
 
 /**

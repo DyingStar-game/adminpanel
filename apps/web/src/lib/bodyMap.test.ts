@@ -9,6 +9,7 @@ import {
   mapLegend,
   pointLabel,
   searchPoints,
+  typeMixGradient,
 } from './bodyMap';
 
 const point = (uuid: string, type: string, name: string | null = null): MapPoint => ({
@@ -66,6 +67,13 @@ describe('body map helpers', () => {
     expect(searchPoints(points, '  ')).toEqual([]);
   });
 
+  it('colours a cluster ring by the share of each type, most numerous first', () => {
+    expect(typeMixGradient(['vehicle', 'player', 'player', 'player'])).toBe(
+      'conic-gradient(#10b981 0% 75%, #e11d48 75% 100%)',
+    );
+    expect(typeMixGradient(['vehicle'])).toBe('conic-gradient(#e11d48 0% 100%)');
+  });
+
   it('formats altitudes and coordinates', () => {
     expect(formatAltitude(301.4)).toBe('301 m');
     expect(formatAltitude(394651)).toBe('394.7 km');
@@ -84,8 +92,10 @@ describe('body map helpers', () => {
       inOrbit: [],
     };
     const grid = graticule(map);
-    // Half-degree lines over a 4° span, one step of margin on each side.
-    expect(grid.lat).toEqual([19.5, 20, 20.5, 21, 21.5, 22, 22.5, 23, 23.5, 24, 24.5]);
+    // 0.2° lines over a 4° span, one step of margin on each side.
+    expect(grid.lat[0]).toBe(19.8);
+    expect(grid.lat.at(-1)).toBe(24.2);
+    expect(grid.lat).toHaveLength(23);
     expect(grid.lines).toHaveLength(grid.lat.length + grid.lon.length);
     // The centre's parallel passes through the projection origin.
     const centreLat = grid.lines[grid.lat.indexOf(22)] ?? [];
