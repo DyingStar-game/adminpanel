@@ -363,7 +363,8 @@ export const en = {
       parentCycle: 'Parent cycle inside the import.',
       badShape: 'Expected a {{expected}}.',
       aliasNotFound: 'No item matches {{alias}} (_<type>_<name>), on the server or in the import.',
-      aliasAmbiguous: '{{count}} items match {{alias}}: give the parent UUID instead.',
+      aliasAmbiguous:
+        '{{count}} items match {{alias}}: give the parent UUID, or name its container first, e.g. _poi_village_<name>/{{alias}}.',
       aliasResolved: '{{alias}} → {{uuid}}',
       typeMismatch: 'object_data.type differs from the object type ({{expected}}).',
       undeclaredKey: 'Not declared in the type definition: not replicated to clients.',

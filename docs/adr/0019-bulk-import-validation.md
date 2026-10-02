@@ -112,6 +112,11 @@ Given by the maintainer:
   shows the resolution as an information; no match (`aliasNotFound`) or several
   (`aliasAmbiguous`: 11 spawn building names are shared by up to 16 buildings) is blocking.
   The check returns the resolved items, which are the ones sent.
+- **Compound alias**: a shared name is narrowed down by its container, segments separated by
+  `/`: `_poi_village_mining_village_45/_spawnbuilding_tarsis_4-1008` is the building of that
+  name linked to that village. Each segment after the first only matches items one of whose
+  top-level properties holds the previous item's UUID (`poi_uuid` for a building and its
+  village, `parent_id`…). Spawn building names are unique within a village (live data).
 
 ## Consequences
 

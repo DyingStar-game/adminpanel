@@ -208,7 +208,10 @@ export function checkImportFormat(items: unknown[], knownTypes: readonly string[
 /**
  * Business rule (ADR 0019): `parent_id` may name its parent instead of giving its UUID, as
  * `_<object_type>_<name>` (e.g. `_planet_SandBox`). Types contain `_` themselves
- * (`poi_village`): the longest known type matching the prefix wins.
+ * (`poi_village`): the longest known type matching the prefix wins. A name shared by several
+ * items is narrowed down by its container, segments separated by `/`:
+ * `_poi_village_mining_village_45/_spawnbuilding_tarsis_4-1008` is the building of that name
+ * linked to that village.
  */
 export const isParentAlias = (value: unknown): value is string =>
   typeof value === 'string' && value.startsWith('_') && value.length > 1;
@@ -225,17 +228,34 @@ export function parseParentAlias(
   return type ? { type, name: body.slice(type.length + 1) } : null;
 }
 
+/** Segments of an alias (`_a_x/_b_y`), or null when one of them is not `_<type>_<name>`. */
+export function parseAliasPath(
+  value: string,
+  knownTypes: readonly string[],
+): { type: string; name: string }[] | null {
+  const segments = value.split('/').map((segment) => parseParentAlias(segment, knownTypes));
+  return segments.every((s) => s !== null) ? (segments as { type: string; name: string }[]) : null;
+}
+
 /** An item that an alias may designate: on the server or in the import. */
 export interface AliasCandidate {
   object_uuid: string;
   object_type: string;
-  name: unknown;
+  object_data: Record<string, unknown>;
 }
 
 /**
- * Replaces parent aliases by the UUID of the only item of that type with that name, among the
- * server's items and the import's own. Returns the resolved items and, per row index, an info
- * (resolved) or an error (not found, ambiguous, unknown type).
+ * An item is linked to a container when one of its top-level properties holds the container's
+ * UUID (`parent_id`, `poi_uuid`…).
+ */
+const linkedTo = (candidate: AliasCandidate, container: string) =>
+  Object.values(candidate.object_data).some((value) => value === container);
+
+/**
+ * Replaces parent aliases by the UUID of the only item they designate, among the server's items
+ * and the import's own: each segment matches by type and name, and from the second one on, among
+ * the items linked to the previous segment's item. Returns the resolved items and, per row
+ * index, an info (resolved) or an error (not found, ambiguous).
  */
 export function resolveParentAliases(
   items: unknown[],
@@ -243,31 +263,40 @@ export function resolveParentAliases(
   knownTypes: readonly string[],
 ): { items: unknown[]; findings: Map<number, ImportFinding[]> } {
   const findings = new Map<number, ImportFinding[]>();
-  const byKey = new Map<string, string[]>();
+  const byKey = new Map<string, AliasCandidate[]>();
   const keyOf = (type: string, name: string) => JSON.stringify([type, name]);
+  const seen = new Set<string>();
   for (const c of candidates) {
-    if (typeof c.name !== 'string' || !c.name) continue;
-    const key = keyOf(c.object_type, c.name);
-    const uuids = byKey.get(key) ?? [];
-    if (!uuids.includes(c.object_uuid)) uuids.push(c.object_uuid);
-    byKey.set(key, uuids);
+    const name = c.object_data.name;
+    if (typeof name !== 'string' || !name || seen.has(c.object_uuid)) continue;
+    seen.add(c.object_uuid);
+    const key = keyOf(c.object_type, name);
+    byKey.set(key, [...(byKey.get(key) ?? []), c]);
   }
+
   const path = 'object_data.parent_id';
   const resolved = items.map((raw, index) => {
     if (!isRecord(raw) || !isRecord(raw.object_data)) return raw;
     const alias = raw.object_data.parent_id;
     if (!isParentAlias(alias)) return raw;
-    const parsed = parseParentAlias(alias, knownTypes);
-    const matches = parsed ? (byKey.get(keyOf(parsed.type, parsed.name)) ?? []) : [];
-    const [uuid] = matches;
-    if (parsed && matches.length === 1 && uuid) {
+    const segments = parseAliasPath(alias, knownTypes);
+    let matches: AliasCandidate[] = [];
+    for (const [i, segment] of (segments ?? []).entries()) {
+      const named = byKey.get(keyOf(segment.type, segment.name)) ?? [];
+      const container = matches[0]?.object_uuid;
+      matches = i === 0 ? named : container ? named.filter((c) => linkedTo(c, container)) : [];
+      // A container must be unique before narrowing down inside it.
+      if (matches.length !== 1) break;
+    }
+    const uuid = matches[0]?.object_uuid;
+    if (segments && matches.length === 1 && uuid) {
       findings.set(index, [
         { code: 'aliasResolved', severity: 'info', path, params: { alias, uuid } },
       ]);
       return { ...raw, object_data: { ...raw.object_data, parent_id: uuid } };
     }
     findings.set(index, [
-      parsed && matches.length > 1
+      segments && matches.length > 1
         ? error('aliasAmbiguous', path, { alias, count: matches.length })
         : error('aliasNotFound', path, { alias }),
     ]);

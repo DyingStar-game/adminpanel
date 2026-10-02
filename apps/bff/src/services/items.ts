@@ -256,23 +256,21 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
       const types = defs.map((d) => d.type);
       // Parent aliases (`_planet_SandBox`) designate an item of the server or of the import.
       const own = items.flatMap((item) => {
-        const i = item as {
-          object_uuid?: unknown;
-          object_type?: unknown;
-          object_data?: { name?: unknown };
-        };
-        return typeof i?.object_uuid === 'string' && typeof i.object_type === 'string'
-          ? [{ object_uuid: i.object_uuid, object_type: i.object_type, name: i.object_data?.name }]
+        const i = item as { object_uuid?: unknown; object_type?: unknown; object_data?: unknown };
+        return typeof i?.object_uuid === 'string' &&
+          typeof i.object_type === 'string' &&
+          i.object_data &&
+          typeof i.object_data === 'object'
+          ? [
+              {
+                object_uuid: i.object_uuid,
+                object_type: i.object_type,
+                object_data: i.object_data as Record<string, unknown>,
+              },
+            ]
           : [];
       });
-      const candidates = [
-        ...all.map((i) => ({
-          object_uuid: i.object_uuid,
-          object_type: i.object_type,
-          name: i.object_data.name,
-        })),
-        ...own,
-      ];
+      const candidates = [...all, ...own];
       const aliases = resolveParentAliases(items, candidates, types);
       const rows = checkImportCoherence(
         aliases.items,

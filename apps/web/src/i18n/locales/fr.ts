@@ -369,7 +369,7 @@ export const fr: Translations = {
       aliasNotFound:
         'Aucun objet ne correspond à {{alias}} (_<type>_<nom>), ni sur le serveur ni dans l’import.',
       aliasAmbiguous:
-        '{{count}} objets correspondent à {{alias}} : indique plutôt l’UUID du parent.',
+        '{{count}} objets correspondent à {{alias}} : indique l’UUID du parent, ou nomme d’abord son conteneur, par exemple _poi_village_<nom>/{{alias}}.',
       aliasResolved: '{{alias}} → {{uuid}}',
       typeMismatch: 'object_data.type diffère du type d’objet ({{expected}}).',
       undeclaredKey: 'Non déclaré dans la définition du type : pas répliqué vers les clients.',

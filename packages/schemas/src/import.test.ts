@@ -150,10 +150,24 @@ describe('parent aliases', () => {
   });
 
   it('replaces an alias by the UUID of the only item with that type and name', () => {
+    const named = (
+      uuid: string,
+      type: string,
+      name: string,
+      data: Record<string, unknown> = {},
+    ) => ({
+      object_uuid: uuid,
+      object_type: type,
+      object_data: { name, ...data },
+    });
+    const V1 = '44444444-4444-4444-8444-444444444444';
+    const V2 = '55555555-5555-4555-8555-555555555555';
     const candidates = [
-      { object_uuid: A, object_type: 'planet', name: 'SandBox' },
-      { object_uuid: B, object_type: 'spawnbuilding', name: 'tarsis_4-1008' },
-      { object_uuid: C, object_type: 'spawnbuilding', name: 'tarsis_4-1008' },
+      named(A, 'planet', 'SandBox'),
+      named(V1, 'poi_village', 'mining_village_45'),
+      named(V2, 'poi_village', 'mining_village_03'),
+      named(B, 'spawnbuilding', 'tarsis_4-1008', { poi_uuid: V1 }),
+      named(C, 'spawnbuilding', 'tarsis_4-1008', { poi_uuid: V2 }),
     ];
     const { items, findings } = resolveParentAliases(
       [
@@ -161,11 +175,15 @@ describe('parent aliases', () => {
         item(C, { parent_id: '_spawnbuilding_tarsis_4-1008' }),
         item(C, { parent_id: '_planet_Nowhere' }),
         item(C, { parent_id: B }),
+        item(C, { parent_id: '_poi_village_mining_village_45/_spawnbuilding_tarsis_4-1008' }),
+        item(C, { parent_id: '_poi_village_mining_village_99/_spawnbuilding_tarsis_4-1008' }),
       ],
       candidates,
       types,
     );
-    expect((items[0] as { object_data: { parent_id: string } }).object_data.parent_id).toBe(A);
+    const parentOf = (i: number) =>
+      (items[i] as { object_data: { parent_id: string } }).object_data.parent_id;
+    expect(parentOf(0)).toBe(A);
     expect(findings.get(0)?.[0]).toMatchObject({
       code: 'aliasResolved',
       severity: 'info',
@@ -178,5 +196,8 @@ describe('parent aliases', () => {
     });
     expect(findings.get(2)?.[0]).toMatchObject({ code: 'aliasNotFound', severity: 'error' });
     expect(findings.has(3)).toBe(false);
+    // Narrowed down by the village it is linked to (`poi_uuid`).
+    expect(parentOf(4)).toBe(B);
+    expect(findings.get(5)?.[0]).toMatchObject({ code: 'aliasNotFound' });
   });
 });
