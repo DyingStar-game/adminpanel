@@ -1,9 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ids } from '@dyingstar-admin/testing';
 import { renderWithProviders } from '@/test/render';
 import { useInProcessBff } from '@/test/bff';
+import { useImportDraft } from '@/stores/importDraft';
 import { ImportPage } from './ImportPage';
 
 const NEW = '11111111-1111-4111-8111-111111111111';
@@ -25,6 +26,30 @@ const paste = (text: string) => fireEvent.change(field(), { target: { value: tex
 const row = (n: number) => screen.getByRole('listitem', { name: `Item ${n}` });
 
 describe('ImportPage', () => {
+  // The draft is a module-level store: every test starts from an empty one.
+  beforeEach(() => useImportDraft.getState().clear());
+
+  it('keeps the draft and its check when leaving the page and coming back', async () => {
+    useInProcessBff();
+    const first = renderWithProviders(<ImportPage search={{}} />);
+    paste(JSON.stringify([truck(NEW)]));
+    await userEvent.click(screen.getByRole('button', { name: 'Check' }));
+    await screen.findByText('1 new · 0 already on the server · 0 invalid · 0 with warnings');
+    first.unmount();
+
+    renderWithProviders(<ImportPage search={{ parent: ids.vehicle }} />);
+
+    expect((field() as HTMLTextAreaElement).value).toContain(NEW);
+    expect(
+      screen.getByText('1 new · 0 already on the server · 0 invalid · 0 with warnings'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Import 1 item' })).toBeEnabled();
+    // A kept draft keeps its own default level.
+    expect(
+      screen.getByRole('switch', { name: 'Level for items without parent_id' }),
+    ).not.toBeChecked();
+  });
+
   it('points at the line and column of malformed JSON', async () => {
     useInProcessBff();
     renderWithProviders(<ImportPage search={{}} />);

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DownloadIcon, EraserIcon, RotateCcwIcon, SearchCheckIcon, UploadIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,6 @@ import {
   IMPORT_MAX_BYTES,
   IMPORT_MAX_ITEMS,
   UuidSchema,
-  type ImportRow,
 } from '@dyingstar-admin/schemas';
 import { JsonDropField } from '@/components/molecules/JsonDropField';
 import { WriteConfirm } from '@/components/molecules/WriteConfirm';
@@ -19,69 +18,60 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { useDefinitions } from '@/hooks/queries';
 import { useImportCheck, useImportRun, type ImportOutcome } from '@/hooks/useImport';
+import { useImportDraft } from '@/stores/importDraft';
 import { useWriteTarget } from '@/hooks/useWriteTarget';
 import { cn } from '@/lib/cn';
-import {
-  importSummary,
-  normalizeImport,
-  parseImportText,
-  type ParsedImport,
-} from '@/lib/importInput';
+import { importSummary, normalizeImport, parseImportText } from '@/lib/importInput';
 import type { ImportSearch } from '@/lib/importSearch';
 
 interface ImportPageProps {
   search: ImportSearch;
 }
 
-interface Checked {
-  items: unknown[];
-  generated: Set<number>;
-  rows: ImportRow[];
-}
-
-type InputError = Exclude<ParsedImport, { ok: true }>;
-
 const megabytes = (bytes: number) => Math.round(bytes / 1024 / 1024);
 
-/** Bulk import (ADR 0004, 0019): paste or drop JSON, check every item, then send. */
+/**
+ * Bulk import (ADR 0004, 0019): paste or drop JSON, check every item, then send. The draft
+ * lives in a store: it survives moving to other pages, only Clear empties it.
+ */
 export function ImportPage({ search }: ImportPageProps) {
   const { t } = useTranslation();
   const definitions = useDefinitions();
   const check = useImportCheck();
-  const { state: run, run: start, cancel, reset } = useImportRun();
+  const { run: start, cancel } = useImportRun();
   const { isProduction, server } = useWriteTarget();
-
-  const [text, setText] = useState('');
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [defaultParent, setDefaultParent] = useState(search.parent ?? '');
-  const [useDefaultParent, setUseDefaultParent] = useState(search.parent !== undefined);
-  const [inputError, setInputError] = useState<InputError | null>(null);
-  const [checked, setChecked] = useState<Checked | null>(null);
-  const [overwrite, setOverwrite] = useState<Set<number>>(new Set());
+  const {
+    text,
+    fileName,
+    defaultParent,
+    useDefaultParent,
+    inputError,
+    checked,
+    checking,
+    overwrite,
+    run,
+    edit,
+    setDefaultParent,
+    setUseDefaultParent,
+    setInputError,
+    setChecked,
+    setOverwrite,
+    clear,
+  } = useImportDraft();
   const [confirming, setConfirming] = useState(false);
   const [focusAt, setFocusAt] = useState<{ offset: number; nonce: number } | null>(null);
 
+  // Opened from a level: it becomes the default parent of a new draft (never of a kept one).
+  useEffect(() => {
+    const draft = useImportDraft.getState();
+    if (search.parent !== undefined && !draft.text && !draft.checked) {
+      draft.setDefaultParent(search.parent);
+      draft.setUseDefaultParent(true);
+    }
+  }, [search.parent]);
+
   const parentOk =
     !useDefaultParent || defaultParent === '' || UuidSchema.safeParse(defaultParent).success;
-
-  // Bumped on every edit: a check answering after the text changed (or was cleared) is dropped.
-  const generation = useRef(0);
-
-  const edit = (value: string) => {
-    generation.current += 1;
-    setText(value);
-    setChecked(null);
-    setInputError(null);
-    reset();
-  };
-
-  /** Empties the import: text, loaded file, findings, choices and the last run. */
-  const clear = () => {
-    setFileName(null);
-    setOverwrite(new Set());
-    setFocusAt(null);
-    edit('');
-  };
 
   const runCheck = async () => {
     const parsed = parseImportText(text);
@@ -93,14 +83,14 @@ export function ImportPage({ search }: ImportPageProps) {
     });
     const types = (definitions.data?.definitions ?? []).map((d) => d.type);
     // Format findings at once, then the server's statuses and coherence warnings.
-    setChecked({ ...normalized, rows: checkImportFormat(normalized.items, types) });
-    setOverwrite(new Set());
-    reset();
+    setChecked({
+      ...normalized,
+      rows: checkImportFormat(normalized.items, types),
+      fromServer: false,
+    });
+    setOverwrite(() => new Set());
     try {
-      // The server resolves parent aliases: its items are the ones to send.
-      const started = generation.current;
-      const { rows, items } = await check.mutateAsync(normalized.items);
-      if (started === generation.current) setChecked({ ...normalized, items, rows });
+      await check(normalized);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('import.checkFailed'));
     }
@@ -118,7 +108,7 @@ export function ImportPage({ search }: ImportPageProps) {
       ),
     [checked, overwrite],
   );
-  const serverChecked = checked && check.isSuccess && !check.isPending;
+  const serverChecked = !!checked?.fromServer && !checking;
   const finished = !run.running && run.outcomes.size > 0;
   const failed = [...run.outcomes].filter(([, o]) => o.state === 'failed').map(([index]) => index);
 
@@ -184,14 +174,8 @@ export function ImportPage({ search }: ImportPageProps) {
           <JsonDropField
             id="import-json"
             value={text}
-            onChange={(value) => {
-              setFileName(null);
-              edit(value);
-            }}
-            onFile={(content, name) => {
-              setFileName(name);
-              edit(content);
-            }}
+            onChange={(value) => edit(value)}
+            onFile={(content, name) => edit(content, name)}
             onTooLarge={(name) =>
               toast.error(t('import.fileTooLarge', { name, size: megabytes(IMPORT_MAX_BYTES) }))
             }
@@ -243,10 +227,7 @@ export function ImportPage({ search }: ImportPageProps) {
               <Switch
                 id="import-default-parent"
                 checked={useDefaultParent}
-                onCheckedChange={(value) => {
-                  setUseDefaultParent(value);
-                  setChecked(null);
-                }}
+                onCheckedChange={setUseDefaultParent}
               />
               <Label htmlFor="import-default-parent" className="font-normal">
                 {t('import.defaultParent')}
@@ -256,10 +237,7 @@ export function ImportPage({ search }: ImportPageProps) {
               <Input
                 aria-label="parent_id"
                 value={defaultParent}
-                onChange={(event) => {
-                  setDefaultParent(event.target.value.trim());
-                  setChecked(null);
-                }}
+                onChange={(event) => setDefaultParent(event.target.value.trim())}
                 placeholder={t('import.rootHint')}
                 aria-invalid={!parentOk}
                 className={cn('h-8 w-[340px] font-mono text-xs', !parentOk && 'border-destructive')}
@@ -272,10 +250,10 @@ export function ImportPage({ search }: ImportPageProps) {
             </Button>
             <Button
               onClick={() => void runCheck()}
-              disabled={!text.trim() || !parentOk || check.isPending || run.running}
+              disabled={!text.trim() || !parentOk || checking || run.running}
             >
               <SearchCheckIcon />
-              {check.isPending ? t('import.checking') : t('import.check')}
+              {checking ? t('import.checking') : t('import.check')}
             </Button>
           </div>
         </section>
@@ -297,7 +275,7 @@ export function ImportPage({ search }: ImportPageProps) {
                     id="import-overwrite-all"
                     checked={allOverwritten}
                     onCheckedChange={(value) =>
-                      setOverwrite(value ? new Set(conflicts) : new Set())
+                      setOverwrite(() => (value ? new Set(conflicts) : new Set()))
                     }
                   />
                   <Label htmlFor="import-overwrite-all" className="font-normal">

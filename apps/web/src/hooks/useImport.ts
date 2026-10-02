@@ -1,5 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useCallback } from 'react';
 import pLimit from 'p-limit';
 import {
   ImportCheckResponseSchema,
@@ -9,56 +8,55 @@ import {
   type ObjectData,
 } from '@dyingstar-admin/schemas';
 import { apiGet, apiSend } from '@/lib/api';
-import { overwriteRequest, sendWaves } from '@/lib/importInput';
+import { overwriteRequest, sendWaves, type NormalizedImport } from '@/lib/importInput';
+import { useImportDraft, type ImportOutcome } from '@/stores/importDraft';
 import { usePreferences } from '@/stores/preferences';
 import { useAfterWrite } from './mutations';
 
-/** `POST /api/items/import/check`: statuses and findings, nothing written (ADR 0019). */
+export type { ImportOutcome, ImportRunState } from '@/stores/importDraft';
+
+/**
+ * `POST /api/items/import/check` (read-only, ADR 0019). The answer goes to the import draft,
+ * unless the text changed meanwhile; it lands even if the user left the page.
+ */
 export function useImportCheck() {
   const serverId = usePreferences((s) => s.serverId);
-  return useMutation({
-    mutationFn: async (items: unknown[]) =>
-      (await apiSend('POST', '/api/items/import/check', {
-        serverId,
-        body: { items },
-        schema: ImportCheckResponseSchema,
-      })) as ImportCheckResponse,
-  });
-}
-
-export type ImportOutcome =
-  { state: 'created' | 'overwritten' } | { state: 'failed'; message: string };
-
-export interface ImportRunState {
-  running: boolean;
-  done: number;
-  total: number;
-  /** Outcome per input row index. */
-  outcomes: Map<number, ImportOutcome>;
-  cancelled: boolean;
+  return useCallback(
+    async (normalized: NormalizedImport) => {
+      const draft = useImportDraft.getState();
+      const started = draft.generation;
+      draft.setChecking(true);
+      try {
+        const { rows, items } = (await apiSend('POST', '/api/items/import/check', {
+          serverId,
+          body: { items: normalized.items },
+          schema: ImportCheckResponseSchema,
+        })) as ImportCheckResponse;
+        if (useImportDraft.getState().generation === started) {
+          useImportDraft.getState().setChecked({ ...normalized, items, rows, fromServer: true });
+        }
+      } finally {
+        if (useImportDraft.getState().generation === started) {
+          useImportDraft.getState().setChecking(false);
+        }
+      }
+    },
+    [serverId],
+  );
 }
 
 /** Items sent at once inside a wave (ADR 0004: limited concurrency). */
 const CONCURRENCY = 4;
 
-const IDLE: ImportRunState = {
-  running: false,
-  done: 0,
-  total: 0,
-  outcomes: new Map(),
-  cancelled: false,
-};
-
 /**
  * Sends checked rows one by one through the BFF (ADR 0004): creates (`POST`, 409 if taken) or
  * overwrites (full replace through `PUT`), parents in earlier waves than their children, a few
- * at a time, cancellable between items. Lists and counts refresh once at the end.
+ * at a time, cancellable between items. Progress lives in the import draft, so the send goes on
+ * while the user is on another page. Lists and counts refresh once at the end.
  */
 export function useImportRun() {
   const serverId = usePreferences((s) => s.serverId);
   const afterWrite = useAfterWrite();
-  const [state, setState] = useState<ImportRunState>(IDLE);
-  const cancelRef = useRef(false);
 
   const run = useCallback(
     async (
@@ -67,16 +65,24 @@ export function useImportRun() {
       /** Outcomes of a previous run kept as they are (retrying failed rows). */
       previous: Map<number, ImportOutcome> = new Map(),
     ) => {
-      cancelRef.current = false;
+      const draft = useImportDraft.getState();
+      draft.requestCancel(false);
       const outcomes = new Map(previous);
       for (const { index } of plan) outcomes.delete(index);
       let done = 0;
-      setState({ running: true, done: 0, total: plan.length, outcomes, cancelled: false });
+      draft.setRun(() => ({
+        running: true,
+        done: 0,
+        total: plan.length,
+        outcomes: new Map(outcomes),
+        cancelled: false,
+      }));
       const overwrite = new Map(plan.map((p) => [p.index, p.overwrite]));
       const limit = pLimit(CONCURRENCY);
+      const cancelled = () => useImportDraft.getState().cancelRequested;
 
       const send = async (index: number) => {
-        if (cancelRef.current) return;
+        if (cancelled()) return;
         const item = items[index] as CreateItem;
         try {
           if (overwrite.get(index)) {
@@ -103,26 +109,22 @@ export function useImportRun() {
           });
         }
         done += 1;
-        setState((s) => ({ ...s, done, outcomes: new Map(outcomes) }));
+        useImportDraft.getState().setRun((s) => ({ ...s, done, outcomes: new Map(outcomes) }));
       };
 
       for (const wave of sendWaves(
         items,
         plan.map((p) => p.index),
       )) {
-        if (cancelRef.current) break;
+        if (cancelled()) break;
         await Promise.all(wave.map((index) => limit(() => send(index))));
       }
       await afterWrite();
-      setState((s) => ({ ...s, running: false, cancelled: cancelRef.current }));
+      useImportDraft.getState().setRun((s) => ({ ...s, running: false, cancelled: cancelled() }));
     },
     [serverId, afterWrite],
   );
 
-  const cancel = useCallback(() => {
-    cancelRef.current = true;
-  }, []);
-  const reset = useCallback(() => setState(IDLE), []);
-
-  return { state, run, cancel, reset };
+  const cancel = useCallback(() => useImportDraft.getState().requestCancel(true), []);
+  return { run, cancel };
 }
