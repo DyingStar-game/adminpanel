@@ -67,6 +67,12 @@ export const ORBIT = {
   pageSize: 8,
 } as const;
 
+/** Gap kept between references and the first / last cluster or the parent, in degrees. */
+const REF_MARGIN_DEG = 16;
+
+/** Children of two open clusters closer than this would overlap (node and its label). */
+const NODE_CLEARANCE = 70;
+
 /** Below this many clusters, an open cluster has no neighbour to clear and stays on the ring. */
 const CROWDED_CLUSTERS = 4;
 
@@ -102,6 +108,13 @@ function spread(count: number, from: number, to: number): number[] {
   return Array.from({ length: count }, (_, i) => from + ((to - from) * i) / (count - 1));
 }
 
+/** Positions of `slots` children fanned outwards (±80°) around a cluster at `angle`. */
+function fan(position: { x: number; y: number }, angle: number, slots: number) {
+  return spread(slots, angle - 80, angle + 80).map((a) =>
+    polar(position.x, position.y, ORBIT.childRadius, a),
+  );
+}
+
 export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: OrbitEdge[] } {
   const radii = orbitRadii(input.clusters.length);
   const centerId = input.center.uuid;
@@ -127,15 +140,34 @@ export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: Orb
   // Children clusters around the right, bottom and left sides (the top is the parent's).
   const clusterAngles = spread(input.clusters.length, -30, 210);
   const opened = new Map(input.open.map((o) => [o.objectType, o]));
-  // Ring of the previous cluster when it was open: neighbours alternate between two rings.
-  let previousRing: 'inner' | 'outer' | null = null;
+  // Previous open cluster: an open cluster goes to the outer ring only when the children of the
+  // previous one (on the inner ring) would overlap its own, so neighbours alternate.
+  let previous: { fan: { x: number; y: number }[]; ring: 'inner' | 'outer' } | null = null;
   input.clusters.forEach((cluster, i) => {
     const angle = clusterAngles[i] ?? 0;
     const id = `cluster:${cluster.objectType}`;
     const openCluster = opened.get(cluster.objectType);
     const open = !!openCluster;
-    const ring = open ? (previousRing === 'inner' ? 'outer' : 'inner') : null;
-    previousRing = ring;
+    const slots = openCluster
+      ? Math.min(openCluster.items.length, ORBIT.pageSize) + (openCluster.hasMore ? 1 : 0)
+      : 0;
+    let ring: 'inner' | 'outer' | null = null;
+    if (open) {
+      const innerFan = fan(polar(0, 0, radii.openCluster, angle), angle, slots);
+      const clash =
+        previous?.ring === 'inner' &&
+        innerFan.some((a) =>
+          previous?.fan.some((b) => Math.hypot(a.x - b.x, a.y - b.y) < NODE_CLEARANCE),
+        );
+      ring = clash ? 'outer' : 'inner';
+      previous = {
+        ring,
+        fan:
+          ring === 'inner'
+            ? innerFan
+            : fan(polar(0, 0, radii.openClusterOuter, angle), angle, slots),
+      };
+    }
     const position = polar(
       0,
       0,
@@ -159,13 +191,12 @@ export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: Orb
     // An open cluster fans its children outwards, away from the centre.
     if (openCluster) {
       const items = openCluster.items.slice(0, ORBIT.pageSize);
-      const slots = items.length + (openCluster.hasMore ? 1 : 0);
-      const angles = spread(slots, angle - 80, angle + 80);
+      const points = fan(position, angle, slots);
       items.forEach((entity, j) => {
         nodes.push({
           id: entity.uuid,
           kind: 'child',
-          ...polar(position.x, position.y, ORBIT.childRadius, angles[j] ?? angle),
+          ...(points[j] ?? position),
           entity,
         });
         edges.push({ id: `child:${entity.uuid}`, source: id, target: entity.uuid, kind: 'child' });
@@ -174,7 +205,7 @@ export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: Orb
         nodes.push({
           id: `more:${cluster.objectType}`,
           kind: 'more',
-          ...polar(position.x, position.y, ORBIT.childRadius, angles[slots - 1] ?? angle),
+          ...(points[slots - 1] ?? position),
           objectType: cluster.objectType,
         });
       }
@@ -194,12 +225,37 @@ export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: Orb
   }
   const refs = [...grouped.values()];
   const left = Math.ceil(refs.length / 2);
-  const refAngles = [...spread(left, -175, -112), ...spread(refs.length - left, -68, -5)];
+  // With two clusters or more, the first and last sit at -30° and 210°: references stay in the
+  // free upper sector between them, on both sides of the parent's axis.
+  type Arc = [from: number, to: number];
+  const [leftArc, rightArc]: [Arc, Arc] =
+    input.clusters.length >= 2
+      ? [
+          [-150 + REF_MARGIN_DEG, -90 - REF_MARGIN_DEG],
+          [-90 + REF_MARGIN_DEG, -30 - REF_MARGIN_DEG],
+        ]
+      : [
+          [-175, -112],
+          [-68, -5],
+        ];
+  const refAngles = [...spread(left, ...leftArc), ...spread(refs.length - left, ...rightArc)];
+  // Far enough for neighbouring references to keep apart on their narrow arc, and beyond the
+  // children of open clusters that rise into the upper sector.
+  const arc = rad(leftArc[1] - leftArc[0]);
+  const spacing = left > 1 ? (NODE_CLEARANCE * (left - 1)) / arc : 0;
+  const fanTop = nodes
+    .filter((n) => n.kind === 'child' || n.kind === 'more')
+    .filter((n) => {
+      const deg = (Math.atan2(n.y, n.x) * 180) / Math.PI;
+      return deg > -160 && deg < -20;
+    })
+    .reduce((max, n) => Math.max(max, Math.hypot(n.x, n.y) + NODE_CLEARANCE), 0);
+  const refRadius = Math.max(radii.ref, spacing, fanTop);
   refs.forEach(({ entity, roles }, i) => {
     nodes.push({
       id: entity.uuid,
       kind: 'ref',
-      ...polar(0, 0, radii.ref, refAngles[i] ?? -140),
+      ...polar(0, 0, refRadius, refAngles[i] ?? -120),
       entity,
       roles,
     });

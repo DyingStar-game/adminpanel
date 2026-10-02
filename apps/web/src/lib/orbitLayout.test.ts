@@ -107,6 +107,58 @@ describe('orbitLayout', () => {
     }
   });
 
+  it('keeps two open clusters far apart on the inner ring', () => {
+    const page = (type: string) => ({
+      objectType: type,
+      items: [entity(`${type}0`, type)],
+      hasMore: false,
+    });
+    const { nodes } = orbitLayout({
+      center: entity('c0'),
+      parent: null,
+      clusters: [
+        { objectType: 'a', total: 1 },
+        { objectType: 'b', total: 1 },
+      ],
+      open: [page('a'), page('b')],
+      refs: [],
+    });
+    const radius = (type: string) => {
+      const cluster = nodes.find((n) => n.id === `cluster:${type}`);
+      return cluster ? distance(cluster, { x: 0, y: 0 }) : 0;
+    };
+    // 240° apart: no overlap possible, both stay close to the centre.
+    expect(Math.abs(radius('a') - orbitRadii(2).openCluster)).toBeLessThanOrEqual(1);
+    expect(Math.abs(radius('b') - orbitRadii(2).openCluster)).toBeLessThanOrEqual(1);
+  });
+
+  it('keeps references in the free upper sector, clear of open clusters', () => {
+    const page = (type: string) => ({
+      objectType: type,
+      items: Array.from({ length: 3 }, (_, i) => entity(`${type}${i}`, type)),
+      hasMore: false,
+    });
+    const { nodes } = orbitLayout({
+      center: entity('c0'),
+      parent: entity('p0', 'planet'),
+      clusters: [
+        { objectType: 'vehicle_component', total: 3 },
+        { objectType: 'miningrock', total: 3 },
+      ],
+      open: [page('vehicle_component'), page('miningrock')],
+      refs: [{ ...entity('pilot', 'player'), path: 'pilot_uuid', role: 'pilot' }],
+    });
+
+    const ref = nodes.find((n) => n.kind === 'ref');
+    if (!ref) throw new Error('reference missing');
+    const deg = (Math.atan2(ref.y, ref.x) * 180) / Math.PI;
+    expect(deg).toBeGreaterThan(-150);
+    expect(deg).toBeLessThan(-30);
+    for (const other of nodes.filter((n) => n.kind === 'child' || n.kind === 'cluster')) {
+      expect(distance(ref, other)).toBeGreaterThan(70);
+    }
+  });
+
   it('draws an entity referenced several times once, with every role on its edge', () => {
     const { nodes, edges } = orbitLayout({
       center: entity('c'),
