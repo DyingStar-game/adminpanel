@@ -84,28 +84,14 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
         {schematic.doors.map((door) => {
           const open = valueAt(data, door.path);
           return (
-            <rect
+            <Door
               key={door.path}
-              x={door.at[0] * U - 3}
-              y={(door.at[1] - 1) * U}
-              width={6}
-              height={2 * U}
-              rx={3}
-              fill={
-                open === true ? 'var(--ds-ok)' : open === false ? 'var(--ds-fg-3)' : 'transparent'
-              }
-              stroke="var(--ds-fg-3)"
-              strokeDasharray={typeof open === 'boolean' ? undefined : '3 3'}
-            >
-              <title>
-                {label(door.label)} ·{' '}
-                {open === true
-                  ? t('schematic.open')
-                  : open === false
-                    ? t('schematic.closed')
-                    : t('schematic.unknown')}
-              </title>
-            </rect>
+              hinge={[door.at[0] * U, (door.at[1] - 1) * U]}
+              // Doors on the left half swing out to the left, the others to the right.
+              side={door.at[0] < width / 2 ? 'left' : 'right'}
+              open={open}
+              title={`${label(door.label)} · ${t(`schematic.${doorState(open)}`)}`}
+            />
           );
         })}
 
@@ -221,6 +207,79 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
         })}
       </svg>
     </div>
+  );
+}
+
+/** Door state from its boolean (absent while the model is not in use). */
+const doorState = (value: unknown) =>
+  value === true ? 'open' : value === false ? 'closed' : 'unknown';
+
+/** Swing of an open door, in degrees. */
+const DOOR_SWING = 55;
+/** Length of a door leaf, in pixels. */
+const DOOR_LENGTH = 2 * U;
+
+/**
+ * Door leaf hinged at its front end on the body side: flush with the body when closed, swung
+ * out by `DOOR_SWING` degrees when open, with its swing arc and the opening left in the body.
+ */
+function Door({
+  hinge: [hx, hy],
+  side,
+  open,
+  title,
+}: {
+  hinge: [number, number];
+  side: 'left' | 'right';
+  open: unknown;
+  title: string;
+}) {
+  const state = doorState(open);
+  // SVG angles turn clockwise: positive swings the free end to the left.
+  const angle = state === 'open' ? (side === 'left' ? DOOR_SWING : -DOOR_SWING) : 0;
+  const radians = (DOOR_SWING * Math.PI) / 180;
+  const endX = hx + (side === 'left' ? -1 : 1) * DOOR_LENGTH * Math.sin(radians);
+  const endY = hy + DOOR_LENGTH * Math.cos(radians);
+  return (
+    <g aria-label={title} data-state={state}>
+      <title>{title}</title>
+      {state === 'open' && (
+        <>
+          {/* Opening left in the body, and the path swept by the free end. */}
+          <line
+            x1={hx}
+            y1={hy}
+            x2={hx}
+            y2={hy + DOOR_LENGTH}
+            stroke="var(--ds-ok)"
+            strokeWidth={2}
+            strokeDasharray="3 3"
+          />
+          <path
+            d={`M ${hx} ${hy + DOOR_LENGTH} A ${DOOR_LENGTH} ${DOOR_LENGTH} 0 0 ${side === 'left' ? 1 : 0} ${endX} ${endY}`}
+            fill="none"
+            stroke="var(--ds-fg-3)"
+            strokeWidth={1}
+            strokeDasharray="2 3"
+          />
+        </>
+      )}
+      <rect
+        x={hx - 3}
+        y={hy}
+        width={6}
+        height={DOOR_LENGTH}
+        rx={3}
+        fill={
+          state === 'open' ? 'var(--ds-ok)' : state === 'closed' ? 'var(--ds-fg-3)' : 'transparent'
+        }
+        stroke="var(--ds-fg-3)"
+        strokeDasharray={state === 'unknown' ? '3 3' : undefined}
+        className="motion-safe:transition-transform motion-safe:duration-500"
+        style={{ transform: `rotate(${angle}deg)`, transformOrigin: `${hx}px ${hy}px` }}
+      />
+      <circle cx={hx} cy={hy} r={2.5} fill="var(--ds-fg-2)" />
+    </g>
   );
 }
 

@@ -57,6 +57,15 @@ describe('ObjectPage', () => {
     expect(await within(schematic).findByLabelText('RL · missing item')).toBeInTheDocument();
     expect(within(schematic).getByLabelText('RR · empty')).toBeInTheDocument();
     expect(within(schematic).getByText('28.7 km/h')).toBeInTheDocument();
+    // Front_l_door is open: its leaf swings out; Front_r_door is closed.
+    expect(within(schematic).getByLabelText('Left door · open')).toHaveAttribute(
+      'data-state',
+      'open',
+    );
+    expect(within(schematic).getByLabelText('Right door · closed')).toHaveAttribute(
+      'data-state',
+      'closed',
+    );
 
     await userEvent.click(driver);
     expect(onNavigate).toHaveBeenCalledWith(ids.player);
