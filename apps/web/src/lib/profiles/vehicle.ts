@@ -4,7 +4,7 @@ import type { TypeProfileSchema } from './schema';
 export const vehicle: z.input<typeof TypeProfileSchema> = {
   type: 'vehicle',
   // Where the vehicle is and who is in it; engine / handbrake / odometer stay on the object page.
-  columns: ['parent_id', 'pilot_uuid', 'seats'],
+  columns: ['parent_id', 'pilot_uuid', 'speed', 'mass', 'cargo_mass'],
   headline: [
     ['speed'],
     ['engine'],

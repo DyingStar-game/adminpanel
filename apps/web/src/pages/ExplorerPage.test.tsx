@@ -66,13 +66,16 @@ describe('ExplorerPage', () => {
     // Profile columns for vehicles, references resolved to the pilot's name.
     expect(await screen.findByRole('columnheader', { name: 'pilot_uuid' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'parent_id' })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: 'seats' })).toBeInTheDocument();
-    expect(screen.queryByRole('columnheader', { name: 'engine' })).not.toBeInTheDocument();
-    // Seats are listed inline in the row, the parent is a resolved link.
-    expect(await within(table()).findByText('SeatPassenger')).toBeInTheDocument();
+    for (const name of ['speed', 'mass', 'cargo_mass']) {
+      expect(screen.getByRole('columnheader', { name })).toBeInTheDocument();
+    }
+    for (const name of ['seats', 'engine']) {
+      expect(screen.queryByRole('columnheader', { name })).not.toBeInTheDocument();
+    }
+    // The parent and the pilot are resolved links.
     expect(await within(table()).findByRole('button', { name: /SandBox/ })).toBeInTheDocument();
-    // The pilot shows twice in the row: pilot_uuid and the driver seat.
-    expect(await within(table()).findAllByRole('button', { name: /ddurieux/ })).toHaveLength(2);
+    expect(await within(table()).findByRole('button', { name: /ddurieux/ })).toBeInTheDocument();
+    expect(await within(table()).findByText(/^1\D?450$/)).toBeInTheDocument();
   });
 
   it('inspects an item: relations, broken links, channels and undeclared keys', async () => {
