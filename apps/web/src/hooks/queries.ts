@@ -69,7 +69,9 @@ export function useItem(uuid: string | undefined, { live = false }: LiveOption =
     queryKey: queryKeys.item(serverId, uuid ?? ''),
     queryFn: () => fetchItem(serverId, uuid ?? ''),
     enabled: !!serverId && !!uuid,
-    refetchInterval,
+    // An item that no longer exists (deleted, or respawned under another UUID by the game) is
+    // not polled any more.
+    refetchInterval: (query) => (query.state.data === null ? false : refetchInterval),
   });
 }
 

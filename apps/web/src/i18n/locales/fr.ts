@@ -51,7 +51,8 @@ export const fr: Translations = {
     empty: 'Sélectionne un objet pour l’inspecter.',
     loading: 'Chargement…',
     error: "Impossible de charger l'objet.",
-    notFound: 'Objet {{uuid}} introuvable.',
+    notFound:
+      "Objet {{uuid}} introuvable : il a peut-être été supprimé ou recréé par le jeu. Le live est arrêté.",
     relations: 'Relations',
     children: 'enfants',
     noChildren: 'aucun',

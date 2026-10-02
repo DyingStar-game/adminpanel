@@ -49,7 +49,8 @@ export const en = {
     empty: 'Select an item to inspect it.',
     loading: 'Loading…',
     error: 'Could not load the item.',
-    notFound: 'Item {{uuid}} not found.',
+    notFound:
+      'Item {{uuid}} not found: it may have been deleted or respawned by the game. Live refresh stopped.',
     relations: 'Relations',
     children: 'children',
     noChildren: 'none',

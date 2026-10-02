@@ -35,6 +35,23 @@ describe('Inspector live refresh', () => {
     expect(value.closest('[data-changed]')).not.toBeNull();
   });
 
+  it('stops polling an item that disappeared', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const bff = useInProcessBff();
+    usePreferences.setState({ live: true });
+    renderInspector();
+    await screen.findByText('28.7');
+
+    // The game deletes (or respawns under another UUID) the vehicle.
+    bff.persistence.items.delete(ids.vehicle);
+    await vi.advanceTimersByTimeAsync(LIVE_INTERVALS.entity + 50);
+    expect(await screen.findByText(/may have been deleted/)).toBeInTheDocument();
+    const calls = bff.persistence.calls.get('GET /items/:uuid');
+
+    await vi.advanceTimersByTimeAsync(LIVE_INTERVALS.entity * 3);
+    expect(bff.persistence.calls.get('GET /items/:uuid')).toBe(calls);
+  });
+
   it('does not poll while live refresh is paused', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const bff = useInProcessBff();
