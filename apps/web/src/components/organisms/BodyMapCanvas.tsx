@@ -47,30 +47,45 @@ interface BodyMapCanvasProps {
   onSelect: (uuid: string) => void;
   /** Tooltip content of a point (label, type, altitude…). */
   describe: (point: MapPoint) => string;
+  /** Types whose names are written above their markers. */
+  named: ReadonlySet<string>;
+  /** Name written above a point of a named type. */
+  nameOf: (point: MapPoint) => string;
   labels: { cluster: (count: number) => string; grid: (step: string, major: string) => string };
 }
 
 const toLatLng = (point: MapPoint): MapLatLng => [point.y, point.x];
 
 const icons = new Map<string, L.DivIcon>();
-/** Type of each dot icon, read back by clusters to colour their ring. */
+/** Type of each marker icon, read back by clusters to colour their ring. */
 const iconTypes = new WeakMap<L.Icon | L.DivIcon, string>();
+
+/** Names come from the game data: escaped before going into the icon's HTML. */
+const escapeHtml = (text: string) =>
+  text.replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
+  );
+
 /**
  * Coloured marker of a type (square for structures, round otherwise); selected points get a
- * ring. Cached: one icon per type and state.
+ * ring, and a `name` is written above the marker. Cached: one icon per type, state and name.
  */
-function dotIcon(objectType: string, selected: boolean): L.DivIcon {
-  const key = `${objectType}|${selected}`;
+function markerIcon(objectType: string, selected: boolean, name: string | null): L.DivIcon {
+  const key = `${objectType}|${selected}|${name ?? ''}`;
   let icon = icons.get(key);
   if (!icon) {
     const square = markerShape(objectType) === 'square';
     const size = (selected ? 16 : 10) + (square ? 2 : 0);
+    const label = name
+      ? `<span class="pointer-events-none absolute bottom-full left-1/2 mb-0.5 -translate-x-1/2 whitespace-nowrap text-[10.5px] font-medium leading-none text-foreground [text-shadow:0_0_3px_var(--background),0_0_3px_var(--background),0_0_2px_var(--background)]">${escapeHtml(name)}</span>`
+      : '';
     icon = L.divIcon({
       className: '',
       iconSize: [size, size],
-      html: `<span data-type="${objectType}" class="block size-full ${square ? 'rounded-[2px]' : 'rounded-full'} border border-background shadow-sm${
+      html: `<span data-type="${objectType}" class="relative block size-full ${square ? 'rounded-[2px]' : 'rounded-full'} border border-background shadow-sm${
         selected ? ' ring-2 ring-foreground' : ''
-      }" style="background:${typeColor(objectType)}"></span>`,
+      }" style="background:${typeColor(objectType)}">${label}</span>`,
     });
     icons.set(key, icon);
     iconTypes.set(icon, objectType);
@@ -152,7 +167,12 @@ const Points = memo(function Points({
   onSelect,
   describe,
   labels,
-}: Pick<BodyMapCanvasProps, 'points' | 'selected' | 'onSelect' | 'describe' | 'labels'>) {
+  named,
+  nameOf,
+}: Pick<
+  BodyMapCanvasProps,
+  'points' | 'selected' | 'onSelect' | 'describe' | 'labels' | 'named' | 'nameOf'
+>) {
   const clusterIcon = useMemo(
     () => (cluster: L.MarkerCluster) => {
       const count = cluster.getChildCount();
@@ -181,7 +201,11 @@ const Points = memo(function Points({
         <Marker
           key={point.object_uuid}
           position={toLatLng(point)}
-          icon={dotIcon(point.object_type, point.object_uuid === selected)}
+          icon={markerIcon(
+            point.object_type,
+            point.object_uuid === selected,
+            named.has(point.object_type) ? nameOf(point) : null,
+          )}
           zIndexOffset={point.object_uuid === selected ? 1000 : 0}
           eventHandlers={{ click: () => onSelect(point.object_uuid) }}
           keyboard={false}
@@ -206,6 +230,8 @@ export function BodyMapCanvas({
   onSelect,
   describe,
   labels,
+  named,
+  nameOf,
 }: BodyMapCanvasProps) {
   return (
     <MapContainer
@@ -227,6 +253,8 @@ export function BodyMapCanvas({
         onSelect={onSelect}
         describe={describe}
         labels={labels}
+        named={named}
+        nameOf={nameOf}
       />
       <ScaleControl position="bottomright" imperial={false} />
       <FitOnce points={points} />

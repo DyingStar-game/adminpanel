@@ -244,6 +244,7 @@ export const en = {
     cluster_one: '{{count}} item',
     cluster_other: '{{count}} items',
     grid: 'Grid {{step}} · thick lines {{major}}',
+    names: 'Names of {{type}}',
     inOrbit: 'In orbit',
     altitude: 'altitude {{value}}',
     via: 'in {{label}}',

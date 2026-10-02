@@ -62,7 +62,11 @@ function BodyMap({
   onOpenOrbit,
 }: MapPageProps & { map: BodyMapResponse }) {
   const { t } = useTranslation();
-  const { mapHidden, setMapHidden } = usePreferences();
+  const { mapHidden, setMapHidden, mapNamed, setMapNamed } = usePreferences();
+  const named = useMemo(
+    () => new Set(Object.keys(mapNamed).filter((type) => mapNamed[type])),
+    [mapNamed],
+  );
   const [focus, setFocus] = useState<MapFocus | null>(null);
 
   const byUuid = useMemo(
@@ -129,6 +133,8 @@ function BodyMap({
             onSelect={select}
             describe={describe}
             labels={clusterLabels}
+            named={named}
+            nameOf={pointLabel}
           />
         )
       }
@@ -180,9 +186,15 @@ function BodyMap({
                 ...entry,
                 shown: isShown(entry.objectType, mapHidden),
                 shape: markerShape(entry.objectType),
+                named: named.has(entry.objectType),
               }))}
               onToggle={(type, shown) => setMapHidden(type, !shown)}
-              labels={{ title: t('map.types'), toggle: (type) => t('map.toggle', { type }) }}
+              onToggleNames={setMapNamed}
+              labels={{
+                title: t('map.types'),
+                toggle: (type) => t('map.toggle', { type }),
+                names: (type) => t('map.names', { type }),
+              }}
             />
             {map.inOrbit.length > 0 && (
               <section aria-label={t('map.inOrbit')} className="flex flex-col gap-1">

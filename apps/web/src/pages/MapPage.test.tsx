@@ -57,6 +57,21 @@ describe('MapPage', () => {
     expect(usePreferences.getState().mapHidden).toMatchObject({ miningrock: false });
   });
 
+  it('writes the names of a type above its markers on demand', async () => {
+    useInProcessBff();
+    renderMap(ids.planet);
+
+    const legend = await screen.findByRole('region', { name: 'Types' });
+    const names = within(legend).getByRole('button', { name: 'Names of player' });
+    expect(names).toHaveAttribute('aria-pressed', 'false');
+
+    await userEvent.click(names);
+
+    expect(names).toHaveAttribute('aria-pressed', 'true');
+    // jsdom gives the map no size: markers stay clustered, labels are checked in a browser.
+    expect(usePreferences.getState().mapNamed).toMatchObject({ player: true });
+  });
+
   it('finds an item, selects it and shows it in the inspector', async () => {
     useInProcessBff();
     const { onSearchChange } = renderMap(ids.planet);

@@ -15,12 +15,15 @@ interface PreferencesState {
   me: string | null;
   /** Types shown (`false`) or hidden (`true`) on planetary maps; profile default otherwise. */
   mapHidden: Record<string, boolean>;
+  /** Types whose names are written above their markers on planetary maps. */
+  mapNamed: Record<string, boolean>;
   setLocale: (locale: Locale) => void;
   setTheme: (theme: Theme) => void;
   setServerId: (serverId: string) => void;
   setLive: (live: boolean) => void;
   setMe: (me: string | null) => void;
   setMapHidden: (objectType: string, hidden: boolean) => void;
+  setMapNamed: (objectType: string, named: boolean) => void;
 }
 
 /** Per-viewer UI preferences, persisted in localStorage. */
@@ -33,6 +36,7 @@ export const usePreferences = create<PreferencesState>()(
       live: true,
       me: null,
       mapHidden: {},
+      mapNamed: {},
       setLocale: (locale) => {
         void i18n.changeLanguage(locale);
         set({ locale });
@@ -43,6 +47,8 @@ export const usePreferences = create<PreferencesState>()(
       setMe: (me) => set({ me }),
       setMapHidden: (objectType, hidden) =>
         set((s) => ({ mapHidden: { ...s.mapHidden, [objectType]: hidden } })),
+      setMapNamed: (objectType, named) =>
+        set((s) => ({ mapNamed: { ...s.mapNamed, [objectType]: named } })),
     }),
     {
       name: 'dyingstar-admin-preferences',
