@@ -1,0 +1,61 @@
+# 0016. Scene schematics: declarative views per `scenename`
+
+- **Status:** Accepted
+- **Date:** 2026-10-02
+- **Scope:** Manage persistence
+
+## Context
+
+Type profiles ([ADR 0008](./0008-combined-navigation-type-aware-views.md)) refine how a whole
+`object_type` is shown. Within a type, the actual model is identified by its `scenename`
+(e.g. `scenes/_universe/vehicles/ground/trucks/truck.tscn`), and the maintainer knows what a
+model looks like: the truck has two seats, a cargo bed and component compartments. A small
+schematic of the model, bound to the live data, makes an entity readable at a glance.
+
+Live data of a truck (2026-10-02, 16 trucks):
+
+- `seats`: `{ SeatDriver, SeatPassenger }` → player UUID or `""` (empty seat);
+- `components`: `{ Slot_FL, Slot_FR, Slot_RL, Slot_RR }` → **component compartments** (not
+  wheels), each holding a `vehicle_component` (today 4 × `engine_t1.tscn`, whose `slot_id`
+  names the compartment);
+- `doors`, `engine`, `headlights`: only present while the truck is used;
+- `speed`, `limiter_kmh`, `handbrake`, `mass`, `cargo_mass`; no known cargo capacity;
+- `suspension`: one value per wheel, meaning not specified yet — left aside.
+
+The maintainer wants this for the truck first, then for other models once the result suits.
+It must be simple to maintain.
+
+## Options considered
+
+1. **One hand-drawn React component per model** — free-form, but every model is code to
+   write, review and keep consistent.
+2. **Declarative schematic per model, one generic renderer** — a small data file per model
+   (shapes, slots, readouts bound to data paths), validated by Zod.
+
+## Decision
+
+Option 2.
+
+- One file per model in `apps/web/src/lib/schematics/`, registered in an index and matched on
+  the exact `scenename` (or a `*` pattern within one path segment, for variants).
+- A closed vocabulary, extended only when a new model needs it:
+  - **shapes**: `body`, `cargo` (rectangles on a grid, optional value drawn inside, e.g.
+    `cargo_mass`);
+  - **slots**: `seat` (reference to a player: occupied / empty), `bay` (component
+    compartment: installed component shown by its own `scenename` model name, empty, or
+    broken reference), `door` (open / closed / unknown);
+  - **readouts**: `gauge` (number with an optional maximum read from another path, e.g.
+    `speed` / `limiter_kmh`), `toggle` (boolean), `value` (number with unit).
+- Labels are short keys translated under `schematic.labels.*`, falling back to the raw label.
+- One generic organism draws any schematic in SVG, in the mock-up style; seats and bays link to
+  the referenced entity; live refresh updates it like the rest of the page.
+- Shown on the object page, in a card next to the usual information. Items without a
+  matching schematic are unchanged.
+- A test validates every schematic and checks that its paths exist in a sample item.
+
+## Consequences
+
+- Adding a model = adding one data file and one line in the index.
+- The vocabulary will grow with the next models (e.g. shelves, cargo depots); each addition
+  is a small change of the renderer, documented here or in a follow-up ADR.
+- `suspension` is not drawn until its mapping to wheels is known.

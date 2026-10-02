@@ -10,6 +10,7 @@ import { ChildrenTabs } from '@/components/organisms/ChildrenTabs';
 import { HeadlineFacts } from '@/components/organisms/HeadlineFacts';
 import { PropertySections } from '@/components/organisms/PropertySections';
 import { RelationsList } from '@/components/organisms/RelationsList';
+import { SchematicCard } from '@/components/organisms/SchematicCard';
 import { ObjectPageLayout } from '@/components/templates/ObjectPageLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ import { useAncestors, useDefinitions, useItem } from '@/hooks/queries';
 import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { itemLabel } from '@/lib/itemLabel';
+import { schematicFor } from '@/lib/schematics';
 import { useItemActions } from '@/stores/itemActions';
 
 interface ObjectPageProps {
@@ -63,6 +65,7 @@ function ObjectDetails({
   const { refs, parentId, parentTarget, resolveRef, profile } = useItemRefs(item);
   const changed = useChangedKeys(item.object_data, item.object_uuid);
   const actions = useItemActions();
+  const schematic = schematicFor(item.object_data.scenename);
   const isMoon =
     !!profile?.moonWhenParentIs &&
     parentTarget?.status === 'found' &&
@@ -84,7 +87,18 @@ function ObjectDetails({
         children: t('inspector.children'),
         properties: t('objectPage.properties'),
         raw: t('objectPage.raw'),
+        schematic: t('schematic.title'),
       }}
+      schematic={
+        schematic && (
+          <SchematicCard
+            schematic={schematic}
+            data={item.object_data}
+            resolveRef={resolveRef}
+            onNavigate={onNavigate}
+          />
+        )
+      }
       header={
         <header className="flex flex-col gap-3">
           <CrumbTrail crumbs={crumbs} onSelect={onNavigate} />

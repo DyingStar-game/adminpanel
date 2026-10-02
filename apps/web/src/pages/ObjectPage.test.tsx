@@ -42,6 +42,31 @@ describe('ObjectPage', () => {
     expect(onNavigate).toHaveBeenCalledWith(ids.player);
   });
 
+  it('draws the truck schematic bound to the data', async () => {
+    useInProcessBff();
+    const { onNavigate } = renderPage(ids.vehicle);
+
+    const schematic = await screen.findByRole('region', { name: 'Schematic' });
+    const driver = await within(schematic).findByRole('link', { name: 'Driver · ddurieux' });
+    expect(within(schematic).getByLabelText('Passenger · empty')).toBeInTheDocument();
+    // Compartments show the installed component model, a broken reference or an empty bay.
+    expect(await within(schematic).findByRole('link', { name: 'FL · wheel' })).toBeInTheDocument();
+    expect(await within(schematic).findByLabelText('RL · missing item')).toBeInTheDocument();
+    expect(within(schematic).getByLabelText('RR · empty')).toBeInTheDocument();
+    expect(within(schematic).getByText('28.7 km/h')).toBeInTheDocument();
+
+    await userEvent.click(driver);
+    expect(onNavigate).toHaveBeenCalledWith(ids.player);
+  });
+
+  it('shows no schematic for a model without one', async () => {
+    useInProcessBff();
+    renderPage(ids.planet);
+
+    await screen.findByRole('heading', { level: 1, name: 'SandBox' });
+    expect(screen.queryByRole('region', { name: 'Schematic' })).not.toBeInTheDocument();
+  });
+
   it('labels a moon and pairs its orbital samples', async () => {
     useInProcessBff();
     renderPage(ids.moon);

@@ -7,7 +7,15 @@ interface ObjectPageLayoutProps {
   children: ReactNode;
   properties: ReactNode;
   raw: ReactNode;
-  labels: { relations: string; children: string; properties: string; raw: string };
+  /** Model schematic (ADR 0016), shown above the relations when the model has one. */
+  schematic?: ReactNode;
+  labels: {
+    relations: string;
+    children: string;
+    properties: string;
+    raw: string;
+    schematic: string;
+  };
 }
 
 /** Object page from the mock-up (1c): centred column of cards on the dotted background. */
@@ -18,7 +26,14 @@ export function ObjectPageLayout(props: ObjectPageLayoutProps) {
         {props.header}
         {props.headline}
         <div className="grid grid-cols-1 gap-4.5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-          <Card title={props.labels.relations}>{props.relations}</Card>
+          <div className="flex min-w-0 flex-col gap-4.5">
+            {props.schematic && (
+              <Card title={props.labels.schematic} padded>
+                {props.schematic}
+              </Card>
+            )}
+            <Card title={props.labels.relations}>{props.relations}</Card>
+          </div>
           <Card title={props.labels.properties}>{props.properties}</Card>
         </div>
         <Card title={props.labels.children} padded>

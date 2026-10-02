@@ -121,7 +121,13 @@ const vehicle: Item = {
     rotation: { x: -1.025, y: 2.93, z: -2.19 },
     pilot_uuid: ids.player,
     seats: { SeatDriver: ids.player, SeatPassenger: '' },
-    components: { Slot_FL: ids.wheelFl, Slot_FR: ids.wheelFr, Slot_RL: ids.missingComponent },
+    // Slot_RR is an empty compartment.
+    components: {
+      Slot_FL: ids.wheelFl,
+      Slot_FR: ids.wheelFr,
+      Slot_RL: ids.missingComponent,
+      Slot_RR: '',
+    },
     doors: { Front_l_door: true, Front_r_door: false },
     speed: 28.7,
     engine: true,

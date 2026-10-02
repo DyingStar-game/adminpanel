@@ -5,7 +5,14 @@ import { cn } from '@/lib/cn';
 export type RefTarget =
   | { status: 'loading' }
   | { status: 'missing' }
-  | { status: 'found'; label: string; objectType: string; parentId?: string | null | undefined };
+  | {
+      status: 'found';
+      label: string;
+      objectType: string;
+      parentId?: string | null | undefined;
+      /** Model of the referenced item (schematics show it, ADR 0016). */
+      scenename?: string | null | undefined;
+    };
 
 interface UuidLinkProps {
   uuid: string;
