@@ -2,6 +2,7 @@ import {
   CirclePlusIcon,
   CompassIcon,
   CopyIcon,
+  MapIcon,
   NetworkIcon,
   PencilIcon,
   Trash2Icon,
@@ -25,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { useAncestors, useDefinitions, useItem } from '@/hooks/queries';
 import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
+import { hasMap } from '@/lib/bodyMap';
 import { itemLabel } from '@/lib/itemLabel';
 import { schematicFor } from '@/lib/schematics';
 import { SPAWN_DISTANCE, SPAWN_HEIGHT, spawnNextTo } from '@/lib/spawn';
@@ -36,10 +38,17 @@ interface ObjectPageProps {
   onNavigate: (uuid: string) => void;
   onOpenInExplorer: (item: Item) => void;
   onOpenOrbit: (uuid: string) => void;
+  onOpenMap: (uuid: string) => void;
 }
 
 /** Full detail of one entity (mock-up 1c, ADR 0008). */
-export function ObjectPage({ uuid, onNavigate, onOpenInExplorer, onOpenOrbit }: ObjectPageProps) {
+export function ObjectPage({
+  uuid,
+  onNavigate,
+  onOpenInExplorer,
+  onOpenOrbit,
+  onOpenMap,
+}: ObjectPageProps) {
   const { t } = useTranslation();
   const query = useItem(uuid, { live: true });
 
@@ -53,6 +62,7 @@ export function ObjectPage({ uuid, onNavigate, onOpenInExplorer, onOpenOrbit }: 
       onNavigate={onNavigate}
       onOpenInExplorer={onOpenInExplorer}
       onOpenOrbit={onOpenOrbit}
+      onOpenMap={onOpenMap}
     />
   );
 }
@@ -62,6 +72,7 @@ function ObjectDetails({
   onNavigate,
   onOpenInExplorer,
   onOpenOrbit,
+  onOpenMap,
   updatedAt,
 }: Omit<ObjectPageProps, 'uuid'> & { item: Item; updatedAt: number }) {
   const { t } = useTranslation();
@@ -131,6 +142,12 @@ function ObjectDetails({
               <NetworkIcon />
               {t('objectPage.orbit')}
             </Button>
+            {hasMap(item.object_type) && (
+              <Button variant="outline" size="sm" onClick={() => onOpenMap(item.object_uuid)}>
+                <MapIcon />
+                {t('map.open')}
+              </Button>
+            )}
             {spawn && (
               <Button
                 variant="outline"

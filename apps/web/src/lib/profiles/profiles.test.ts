@@ -3,13 +3,10 @@ import { matchesPath, orderChildTypes, profileFor, relationFor, tableColumnsFor 
 
 describe('type profiles', () => {
   it('loads the first profiles and falls back to none', () => {
-    expect(['vehicle', 'player', 'planet', 'star'].map((t) => profileFor(t)?.type)).toEqual([
-      'vehicle',
-      'player',
-      'planet',
-      'star',
-    ]);
-    expect(profileFor('miningrock')).toBeNull();
+    const types = ['vehicle', 'player', 'planet', 'star', 'miningrock'];
+    expect(types.map((t) => profileFor(t)?.type)).toEqual(types);
+    expect(profileFor('poi_village')).toBeNull();
+    expect(tableColumnsFor('poi_village')).toEqual([]);
     expect(tableColumnsFor('miningrock')).toEqual([]);
   });
 

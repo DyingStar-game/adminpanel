@@ -34,6 +34,7 @@ interface OrbitPageProps {
   onRecenter: (uuid: string, selected?: string) => void;
   onOpenPage: (uuid: string) => void;
   onOpenInExplorer: (item: Item) => void;
+  onOpenMap: (uuid: string) => void;
 }
 
 const toEntity = (item: Item): OrbitEntity => ({
@@ -60,6 +61,7 @@ function Orbit({
   onRecenter,
   onOpenPage,
   onOpenInExplorer,
+  onOpenMap,
 }: OrbitPageProps & { item: Item }) {
   const { t } = useTranslation();
   const counts = useChildrenCounts(item.object_uuid, true, { live: true });
@@ -234,6 +236,7 @@ function Orbit({
           uuid={search.selected ?? item.object_uuid}
           onNavigate={(uuid) => onSearchChange({ ...search, selected: uuid })}
           onOpen={onOpenPage}
+          onMap={onOpenMap}
           onCenter={(uuid) => onRecenter(uuid, uuid)}
         />
       }

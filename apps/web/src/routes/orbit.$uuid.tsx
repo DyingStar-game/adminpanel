@@ -23,6 +23,7 @@ function OrbitRoute() {
       }
       onOpenPage={(target) => void navigate({ to: '/items/$uuid', params: { uuid: target } })}
       onOpenInExplorer={(item) => void navigate({ to: '/explorer', search: searchForItem(item) })}
+      onOpenMap={(target) => void navigate({ to: '/map/$uuid', params: { uuid: target } })}
     />
   );
 }

@@ -10,4 +10,5 @@ export const planet: z.input<typeof TypeProfileSchema> = {
   renderers: { positions: 'orbitalSamples' },
   hidden: ['rotations'],
   moonWhenParentIs: 'planet',
+  map: { body: true },
 };

@@ -1,3 +1,4 @@
+import { miningrock } from './miningrock';
 import { planet } from './planet';
 import { player } from './player';
 import { TypeProfileSchema, type TypeProfile } from './schema';
@@ -8,7 +9,7 @@ export type { Renderer, TypeProfile } from './schema';
 
 /** Validated profiles; a typo in a profile file fails at load time (and in tests). */
 const PROFILES: Map<string, TypeProfile> = new Map(
-  [vehicle, player, planet, star].map((raw) => {
+  [vehicle, player, planet, star, miningrock].map((raw) => {
     const profile = TypeProfileSchema.parse(raw);
     return [profile.type, profile];
   }),

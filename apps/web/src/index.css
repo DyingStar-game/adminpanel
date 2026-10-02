@@ -124,3 +124,27 @@
     cursor: pointer;
   }
 }
+
+/* Leaflet controls and tooltips follow the theme (planetary map, ADR 0018). */
+.leaflet-container .leaflet-bar {
+  border-color: var(--border);
+}
+.leaflet-container .leaflet-bar a,
+.leaflet-container .leaflet-bar a:hover {
+  background-color: var(--background);
+  border-bottom-color: var(--border);
+  color: var(--foreground);
+}
+.leaflet-container .leaflet-control-scale-line {
+  background: var(--background);
+  border-color: var(--ds-fg-3);
+  color: var(--ds-fg-2);
+}
+.leaflet-container .leaflet-tooltip {
+  background: var(--popover);
+  border-color: var(--border);
+  color: var(--popover-foreground);
+}
+.leaflet-container .leaflet-tooltip-top::before {
+  border-top-color: var(--border);
+}

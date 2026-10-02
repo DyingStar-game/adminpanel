@@ -38,6 +38,10 @@ export const TypeProfileSchema = z.object({
   spawnDistance: z.number().positive().optional(),
   /** Height added above the reference when spawning or duplicating this type, in metres. */
   spawnHeight: z.number().nonnegative().optional(),
+  /** Planetary map (ADR 0018): `body` gives the type a map, `hidden` hides it there by default. */
+  map: z
+    .object({ body: z.boolean().default(false), hidden: z.boolean().default(false) })
+    .optional(),
   /** `star`: bodies linked implicitly (single star system, ADR 0008). */
   implicitChildren: z.object({ objectType: z.string(), parentId: z.literal('') }).optional(),
 });

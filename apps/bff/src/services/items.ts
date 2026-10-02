@@ -4,6 +4,7 @@ import {
   EditConflictDetailsSchema,
   ErrorCode,
   type AncestorsResponse,
+  type BodyMapResponse,
   type ChildrenCountsResponse,
   type CreateItem,
   type DuplicateRequest,
@@ -15,6 +16,7 @@ import {
 import type { PersistenceClient } from '../clients/persistence';
 import { ApiError, notFound } from '../lib/errors';
 import type { DefinitionsService } from './definitions';
+import { buildBodyMap, PLACED_THROUGH_PARENT } from './bodyMap';
 import { planDuplicate } from './duplicate';
 import { mergeEdit, type EditRequest } from './merge';
 
@@ -27,6 +29,8 @@ const SCAN_PAGE_SIZE = 10_000;
 const SCENES_TTL_MS = 5 * 60 * 1000;
 /** Largest subtree duplicated at once (ADR 0017). */
 export const MAX_DUPLICATE = 200;
+/** Largest body map computed at once (ADR 0018). */
+export const MAX_MAP_POINTS = 20_000;
 
 export interface ItemsServiceOptions {
   client: PersistenceClient;
@@ -71,16 +75,19 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
     }
   }
 
-  /** Every item, page by page (full scan: reserved to rare, cached or explicit uses). */
-  async function scanAll(): Promise<Item[]> {
+  /** Every item matching a filter, page by page. */
+  async function listAll(filter: Omit<ListItemsQuery, 'page' | 'page_size'>): Promise<Item[]> {
     const all: Item[] = [];
     for (let page = 1; ; page++) {
-      const res = await client.list({ page, page_size: SCAN_PAGE_SIZE });
+      const res = await client.list({ ...filter, page, page_size: SCAN_PAGE_SIZE });
       all.push(...res.items);
       if (res.items.length < SCAN_PAGE_SIZE || page * SCAN_PAGE_SIZE >= res.total) break;
     }
     return all;
   }
+
+  /** Every item, page by page (full scan: reserved to rare, cached or explicit uses). */
+  const scanAll = () => listAll({});
 
   // Known scenes change rarely and need a full scan: cached for a few minutes.
   const scenes = new LRUCache<'scenes', SceneUsage[]>({
@@ -208,6 +215,31 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
         reads.clear();
       }
       return created;
+    },
+
+    /** Map of a celestial body: its children and the players they house (ADR 0018). */
+    bodyMap(uuid: string): Promise<BodyMapResponse> {
+      return read(`map:${uuid}`, async () => {
+        const body = await getOrThrow(uuid);
+        const [children, ...placedTotals] = await Promise.all([
+          total({ parent_id: uuid }),
+          ...PLACED_THROUGH_PARENT.map((type) => total({ object_type: type })),
+        ]);
+        const size = placedTotals.reduce((sum, n) => sum + n, children);
+        if (size > MAX_MAP_POINTS) {
+          throw new ApiError(
+            400,
+            ErrorCode.mapTooLarge,
+            `A map of more than ${MAX_MAP_POINTS} items is not computed`,
+            { max: MAX_MAP_POINTS, size },
+          );
+        }
+        const [items, ...placed] = await Promise.all([
+          listAll({ parent_id: uuid }),
+          ...PLACED_THROUGH_PARENT.map((type) => listAll({ object_type: type })),
+        ]);
+        return buildBodyMap(body, items, placed.flat());
+      });
     },
 
     /** `scenename` values in use, with their type and count, most used first. */

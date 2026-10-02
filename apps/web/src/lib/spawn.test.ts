@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { basisFromEuler } from '@dyingstar-admin/schemas';
 import {
-  basisFromEuler,
   SPAWN_DISTANCE,
   SPAWN_HEIGHT,
   spawnDistanceFor,

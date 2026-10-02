@@ -3,6 +3,7 @@ import {
   CirclePlusIcon,
   ExpandIcon,
   LocateFixedIcon,
+  MapIcon,
   NetworkIcon,
   PencilIcon,
   Trash2Icon,
@@ -20,6 +21,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useChildrenCounts, useDefinitions, useItem } from '@/hooks/queries';
 import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
+import { hasMap } from '@/lib/bodyMap';
 import { itemLabel } from '@/lib/itemLabel';
 import { SPAWN_DISTANCE, SPAWN_HEIGHT, spawnNextTo } from '@/lib/spawn';
 import { useItemActions } from '@/stores/itemActions';
@@ -33,12 +35,14 @@ interface InspectorProps {
   onOpen: (uuid: string) => void;
   /** Opens the orbit view centred on the item (omitted when already there). */
   onOrbit?: (uuid: string) => void;
+  /** Opens the planetary map of a celestial body (ADR 0018); shown for types having one. */
+  onMap?: (uuid: string) => void;
   /** Inside the orbit view: centres the graph on the item (mock-up 1a). */
   onCenter?: (uuid: string) => void;
 }
 
 /** Right panel: identity, relations, children summary and properties by channel. */
-export function Inspector({ uuid, onNavigate, onOpen, onOrbit, onCenter }: InspectorProps) {
+export function Inspector({ uuid, onNavigate, onOpen, onOrbit, onMap, onCenter }: InspectorProps) {
   const { t } = useTranslation();
   const query = useItem(uuid, { live: true });
 
@@ -53,6 +57,7 @@ export function Inspector({ uuid, onNavigate, onOpen, onOrbit, onCenter }: Inspe
       onNavigate={onNavigate}
       onOpen={onOpen}
       onOrbit={onOrbit}
+      onMap={onMap}
       onCenter={onCenter}
     />
   );
@@ -63,6 +68,7 @@ function ItemDetails({
   onNavigate,
   onOpen,
   onOrbit,
+  onMap,
   onCenter,
   updatedAt,
 }: { item: Item; updatedAt: number } & Omit<InspectorProps, 'uuid'>) {
@@ -108,6 +114,12 @@ function ItemDetails({
             <Button variant="outline" size="xs" onClick={() => onOrbit(item.object_uuid)}>
               <NetworkIcon />
               {t('objectPage.orbit')}
+            </Button>
+          )}
+          {onMap && hasMap(item.object_type) && (
+            <Button variant="outline" size="xs" onClick={() => onMap(item.object_uuid)}>
+              <MapIcon />
+              {t('map.open')}
             </Button>
           )}
           <Button variant="outline" size="xs" onClick={() => onOpen(item.object_uuid)}>

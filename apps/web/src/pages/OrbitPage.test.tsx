@@ -25,6 +25,7 @@ function renderOrbit(uuid: string, initial: Partial<OrbitSearch> = {}) {
           onRecenter={onRecenter}
           onOpenPage={vi.fn()}
           onOpenInExplorer={vi.fn()}
+          onOpenMap={vi.fn()}
         />
       </div>
     );

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ExplorerRouteImport } from './routes/explorer'
 import { Route as ItemsUuidRouteImport } from './routes/items.$uuid'
+import { Route as MapUuidRouteImport } from './routes/map.$uuid'
 import { Route as OrbitUuidRouteImport } from './routes/orbit.$uuid'
 
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +30,11 @@ const ItemsUuidRoute = ItemsUuidRouteImport.update({
   path: '/items/$uuid',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MapUuidRoute = MapUuidRouteImport.update({
+  id: '/map/$uuid',
+  path: '/map/$uuid',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrbitUuidRoute = OrbitUuidRouteImport.update({
   id: '/orbit/$uuid',
   path: '/orbit/$uuid',
@@ -39,12 +45,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/explorer': typeof ExplorerRoute
   '/items/$uuid': typeof ItemsUuidRoute
+  '/map/$uuid': typeof MapUuidRoute
   '/orbit/$uuid': typeof OrbitUuidRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/explorer': typeof ExplorerRoute
   '/items/$uuid': typeof ItemsUuidRoute
+  '/map/$uuid': typeof MapUuidRoute
   '/orbit/$uuid': typeof OrbitUuidRoute
 }
 export interface FileRoutesById {
@@ -52,20 +60,28 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/explorer': typeof ExplorerRoute
   '/items/$uuid': typeof ItemsUuidRoute
+  '/map/$uuid': typeof MapUuidRoute
   '/orbit/$uuid': typeof OrbitUuidRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/explorer' | '/items/$uuid' | '/orbit/$uuid'
+  fullPaths: '/' | '/explorer' | '/items/$uuid' | '/map/$uuid' | '/orbit/$uuid'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/explorer' | '/items/$uuid' | '/orbit/$uuid'
-  id: '__root__' | '/' | '/explorer' | '/items/$uuid' | '/orbit/$uuid'
+  to: '/' | '/explorer' | '/items/$uuid' | '/map/$uuid' | '/orbit/$uuid'
+  id:
+    | '__root__'
+    | '/'
+    | '/explorer'
+    | '/items/$uuid'
+    | '/map/$uuid'
+    | '/orbit/$uuid'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ExplorerRoute: typeof ExplorerRoute
   ItemsUuidRoute: typeof ItemsUuidRoute
+  MapUuidRoute: typeof MapUuidRoute
   OrbitUuidRoute: typeof OrbitUuidRoute
 }
 
@@ -92,6 +108,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ItemsUuidRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/map/$uuid': {
+      id: '/map/$uuid'
+      path: '/map/$uuid'
+      fullPath: '/map/$uuid'
+      preLoaderRoute: typeof MapUuidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/orbit/$uuid': {
       id: '/orbit/$uuid'
       path: '/orbit/$uuid'
@@ -106,6 +129,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExplorerRoute: ExplorerRoute,
   ItemsUuidRoute: ItemsUuidRoute,
+  MapUuidRoute: MapUuidRoute,
   OrbitUuidRoute: OrbitUuidRoute,
 }
 export const routeTree = rootRouteImport

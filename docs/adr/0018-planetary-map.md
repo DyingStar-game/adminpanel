@@ -1,6 +1,6 @@
 # 0018. Planetary map: a 2D view of everything placed on a celestial body
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-02
 - **Scope:** Manage persistence
 

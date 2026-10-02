@@ -28,6 +28,7 @@ export const ErrorCode = {
   editConflict: 'EDIT_CONFLICT',
   duplicateTooLarge: 'DUPLICATE_TOO_LARGE',
   duplicatePartial: 'DUPLICATE_PARTIAL',
+  mapTooLarge: 'MAP_TOO_LARGE',
   upstreamRejected: 'UPSTREAM_REJECTED',
   upstreamError: 'UPSTREAM_ERROR',
   upstreamTimeout: 'UPSTREAM_TIMEOUT',

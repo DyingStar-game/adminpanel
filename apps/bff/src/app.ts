@@ -5,6 +5,7 @@ import { toPublicServer, type ServerConfig } from './config/servers';
 import { createPersistenceClient } from './clients/persistence';
 import { ApiError } from './lib/errors';
 import { requireServer } from './middleware/server';
+import { bodiesRoutes } from './routes/bodies';
 import { itemsRoutes } from './routes/items';
 import type { DefinitionsService } from './services/definitions';
 import { createItemsService } from './services/items';
@@ -68,6 +69,8 @@ export function createApp({
   api.use('/items/*', requireServer(registry, definitions));
   api.use('/items', requireServer(registry, definitions));
   api.route('/items', itemsRoutes);
+  api.use('/bodies/*', requireServer(registry, definitions));
+  api.route('/bodies', bodiesRoutes);
   app.route('/api', api);
   // Registered after the API routes and before the SPA fallback, so unknown API paths never
   // return index.html.

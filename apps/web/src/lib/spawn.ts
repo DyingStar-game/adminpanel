@@ -1,4 +1,15 @@
-import { Vec3Schema, type Item, type Vec3 } from '@dyingstar-admin/schemas';
+import {
+  addScaled,
+  basisFromEuler,
+  cross,
+  dot,
+  eulerFromBasis,
+  normalize,
+  Vec3Schema,
+  type Item,
+  type V,
+  type Vec3,
+} from '@dyingstar-admin/schemas';
 import { profileFor } from './profiles';
 
 /** Default gap between an entity and an item spawned next to it, in metres. */
@@ -23,53 +34,6 @@ export interface SpawnPreset {
 }
 
 const round = (n: number) => Math.round(n * 1000) / 1000;
-
-type V = [number, number, number];
-const add = (a: V, b: V, k: number): V => [a[0] + b[0] * k, a[1] + b[1] * k, a[2] + b[2] * k];
-const dot = (a: V, b: V) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
-const cross = (a: V, b: V): V => [
-  a[1] * b[2] - a[2] * b[1],
-  a[2] * b[0] - a[0] * b[2],
-  a[0] * b[1] - a[1] * b[0],
-];
-const normalize = (a: V): V | null => {
-  const n = Math.hypot(...a);
-  return n > 1e-9 ? [a[0] / n, a[1] / n, a[2] / n] : null;
-};
-
-/**
- * Columns (right, up, back) of the basis of a Godot Euler rotation. Godot's default order is
- * YXZ: the basis is Ry · Rx · Rz.
- */
-export function basisFromEuler({ x, y, z }: Vec3): [V, V, V] {
-  const [cx, sx, cy, sy, cz, sz] = [
-    Math.cos(x),
-    Math.sin(x),
-    Math.cos(y),
-    Math.sin(y),
-    Math.cos(z),
-    Math.sin(z),
-  ];
-  return [
-    [cy * cz + sy * sx * sz, cx * sz, -sy * cz + cy * sx * sz],
-    [-cy * sz + sy * sx * cz, cx * cz, sy * sz + cy * sx * cz],
-    [sy * cx, -sx, cy * cx],
-  ];
-}
-
-/** Godot YXZ Euler angles of a basis given by its columns (inverse of `basisFromEuler`). */
-function eulerFromBasis([right, up, back]: [V, V, V]): Vec3 {
-  // Row 1 column 2 of the matrix is −sin(x).
-  const m12 = back[1];
-  if (Math.abs(m12) < 1 - 1e-9) {
-    return {
-      x: Math.asin(-m12),
-      y: Math.atan2(back[0], back[2]),
-      z: Math.atan2(right[1], up[1]),
-    };
-  }
-  return { x: m12 < 0 ? Math.PI / 2 : -Math.PI / 2, y: Math.atan2(-right[2], right[0]), z: 0 };
-}
 
 /**
  * Beyond this distance from its parent's origin, the reference stands on a celestial body
@@ -103,11 +67,11 @@ export function spawnNextTo(
   const up: V = (Math.hypot(...origin) > BODY_FRAME_RADIUS && normalize(origin)) || [0, 1, 0];
   // Forward flattened on the ground; the entity's up when it faces straight up or down.
   const back =
-    normalize(add(ownBack, up, -dot(ownBack, up))) ??
-    normalize(add(ownUp, up, -dot(ownUp, up))) ??
+    normalize(addScaled(ownBack, up, -dot(ownBack, up))) ??
+    normalize(addScaled(ownUp, up, -dot(ownUp, up))) ??
     normalize(cross(up, [1, 0, 0])) ??
     ([0, 0, 1] as V);
-  const target = add(add(origin, back, -distance), up, height);
+  const target = addScaled(addScaled(origin, back, -distance), up, height);
   const angles = eulerFromBasis([cross(up, back), up, back]);
 
   return {

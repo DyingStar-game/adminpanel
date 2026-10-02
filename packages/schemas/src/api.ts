@@ -97,3 +97,35 @@ export type DuplicateRequest = z.input<typeof DuplicateRequestSchema>;
 
 /** Created copies, the root first, parents before children. */
 export const DuplicateResponseSchema = z.object({ created: z.array(ItemSchema) });
+
+/** One item on a body map (ADR 0018). */
+export const MapPointSchema = z.object({
+  object_uuid: z.string(),
+  object_type: z.string(),
+  /** `object_data.name`, when set. */
+  name: z.string().nullable(),
+  /** Parent placing the item, when it is not the body itself (a player's building). */
+  via: z.string().nullable(),
+  /** Degrees, assuming +Y is the pole and longitude 0 the +Z direction. */
+  lat: z.number(),
+  lon: z.number(),
+  /** Metres above the reference radius. */
+  altitude: z.number(),
+  /** Projected position in metres (azimuthal equidistant, centred on the map centre): east, north. */
+  x: z.number(),
+  y: z.number(),
+});
+export type MapPoint = z.infer<typeof MapPointSchema>;
+
+/** `GET /api/bodies/:uuid/map` (ADR 0018). */
+export const BodyMapResponseSchema = z.object({
+  body: z.object({ object_uuid: z.string(), object_type: z.string(), name: z.string().nullable() }),
+  /** Median distance of the body's surface children to its centre, in metres (0 if none). */
+  referenceRadius: z.number(),
+  /** Map centre (centroid of the drawn points). */
+  center: z.object({ lat: z.number(), lon: z.number() }),
+  points: z.array(MapPointSchema),
+  /** Items too high above the surface to be drawn (stations…). */
+  inOrbit: z.array(MapPointSchema),
+});
+export type BodyMapResponse = z.infer<typeof BodyMapResponseSchema>;

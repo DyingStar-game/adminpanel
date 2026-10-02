@@ -10,15 +10,17 @@ import { ObjectPage } from './ObjectPage';
 const renderPage = (uuid: string) => {
   const onNavigate = vi.fn();
   const onOpenInExplorer = vi.fn();
+  const onOpenMap = vi.fn();
   renderWithProviders(
     <ObjectPage
       uuid={uuid}
       onNavigate={onNavigate}
       onOpenInExplorer={onOpenInExplorer}
       onOpenOrbit={vi.fn()}
+      onOpenMap={onOpenMap}
     />,
   );
-  return { onNavigate, onOpenInExplorer };
+  return { onNavigate, onOpenInExplorer, onOpenMap };
 };
 const section = (name: string) => screen.getByRole('region', { name });
 
@@ -124,6 +126,22 @@ describe('ObjectPage', () => {
     expect(onOpenInExplorer).toHaveBeenCalledWith(
       expect.objectContaining({ object_uuid: ids.rock }),
     );
+  });
+
+  it('opens the map of a celestial body, and only of one', async () => {
+    useInProcessBff();
+    const { onOpenMap } = renderPage(ids.planet);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Map' }));
+    expect(onOpenMap).toHaveBeenCalledWith(ids.planet);
+  });
+
+  it('offers no map for other types', async () => {
+    useInProcessBff();
+    renderPage(ids.vehicle);
+
+    await screen.findByRole('heading', { level: 1, name: /vehicle 4e9a9ff9/ });
+    expect(screen.queryByRole('button', { name: 'Map' })).not.toBeInTheDocument();
   });
 
   it('reports an unknown item', async () => {

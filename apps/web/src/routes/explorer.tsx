@@ -13,6 +13,7 @@ function ExplorerRoute() {
       onOrbit={(uuid) =>
         void navigate({ to: '/orbit/$uuid', params: { uuid }, search: { page: 1 } })
       }
+      onMap={(uuid) => void navigate({ to: '/map/$uuid', params: { uuid } })}
     />
   );
 }
