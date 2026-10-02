@@ -33,6 +33,11 @@ describe('ImportPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Check' }));
 
     expect(screen.getByRole('alert')).toHaveTextContent(/line 2, column \d+/);
+    // The cursor goes to the faulty character, on the line numbered in the gutter.
+    await userEvent.click(screen.getByRole('button', { name: 'Go to the error' }));
+    const textarea = field() as HTMLTextAreaElement;
+    expect(textarea).toHaveFocus();
+    expect(textarea.value.slice(0, textarea.selectionStart).split('\n')).toHaveLength(2);
   });
 
   it('checks every item, then creates the new ones and skips existing ones by default', async () => {

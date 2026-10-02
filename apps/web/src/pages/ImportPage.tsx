@@ -59,6 +59,7 @@ export function ImportPage({ search }: ImportPageProps) {
   const [checked, setChecked] = useState<Checked | null>(null);
   const [overwrite, setOverwrite] = useState<Set<number>>(new Set());
   const [confirming, setConfirming] = useState(false);
+  const [focusAt, setFocusAt] = useState<{ offset: number; nonce: number } | null>(null);
 
   const parentOk =
     !useDefaultParent || defaultParent === '' || UuidSchema.safeParse(defaultParent).success;
@@ -183,6 +184,8 @@ export function ImportPage({ search }: ImportPageProps) {
             }
             maxBytes={IMPORT_MAX_BYTES}
             invalid={!!inputError}
+            errorLine={inputError?.reason === 'syntax' ? inputError.line : undefined}
+            focusAt={focusAt}
             labels={{
               field: t('import.field'),
               drop: t('import.drop'),
@@ -194,17 +197,31 @@ export function ImportPage({ search }: ImportPageProps) {
             <p className="text-xs text-fg-2">{t('import.loaded', { name: fileName })}</p>
           )}
           {inputError && (
-            <p role="alert" className="text-sm text-destructive">
+            <p role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">
               {inputError.reason === 'syntax'
                 ? t('import.errors.syntax', {
                     line: inputError.line,
                     column: inputError.column,
-                    message: inputError.message,
+                    message: t(
+                      `import.syntax.${inputError.message}` as 'import.syntax.ValueExpected',
+                      {
+                        defaultValue: inputError.message,
+                      },
+                    ),
                   })
                 : t(`import.errors.${inputError.reason}`, {
                     max: IMPORT_MAX_ITEMS,
                     size: megabytes(IMPORT_MAX_BYTES),
                   })}
+              {inputError.reason === 'syntax' && (
+                <Button
+                  variant="outline"
+                  size="xs"
+                  onClick={() => setFocusAt({ offset: inputError.offset, nonce: Date.now() })}
+                >
+                  {t('import.goToError')}
+                </Button>
+              )}
             </p>
           )}
 

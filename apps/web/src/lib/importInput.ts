@@ -10,7 +10,7 @@ import {
 export type ParsedImport =
   | { ok: true; items: unknown[] }
   | { ok: false; reason: 'empty' | 'tooLarge' | 'tooMany' | 'notArray'; limit?: number }
-  | { ok: false; reason: 'syntax'; line: number; column: number; message: string };
+  | { ok: false; reason: 'syntax'; line: number; column: number; offset: number; message: string };
 
 /** Line and column (1-based) of an offset in a text. */
 function position(text: string, offset: number) {
@@ -40,6 +40,7 @@ export function parseImportText(text: string): ParsedImport {
       ok: false,
       reason: 'syntax',
       ...position(text, first.offset),
+      offset: first.offset,
       message: printParseErrorCode(first.error),
     };
   }
