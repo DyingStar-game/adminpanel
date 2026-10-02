@@ -25,7 +25,7 @@ import { ApiError } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { itemLabel } from '@/lib/itemLabel';
 import { isValidParentId, parseRaw, toRaw } from '@/lib/propertyForm';
-import { spawnNextTo } from '@/lib/spawn';
+import { spawnDistanceFor, spawnNextTo } from '@/lib/spawn';
 import { usePreferences } from '@/stores/preferences';
 
 interface DuplicateDialogProps {
@@ -43,8 +43,8 @@ interface Placement {
   reference: string | null;
 }
 
-const placementFrom = (reference: Item): Placement | null => {
-  const preset = spawnNextTo(reference);
+const placementFrom = (reference: Item, distance: number): Placement | null => {
+  const preset = spawnNextTo(reference, distance);
   return preset
     ? {
         parentId: preset.parentId,
@@ -58,7 +58,8 @@ const placementFrom = (reference: Item): Placement | null => {
 /**
  * Duplicates an item and its children (ADR 0017). The target placement (parent, position,
  * rotation) is explicit and editable; a reference entity (a player, the original, any item by
- * UUID) fills it: its parent, 2 m in front of it, its yaw.
+ * UUID) fills it: its parent, in front of it at a distance that depends on the copied type
+ * (8 m for a vehicle), its yaw.
  */
 export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialogProps) {
   const { t } = useTranslation();
@@ -73,22 +74,38 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
   const [withChildren, setWithChildren] = useState(true);
   const [referenceUuid, setReferenceUuid] = useState('');
   const [error, setError] = useState<string | null>(null);
+  // Gap left between the reference and the copy, by default from the copied type's profile.
+  const [distance, setDistance] = useState<string | null>(null);
+  const [referenceItem, setReferenceItem] = useState<Item | null>(null);
+  const gap = Number(distance ?? spawnDistanceFor(source.data?.object_type));
+  const gapOk = Number.isFinite(gap) && gap >= 0;
 
   // Until a reference is picked, the copy goes next to the original.
-  const current = placement ?? (source.data ? placementFrom(source.data) : null);
+  const current = placement ?? (source.data && gapOk ? placementFrom(source.data, gap) : null);
   const update = (patch: Partial<Placement>) =>
     current &&
     setPlacement({ ...current, ...patch, reference: patch.reference ?? current.reference });
-  const applyReference = (reference: Item) => {
-    const next = placementFrom(reference);
-    if (next) setPlacement(next);
-    else setError(t('duplicate.noPosition', { label: itemLabel(reference) }));
+  const applyReference = (reference: Item, withGap = gap) => {
+    const next = placementFrom(reference, withGap);
+    if (next) {
+      setReferenceItem(reference);
+      setPlacement(next);
+    } else setError(t('duplicate.noPosition', { label: itemLabel(reference) }));
+  };
+  /** A new distance recomputes the placement from the current reference. */
+  const changeDistance = (value: string) => {
+    setDistance(value);
+    const next = Number(value);
+    const reference = referenceItem ?? source.data;
+    if (reference && value.trim() !== '' && Number.isFinite(next) && next >= 0) {
+      applyReference(reference, next);
+    }
   };
 
   const position = current ? parseRaw(current.position, 'vec3') : null;
   const rotation = current ? parseRaw(current.rotation, 'vec3') : null;
   const parentOk = !!current && isValidParentId(current.parentId);
-  const valid = parentOk && !!position?.ok && !!rotation?.ok;
+  const valid = parentOk && gapOk && !!position?.ok && !!rotation?.ok;
   const children = counts.data?.total ?? 0;
 
   const confirm = async () => {
@@ -191,6 +208,20 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
                 </span>
               )}
             </span>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="duplicate-distance" className="text-[11px]">
+                {t('duplicate.distance')}
+              </Label>
+              <Input
+                id="duplicate-distance"
+                inputMode="decimal"
+                value={distance ?? String(gap)}
+                onChange={(e) => changeDistance(e.target.value)}
+                aria-invalid={!gapOk}
+                className={cn('h-7 w-20 font-mono text-xs', !gapOk && 'border-destructive')}
+              />
+              <span className="text-[11px] text-fg-3">{t('duplicate.distanceHint')}</span>
+            </div>
             <div className="flex flex-col gap-1">
               <Label htmlFor="duplicate-parent" className="font-mono text-[11px]">
                 parent_id

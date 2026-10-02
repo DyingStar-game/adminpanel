@@ -18,6 +18,8 @@ export const vehicle: z.input<typeof TypeProfileSchema> = {
     { path: 'components.*', target: 'vehicle_component', label: 'component' },
   ],
   childrenFirst: ['vehicle_component'],
+  // A truck is several metres long: 2 m made duplicated vehicles collide.
+  spawnDistance: 8,
   renderers: {
     doors: 'namedMap',
     seats: 'namedMap',

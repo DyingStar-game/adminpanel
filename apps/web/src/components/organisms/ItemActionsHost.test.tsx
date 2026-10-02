@@ -226,4 +226,30 @@ describe('ItemActionsHost', () => {
 
     expect(within(dialog).getByRole('button', { name: 'Duplicate' })).toBeDisabled();
   });
+
+  it('keeps 8 m between vehicles by default, and recomputes on another distance', async () => {
+    const bff = useInProcessBff();
+    renderHost();
+    act(() => useItemActions.getState().duplicate(ids.vehicle));
+    const original = stored(bff, ids.vehicle).object_data.position as { x: number; z: number };
+
+    const dialog = await screen.findByRole('dialog');
+    const gap = async () => {
+      const x = Number(
+        (await within(dialog).findByRole('textbox', { name: 'position x' })).getAttribute('value'),
+      );
+      const z = Number(
+        within(dialog).getByRole('textbox', { name: 'position z' }).getAttribute('value'),
+      );
+      return Math.hypot(x - original.x, z - original.z);
+    };
+    // The vehicle's own gap applies once the original is loaded.
+    const distance = await within(dialog).findByDisplayValue('8');
+    expect(await gap()).toBeCloseTo(8, 1);
+
+    await userEvent.clear(distance);
+    await userEvent.type(distance, '20');
+
+    expect(await gap()).toBeCloseTo(20, 1);
+  });
 });

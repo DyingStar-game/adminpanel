@@ -143,7 +143,7 @@ export const fr: Translations = {
     deleted: '{{label}} supprimé',
     spawnNext: 'Faire apparaître à côté',
     spawnHint:
-      "Apparition à côté de {{label}} : même parent, 2 m devant, même orientation. Les positions sont relatives au parent ; le jeu ne transmet pas encore la position des joueurs à l'API, c'est donc la dernière sauvegardée qui est utilisée.",
+      "Apparition à côté de {{label}} : même parent, devant, même orientation. Les positions sont relatives au parent ; le jeu ne transmet pas encore la position des joueurs à l'API, c'est donc la dernière sauvegardée qui est utilisée.",
     scenesOfType: 'Utilisées par {{type}}',
     scenesOther: 'Autres scènes',
     scenesEmpty: 'Aucune scène connue ne correspond : la valeur saisie est conservée.',
@@ -182,6 +182,8 @@ export const fr: Translations = {
     placementTitle: 'Placement de la copie',
     from: 'à côté de {{label}}',
     relative: 'La position est relative au parent.',
+    distance: 'Distance (m)',
+    distanceHint: "devant la référence, prévoir la taille de l'objet",
     noPosition: "{{label}} n'a pas de position à côté de laquelle placer la copie.",
     noPlayer: 'Aucun joueur trouvé',
     npc: 'PNJ',

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { spawnNextTo } from './spawn';
+import { SPAWN_DISTANCE, spawnDistanceFor, spawnNextTo } from './spawn';
 
 const player = (data: Record<string, unknown>) => ({
   object_type: 'player',
@@ -12,9 +12,10 @@ describe('spawnNextTo', () => {
     expect(spawnNextTo(player({ position: { x: 0, y: 0, z: 0 } }))?.parentId).toBe('building');
   });
 
-  it('places the item 2 m in front (−Z) when the entity faces the default direction', () => {
+  it('places the item in front (−Z) when the entity faces the default direction', () => {
     const preset = spawnNextTo(
       player({ position: { x: 1, y: 0.5, z: 10 }, rotation: { x: 0, y: 0, z: 0 } }),
+      2,
     );
     expect(preset).toEqual({
       parentId: 'building',
@@ -26,12 +27,26 @@ describe('spawnNextTo', () => {
   it('follows the yaw', () => {
     const preset = spawnNextTo(
       player({ position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: Math.PI / 2, z: 0 } }),
+      2,
     );
     expect(preset?.position).toEqual({ x: -2, y: 0, z: -0 });
     expect(preset?.rotation.y).toBeCloseTo(Math.PI / 2);
   });
 
+  it('uses the default gap when none is given', () => {
+    const preset = spawnNextTo(player({ position: { x: 0, y: 0, z: 0 } }));
+    expect(preset?.position.z).toBe(-SPAWN_DISTANCE);
+  });
+
   it('needs a position', () => {
     expect(spawnNextTo(player({}))).toBeNull();
+  });
+});
+
+describe('spawnDistanceFor', () => {
+  it('leaves more room for vehicles than for other types', () => {
+    expect(spawnDistanceFor('vehicle')).toBe(8);
+    expect(spawnDistanceFor('box')).toBe(SPAWN_DISTANCE);
+    expect(spawnDistanceFor(undefined)).toBe(SPAWN_DISTANCE);
   });
 });

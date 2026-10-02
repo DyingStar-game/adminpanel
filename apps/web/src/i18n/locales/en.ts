@@ -140,7 +140,7 @@ export const en = {
     deleted: '{{label}} deleted',
     spawnNext: 'Spawn next to it',
     spawnHint:
-      'Spawned next to {{label}}: same parent, 2 m in front of it, same orientation. Positions are relative to the parent; the game currently does not report player positions to the API, so the last saved one is used.',
+      'Spawned next to {{label}}: same parent, in front of it, same orientation. Positions are relative to the parent; the game currently does not report player positions to the API, so the last saved one is used.',
     scenesOfType: 'Used by {{type}}',
     scenesOther: 'Other scenes',
     scenesEmpty: 'No known scene matches: the typed value is kept.',
@@ -179,6 +179,8 @@ export const en = {
     placementTitle: 'Placement of the copy',
     from: 'next to {{label}}',
     relative: 'The position is relative to the parent.',
+    distance: 'Distance (m)',
+    distanceHint: 'in front of the reference, keep room for the item size',
     noPosition: '{{label}} has no position to place the copy next to.',
     noPlayer: 'No player found',
     npc: 'NPC',

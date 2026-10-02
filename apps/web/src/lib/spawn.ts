@@ -1,7 +1,12 @@
 import { Vec3Schema, type Item, type Vec3 } from '@dyingstar-admin/schemas';
+import { profileFor } from './profiles';
 
-/** Distance between an entity and an item spawned next to it, in metres. */
-export const SPAWN_DISTANCE = 2;
+/** Default gap between an entity and an item spawned next to it, in metres. */
+export const SPAWN_DISTANCE = 3;
+
+/** Gap for an item of this type: its profile's `spawnDistance`, else the default. */
+export const spawnDistanceFor = (objectType: string | undefined) =>
+  profileFor(objectType)?.spawnDistance ?? SPAWN_DISTANCE;
 
 export interface SpawnPreset {
   /** Positions are relative to the parent: the spawned item shares the entity's parent. */

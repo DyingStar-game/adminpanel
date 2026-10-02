@@ -34,6 +34,8 @@ export const TypeProfileSchema = z.object({
   hidden: z.array(z.string()).default([]),
   /** `planet`: a planet whose parent is a planet is a moon. */
   moonWhenParentIs: z.string().optional(),
+  /** Gap left when spawning or duplicating this type next to something, in metres. */
+  spawnDistance: z.number().positive().optional(),
   /** `star`: bodies linked implicitly (single star system, ADR 0008). */
   implicitChildren: z.object({ objectType: z.string(), parentId: z.literal('') }).optional(),
 });
