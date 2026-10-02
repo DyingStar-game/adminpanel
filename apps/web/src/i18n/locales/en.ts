@@ -138,6 +138,10 @@ export const en = {
     deleteNotPropagated:
       'The running game is not notified of deletions: the item may stay in game until it reloads.',
     deleted: '{{label}} deleted',
+    spawnNext: 'Spawn next to it',
+    spawnHint:
+      'Spawned next to {{label}}: same parent, 2 m in front of it, same orientation. Positions are relative to the parent; the game currently does not report player positions to the API, so the last saved one is used.',
+    knownScenes: 'Scenes already used by this type:',
   },
   schematic: {
     title: 'Schematic',

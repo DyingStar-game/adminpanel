@@ -100,6 +100,38 @@ describe('ItemActionsHost', () => {
     });
   });
 
+  it('spawns next to an entity with its parent, position, yaw and a known scene', async () => {
+    const bff = useInProcessBff();
+    const { onCreated } = renderHost();
+    act(() =>
+      useItemActions.getState().create({
+        parentId: ids.spawnbuilding,
+        objectType: 'vehicle',
+        spawn: {
+          nearLabel: 'ddurieux',
+          preset: {
+            parentId: ids.spawnbuilding,
+            position: { x: 1, y: 0, z: 8 },
+            rotation: { x: 0, y: 1.5, z: 0 },
+          },
+        },
+      }),
+    );
+
+    expect(await screen.findByText(/Spawned next to ddurieux/)).toBeInTheDocument();
+    await userEvent.click(await screen.findByRole('button', { name: 'truck.tscn' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+    await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
+    const created = onCreated.mock.calls[0]?.[0];
+    expect(stored(bff, created.object_uuid).object_data).toMatchObject({
+      parent_id: ids.spawnbuilding,
+      scenename: 'scenes/_universe/vehicles/ground/trucks/truck.tscn',
+      position: { x: 1, y: 0, z: 8 },
+      rotation: { x: 0, y: 1.5, z: 0 },
+    });
+  });
+
   it('refuses a UUID that already exists', async () => {
     useInProcessBff();
     renderHost();

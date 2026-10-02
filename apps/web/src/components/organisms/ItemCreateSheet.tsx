@@ -16,16 +16,20 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useDefinitions } from '@/hooks/queries';
 import { useCreateItem } from '@/hooks/mutations';
+import { useSceneNames } from '@/hooks/useSceneNames';
 import { useWriteTarget } from '@/hooks/useWriteTarget';
 import { ApiError } from '@/lib/api';
-import { dataFromRows } from '@/lib/propertyForm';
+import { dataFromRows, toRaw } from '@/lib/propertyForm';
 import { PropertiesSchema, type PropertiesFormValues } from '@/lib/propertyFormSchema';
+import type { SpawnContext } from '@/stores/itemActions';
 import { PropertiesEditor } from './PropertiesEditor';
 
 interface ItemCreateSheetProps {
   /** Level the item is created in (`''` = root). */
   parentId: string;
   objectType?: string | undefined;
+  /** Spawn next to an entity: position and yaw prefilled, relative to the shared parent. */
+  spawn?: SpawnContext | undefined;
   onCreated: (item: Item) => void;
   onCancel: () => void;
 }
@@ -41,6 +45,7 @@ type CreateFormValues = z.infer<typeof CreateFormSchema> & PropertiesFormValues;
 export function ItemCreateSheet({
   parentId,
   objectType,
+  spawn,
   onCreated,
   onCancel,
 }: ItemCreateSheetProps) {
@@ -56,13 +61,24 @@ export function ItemCreateSheet({
       objectType: objectType ?? '',
       uuid: crypto.randomUUID(),
       properties: [
-        { key: 'parent_id', kind: 'text', raw: parentId },
+        { key: 'parent_id', kind: 'text', raw: spawn?.preset.parentId ?? parentId },
         { key: 'scenename', kind: 'text', raw: '' },
-        { key: 'position', kind: 'vec3', raw: '0,0,0' },
+        { key: 'position', kind: 'vec3', raw: toRaw(spawn?.preset.position, 'vec3') },
+        ...(spawn
+          ? [{ key: 'rotation', kind: 'vec3' as const, raw: toRaw(spawn.preset.rotation, 'vec3') }]
+          : []),
       ],
     },
   });
   const selectedType = useWatch({ control: form.control, name: 'objectType' });
+  const scenes = useSceneNames(selectedType || undefined);
+  /** Puts a known scene in the `scenename` property (added back if the user removed it). */
+  const pickScene = (scene: string) => {
+    const rows = form.getValues('properties');
+    const index = rows.findIndex((row) => row.key === 'scenename');
+    if (index >= 0) form.setValue(`properties.${index}.raw`, scene, { shouldDirty: true });
+    else form.setValue('properties', [...rows, { key: 'scenename', kind: 'text', raw: scene }]);
+  };
   const definition = definitions.data
     ? (definitions.data.definitions.find((d) => d.type === selectedType) ?? null)
     : undefined;
@@ -159,6 +175,31 @@ export function ItemCreateSheet({
               </span>
             )}
           </div>
+          {spawn && (
+            <p className="rounded-md border border-dashed px-3 py-2 text-xs text-fg-2">
+              {t('editor.spawnHint', { label: spawn.nearLabel })}
+            </p>
+          )}
+          {(scenes.data?.length ?? 0) > 0 && (
+            <div className="flex flex-col gap-1">
+              <span className="text-[11px] text-fg-3">{t('editor.knownScenes')}</span>
+              <div className="flex flex-wrap gap-1">
+                {scenes.data?.slice(0, 8).map((scene) => (
+                  <Button
+                    key={scene}
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    className="max-w-full truncate font-mono"
+                    title={scene}
+                    onClick={() => pickScene(scene)}
+                  >
+                    {scene.split('/').at(-1)}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <span className="text-sm font-medium">object_data</span>
             <PropertiesEditor

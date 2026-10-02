@@ -1,5 +1,12 @@
 import type { ReactNode } from 'react';
-import { ExpandIcon, LocateFixedIcon, NetworkIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import {
+  CirclePlusIcon,
+  ExpandIcon,
+  LocateFixedIcon,
+  NetworkIcon,
+  PencilIcon,
+  Trash2Icon,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Item } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
@@ -13,6 +20,7 @@ import { useChildrenCounts, useDefinitions, useItem } from '@/hooks/queries';
 import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { itemLabel } from '@/lib/itemLabel';
+import { spawnNextTo } from '@/lib/spawn';
 import { useItemActions } from '@/stores/itemActions';
 import { PropertySections, SectionTitle } from './PropertySections';
 import { RelationsList } from './RelationsList';
@@ -68,6 +76,7 @@ function ItemDetails({
   const { refs, parentId, parentTarget, resolveRef } = useItemRefs(item);
   const changed = useChangedKeys(data, item.object_uuid);
   const actions = useItemActions();
+  const spawn = spawnNextTo(item);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -104,6 +113,22 @@ function ItemDetails({
             <ExpandIcon />
             {t('inspector.open')}
           </Button>
+          {spawn && (
+            <Button
+              variant="outline"
+              size="icon-xs"
+              aria-label={t('editor.spawnNext')}
+              title={t('editor.spawnNext')}
+              onClick={() =>
+                actions.create({
+                  parentId: spawn.parentId,
+                  spawn: { preset: spawn, nearLabel: itemLabel(item) },
+                })
+              }
+            >
+              <CirclePlusIcon />
+            </Button>
+          )}
           <Button
             variant="outline"
             size="icon-xs"

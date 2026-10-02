@@ -1,4 +1,4 @@
-import { CompassIcon, NetworkIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import { CirclePlusIcon, CompassIcon, NetworkIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Item } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
@@ -19,6 +19,7 @@ import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { itemLabel } from '@/lib/itemLabel';
 import { schematicFor } from '@/lib/schematics';
+import { spawnNextTo } from '@/lib/spawn';
 import { useItemActions } from '@/stores/itemActions';
 
 interface ObjectPageProps {
@@ -66,6 +67,7 @@ function ObjectDetails({
   const changed = useChangedKeys(item.object_data, item.object_uuid);
   const actions = useItemActions();
   const schematic = schematicFor(item.object_data.scenename);
+  const spawn = spawnNextTo(item);
   const isMoon =
     !!profile?.moonWhenParentIs &&
     parentTarget?.status === 'found' &&
@@ -121,6 +123,21 @@ function ObjectDetails({
               <NetworkIcon />
               {t('objectPage.orbit')}
             </Button>
+            {spawn && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  actions.create({
+                    parentId: spawn.parentId,
+                    spawn: { preset: spawn, nearLabel: itemLabel(item) },
+                  })
+                }
+              >
+                <CirclePlusIcon />
+                {t('editor.spawnNext')}
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => actions.edit(item.object_uuid)}>
               <PencilIcon />
               {t('editor.edit')}

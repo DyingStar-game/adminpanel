@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { ids } from '@dyingstar-admin/testing';
 import { renderWithProviders } from '@/test/render';
 import { useInProcessBff } from '@/test/bff';
+import { useItemActions } from '@/stores/itemActions';
 import { ObjectPage } from './ObjectPage';
 
 const renderPage = (uuid: string) => {
@@ -93,6 +94,17 @@ describe('ObjectPage', () => {
     renderPage(ids.player);
 
     expect(await screen.findByText('0.38 rad · 21.772°')).toBeInTheDocument();
+  });
+
+  it('offers to spawn an item next to a player, in its parent', async () => {
+    useInProcessBff();
+    renderPage(ids.player);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Spawn next to it' }));
+
+    const action = useItemActions.getState().action;
+    expect(action).toMatchObject({ kind: 'create', parentId: ids.spawnbuilding });
+    expect(action?.kind === 'create' && action.spawn?.nearLabel).toBe('ddurieux');
   });
 
   it('opens the item in the explorer and reports unknown items', async () => {

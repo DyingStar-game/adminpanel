@@ -1,15 +1,26 @@
 import { create } from 'zustand';
+import type { SpawnPreset } from '@/lib/spawn';
 
 /** Write action in progress, shown by `ItemActionsHost` (one sheet or dialog at a time). */
 export type ItemAction =
   | { kind: 'edit'; uuid: string }
-  | { kind: 'create'; parentId: string; objectType?: string | undefined }
+  | { kind: 'create'; parentId: string; objectType?: string | undefined; spawn?: SpawnContext }
   | { kind: 'delete'; uuid: string };
+
+/** Creation next to an entity: its parent, position and yaw, and its label for the UI. */
+export interface SpawnContext {
+  preset: SpawnPreset;
+  nearLabel: string;
+}
 
 interface ItemActionsState {
   action: ItemAction | null;
   edit: (uuid: string) => void;
-  create: (context: { parentId: string; objectType?: string | undefined }) => void;
+  create: (context: {
+    parentId: string;
+    objectType?: string | undefined;
+    spawn?: SpawnContext;
+  }) => void;
   remove: (uuid: string) => void;
   close: () => void;
 }

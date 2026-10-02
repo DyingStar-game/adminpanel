@@ -26,6 +26,7 @@ export function ItemActionsHost({ onCreated, onDeleted }: ItemActionsHostProps) 
             <ItemCreateSheet
               parentId={action.parentId}
               objectType={action.objectType}
+              spawn={action.spawn}
               onCancel={close}
               onCreated={(item) => {
                 close();
