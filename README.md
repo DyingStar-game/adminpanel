@@ -16,17 +16,13 @@ Web administration panel for game servers of the open-source community project *
 
 ## Role in the ecosystem
 
-This application lets operators and contributors:
+This application lets operators and contributors inspect and fix the persistent state of the game
+universe (items stored by the persistence service: planets, buildings, vehicles, players…),
+while the game runs.
 
-- Monitor Godot server status and connected players
-- Manage persistence (items, bulk JSON import)
-- Administer Keycloak accounts (roles, enable/disable)
-- Moderate bans
-- Configure servers and test service connectivity
-
-All calls to persistence, Keycloak, and WebSockets go through the **BFF backend** — the only entry point to cluster services (Minikube/Kubernetes). The frontend never exposes internal service URLs.
-
-See [ARCHITECTURE.md](./ARCHITECTURE.md) for the responsibility split.
+All calls to cluster services go through the **BFF** (`apps/bff`), the only component that knows
+their internal URLs. The browser only talks to the BFF, which also validates writes against the
+object type definitions.
 
 ## Screenshot
 
@@ -34,11 +30,26 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for the responsibility split.
 
 ## Features
 
-- Real-time dashboard (10s polling)
-- Persistence items CRUD with enriched JSON editor
-- Bulk JSON import with validation and conflict resolution
-- Missions (temporary file storage, WIP)
-- Keycloak accounts & roles (graceful degradation when not configured)
+Available (lot 1, persistence items):
+
+- **Combined navigation**: hierarchy tree, a table per object type with type-aware columns
+  (vehicles, players, planets, stars…), an inspector, and an object page with a clickable orbit
+  graph of its relations.
+- **Live**: the open object refreshes every 2 s, lists every 5 s, counts every 15 s; can be paused.
+- **Scene schematics**: a top view of a vehicle's compartments (truck first).
+- **Editing**: properties validated against the type definitions; only changed keys are sent, and a
+  value the game changed meanwhile asks before being overwritten.
+- **Create, duplicate, delete**: creation from the definitions with a scene picker; spawn or
+  duplicate (with children) next to a player or any item, upright on planets; deletion warns about
+  orphans. Unknown object types are refused, and writes to a production server ask for
+  confirmation.
+- **Comfort**: copy buttons on UUIDs, positions and rotations; light and dark themes; English and
+  French.
+
+Planned:
+
+- Bulk JSON import (next step of lot 1)
+- Real-time dashboard of game servers and connected players
 - Bans and moderation history
 - Settings and connectivity tests
 
@@ -104,10 +115,12 @@ Pass the variables of [`.env.sample`](./.env.sample) with `-e` (at least `SERVER
 
 ## Contributor documentation
 
-- [ONBOARDING.md](./ONBOARDING.md) — setup, env vars, conventions
-- [ARCHITECTURE.md](./ARCHITECTURE.md) — BFF layout, mesh (resourcesdynamic), Kubernetes
-- [deploy/KUBERNETES.md](./deploy/KUBERNETES.md) — mapping to `../kubernetes` (ports, namespaces, realms)
-- [deploy/SKAFFOLD.md](./deploy/SKAFFOLD.md) — Skaffold module for admin panel
+- [docs/adr/](./docs/adr/) — architecture decision records (stack, BFF, live, writes, views…)
+- [docs/lot-1-plan.md](./docs/lot-1-plan.md) — lot 1 plan and progress
+- [docs/design/](./docs/design/) — the design mock-up the UI follows
+- [CLAUDE.md](./CLAUDE.md) — working rules (git, Makefile, conventions)
+- [ONBOARDING.md](./ONBOARDING.md), [ARCHITECTURE.md](./ARCHITECTURE.md) and [deploy/](./deploy/)
+  still describe the previous version of the panel and are being rewritten.
 
 ### Translations
 
