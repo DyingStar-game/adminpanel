@@ -39,7 +39,11 @@ const truck = (data: Record<string, unknown>, uuid = NEW) => ({
   },
 });
 const check = (items: unknown[]) =>
-  checkImportCoherence(items, checkImportFormat(items, ['vehicle', 'player', 'planet']), context);
+  checkImportCoherence(
+    items,
+    checkImportFormat(items, ['vehicle', 'player', 'planet', 'spawnbuilding']),
+    context,
+  );
 const codes = (row: ImportRow | undefined) => row?.findings.map((f) => f.code) ?? [];
 
 describe('valueKind', () => {
@@ -144,6 +148,47 @@ describe('checkImportCoherence', () => {
         params: { expected: 'vehicle' },
       },
     ]);
+  });
+
+  it('warns about a probable duplicate, and refuses the same object at the same place', () => {
+    // The fixture's spawn building: named, under the planet, at a given position.
+    const building = createDataset().find((i) => i.object_uuid === ids.spawnbuilding);
+    if (!building) throw new Error('fixture building missing');
+    const copy = (data: Record<string, unknown>, uuid = NEW) => ({
+      object_type: 'spawnbuilding',
+      object_uuid: uuid,
+      object_data: { ...building.object_data, uuid, ...data },
+    });
+    const [elsewhere] = check([copy({ position: { x: 1, y: 2, z: 3 } })]);
+    expect(elsewhere?.status).toBe('new');
+    expect(elsewhere?.findings).toContainEqual(
+      expect.objectContaining({
+        code: 'possibleDuplicate',
+        params: { uuid: ids.spawnbuilding, count: 1 },
+      }),
+    );
+
+    const [same] = check([copy({})]);
+    expect(same?.status).toBe('invalid');
+    expect(same?.findings).toContainEqual(
+      expect.objectContaining({
+        code: 'duplicateSpawn',
+        severity: 'error',
+        params: { uuid: ids.spawnbuilding },
+      }),
+    );
+
+    // Re-importing the item itself (same UUID) is a conflict, not a duplicate.
+    const [itself] = check([copy({}, ids.spawnbuilding)]);
+    expect(itself?.status).toBe('conflict');
+
+    // Twice the same new object in one import.
+    const twin = { name: 'new_building', position: { x: 9, y: 9, z: 9 } };
+    const rows = check([copy(twin), copy(twin, '22222222-2222-4222-8222-222222222222')]);
+    expect(rows[0]?.status).toBe('new');
+    expect(rows[1]?.findings).toContainEqual(
+      expect.objectContaining({ code: 'duplicateSpawnInImport', params: { row: 1 } }),
+    );
   });
 
   it('leaves invalid rows untouched', () => {

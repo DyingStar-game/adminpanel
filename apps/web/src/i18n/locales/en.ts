@@ -366,6 +366,12 @@ export const en = {
       aliasAmbiguous:
         '{{count}} items match {{alias}}: give the parent UUID, or name its container first, e.g. _poi_village_<name>/{{alias}}.',
       aliasResolved: '{{alias}} → {{uuid}}',
+      duplicateSpawn:
+        'Already on the server at the same place ({{uuid}}): same type, name, parent and position.',
+      duplicateSpawnInImport: 'Same object at the same place as item #{{row}} of the import.',
+      possibleDuplicate_one: 'Probable duplicate: {{uuid}} already has this type and name.',
+      possibleDuplicate_other:
+        'Probable duplicate: {{count}} items already have this type and name (e.g. {{uuid}}).',
       typeMismatch: 'object_data.type differs from the object type ({{expected}}).',
       undeclaredKey: 'Not declared in the type definition: not replicated to clients.',
       kindMismatch: 'Existing items hold a {{expected}} here, this one a {{actual}}.',

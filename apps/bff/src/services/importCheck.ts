@@ -45,7 +45,29 @@ export interface ImportContext {
   stats: Map<string, TypeStats>;
   /** Scene → types using it. */
   scenes: Map<string, Set<string>>;
+  /** Items by type and name, to spot an object imported twice. */
+  named: Map<string, Item[]>;
 }
+
+/** Two positions closer than this, in metres on each axis, are the same place. */
+const SAME_PLACE_M = 0.001;
+
+const namedKey = (type: string, name: string) => JSON.stringify([type, name]);
+
+const samePlace = (a: unknown, b: unknown) => {
+  const pa = a as { x?: unknown; y?: unknown; z?: unknown } | null;
+  const pb = b as { x?: unknown; y?: unknown; z?: unknown } | null;
+  return (['x', 'y', 'z'] as const).every(
+    (axis) =>
+      typeof pa?.[axis] === 'number' &&
+      typeof pb?.[axis] === 'number' &&
+      Math.abs(pa[axis] - pb[axis]) < SAME_PLACE_M,
+  );
+};
+
+/** Same object at the same place: same type, name, parent and position (business rule). */
+const sameSpawn = (a: Record<string, unknown>, b: Record<string, unknown>) =>
+  (a.parent_id ?? '') === (b.parent_id ?? '') && samePlace(a.position, b.position);
 
 /** Keys repeated from the item itself, never in definitions. */
 const IDENTITY_KEYS = new Set(['uuid', 'type']);
@@ -94,7 +116,14 @@ export function buildImportContext(all: Item[], definitions: ObjectDefinition[])
   const declared = new Map(
     definitions.map((d) => [d.type, new Set(d.channels.flatMap((c) => c.properties))]),
   );
-  return { declared, existing, stats, scenes };
+  const named = new Map<string, Item[]>();
+  for (const item of all) {
+    const name = item.object_data.name;
+    if (typeof name !== 'string' || !name) continue;
+    const key = namedKey(item.object_type, name);
+    named.set(key, [...(named.get(key) ?? []), item]);
+  }
+  return { declared, existing, stats, scenes, named };
 }
 
 const warning = (
@@ -120,6 +149,9 @@ export function checkImportCoherence(
     ),
   );
   const typeOf = (uuid: string) => context.existing.get(uuid) ?? inputTypes.get(uuid);
+
+  // Items of the input already met, by type and name: the same object twice in one import.
+  const seenInInput = new Map<string, { index: number; data: Record<string, unknown> }[]>();
 
   return rows.map((row) => {
     if (row.status === 'invalid' || !row.object_uuid || !row.object_type) return row;
@@ -206,9 +238,46 @@ export function checkImportCoherence(
       findings.push(warning('positionMissing', 'object_data.position'));
     }
 
+    // An object imported twice (business rule): the same name is a warning, the same name at
+    // the same place (parent and position) an error. The item itself (same UUID) does not count.
+    const name = data.name;
+    if (typeof name === 'string' && name) {
+      const key = namedKey(type, name);
+      const others = (context.named.get(key) ?? []).filter(
+        (item) => item.object_uuid !== row.object_uuid,
+      );
+      const twin = others.find((item) => sameSpawn(item.object_data, data));
+      const inInput = (seenInInput.get(key) ?? []).find((seen) => sameSpawn(seen.data, data));
+      if (twin) {
+        findings.push({
+          code: 'duplicateSpawn',
+          severity: 'error',
+          path: 'object_data.position',
+          params: { uuid: twin.object_uuid },
+        });
+      } else if (inInput) {
+        findings.push({
+          code: 'duplicateSpawnInImport',
+          severity: 'error',
+          path: 'object_data.position',
+          params: { row: inInput.index + 1 },
+        });
+      } else if (others[0] && !context.existing.has(row.object_uuid)) {
+        // Only new items: an existing one (same UUID) is already reported as a conflict.
+        findings.push(
+          warning('possibleDuplicate', 'object_data.name', {
+            uuid: others[0].object_uuid,
+            count: others.length,
+          }),
+        );
+      }
+      seenInInput.set(key, [...(seenInInput.get(key) ?? []), { index: row.index, data }]);
+    }
+
+    const blocking = findings.some((f) => f.severity === 'error');
     return {
       ...row,
-      status: context.existing.has(row.object_uuid) ? 'conflict' : 'new',
+      status: blocking ? 'invalid' : context.existing.has(row.object_uuid) ? 'conflict' : 'new',
       findings,
     };
   });

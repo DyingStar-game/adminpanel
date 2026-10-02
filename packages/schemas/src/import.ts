@@ -23,6 +23,8 @@ export const ImportCodeSchema = z.enum([
   'badShape',
   'aliasNotFound',
   'aliasAmbiguous',
+  'duplicateSpawn',
+  'duplicateSpawnInImport',
   // Information.
   'aliasResolved',
   // Warnings (coherence with the server's data).
@@ -36,6 +38,7 @@ export const ImportCodeSchema = z.enum([
   'sceneUnknown',
   'sceneOtherType',
   'positionMissing',
+  'possibleDuplicate',
 ]);
 export type ImportCode = z.infer<typeof ImportCodeSchema>;
 

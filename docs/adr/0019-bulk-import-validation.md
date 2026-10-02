@@ -118,6 +118,19 @@ Given by the maintainer:
   top-level properties holds the previous item's UUID (`poi_uuid` for a building and its
   village, `parent_id`…). Spawn building names are unique within a village (live data).
 
+### Update (2026-10-02): objects imported twice
+
+Items without UUID get a new one at every check, so re-checking an imported file shows them as
+new again. Business rule given by the maintainer:
+
+- same type and same `name` as an item on the server: **warning** `possibleDuplicate`, for new
+  items only (names are often shared: 16 spawn buildings are called `tarsis_4-1008`);
+- same type, `name`, `parent_id` and `position` (within 1 mm) as an item on the server, or as an
+  earlier item of the import: **error** `duplicateSpawn` / `duplicateSpawnInImport`, the same
+  object cannot spawn twice at the same place. The item itself (same UUID) does not count.
+
+No live item is a same-place duplicate of another (2,076 items re-checked).
+
 ## Consequences
 
 - Most errors appear before anything is sent, with the path of the faulty value.

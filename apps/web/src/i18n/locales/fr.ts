@@ -371,6 +371,12 @@ export const fr: Translations = {
       aliasAmbiguous:
         '{{count}} objets correspondent à {{alias}} : indique l’UUID du parent, ou nomme d’abord son conteneur, par exemple _poi_village_<nom>/{{alias}}.',
       aliasResolved: '{{alias}} → {{uuid}}',
+      duplicateSpawn:
+        'Déjà sur le serveur au même endroit ({{uuid}}) : même type, nom, parent et position.',
+      duplicateSpawnInImport: 'Même objet au même endroit que l’objet n° {{row}} de l’import.',
+      possibleDuplicate_one: 'Doublon probable : {{uuid}} a déjà ce type et ce nom.',
+      possibleDuplicate_other:
+        'Doublon probable : {{count}} objets ont déjà ce type et ce nom (par exemple {{uuid}}).',
       typeMismatch: 'object_data.type diffère du type d’objet ({{expected}}).',
       undeclaredKey: 'Non déclaré dans la définition du type : pas répliqué vers les clients.',
       kindMismatch: 'Les objets existants ont un {{expected}} ici, celui-ci un {{actual}}.',
