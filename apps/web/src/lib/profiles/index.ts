@@ -18,8 +18,11 @@ const PROFILES: Map<string, TypeProfile> = new Map(
 export const profileFor = (objectType: string | undefined): TypeProfile | null =>
   (objectType && PROFILES.get(objectType)) || null;
 
+const NO_COLUMNS: string[] = [];
+
+/** Extra table columns of a type; a stable empty array when it has none (memo-friendly). */
 export const tableColumnsFor = (objectType: string | undefined): string[] =>
-  profileFor(objectType)?.columns ?? [];
+  profileFor(objectType)?.columns ?? NO_COLUMNS;
 
 /** Matches a reference path (`seats.SeatDriver`) against a profile pattern (`seats.*`). */
 export function matchesPath(pattern: string, path: string): boolean {

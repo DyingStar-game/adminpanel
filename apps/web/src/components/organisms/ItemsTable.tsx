@@ -43,7 +43,21 @@ export interface ItemsTableProps {
   embedded?: boolean;
 }
 
-const features = tableFeatures({});
+/**
+ * Values cells read from `table.options.meta` instead of closures, so columns stay stable
+ * while references resolve or live data refreshes (otherwise every cell would remount).
+ */
+interface CellMeta {
+  resolveRef: (uuid: string) => RefTarget;
+  onNavigate: (uuid: string) => void;
+  moonParentType: string | undefined;
+}
+
+const features = tableFeatures({ tableMeta: {} as CellMeta });
+const metaOf = (table: { options: { meta?: CellMeta | undefined } }): CellMeta => {
+  if (!table.options.meta) throw new Error('ItemsTable cells need their meta');
+  return table.options.meta;
+};
 const uuidOf = (item: Item) => item.object_uuid;
 const helper = createColumnHelper<typeof features, Item>();
 
@@ -136,38 +150,47 @@ export function ItemsTable(props: ItemsTableProps) {
           helper.display({
             id: key,
             header: key === KIND_COLUMN ? t('table.kind') : key,
-            cell: ({ row }) =>
-              key === KIND_COLUMN ? (
+            cell: ({ row, table }) => {
+              const meta = metaOf(table);
+              return key === KIND_COLUMN ? (
                 <MonoText tone="muted">
-                  {t(`profile.${celestialKind(row.original, moonParentType, resolveRef)}`)}
+                  {t(
+                    `profile.${celestialKind(row.original, meta.moonParentType, meta.resolveRef)}`,
+                  )}
                 </MonoText>
               ) : (
                 <ValueView
                   value={row.original.object_data[key]}
                   name={key}
-                  resolveRef={resolveRef}
-                  onNavigate={props.onNavigate}
+                  resolveRef={meta.resolveRef}
+                  onNavigate={meta.onNavigate}
                 />
-              ),
+              );
+            },
           }),
         ),
         helper.display({
           id: 'position',
           header: 'position',
-          cell: ({ row }) => (
+          cell: ({ row, table }) => (
             <ValueView
               value={displayPosition(row.original)}
               name="position"
-              resolveRef={resolveRef}
-              onNavigate={props.onNavigate}
+              resolveRef={metaOf(table).resolveRef}
+              onNavigate={metaOf(table).onNavigate}
             />
           ),
         }),
       ]),
-    [extraKeys, objectType, resolveRef, props.onNavigate, t, moonParentType],
+    [extraKeys, objectType, t],
   );
 
-  const table = useTable({ features, columns, data: rows });
+  const table = useTable({
+    features,
+    columns,
+    data: rows,
+    meta: { resolveRef, onNavigate: props.onNavigate, moonParentType },
+  });
   const grid = `minmax(160px,1.4fr) 92px ${extraKeys.map(() => 'minmax(80px,1fr)').join(' ')} minmax(140px,1.2fr)`;
   const total = query.data?.total ?? 0;
   const typeOptions = [
