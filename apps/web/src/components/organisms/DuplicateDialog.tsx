@@ -143,7 +143,7 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
 
   return (
     <Dialog open onOpenChange={(open) => !open && onCancel()}>
-      <DialogContent className="sm:max-w-[520px]">
+      <DialogContent className="sm:max-w-130">
         <DialogHeader>
           <DialogTitle>
             {t('duplicate.title', { label: source.data ? itemLabel(source.data) : '…' })}
@@ -227,7 +227,7 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
               onChange={changeOffset}
             />
             <div className="flex flex-col gap-1">
-              <Label htmlFor="duplicate-parent" className="font-mono text-[11px]">
+              <Label htmlFor="duplicate-parent" className="font-mono text-2xs">
                 parent_id
               </Label>
               <Input
@@ -239,7 +239,7 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
               />
             </div>
             <div className="flex flex-col gap-1">
-              <span className="font-mono text-[11px]">position</span>
+              <span className="font-mono text-2xs">position</span>
               <PropertyInput
                 id="duplicate-position"
                 label="position"
@@ -250,7 +250,7 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
               />
             </div>
             <div className="flex flex-col gap-1">
-              <span className="font-mono text-[11px]">rotation</span>
+              <span className="font-mono text-2xs">rotation</span>
               <PropertyInput
                 id="duplicate-rotation"
                 label="rotation"
@@ -260,7 +260,7 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
                 invalid={!rotation?.ok}
               />
             </div>
-            <p className="text-[11px] text-fg-3">{t('duplicate.relative')}</p>
+            <p className="text-2xs text-fg-3">{t('duplicate.relative')}</p>
           </section>
 
           <div className="flex items-center gap-2">
@@ -293,7 +293,10 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
           <Button
             disabled={!valid || duplicate.isPending}
             onClick={() => void confirm()}
-            className={cn(isProduction && 'bg-destructive text-white hover:bg-destructive/90')}
+            className={cn(
+              isProduction &&
+                'border-destructive/40 bg-destructive/15 text-destructive shadow-none hover:bg-destructive/25',
+            )}
           >
             {t('duplicate.confirm')}
           </Button>

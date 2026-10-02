@@ -34,7 +34,7 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
         role="img"
         aria-label={label(schematic.title)}
         viewBox={`${-U} ${-U / 2} ${(width + 2) * U} ${(height + 1) * U}`}
-        className="mx-auto max-h-[440px] w-full max-w-[320px] font-mono"
+        className="mx-auto max-h-110 w-full max-w-80 font-mono"
       >
         {schematic.shapes.map((shape) => {
           const value = shape.value ? number(valueAt(data, shape.value.path)) : null;
@@ -46,10 +46,10 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
                 width={shape.size[0] * U}
                 height={shape.size[1] * U}
                 rx={shape.kind === 'body' ? 14 : 6}
-                fill={shape.kind === 'body' ? 'var(--ds-bg)' : 'var(--ds-bg-2)'}
+                // Every shape is drawn plain: dashes mean "absent" (empty seat or bay, unknown door).
+                fill="var(--ds-bg)"
                 stroke="var(--ds-line-2)"
                 strokeWidth={1.5}
-                strokeDasharray={shape.kind === 'cargo' ? '6 4' : undefined}
               />
               <text
                 x={(shape.at[0] + shape.size[0] / 2) * U}
@@ -335,13 +335,17 @@ function Readouts({
     <div className="flex flex-wrap gap-2">
       {schematic.readouts.map((readout) => {
         const value = valueAt(data, readout.path);
+        // Every readout is the same chip, aligned on one line.
+        const chip =
+          'inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs';
         if (readout.kind === 'toggle') {
+          // The dot carries the state (green on, grey off); the word stays for screen readers.
+          const state =
+            value === true ? t('schematic.on') : value === false ? t('schematic.off') : '—';
           return (
-            <span
-              key={readout.path}
-              className="inline-flex items-center gap-1.5 rounded-md border bg-background px-2 py-1 text-xs"
-            >
+            <span key={readout.path} className={chip} title={`${label(readout.label)} · ${state}`}>
               <span
+                aria-hidden
                 className={cn(
                   'size-2 rounded-full',
                   value === true
@@ -352,40 +356,17 @@ function Readouts({
                 )}
               />
               {label(readout.label)}
-              <MonoText tone="subtle" className="text-[10.5px]">
-                {value === true ? t('schematic.on') : value === false ? t('schematic.off') : '—'}
-              </MonoText>
+              <span className="sr-only">{state}</span>
             </span>
           );
         }
         const n = number(value);
-        const max =
-          readout.kind === 'gauge' && readout.max ? number(valueAt(data, readout.max)) : null;
         return (
-          <span
-            key={readout.path}
-            className="inline-flex min-w-[120px] flex-col gap-1 rounded-md border bg-background px-2 py-1 text-xs"
-          >
-            <span className="flex items-baseline justify-between gap-2">
-              {label(readout.label)}
-              <MonoText className="font-semibold">
-                {n === null ? '—' : format.format(n)} {readout.unit}
-              </MonoText>
-            </span>
-            {readout.kind === 'gauge' && max !== null && max > 0 && n !== null && (
-              <span
-                className="h-1.5 overflow-hidden rounded-full bg-surface-3"
-                title={`max ${format.format(max)}`}
-              >
-                <span
-                  className={cn(
-                    'block h-full rounded-full',
-                    n > max ? 'bg-destructive' : 'bg-link',
-                  )}
-                  style={{ width: `${Math.min(100, (n / max) * 100)}%` }}
-                />
-              </span>
-            )}
+          <span key={readout.path} className={chip}>
+            {label(readout.label)}
+            <MonoText className="font-semibold">
+              {n === null ? '—' : format.format(n)} {readout.unit}
+            </MonoText>
           </span>
         );
       })}

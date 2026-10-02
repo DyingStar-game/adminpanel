@@ -30,15 +30,13 @@ interface MapLegendProps {
 export function MapLegend({ entries, onToggle, onToggleNames, labels }: MapLegendProps) {
   return (
     <section aria-label={labels.title} className="flex flex-col gap-1">
-      <span className="text-[11px] font-medium text-fg-2">{labels.title}</span>
+      <span className="text-2xs font-medium text-fg-2">{labels.title}</span>
       <ul className="flex flex-col gap-0.5">
         {entries.map((entry) => (
           <li key={entry.objectType} className="flex items-center gap-2">
             <TypeDot objectType={entry.objectType} shape={entry.shape} />
-            <MonoText className="min-w-0 flex-1 truncate text-[11.5px]">
-              {entry.objectType}
-            </MonoText>
-            <MonoText tone="subtle" className="text-[11px] tabular-nums">
+            <MonoText className="min-w-0 flex-1 truncate text-xs">{entry.objectType}</MonoText>
+            <MonoText tone="subtle" className="text-2xs tabular-nums">
               {entry.count}
             </MonoText>
             <Button

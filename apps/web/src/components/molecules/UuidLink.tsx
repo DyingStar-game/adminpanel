@@ -46,7 +46,7 @@ export function UuidLink({ uuid, target, onNavigate, missingLabel }: UuidLinkPro
         title={uuid}
         onClick={() => onNavigate(uuid)}
         className={cn(
-          'inline-flex min-w-0 items-center gap-1.5 truncate text-left font-mono text-xs text-link underline decoration-dotted underline-offset-[3px]',
+          'inline-flex min-w-0 items-center gap-1.5 truncate text-left font-mono text-xs text-link underline decoration-dotted underline-offset-0.75',
           target.status === 'loading' && 'opacity-60',
         )}
       >

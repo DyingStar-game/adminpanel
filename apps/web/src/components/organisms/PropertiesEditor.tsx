@@ -71,16 +71,16 @@ export function PropertiesEditor({
         return (
           <div key={field.id} className="flex flex-col gap-1 rounded-md border px-2.5 py-2">
             <div className="flex items-center gap-1.5">
-              <MonoText className="min-w-0 flex-1 truncate text-[11.5px]" title={field.key}>
+              <MonoText className="min-w-0 flex-1 truncate text-xs" title={field.key}>
                 {field.key}
               </MonoText>
               {definition && !declared.has(field.key) && (
-                <Badge variant="outline" className="text-[10px]">
+                <Badge variant="outline" className="text-3xs">
                   {t('inspector.notReplicated')}
                 </Badge>
               )}
               {gameChanged?.has(field.key) && (
-                <Badge className="bg-flash text-[10px] text-foreground">
+                <Badge className="bg-flash text-3xs text-foreground">
                   {t('editor.changedInGame')}
                 </Badge>
               )}
@@ -152,7 +152,7 @@ export function PropertiesEditor({
               }
             />
             {message && (
-              <span role="alert" className="text-[11px] text-destructive">
+              <span role="alert" className="text-2xs text-destructive">
                 {t(`editor.errors.${message}` as 'editor.errors.json')}
               </span>
             )}
@@ -181,7 +181,7 @@ export function PropertiesEditor({
       </div>
       {suggestions.length > 0 && (
         <div className="flex flex-wrap items-center gap-1">
-          <span className="text-[11px] text-fg-3">{t('editor.suggestions')}</span>
+          <span className="text-2xs text-fg-3">{t('editor.suggestions')}</span>
           {suggestions.map((key) => (
             <Button
               key={key}

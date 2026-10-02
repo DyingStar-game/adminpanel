@@ -24,12 +24,12 @@ export function PropertyRow({
     <div
       data-changed={changed || undefined}
       className={cn(
-        'grid min-h-[30px] items-center gap-2.5 px-4.5 transition-colors duration-700',
+        'grid min-h-7.5 items-center gap-2.5 px-4.5 transition-colors duration-700',
         wide ? 'grid-cols-[190px_minmax(0,1fr)]' : 'grid-cols-[120px_minmax(0,1fr)]',
         changed && 'bg-flash',
       )}
     >
-      <span className="flex min-w-0 items-center gap-1 truncate font-mono text-[11.5px] text-fg-2">
+      <span className="flex min-w-0 items-center gap-1 truncate font-mono text-xs text-fg-2">
         <span className="truncate" title={name}>
           {name}
         </span>

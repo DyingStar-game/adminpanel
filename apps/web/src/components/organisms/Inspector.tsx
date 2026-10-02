@@ -94,18 +94,16 @@ function ItemDetails({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex flex-col gap-2 border-b px-4.5 py-4">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <TypeDot objectType={item.object_type} shape="square" />
-          <MonoText tone="muted" className="text-[11px]">
-            {item.object_type}
-          </MonoText>
+          <span className="text-2xs text-fg-2">{item.object_type}</span>
           {!definition && definitions.isSuccess && (
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-3xs">
               {t('inspector.unknownType')}
             </Badge>
           )}
           {parentTarget?.status === 'missing' && (
-            <Badge variant="destructive" className="text-[10px]">
+            <Badge variant="destructive" className="text-3xs">
               {t('inspector.orphan')}
             </Badge>
           )}
@@ -181,7 +179,7 @@ function ItemDetails({
         </div>
         <h2 className="text-lg leading-tight font-semibold tracking-tight">{itemLabel(item)}</h2>
         <UpdatedAt at={updatedAt} />
-        <MonoText tone="subtle" className="text-[11px] leading-relaxed break-all">
+        <MonoText tone="subtle" className="text-2xs leading-relaxed break-all">
           {item.object_uuid}
           <CopyButton value={item.object_uuid} className="ml-1 inline-grid align-middle" />
           {typeof data.scenename === 'string' && (

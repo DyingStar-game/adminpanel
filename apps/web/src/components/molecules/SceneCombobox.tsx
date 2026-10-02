@@ -80,12 +80,12 @@ export function SceneCombobox({
         <span className="shrink-0 font-mono text-xs font-medium">
           {option.scenename.split('/').at(-1)}
         </span>
-        <span className="truncate font-mono text-[10.5px] text-fg-3">
+        <span className="truncate font-mono text-2xs text-fg-3">
           {option.scenename.split('/').slice(0, -1).join('/')}
         </span>
       </span>
       {option.count > 0 && (
-        <MonoText tone="subtle" className="shrink-0 text-[10px]">
+        <MonoText tone="subtle" className="shrink-0 text-3xs">
           {labels.count(option.count)}
         </MonoText>
       )}

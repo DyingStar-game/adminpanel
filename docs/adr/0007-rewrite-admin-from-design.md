@@ -1,6 +1,6 @@
 # 0007. Rewrite the admin from scratch, styled after the Claude Design mock-up
 
-- **Status:** Accepted
+- **Status:** Accepted — visual style superseded by [ADR 0020](./0020-visual-identity-first-panel.md)
 - **Date:** 2026-10-01
 - **Scope:** Project-wide
 

@@ -222,9 +222,7 @@ export function ItemsTable(props: ItemsTableProps) {
         )}
         <div className="flex flex-wrap items-center gap-2.5">
           {objectType ? <TypeDot objectType={objectType} className="size-2.5" /> : null}
-          <span className="font-mono text-base font-semibold">
-            {objectType ?? t('table.allTypes')}
-          </span>
+          <span className="text-base font-semibold">{objectType ?? t('table.allTypes')}</span>
           <span className="text-xs text-fg-3">{t('table.count', { count: total })}</span>
           <span className="flex-1" />
           {!embedded && onFilterChange && (
@@ -238,7 +236,7 @@ export function ItemsTable(props: ItemsTableProps) {
                   scope: value === ALL_TYPES ? 'level' : scope,
                 })
               }
-              className="w-40 font-mono"
+              className="w-40"
             />
           )}
           {objectType && !embedded && onFilterChange && (
@@ -277,7 +275,7 @@ export function ItemsTable(props: ItemsTableProps) {
 
       <div
         role="row"
-        className="grid h-8 shrink-0 items-center gap-3 border-b bg-surface-2 px-5 font-mono text-[11px] text-fg-3"
+        className="grid h-8 shrink-0 items-center gap-3 border-b bg-surface-2 px-5 text-2xs tracking-wider text-fg-3 uppercase"
         style={{ gridTemplateColumns: grid }}
       >
         {table.getHeaderGroups()[0]?.headers.map((header) => (
@@ -305,7 +303,7 @@ export function ItemsTable(props: ItemsTableProps) {
               aria-selected={row.original.object_uuid === selectedId}
               onClick={() => props.onSelect(row.original)}
               className={cn(
-                'grid h-[34px] cursor-pointer items-center gap-3 border-b px-5 text-[12.5px] transition-colors duration-700 hover:bg-surface-3',
+                'grid h-8.5 cursor-pointer items-center gap-3 border-b px-5 text-xs transition-colors duration-700 hover:bg-surface-3',
                 row.original.object_uuid === selectedId && 'bg-link-bg',
                 changedRows.has(row.original.object_uuid) && 'bg-flash',
               )}

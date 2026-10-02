@@ -1,41 +1,47 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
-@import '@fontsource-variable/geist';
-@import '@fontsource-variable/geist-mono';
+@import '@fontsource/poppins/300.css';
+@import '@fontsource/poppins/400.css';
+@import '@fontsource/poppins/500.css';
+@import '@fontsource/poppins/600.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+@import '@fontsource/jetbrains-mono/600.css';
 
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design tokens from the Claude Design mock-up (docs/design/persistence), ADR 0014.
- * shadcn variables are mapped onto the mock-up palette; extra tokens cover what the
- * mock-up needs beyond shadcn (secondary surfaces, strong border, link, live flash…).
+ * Design tokens of the first DyingStar admin panel (its `ds-*` palette: night background,
+ * gold accent, Poppins / JetBrains Mono), dark only. shadcn variables are mapped onto it;
+ * extra tokens cover secondary surfaces, strong border, link, live flash…
  */
-:root {
-  /* Mock-up palette */
-  --ds-bg: #ffffff;
-  --ds-bg-2: #fafafa;
-  --ds-bg-3: #f4f4f5;
-  --ds-line: #e4e4e7;
-  --ds-line-2: #d4d4d8;
-  --ds-fg: #09090b;
-  --ds-fg-2: #52525b;
-  --ds-fg-3: #71717a;
-  --ds-acc: #4f46e5;
-  --ds-acc-bg: #eef2ff;
-  --ds-flash: #fef08a;
-  --ds-danger: #dc2626;
-  --ds-ok: #16a34a;
-  --ds-dot: #e4e4e7;
+:root,
+.dark {
+  /* First panel palette */
+  --ds-bg: #0d0d14;
+  --ds-bg-2: #16161f;
+  --ds-bg-3: #1f1f2b;
+  --ds-line: #2a2a3a;
+  --ds-line-2: #3a3a4e;
+  --ds-fg: #e8e8f0;
+  --ds-fg-2: #a6a6ba;
+  --ds-fg-3: #6b6b80;
+  --ds-acc: rgb(255, 186, 8);
+  --ds-acc-bg: rgba(255, 186, 8, 0.08);
+  --ds-flash: rgba(255, 186, 8, 0.22);
+  --ds-danger: #ef4444;
+  --ds-ok: #22c55e;
+  --ds-dot: #1f1f2c;
 
   /* shadcn variables */
   --background: var(--ds-bg);
   --foreground: var(--ds-fg);
-  --card: var(--ds-bg);
+  --card: var(--ds-bg-2);
   --card-foreground: var(--ds-fg);
-  --popover: var(--ds-bg);
+  --popover: var(--ds-bg-2);
   --popover-foreground: var(--ds-fg);
-  --primary: var(--ds-fg);
+  --primary: var(--ds-acc);
   --primary-foreground: var(--ds-bg);
   --secondary: var(--ds-bg-3);
   --secondary-foreground: var(--ds-fg);
@@ -46,31 +52,21 @@
   --destructive: var(--ds-danger);
   --border: var(--ds-line);
   --input: var(--ds-line);
-  --ring: var(--ds-acc);
+  --ring: rgba(255, 186, 8, 0.8);
   --radius: 0.5rem;
-}
-
-.dark {
-  --ds-bg: #09090b;
-  --ds-bg-2: #0f0f12;
-  --ds-bg-3: #1c1c1f;
-  --ds-line: #27272a;
-  --ds-line-2: #3f3f46;
-  --ds-fg: #fafafa;
-  --ds-fg-2: #a1a1aa;
-  --ds-fg-3: #8b8b94;
-  --ds-acc: #a5b4fc;
-  --ds-acc-bg: #1e1b4b;
-  --ds-flash: #713f12;
-  --ds-danger: #f87171;
-  --ds-ok: #4ade80;
-  --ds-dot: #1f1f23;
+  color-scheme: dark;
 }
 
 @theme inline {
-  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'Geist Mono Variable', ui-monospace, monospace;
+  --font-sans: 'Poppins', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --font-heading: var(--font-sans);
+
+  /* Small text sizes of the first panel, below Tailwind's `text-xs` (12px). */
+  --text-3xs: 0.625rem;
+  --text-3xs--line-height: 0.875rem;
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -125,6 +121,29 @@
   }
 }
 
+/* Thin scrollbars, gold on hover (first panel). */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--ds-line);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 186, 8, 0.4);
+}
+
+/* Leaflet controls and tooltips follow the theme (planetary map, ADR 0018), fonts included:
+   leaflet.css, loaded after this file, sets Helvetica Neue on the map and a monospace font on
+   the zoom buttons: `body` wins over it. */
+body .leaflet-container,
+body .leaflet-container .leaflet-bar a {
+  font-family: var(--font-sans);
+}
 /* Leaflet controls and tooltips follow the theme (planetary map, ADR 0018). */
 .leaflet-container .leaflet-bar {
   border-color: var(--border);

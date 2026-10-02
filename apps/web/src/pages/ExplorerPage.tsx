@@ -1,14 +1,18 @@
 import { useCallback } from 'react';
+import { PlusIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import type { Item } from '@dyingstar-admin/schemas';
 import { HierarchyTree } from '@/components/organisms/HierarchyTree';
 import { Inspector } from '@/components/organisms/Inspector';
 import { ItemsTable } from '@/components/organisms/ItemsTable';
+import { PageHeading } from '@/components/molecules/PageHeading';
 import { ExplorerLayout } from '@/components/templates/ExplorerLayout';
+import { Button } from '@/components/ui/button';
 import { useGoToItem } from '@/hooks/useGoToItem';
 import { searchForItem, type ExplorerSearch } from '@/lib/explorerSearch';
 import { groupNodeId, useExplorerTree } from '@/stores/explorerTree';
+import { useItemActions } from '@/stores/itemActions';
 
 interface ExplorerPageProps {
   search: ExplorerSearch;
@@ -46,9 +50,29 @@ export function ExplorerPage({
   );
 
   const select = (item: Item) => onSearchChange({ ...search, selected: item.object_uuid });
+  const createItem = useItemActions((s) => s.create);
 
   return (
     <ExplorerLayout
+      heading={
+        <PageHeading
+          title={t('explorer.pageTitle')}
+          actions={
+            // New items go into the listed level (roots when listing a whole type).
+            <Button
+              onClick={() =>
+                createItem({
+                  parentId: search.scope === 'level' ? search.parent : '',
+                  objectType: search.type,
+                })
+              }
+            >
+              <PlusIcon />
+              {t('explorer.addItem')}
+            </Button>
+          }
+        />
+      }
       labels={{
         tree: t('tree.title'),
         table: t('explorer.items'),

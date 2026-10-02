@@ -16,7 +16,7 @@ export function TypeDot({ objectType, shape = 'round', className }: TypeDotProps
       data-type={objectType}
       className={cn(
         'inline-block size-2 shrink-0',
-        shape === 'round' ? 'rounded-full' : 'rounded-[2px]',
+        shape === 'round' ? 'rounded-full' : 'rounded-xs',
         className,
       )}
       style={{ background: typeColor(objectType) }}

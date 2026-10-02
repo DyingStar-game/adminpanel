@@ -39,10 +39,10 @@ export function HierarchyTree(props: HierarchyTreeProps) {
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface-2">
       <div className="flex items-baseline justify-between px-3.5 pt-3.5 pb-2">
-        <span className="text-[11px] font-medium tracking-[.06em] text-fg-3 uppercase">
+        <span className="text-2xs font-medium tracking-[.06em] text-fg-3 uppercase">
           {t('tree.title')}
         </span>
-        <MonoText tone="subtle" className="text-[11px]">
+        <MonoText tone="subtle" className="text-2xs">
           parent_id
         </MonoText>
       </div>
@@ -97,7 +97,7 @@ function ItemNode({ item, ...props }: NodeProps & { item: Item }) {
         label={itemLabel(item)}
       >
         <TypeDot objectType={item.object_type} />
-        <span className={cn('min-w-0 flex-1 truncate text-[12.5px]', selected && 'font-medium')}>
+        <span className={cn('min-w-0 flex-1 truncate text-xs', selected && 'font-medium')}>
           {itemLabel(item)}
         </span>
       </Row>
@@ -154,8 +154,8 @@ function GroupNode({
         label={objectType}
       >
         <TypeDot objectType={objectType} shape="square" className="opacity-80" />
-        <span className="min-w-0 flex-1 truncate font-mono text-xs text-fg-2">{objectType}</span>
-        <MonoText tone="subtle" className="text-[11px]">
+        <span className="min-w-0 flex-1 truncate text-xs text-fg-2">{objectType}</span>
+        <MonoText tone="subtle" className="text-2xs">
           {total}
         </MonoText>
       </Row>

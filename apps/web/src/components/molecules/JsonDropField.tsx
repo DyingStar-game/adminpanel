@@ -84,7 +84,7 @@ export function JsonDropField({
         dragging ? 'border-link bg-link-bg' : 'border-line-strong',
       )}
     >
-      <div className="flex h-[320px] min-h-[160px] resize-y overflow-hidden rounded-md bg-background">
+      <div className="flex h-80 min-h-40 resize-y overflow-hidden rounded-md bg-background">
         {/* Line numbers, scrolled with the text (lines do not wrap). */}
         <div
           ref={gutter}

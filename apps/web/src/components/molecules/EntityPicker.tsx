@@ -53,7 +53,7 @@ export function EntityPicker({ options, value, onChange, labels }: EntityPickerP
             <TypeDot objectType={option.objectType} />
             <span className="min-w-0 flex-1 truncate text-xs">{option.label}</span>
             {option.hint && (
-              <MonoText tone="subtle" className="text-[10px]">
+              <MonoText tone="subtle" className="text-3xs">
                 {option.hint}
               </MonoText>
             )}

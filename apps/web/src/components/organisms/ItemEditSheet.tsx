@@ -123,7 +123,7 @@ function EditForm({
         </SheetTitle>
         <SheetDescription asChild>
           <div className="flex flex-col gap-1">
-            <MonoText tone="subtle" className="text-[11px] break-all">
+            <MonoText tone="subtle" className="text-2xs break-all">
               {base.object_type} · {base.object_uuid}
             </MonoText>
             <span className="text-xs">
@@ -145,7 +145,7 @@ function EditForm({
         </div>
       </ScrollArea>
       <SheetFooter className="flex-row justify-end border-t">
-        <MonoText tone="subtle" className="mr-auto self-center text-[11px]">
+        <MonoText tone="subtle" className="mr-auto self-center text-2xs">
           PUT /items/{'{uuid}'}
         </MonoText>
         <Button type="button" variant="outline" onClick={onDone}>

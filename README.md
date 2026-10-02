@@ -45,7 +45,7 @@ Available (lot 1, persistence items):
   duplicate (with children) next to a player or any item, upright on planets; deletion warns about
   orphans. Unknown object types are refused, and writes to a production server ask for
   confirmation.
-- **Comfort**: copy buttons on UUIDs, positions and rotations; light and dark themes; English and
+- **Comfort**: copy buttons on UUIDs, positions and rotations; the first DyingStar panel's look (dark, gold accent, ADR 0020); English and
   French.
 
 Planned:
@@ -119,7 +119,7 @@ Pass the variables of [`.env.sample`](./.env.sample) with `-e` (at least `SERVER
 
 - [docs/adr/](./docs/adr/) — architecture decision records (stack, BFF, live, writes, views…)
 - [docs/lot-1-plan.md](./docs/lot-1-plan.md) — lot 1 plan and progress
-- [docs/design/](./docs/design/) — the design mock-up the UI follows
+- [docs/design/](./docs/design/) — the mock-up the views are structured after (their look is the first panel's, ADR 0020)
 - [CLAUDE.md](./CLAUDE.md) — working rules (git, Makefile, conventions)
 - [ONBOARDING.md](./ONBOARDING.md), [ARCHITECTURE.md](./ARCHITECTURE.md) and [deploy/](./deploy/)
   still describe the previous version of the panel and are being rewritten.

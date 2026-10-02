@@ -48,7 +48,7 @@ export function MapSearch({ search, onPick, labels }: MapSearchProps) {
               <TypeDot objectType={result.objectType} />
               <span className="min-w-0 flex-1 truncate text-xs">{result.label}</span>
               {result.hint && (
-                <MonoText tone="subtle" className="text-[10px]">
+                <MonoText tone="subtle" className="text-3xs">
                   {result.hint}
                 </MonoText>
               )}

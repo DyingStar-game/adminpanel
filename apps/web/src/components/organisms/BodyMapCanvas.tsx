@@ -84,12 +84,12 @@ function markerIcon(objectType: string, selected: boolean, name: string | null):
     const square = markerShape(objectType) === 'square';
     const size = (selected ? 16 : 10) + (square ? 2 : 0);
     const label = name
-      ? `<span class="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap text-[13px] font-semibold leading-none text-foreground [text-shadow:0_0_3px_var(--background),0_0_3px_var(--background),0_0_2px_var(--background)]">${escapeHtml(name)}</span>`
+      ? `<span class="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap text-sm font-semibold leading-none text-foreground [text-shadow:0_0_3px_var(--background),0_0_3px_var(--background),0_0_2px_var(--background)]">${escapeHtml(name)}</span>`
       : '';
     icon = L.divIcon({
       className: '',
       iconSize: [size, size],
-      html: `<span data-type="${objectType}" class="relative block size-full ${square ? 'rounded-[2px]' : 'rounded-full'} border border-background shadow-sm${
+      html: `<span data-type="${objectType}" class="relative block size-full ${square ? 'rounded-xs' : 'rounded-full'} border border-background shadow-sm${
         selected ? ' ring-2 ring-foreground' : ''
       }" style="background:${typeColor(objectType)}">${label}</span>`,
     });
@@ -188,7 +188,7 @@ function MetricGrid({ caption }: { caption: (step: string, major: string) => str
         interactive={false}
         pathOptions={{ weight: 1.5, className: 'stroke-fg-3 [stroke-opacity:0.6]' }}
       />
-      <div className="pointer-events-none absolute right-2.5 bottom-7 z-[1000] rounded border bg-background/90 px-1.5 py-0.5 font-mono text-[11px] text-fg-2">
+      <div className="pointer-events-none absolute right-2.5 bottom-7 z-[1000] rounded border bg-background/90 px-1.5 py-0.5 font-mono text-2xs text-fg-2">
         {caption(formatDistance(grid.step), formatDistance(grid.step * GRID_MAJOR_EVERY))}
       </div>
     </>
@@ -218,7 +218,7 @@ const Points = memo(function Points({
       return L.divIcon({
         className: '',
         iconSize: [size, size],
-        html: `<span aria-label="${labels.cluster(count)}" class="block size-full rounded-full p-[3px] shadow-sm" style="background:${typeMixGradient(types)}"><span class="grid size-full place-items-center rounded-full bg-background font-mono text-[11px] font-semibold text-foreground">${count}</span></span>`,
+        html: `<span aria-label="${labels.cluster(count)}" class="block size-full rounded-full p-0.75 shadow-sm" style="background:${typeMixGradient(types)}"><span class="grid size-full place-items-center rounded-full bg-background font-mono text-2xs font-semibold text-foreground">${count}</span></span>`,
       });
     },
     [labels],

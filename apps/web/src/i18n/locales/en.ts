@@ -3,18 +3,44 @@ export const en = {
     brand: 'DyingStar',
     section: 'Persistence',
   },
+  nav: {
+    label: 'Navigation',
+    breadcrumb: 'Breadcrumb',
+    admin: 'Admin',
+    adminPanel: 'Admin Panel',
+    activeServer: 'Active server',
+    soon: 'soon',
+    sections: {
+      supervision: 'Supervision',
+      gameWorld: 'Game world',
+      administration: 'Administration',
+      configuration: 'Configuration',
+    },
+    items: {
+      dashboard: 'Dashboard',
+      servers: 'Servers & players',
+      explorer: 'Persistence — Items',
+      import: 'Persistence — Import JSON',
+      users: 'Users',
+      bans: 'Bans',
+      settings: 'Settings',
+    },
+  },
   topBar: {
     searchPlaceholder: 'Go to a UUID…',
     import: 'Import',
     newItem: 'New item',
     home: 'Back to the explorer',
     server: 'Game server',
+    serverLabel: 'Server',
     noServer: 'No server configured',
   },
   search: {
     uuidOnly: 'Enter a full UUID — the persistence API has no name search.',
   },
   explorer: {
+    pageTitle: 'Persistence — Items',
+    addItem: 'Add an item',
     notFound: 'Item {{uuid}} not found',
     items: 'Items',
     inspector: 'Inspector',
@@ -209,12 +235,6 @@ export const en = {
     off: 'Paused',
     toggle: 'Toggle live refresh',
   },
-  theme: {
-    toggle: 'Toggle theme',
-    light: 'Light',
-    dark: 'Dark',
-    system: 'System',
-  },
   language: {
     label: 'Language',
     en: 'English',
@@ -260,7 +280,7 @@ export const en = {
     assumption: 'Latitude / longitude assume +Y is the pole (ADR 0018).',
   },
   import: {
-    title: 'Import',
+    title: 'Persistence — Import JSON',
     intro:
       'Paste a JSON array of items or drop a .json file (up to {{max}} items, {{size}} MB). Every item is checked before anything is sent.',
     input: 'Import input',

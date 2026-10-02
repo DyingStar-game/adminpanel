@@ -176,3 +176,7 @@ export function itemRanges(text: string): ItemRange[] {
     toLine: lineAt(node.offset + node.length),
   }));
 }
+
+/** Rows to point out: a probable duplicate of an item already on the server. */
+export const isProbableDuplicate = (row: ImportRow) =>
+  row.findings.some((f) => f.code === 'possibleDuplicate');

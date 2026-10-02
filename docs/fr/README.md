@@ -49,7 +49,7 @@ Disponibles (lot 1, items de persistance) :
   apparition ou duplication (avec les enfants) à côté d'un joueur ou de n'importe quel item, posé
   droit sur les planètes ; la suppression prévient des orphelins. Les types d'objets inconnus sont
   refusés, et les écritures sur un serveur de production demandent confirmation.
-- **Confort** : boutons copier sur les UUID, positions et rotations ; thèmes clair et sombre ;
+- **Confort** : boutons copier sur les UUID, positions et rotations ; l'apparence du premier panneau DyingStar (sombre, accent or, ADR 0020) ;
   anglais et français.
 
 Prévues :
@@ -124,7 +124,7 @@ Passez les variables de [`.env.sample`](../../.env.sample) avec `-e` (au moins `
 
 - [docs/adr/](../adr/) — décisions d'architecture (stack, BFF, live, écritures, vues…)
 - [docs/lot-1-plan.md](../lot-1-plan.md) — plan et avancement du lot 1
-- [docs/design/](../design/) — la maquette que suit l'interface
+- [docs/design/](../design/) — la maquette qui structure les vues (leur apparence est celle du premier panneau, ADR 0020)
 - [CLAUDE.md](../../CLAUDE.md) — règles de travail (git, Makefile, conventions)
 - [Documentation anglaise](../../README.md)
 - [ONBOARDING.md](./ONBOARDING.md), [ARCHITECTURE.md](./ARCHITECTURE.md) et

@@ -25,7 +25,7 @@ export function SearchBar({ placeholder, onSubmit, className }: SearchBarProps) 
       role="search"
       onSubmit={submit}
       className={cn(
-        'flex h-[30px] w-[340px] max-w-full items-center gap-2 rounded-[7px] border bg-surface-2 px-2.5 text-fg-3 focus-within:border-line-strong',
+        'flex h-7.5 w-85 max-w-full items-center gap-2 rounded-md border bg-surface-2 px-2.5 text-fg-3 focus-within:border-line-strong',
         className,
       )}
     >
@@ -35,7 +35,7 @@ export function SearchBar({ placeholder, onSubmit, className }: SearchBarProps) 
         onChange={(e) => setQuery(e.target.value)}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="min-w-0 flex-1 bg-transparent text-[12.5px] text-foreground outline-none placeholder:text-fg-3"
+        className="min-w-0 flex-1 bg-transparent text-xs text-foreground outline-none placeholder:text-fg-3"
       />
       <Kbd>↵</Kbd>
     </form>

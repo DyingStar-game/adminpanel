@@ -21,6 +21,8 @@ when a step needs a new decision, it is written as a new ADR before coding.
   hidden and named, search, metric grid following the zoom, clusters coloured by type, arrow of
   the selected item's last move, "show on map" from objects.
 - Orbit view: several clusters open at once; copy buttons on UUIDs, positions and rotations.
+- Look of the first DyingStar panel ([ADR 0020](./adr/0020-visual-identity-first-panel.md)):
+  dark palette with gold accent, Poppins / JetBrains Mono, sidebar, page titles with their action.
 
 ### Open questions
 

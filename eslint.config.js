@@ -92,6 +92,26 @@ export default tseslint.config(
     },
   },
   {
+    // Sizes come from the Tailwind scale and the theme (`text-2xs`, `w-60`…), not arbitrary
+    // pixels, so the UI stays consistent. Composite values (`clamp(…px…)`) stay possible.
+    // Generated shadcn/ui primitives are left as they are.
+    files: ['apps/web/src/**/*.{ts,tsx}'],
+    ignores: ['apps/web/src/components/ui/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'Literal[value=/\\[\\d+(\\.\\d+)?px\\]/]',
+          message: 'Use a Tailwind scale or theme size instead of an arbitrary pixel value.',
+        },
+        {
+          selector: 'TemplateElement[value.raw=/\\[\\d+(\\.\\d+)?px\\]/]',
+          message: 'Use a Tailwind scale or theme size instead of an arbitrary pixel value.',
+        },
+      ],
+    },
+  },
+  {
     // shadcn/ui primitives export their variants next to the component.
     files: ['apps/web/src/routes/**/*.tsx', 'apps/web/src/components/ui/**/*.tsx'],
     rules: { 'react-refresh/only-export-components': 'off' },

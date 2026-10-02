@@ -27,13 +27,13 @@ export function HeadlineFacts({ item, resolveRef, onNavigate, changed }: Headlin
         <div
           key={keys.join('+')}
           className={cn(
-            'flex flex-col gap-1 rounded-lg border bg-background px-3 py-2.5 transition-colors duration-700',
+            'flex flex-col gap-1 rounded-xl border bg-surface-2 px-4 py-3 transition-colors duration-700',
             keys.some((key) => changed?.has(key)) && 'bg-flash',
           )}
         >
-          <MonoText tone="subtle" className="text-[11px]">
+          <span className="text-3xs font-semibold tracking-[0.15em] text-fg-3 uppercase">
             {keys.join(' / ')}
-          </MonoText>
+          </span>
           <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
             {keys.map((key) =>
               // Orbital samples are listed in the properties; the headline only counts them.

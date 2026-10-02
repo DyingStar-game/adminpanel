@@ -5,13 +5,12 @@ import { UuidSchema, type Item } from '@dyingstar-admin/schemas';
 import { ItemActionsHost } from '@/components/organisms/ItemActionsHost';
 import { TopBar } from '@/components/organisms/TopBar';
 import { AppShell } from '@/components/templates/AppShell';
+import { Sidebar, type NavId } from '@/components/organisms/Sidebar';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useGoToItem } from '@/hooks/useGoToItem';
-import { useApplyTheme } from '@/hooks/useResolvedTheme';
 import { ExplorerSearchSchema, searchForItem } from '@/lib/explorerSearch';
 import { useExplorerTree, groupNodeId } from '@/stores/explorerTree';
-import { useItemActions } from '@/stores/itemActions';
 
 const ROOTS = { parent: '', scope: 'level', page: 1 } as const;
 
@@ -19,13 +18,11 @@ const ROOTS = { parent: '', scope: 'level', page: 1 } as const;
 const itemOfPath = (pathname: string) => /^\/(?:items|orbit)\/([^/]+)/.exec(pathname)?.[1];
 
 function RootLayout() {
-  const theme = useApplyTheme();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const goToItem = useGoToItem();
   const expand = useExplorerTree((s) => s.expand);
   const location = useRouterState({ select: (s) => s.location });
-  const createItem = useItemActions((s) => s.create);
 
   // The API has no name search (ADR 0007): only full UUIDs can be opened.
   const search = async (query: string) => {
@@ -41,6 +38,9 @@ function RootLayout() {
     void navigate({ to: '/explorer', search: searchForItem(item) });
   };
 
+  // Every view of lot 1 is part of the persistence explorer, except the import.
+  const activeNav: NavId = location.pathname.startsWith('/import') ? 'import' : 'explorer';
+
   /** Level on screen: the item being viewed, or the listed explorer level. */
   const levelOnScreen = () => {
     const viewed = itemOfPath(location.pathname);
@@ -48,12 +48,6 @@ function RootLayout() {
     const explorer = ExplorerSearchSchema.safeParse(location.search);
     const level = explorer.success && explorer.data.scope === 'level' ? explorer.data : null;
     return level ? { parentId: level.parent, objectType: level.type } : null;
-  };
-
-  /** New items go into the level on screen. */
-  const create = () => {
-    const level = levelOnScreen();
-    createItem({ parentId: level?.parentId ?? '', objectType: level?.objectType });
   };
 
   /** The import gives the level on screen to items without a parent (ADR 0019). */
@@ -80,21 +74,33 @@ function RootLayout() {
   return (
     <TooltipProvider>
       <AppShell
+        sidebar={
+          <Sidebar
+            active={activeNav}
+            onNavigate={(id) =>
+              id === 'import' ? openImport() : void navigate({ to: '/explorer', search: ROOTS })
+            }
+            onHome={() => void navigate({ to: '/explorer', search: ROOTS })}
+            version={APP_VERSION}
+          />
+        }
         topBar={
           <TopBar
-            onHome={() => void navigate({ to: '/explorer', search: ROOTS })}
+            crumbs={[t('nav.admin'), t(`nav.items.${activeNav}`)]}
             onSearch={(query) => void search(query)}
-            onCreate={create}
-            onImport={openImport}
           />
         }
       >
         <Outlet />
       </AppShell>
       <ItemActionsHost onCreated={openInExplorer} onDeleted={afterDelete} />
-      <Toaster theme={theme} />
+      {/* Dark only, like the first panel. */}
+      <Toaster theme="dark" />
     </TooltipProvider>
   );
 }
+
+/** Version shown in the sidebar (the app package's). */
+const APP_VERSION = '0.1.0';
 
 export const Route = createRootRoute({ component: RootLayout });

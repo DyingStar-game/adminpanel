@@ -82,9 +82,9 @@ function SectionsSkeleton() {
 export function SectionTitle({ title, meta }: { title: string; meta?: string | undefined }) {
   return (
     <div className="flex items-baseline justify-between px-4.5 pt-4.5 pb-1.5">
-      <span className="text-[11px] font-medium tracking-[.06em] text-fg-3 uppercase">{title}</span>
+      <span className="text-2xs font-medium tracking-[.06em] text-fg-3 uppercase">{title}</span>
       {meta && (
-        <MonoText tone="subtle" className="text-[11px]">
+        <MonoText tone="subtle" className="text-2xs">
           {meta}
         </MonoText>
       )}

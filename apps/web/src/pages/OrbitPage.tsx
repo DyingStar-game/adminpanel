@@ -271,13 +271,13 @@ function Orbit({
               )}
             </div>
           )}
-          <div className="absolute right-4 bottom-3.5 flex flex-col gap-1.5 rounded-lg border bg-background px-3 py-2.5 text-[11px] text-fg-2">
+          <div className="absolute right-4 bottom-3.5 flex flex-col gap-1.5 rounded-lg border bg-background px-3 py-2.5 text-2xs text-fg-2">
             <div className="flex items-center gap-2">
-              <span className="w-[22px] border-t-[1.5px] border-fg-3" />
-              <MonoText className="text-[11px]">parent_id</MonoText>
+              <span className="w-5.5 border-t-2 border-fg-3" />
+              <MonoText className="text-2xs">parent_id</MonoText>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-[22px] border-t-[1.5px] border-dashed border-fg-3" />
+              <span className="w-5.5 border-t-2 border-dashed border-fg-3" />
               {t('orbit.reference')}
             </div>
             <div className="text-fg-3">{t('orbit.hint')}</div>

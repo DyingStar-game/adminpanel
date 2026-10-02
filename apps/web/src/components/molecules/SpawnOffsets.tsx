@@ -21,7 +21,7 @@ export function SpawnOffsets({ id, values, raw, onChange }: SpawnOffsetsProps) {
         const invalid = !offsetValid(values[key]);
         return (
           <div key={key} className="flex items-center gap-1.5">
-            <Label htmlFor={`${id}-${key}`} className="text-[11px]">
+            <Label htmlFor={`${id}-${key}`} className="text-2xs">
               {t(`duplicate.${key}`)}
             </Label>
             <Input
@@ -35,7 +35,7 @@ export function SpawnOffsets({ id, values, raw, onChange }: SpawnOffsetsProps) {
           </div>
         );
       })}
-      <span className="text-[11px] text-fg-3">{t('duplicate.distanceHint')}</span>
+      <span className="text-2xs text-fg-3">{t('duplicate.distanceHint')}</span>
     </div>
   );
 }

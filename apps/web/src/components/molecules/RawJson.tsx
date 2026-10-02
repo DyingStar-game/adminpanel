@@ -25,7 +25,7 @@ export function RawJson({ value, copyLabel }: RawJsonProps) {
       >
         {copied ? <CheckIcon /> : <CopyIcon />}
       </Button>
-      <pre className="max-h-[480px] overflow-auto rounded-lg border bg-surface-2 p-3 font-mono text-[11.5px] leading-relaxed">
+      <pre className="max-h-120 overflow-auto rounded-lg border bg-surface-2 p-3 font-mono text-xs leading-relaxed">
         {text}
       </pre>
     </div>

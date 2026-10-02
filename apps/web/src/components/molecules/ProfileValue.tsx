@@ -27,7 +27,7 @@ export function ProfileValue({ renderer, data, compact = false, ...props }: Prof
         <span className="flex min-w-0 items-center gap-2 overflow-hidden">
           {entries.map(([key, child]) => (
             <span key={key} className="flex min-w-0 shrink-0 items-center gap-1">
-              <MonoText tone="subtle" className="text-[10.5px]">
+              <MonoText tone="subtle" className="text-2xs">
                 {key}
               </MonoText>
               <ValueView {...props} value={child} name={key} />

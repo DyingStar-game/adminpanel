@@ -60,19 +60,19 @@ const OrbitNodeView = memo(function OrbitNodeView({ data }: NodeProps<GraphNode>
     const color = typeColor(node.entity.objectType);
     return (
       <div
-        className="flex size-[116px] flex-col items-center justify-center gap-1 rounded-full border-2 bg-background px-2.5 text-center shadow-lg"
+        className="flex size-29 flex-col items-center justify-center gap-1 rounded-full border-2 bg-background px-2.5 text-center shadow-lg"
         style={{
           borderColor: color,
           boxShadow: `0 0 0 8px color-mix(in oklab, ${color} 14%, transparent)`,
         }}
       >
-        <MonoText tone="muted" className="text-[10px]">
+        <MonoText tone="muted" className="text-3xs">
           {node.entity.objectType}
         </MonoText>
         <span className="line-clamp-2 text-sm leading-tight font-semibold">
           {node.entity.label}
         </span>
-        <MonoText tone="subtle" className="text-[10px]">
+        <MonoText tone="subtle" className="text-3xs">
           {shortUuid(node.entity.uuid)}
         </MonoText>
         <CenterHandles />
@@ -86,14 +86,14 @@ const OrbitNodeView = memo(function OrbitNodeView({ data }: NodeProps<GraphNode>
       <div className="relative flex flex-col items-center">
         <div
           className={cn(
-            'grid place-items-center rounded-full border-2 bg-background font-mono text-[13px] font-semibold transition-opacity',
+            'grid place-items-center rounded-full border-2 bg-background font-mono text-sm font-semibold transition-opacity',
             node.open ? 'opacity-100 shadow-md' : 'opacity-85 hover:opacity-100',
           )}
           style={{ width: size, height: size, borderColor: typeColor(node.objectType) }}
         >
           {node.total}
         </div>
-        <MonoText className="absolute top-full mt-1.5 rounded border bg-background px-1.5 py-0.5 text-[11px] whitespace-nowrap">
+        <MonoText className="absolute top-full mt-1.5 rounded border bg-background px-1.5 py-0.5 text-2xs whitespace-nowrap">
           {node.objectType}
         </MonoText>
         <CenterHandles />
@@ -103,7 +103,7 @@ const OrbitNodeView = memo(function OrbitNodeView({ data }: NodeProps<GraphNode>
 
   if (node.kind === 'more') {
     return (
-      <div className="rounded-full border border-dashed border-line-strong bg-background px-2.5 py-1 font-mono text-[11px] text-fg-2 whitespace-nowrap">
+      <div className="rounded-full border border-dashed border-line-strong bg-background px-2.5 py-1 font-mono text-2xs text-fg-2 whitespace-nowrap">
         {moreLabel}
         <CenterHandles />
       </div>
@@ -124,7 +124,7 @@ const OrbitNodeView = memo(function OrbitNodeView({ data }: NodeProps<GraphNode>
       />
       <span
         className={cn(
-          'rounded bg-surface-2 px-1 text-[11px] leading-none whitespace-nowrap',
+          'rounded bg-surface-2 px-1 text-2xs leading-none whitespace-nowrap',
           selected ? 'font-semibold text-foreground' : 'text-fg-2',
           node.entity.missing && 'text-destructive line-through',
         )}

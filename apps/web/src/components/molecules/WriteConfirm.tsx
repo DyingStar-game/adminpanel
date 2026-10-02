@@ -48,7 +48,9 @@ export function WriteConfirm({
             // `asChild` joins the button's classes without merging them: the destructive look
             // must win over the default variant's background.
             className={
-              destructive ? 'bg-destructive! text-white! hover:bg-destructive/90!' : undefined
+              destructive
+                ? 'border-destructive/40! bg-destructive/15! text-destructive! shadow-none! hover:bg-destructive/25!'
+                : undefined
             }
           >
             {confirmLabel}

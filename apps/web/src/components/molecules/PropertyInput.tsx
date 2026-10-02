@@ -71,7 +71,11 @@ export function PropertyInput({
         aria-label={label}
         aria-invalid={invalid}
         spellCheck={false}
-        className={cn('min-h-16 font-mono text-xs', invalid && 'border-destructive')}
+        // Long values without spaces (scene paths) wrap anywhere instead of widening the form.
+        className={cn(
+          'max-w-full min-h-16 font-mono text-xs [overflow-wrap:anywhere]',
+          invalid && 'border-destructive',
+        )}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />

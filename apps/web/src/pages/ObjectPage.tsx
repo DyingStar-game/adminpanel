@@ -128,8 +128,10 @@ function ObjectDetails({
           <CrumbTrail crumbs={crumbs} onSelect={onNavigate} />
           <div className="flex flex-wrap items-center gap-3">
             <TypeDot objectType={item.object_type} shape="square" className="size-3" />
-            <h1 className="text-2xl font-semibold tracking-tight">{itemLabel(item)}</h1>
-            <MonoText tone="muted">{isMoon ? t('profile.moon') : item.object_type}</MonoText>
+            <h1 className="text-2xl font-semibold tracking-tight text-link">{itemLabel(item)}</h1>
+            <span className="text-sm text-fg-2">
+              {isMoon ? t('profile.moon') : item.object_type}
+            </span>
             {!definition && definitions.isSuccess && (
               <Badge variant="outline">{t('inspector.unknownType')}</Badge>
             )}
@@ -206,7 +208,7 @@ function ObjectDetails({
               <Trash2Icon />
             </Button>
           </div>
-          <MonoText tone="subtle" className="text-[11px] break-all">
+          <MonoText tone="subtle" className="text-2xs break-all">
             {item.object_uuid}
             <CopyButton value={item.object_uuid} className="ml-1 inline-grid align-middle" />
             {typeof item.object_data.scenename === 'string' && ` · ${item.object_data.scenename}`}

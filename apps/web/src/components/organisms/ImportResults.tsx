@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import type { ImportOutcome } from '@/hooks/useImport';
 import { cn } from '@/lib/cn';
+import { isProbableDuplicate } from '@/lib/importInput';
 
 export type ImportFilter = 'all' | 'invalid' | 'warnings' | 'new' | 'conflict' | 'failed';
 
@@ -28,10 +29,6 @@ interface ImportResultsProps {
 }
 
 const PAGE_SIZE = 50;
-
-/** Rows to point out: a probable duplicate of an item already on the server. */
-export const isProbableDuplicate = (row: ImportRow) =>
-  row.findings.some((f) => f.code === 'possibleDuplicate');
 
 const nameOf = (item: unknown): string | null => {
   const data = (item as { object_data?: { name?: unknown } } | null)?.object_data;
@@ -85,7 +82,7 @@ export function ImportResults({
               }}
               className={cn(
                 'rounded-full border px-2.5 py-0.5 text-xs',
-                filter === key ? 'border-foreground bg-foreground text-background' : 'text-fg-2',
+                filter === key ? 'border-link bg-link-bg text-link' : 'text-fg-2 hover:bg-white/5',
               )}
             >
               {t(`import.filters.${key}`)} · {count}
@@ -151,27 +148,27 @@ function ImportRowView({
       )}
     >
       <div className="flex flex-wrap items-center gap-2 text-xs">
-        <MonoText tone="subtle" className="w-10 shrink-0 text-[11px]">
+        <MonoText tone="subtle" className="w-10 shrink-0 text-2xs">
           #{row.index + 1}
         </MonoText>
-        <Badge variant="outline" className={cn('text-[10.5px]', STATUS_STYLE[row.status])}>
+        <Badge variant="outline" className={cn('text-2xs', STATUS_STYLE[row.status])}>
           {t(`import.status.${row.status}`)}
         </Badge>
         {row.object_type && (
           <span className="flex items-center gap-1.5">
             <TypeDot objectType={row.object_type} />
-            <MonoText className="text-[11.5px]">{row.object_type}</MonoText>
+            <MonoText className="text-xs">{row.object_type}</MonoText>
           </span>
         )}
         {name && <span className="font-medium">{name}</span>}
         {row.object_uuid && (
           <span className="flex items-center gap-1">
-            <MonoText tone="muted" className="text-[11px]">
+            <MonoText tone="muted" className="text-2xs">
               {row.object_uuid}
             </MonoText>
             <CopyButton value={row.object_uuid} />
             {generated && (
-              <MonoText tone="subtle" className="text-[10.5px]">
+              <MonoText tone="subtle" className="text-2xs">
                 {t('import.generated')}
               </MonoText>
             )}
@@ -200,7 +197,7 @@ function ImportRowView({
         {outcome && (
           <Badge
             variant={outcome.state === 'failed' ? 'destructive' : 'outline'}
-            className="text-[10.5px]"
+            className="text-2xs"
             title={outcome.state === 'failed' ? outcome.message : undefined}
           >
             {t(`import.outcome.${outcome.state}`)}
@@ -244,7 +241,7 @@ function FindingView({ finding }: { finding: ImportFinding }) {
           ...(finding.params?.parentType === '' ? { context: 'root' } : {}),
         })}
         {finding.path && (
-          <MonoText tone="subtle" className="ml-1.5 text-[11px]">
+          <MonoText tone="subtle" className="ml-1.5 text-2xs">
             {finding.path}
           </MonoText>
         )}

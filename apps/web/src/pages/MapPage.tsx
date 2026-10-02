@@ -176,12 +176,12 @@ function BodyMap({
       }
       overlays={
         <>
-          <div className="absolute top-3.5 left-14 z-[1000] flex w-[380px] max-w-[60%] flex-col gap-2">
+          <div className="absolute top-3.5 left-14 z-[1000] flex w-85 max-w-[45%] flex-col gap-2">
             <div className="flex items-center gap-2 rounded-md border bg-background px-2.5 py-1.5">
               <TypeDot objectType={map.body.object_type} shape="square" />
               <h1 className="truncate text-sm font-semibold">{t('map.title', { name })}</h1>
               <span className="flex-1" />
-              <MonoText tone="subtle" className="shrink-0 text-[11px]">
+              <MonoText tone="subtle" className="shrink-0 text-2xs">
                 {t('map.summary', { shown: visible.length, total: map.points.length })}
               </MonoText>
             </div>
@@ -216,7 +216,7 @@ function BodyMap({
               {t('objectPage.explorer')}
             </Button>
           </div>
-          <div className="absolute bottom-3.5 left-4 z-[1000] flex max-h-[60%] w-[240px] flex-col gap-3 overflow-y-auto rounded-lg border bg-background px-3 py-2.5">
+          <div className="absolute bottom-3.5 left-4 z-[1000] flex max-h-[60%] w-60 flex-col gap-3 overflow-y-auto rounded-lg border bg-background px-3 py-2.5">
             <MapLegend
               entries={legend.map((entry) => ({
                 ...entry,
@@ -234,7 +234,7 @@ function BodyMap({
             />
             {map.inOrbit.length > 0 && (
               <section aria-label={t('map.inOrbit')} className="flex flex-col gap-1">
-                <span className="text-[11px] font-medium text-fg-2">{t('map.inOrbit')}</span>
+                <span className="text-2xs font-medium text-fg-2">{t('map.inOrbit')}</span>
                 {map.inOrbit.map((point) => (
                   <button
                     key={point.object_uuid}
@@ -244,14 +244,14 @@ function BodyMap({
                   >
                     <TypeDot objectType={point.object_type} />
                     <span className="min-w-0 flex-1 truncate text-xs">{pointLabel(point)}</span>
-                    <MonoText tone="subtle" className="text-[11px]">
+                    <MonoText tone="subtle" className="text-2xs">
                       {formatAltitude(point.altitude)}
                     </MonoText>
                   </button>
                 ))}
               </section>
             )}
-            <p className="text-[10.5px] text-fg-3">{t('map.assumption')}</p>
+            <p className="text-2xs text-fg-3">{t('map.assumption')}</p>
           </div>
         </>
       }

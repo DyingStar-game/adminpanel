@@ -76,7 +76,7 @@ export function ChildrenTabs({ item, onSelect, onNavigate }: ChildrenTabsProps) 
       {tabs.map((tab) => (
         <TabsContent key={tab.key} value={tab.key} className="flex flex-col gap-2">
           {tab.implicit && <p className="text-xs text-fg-2">{t('objectPage.implicitHint')}</p>}
-          <div className="h-[420px] overflow-hidden rounded-lg border bg-background">
+          <div className="h-105 overflow-hidden rounded-lg border bg-background">
             <ItemsTable
               embedded
               parentId={tab.parentId}

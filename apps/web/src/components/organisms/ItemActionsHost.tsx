@@ -19,7 +19,7 @@ export function ItemActionsHost({ onCreated, onDeleted }: ItemActionsHostProps) 
   return (
     <>
       <Sheet open={sheetOpen} onOpenChange={(open) => !open && close()}>
-        <SheetContent className="flex w-[520px] flex-col gap-0 p-0 sm:max-w-[520px]">
+        <SheetContent className="flex flex-col gap-0 p-0 data-[side=right]:w-[min(720px,100vw)] data-[side=right]:sm:max-w-180">
           {action?.kind === 'edit' && (
             <ItemEditSheet key={action.uuid} uuid={action.uuid} onDone={close} />
           )}

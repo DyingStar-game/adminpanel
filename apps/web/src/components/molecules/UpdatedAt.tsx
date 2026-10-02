@@ -9,7 +9,7 @@ export function UpdatedAt({ at }: { at: number }) {
   const { t, i18n } = useTranslation();
   if (!at) return null;
   return (
-    <MonoText tone="subtle" className="text-[10.5px]" title={t('live.freshness')}>
+    <MonoText tone="subtle" className="text-2xs" title={t('live.freshness')}>
       {t('live.updated', { time: new Date(at).toLocaleTimeString(i18n.language) })}
     </MonoText>
   );

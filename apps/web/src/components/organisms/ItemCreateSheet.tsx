@@ -169,7 +169,7 @@ export function ItemCreateSheet({
               )}
             />
             {errors.objectType && (
-              <span role="alert" className="text-[11px] text-destructive">
+              <span role="alert" className="text-2xs text-destructive">
                 {t('editor.errors.type')}
               </span>
             )}
@@ -193,11 +193,11 @@ export function ItemCreateSheet({
                 <RefreshCwIcon />
               </Button>
             </div>
-            <MonoText tone="subtle" className="text-[11px]">
+            <MonoText tone="subtle" className="text-2xs">
               {t('editor.uuidHint')}
             </MonoText>
             {errors.uuid && (
-              <span role="alert" className="text-[11px] text-destructive">
+              <span role="alert" className="text-2xs text-destructive">
                 {errors.uuid.message === 'exists'
                   ? t('editor.errors.exists')
                   : t('editor.errors.uuid')}
@@ -237,7 +237,7 @@ export function ItemCreateSheet({
         </div>
       </ScrollArea>
       <SheetFooter className="flex-row justify-end border-t">
-        <MonoText tone="subtle" className="mr-auto self-center text-[11px]">
+        <MonoText tone="subtle" className="mr-auto self-center text-2xs">
           POST /items
         </MonoText>
         <Button type="button" variant="outline" onClick={onCancel}>

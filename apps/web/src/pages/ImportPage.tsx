@@ -9,8 +9,9 @@ import {
   UuidSchema,
 } from '@dyingstar-admin/schemas';
 import { JsonDropField } from '@/components/molecules/JsonDropField';
+import { PageHeading } from '@/components/molecules/PageHeading';
 import { WriteConfirm } from '@/components/molecules/WriteConfirm';
-import { ImportResults, isProbableDuplicate } from '@/components/organisms/ImportResults';
+import { ImportResults } from '@/components/organisms/ImportResults';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +22,13 @@ import { useImportCheck, useImportRun, type ImportOutcome } from '@/hooks/useImp
 import { useImportDraft } from '@/stores/importDraft';
 import { useWriteTarget } from '@/hooks/useWriteTarget';
 import { cn } from '@/lib/cn';
-import { importSummary, itemRanges, normalizeImport, parseImportText } from '@/lib/importInput';
+import {
+  importSummary,
+  isProbableDuplicate,
+  itemRanges,
+  normalizeImport,
+  parseImportText,
+} from '@/lib/importInput';
 import type { ImportSearch } from '@/lib/importSearch';
 
 interface ImportPageProps {
@@ -169,216 +176,225 @@ export function ImportPage({ search }: ImportPageProps) {
 
   return (
     <ScrollArea className="min-h-0 flex-1">
-      <div className="mx-auto flex max-w-[1100px] flex-col gap-5 px-6 py-6">
-        <header className="flex flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{t('import.title')}</h1>
+      {/* Same layout as Persistence — Items: title, then the content in a card. */}
+      <div className="flex flex-col gap-5 p-6">
+        <PageHeading title={t('import.title')}>
           <p className="text-sm text-fg-2">
             {t('import.intro', { max: IMPORT_MAX_ITEMS, size: megabytes(IMPORT_MAX_BYTES) })}
           </p>
           <p className="text-xs text-fg-3">
             {t('editor.liveWarning', { server: server?.name ?? '' })}
           </p>
-        </header>
-
-        <section aria-label={t('import.input')} className="flex flex-col gap-3">
-          <JsonDropField
-            id="import-json"
-            value={text}
-            onChange={(value) => edit(value)}
-            onFile={(content, name) => edit(content, name)}
-            onTooLarge={(name) =>
-              toast.error(t('import.fileTooLarge', { name, size: megabytes(IMPORT_MAX_BYTES) }))
-            }
-            maxBytes={IMPORT_MAX_BYTES}
-            invalid={!!inputError}
-            errorLine={inputError?.reason === 'syntax' ? inputError.line : undefined}
-            highlights={duplicateLines}
-            focusAt={focusAt}
-            labels={{
-              field: t('import.field'),
-              drop: t('import.drop'),
-              pick: t('import.pick'),
-              placeholder: t('import.placeholder'),
-            }}
-          />
-          {fileName && (
-            <p className="text-xs text-fg-2">{t('import.loaded', { name: fileName })}</p>
-          )}
-          {inputError && (
-            <p role="alert" className="flex flex-wrap items-center gap-2 text-sm text-destructive">
-              {inputError.reason === 'syntax'
-                ? t('import.errors.syntax', {
-                    line: inputError.line,
-                    column: inputError.column,
-                    message: t(
-                      `import.syntax.${inputError.message}` as 'import.syntax.ValueExpected',
-                      {
-                        defaultValue: inputError.message,
-                      },
-                    ),
-                  })
-                : t(`import.errors.${inputError.reason}`, {
-                    max: IMPORT_MAX_ITEMS,
-                    size: megabytes(IMPORT_MAX_BYTES),
-                  })}
-              {inputError.reason === 'syntax' && (
-                <Button
-                  variant="outline"
-                  size="xs"
-                  onClick={() => setFocusAt({ offset: inputError.offset, nonce: Date.now() })}
-                >
-                  {t('import.goToError')}
-                </Button>
-              )}
-            </p>
-          )}
-
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="flex items-center gap-2">
-              <Switch
-                id="import-default-parent"
-                checked={useDefaultParent}
-                onCheckedChange={setUseDefaultParent}
-              />
-              <Label htmlFor="import-default-parent" className="font-normal">
-                {t('import.defaultParent')}
-              </Label>
-            </span>
-            {useDefaultParent && (
-              <Input
-                aria-label="parent_id"
-                value={defaultParent}
-                onChange={(event) => setDefaultParent(event.target.value.trim())}
-                placeholder={t('import.rootHint')}
-                aria-invalid={!parentOk}
-                className={cn('h-8 w-[340px] font-mono text-xs', !parentOk && 'border-destructive')}
-              />
-            )}
-            <span className="flex-1" />
-            <Button variant="outline" onClick={clear} disabled={(!text && !checked) || run.running}>
-              <EraserIcon />
-              {t('import.clear')}
-            </Button>
-            <Button
-              onClick={() => void runCheck()}
-              disabled={!text.trim() || !parentOk || checking || run.running}
-            >
-              <SearchCheckIcon />
-              {checking ? t('import.checking') : t('import.check')}
-            </Button>
-          </div>
-        </section>
-
-        {checked && summary && (
-          <>
-            <section
-              aria-label={t('import.summaryTitle')}
-              className="flex flex-wrap items-center gap-3 rounded-lg border bg-surface-2 px-4 py-3 text-sm"
-            >
-              <span>{t('import.summary', summary)}</span>
-              {!serverChecked && (
-                <span className="text-xs text-fg-3">{t('import.formatOnly')}</span>
-              )}
-              <span className="flex-1" />
-              {conflicts.length > 0 && !run.running && !finished && (
-                <span className="flex items-center gap-2">
-                  <Switch
-                    id="import-overwrite-all"
-                    checked={allOverwritten}
-                    onCheckedChange={(value) =>
-                      setOverwrite(() => (value ? new Set(conflicts) : new Set()))
-                    }
-                  />
-                  <Label htmlFor="import-overwrite-all" className="font-normal">
-                    {t('import.overwriteAll', { count: conflicts.length })}
-                  </Label>
-                </span>
-              )}
-              {!finished && (
-                <Button
-                  onClick={askSend}
-                  disabled={!serverChecked || plan.length === 0 || run.running}
-                  className={cn(
-                    isProduction && 'bg-destructive text-white hover:bg-destructive/90',
-                  )}
-                >
-                  <UploadIcon />
-                  {t('import.send', { count: plan.length })}
-                </Button>
-              )}
-            </section>
-
-            {(run.running || finished) && (
-              <section aria-label={t('import.progressTitle')} className="flex flex-col gap-2">
-                <div
-                  role="progressbar"
-                  aria-valuemin={0}
-                  aria-valuemax={run.total}
-                  aria-valuenow={run.done}
-                  className="h-2 overflow-hidden rounded-full bg-surface-3"
-                >
-                  <div
-                    className="h-full rounded-full bg-link transition-[width]"
-                    style={{ width: `${run.total ? (run.done / run.total) * 100 : 0}%` }}
-                  />
-                </div>
-                <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <span>
-                    {t('import.progress', { done: run.done, total: run.total })}
-                    {finished &&
-                      ` · ${t('import.result', {
-                        created: [...run.outcomes.values()].filter((o) => o.state === 'created')
-                          .length,
-                        overwritten: [...run.outcomes.values()].filter(
-                          (o) => o.state === 'overwritten',
-                        ).length,
-                        failed: failed.length,
-                      })}`}
-                    {run.cancelled && ` · ${t('import.cancelled')}`}
-                  </span>
-                  <span className="flex-1" />
-                  {run.running && (
-                    <Button variant="outline" size="sm" onClick={cancel}>
-                      {t('confirm.cancel')}
-                    </Button>
-                  )}
-                  {finished && failed.length > 0 && (
-                    <Button variant="outline" size="sm" onClick={retry}>
-                      <RotateCcwIcon />
-                      {t('import.retry', { count: failed.length })}
-                    </Button>
-                  )}
-                  {finished && (
-                    <Button variant="outline" size="sm" onClick={downloadReport}>
-                      <DownloadIcon />
-                      {t('import.report')}
-                    </Button>
-                  )}
-                </div>
-              </section>
-            )}
-
-            <ImportResults
-              rows={checked.rows}
-              items={checked.items}
-              generated={checked.generated}
-              overwrite={overwrite}
-              onOverwrite={(index, value) =>
-                setOverwrite((current) => {
-                  const next = new Set(current);
-                  if (value) next.add(index);
-                  else next.delete(index);
-                  return next;
-                })
+        </PageHeading>
+        <div className="flex flex-col gap-5 rounded-xl border bg-surface-2 p-5">
+          <section aria-label={t('import.input')} className="flex flex-col gap-3">
+            <JsonDropField
+              id="import-json"
+              value={text}
+              onChange={(value) => edit(value)}
+              onFile={(content, name) => edit(content, name)}
+              onTooLarge={(name) =>
+                toast.error(t('import.fileTooLarge', { name, size: megabytes(IMPORT_MAX_BYTES) }))
               }
-              outcomes={run.outcomes}
-              onShowInJson={(index) => {
-                const range = ranges[index];
-                if (range) setFocusAt({ offset: range.offset, nonce: Date.now() });
+              maxBytes={IMPORT_MAX_BYTES}
+              invalid={!!inputError}
+              errorLine={inputError?.reason === 'syntax' ? inputError.line : undefined}
+              highlights={duplicateLines}
+              focusAt={focusAt}
+              labels={{
+                field: t('import.field'),
+                drop: t('import.drop'),
+                pick: t('import.pick'),
+                placeholder: t('import.placeholder'),
               }}
             />
-          </>
-        )}
+            {fileName && (
+              <p className="text-xs text-fg-2">{t('import.loaded', { name: fileName })}</p>
+            )}
+            {inputError && (
+              <p
+                role="alert"
+                className="flex flex-wrap items-center gap-2 text-sm text-destructive"
+              >
+                {inputError.reason === 'syntax'
+                  ? t('import.errors.syntax', {
+                      line: inputError.line,
+                      column: inputError.column,
+                      message: t(
+                        `import.syntax.${inputError.message}` as 'import.syntax.ValueExpected',
+                        {
+                          defaultValue: inputError.message,
+                        },
+                      ),
+                    })
+                  : t(`import.errors.${inputError.reason}`, {
+                      max: IMPORT_MAX_ITEMS,
+                      size: megabytes(IMPORT_MAX_BYTES),
+                    })}
+                {inputError.reason === 'syntax' && (
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() => setFocusAt({ offset: inputError.offset, nonce: Date.now() })}
+                  >
+                    {t('import.goToError')}
+                  </Button>
+                )}
+              </p>
+            )}
+
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="flex items-center gap-2">
+                <Switch
+                  id="import-default-parent"
+                  checked={useDefaultParent}
+                  onCheckedChange={setUseDefaultParent}
+                />
+                <Label htmlFor="import-default-parent" className="font-normal">
+                  {t('import.defaultParent')}
+                </Label>
+              </span>
+              {useDefaultParent && (
+                <Input
+                  aria-label="parent_id"
+                  value={defaultParent}
+                  onChange={(event) => setDefaultParent(event.target.value.trim())}
+                  placeholder={t('import.rootHint')}
+                  aria-invalid={!parentOk}
+                  className={cn('h-8 w-85 font-mono text-xs', !parentOk && 'border-destructive')}
+                />
+              )}
+              <span className="flex-1" />
+              <Button
+                variant="outline"
+                onClick={clear}
+                disabled={(!text && !checked) || run.running}
+              >
+                <EraserIcon />
+                {t('import.clear')}
+              </Button>
+              <Button
+                onClick={() => void runCheck()}
+                disabled={!text.trim() || !parentOk || checking || run.running}
+              >
+                <SearchCheckIcon />
+                {checking ? t('import.checking') : t('import.check')}
+              </Button>
+            </div>
+          </section>
+
+          {checked && summary && (
+            <>
+              <section
+                aria-label={t('import.summaryTitle')}
+                className="flex flex-wrap items-center gap-3 rounded-lg border bg-background px-4 py-3 text-sm"
+              >
+                <span>{t('import.summary', summary)}</span>
+                {!serverChecked && (
+                  <span className="text-xs text-fg-3">{t('import.formatOnly')}</span>
+                )}
+                <span className="flex-1" />
+                {conflicts.length > 0 && !run.running && !finished && (
+                  <span className="flex items-center gap-2">
+                    <Switch
+                      id="import-overwrite-all"
+                      checked={allOverwritten}
+                      onCheckedChange={(value) =>
+                        setOverwrite(() => (value ? new Set(conflicts) : new Set()))
+                      }
+                    />
+                    <Label htmlFor="import-overwrite-all" className="font-normal">
+                      {t('import.overwriteAll', { count: conflicts.length })}
+                    </Label>
+                  </span>
+                )}
+                {!finished && (
+                  <Button
+                    onClick={askSend}
+                    disabled={!serverChecked || plan.length === 0 || run.running}
+                    className={cn(
+                      isProduction &&
+                        'border-destructive/40 bg-destructive/15 text-destructive shadow-none hover:bg-destructive/25',
+                    )}
+                  >
+                    <UploadIcon />
+                    {t('import.send', { count: plan.length })}
+                  </Button>
+                )}
+              </section>
+
+              {(run.running || finished) && (
+                <section aria-label={t('import.progressTitle')} className="flex flex-col gap-2">
+                  <div
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={run.total}
+                    aria-valuenow={run.done}
+                    className="h-2 overflow-hidden rounded-full bg-surface-3"
+                  >
+                    <div
+                      className="h-full rounded-full bg-link transition-[width]"
+                      style={{ width: `${run.total ? (run.done / run.total) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 text-sm">
+                    <span>
+                      {t('import.progress', { done: run.done, total: run.total })}
+                      {finished &&
+                        ` · ${t('import.result', {
+                          created: [...run.outcomes.values()].filter((o) => o.state === 'created')
+                            .length,
+                          overwritten: [...run.outcomes.values()].filter(
+                            (o) => o.state === 'overwritten',
+                          ).length,
+                          failed: failed.length,
+                        })}`}
+                      {run.cancelled && ` · ${t('import.cancelled')}`}
+                    </span>
+                    <span className="flex-1" />
+                    {run.running && (
+                      <Button variant="outline" size="sm" onClick={cancel}>
+                        {t('confirm.cancel')}
+                      </Button>
+                    )}
+                    {finished && failed.length > 0 && (
+                      <Button variant="outline" size="sm" onClick={retry}>
+                        <RotateCcwIcon />
+                        {t('import.retry', { count: failed.length })}
+                      </Button>
+                    )}
+                    {finished && (
+                      <Button variant="outline" size="sm" onClick={downloadReport}>
+                        <DownloadIcon />
+                        {t('import.report')}
+                      </Button>
+                    )}
+                  </div>
+                </section>
+              )}
+
+              <ImportResults
+                rows={checked.rows}
+                items={checked.items}
+                generated={checked.generated}
+                overwrite={overwrite}
+                onOverwrite={(index, value) =>
+                  setOverwrite((current) => {
+                    const next = new Set(current);
+                    if (value) next.add(index);
+                    else next.delete(index);
+                    return next;
+                  })
+                }
+                outcomes={run.outcomes}
+                onShowInJson={(index) => {
+                  const range = ranges[index];
+                  if (range) setFocusAt({ offset: range.offset, nonce: Date.now() });
+                }}
+              />
+            </>
+          )}
+        </div>
       </div>
       {/* Always confirmed: an import can create or overwrite thousands of items live. */}
       <WriteConfirm

@@ -5,18 +5,44 @@ export const fr: Translations = {
     brand: 'DyingStar',
     section: 'Persistance',
   },
+  nav: {
+    label: 'Navigation',
+    breadcrumb: 'Fil d’Ariane',
+    admin: 'Admin',
+    adminPanel: 'Admin Panel',
+    activeServer: 'Serveur actif',
+    soon: 'bientôt',
+    sections: {
+      supervision: 'Supervision',
+      gameWorld: 'Monde du jeu',
+      administration: 'Administration',
+      configuration: 'Configuration',
+    },
+    items: {
+      dashboard: 'Tableau de bord',
+      servers: 'Serveurs & joueurs',
+      explorer: 'Persistance — Items',
+      import: 'Persistance — Import JSON',
+      users: 'Utilisateurs',
+      bans: 'Bannissements',
+      settings: 'Paramètres',
+    },
+  },
   topBar: {
     searchPlaceholder: 'Aller à un UUID…',
     import: 'Importer',
     newItem: 'Nouvel objet',
     home: "Retour à l'explorateur",
     server: 'Serveur de jeu',
+    serverLabel: 'Serveur',
     noServer: 'Aucun serveur configuré',
   },
   search: {
     uuidOnly: "Saisis un UUID complet — l'API persistence ne permet pas de chercher par nom.",
   },
   explorer: {
+    pageTitle: 'Persistance — Items',
+    addItem: 'Ajouter un item',
     notFound: 'Objet {{uuid}} introuvable',
     items: 'Objets',
     inspector: 'Inspecteur',
@@ -212,12 +238,6 @@ export const fr: Translations = {
     off: 'En pause',
     toggle: 'Activer ou suspendre le live',
   },
-  theme: {
-    toggle: 'Changer de thème',
-    light: 'Clair',
-    dark: 'Sombre',
-    system: 'Système',
-  },
   language: {
     label: 'Langue',
     en: 'English',
@@ -264,7 +284,7 @@ export const fr: Translations = {
     assumption: 'Latitude / longitude supposent que +Y est le pôle (ADR 0018).',
   },
   import: {
-    title: 'Import',
+    title: 'Persistance — Import JSON',
     intro:
       'Colle un tableau JSON d’objets ou dépose un fichier .json (jusqu’à {{max}} objets, {{size}} Mo). Chaque objet est vérifié avant tout envoi.',
     input: 'Saisie de l’import',

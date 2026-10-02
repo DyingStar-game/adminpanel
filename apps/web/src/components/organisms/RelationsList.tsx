@@ -54,12 +54,12 @@ export function RelationsList({
                 missingLabel={missing}
               />
               {ref.label && (
-                <MonoText tone="subtle" className="shrink-0 text-[10px]">
+                <MonoText tone="subtle" className="shrink-0 text-3xs">
                   {ref.label}
                 </MonoText>
               )}
               {unexpected && (
-                <Badge variant="outline" className="text-[10px]" title={ref.expectedType ?? ''}>
+                <Badge variant="outline" className="text-3xs" title={ref.expectedType ?? ''}>
                   {t('relations.unexpectedType', { type: ref.expectedType })}
                 </Badge>
               )}

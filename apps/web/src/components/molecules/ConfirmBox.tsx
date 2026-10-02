@@ -26,7 +26,7 @@ export function ConfirmBox({
       <div className="flex gap-1.5">
         <Button
           size="sm"
-          className="bg-destructive text-white hover:bg-destructive/90"
+          className="border-destructive/40 bg-destructive/15 text-destructive shadow-none hover:bg-destructive/25"
           onClick={onConfirm}
         >
           {confirmLabel}

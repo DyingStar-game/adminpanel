@@ -15,27 +15,18 @@ const servers = [
 const renderTopBar = () => {
   server.use(http.get('*/api/servers', () => HttpResponse.json({ servers })));
   const onSearch = vi.fn();
-  const onHome = vi.fn();
-  renderWithProviders(
-    <TopBar onHome={onHome} onSearch={onSearch} onCreate={vi.fn()} onImport={vi.fn()} />,
-  );
-  return { onSearch, onHome };
+  renderWithProviders(<TopBar crumbs={['Admin', 'Persistence']} onSearch={onSearch} />);
+  return { onSearch };
 };
 
 describe('TopBar', () => {
-  it('selects the first configured server by default', async () => {
+  it('shows the breadcrumb and the active game server', async () => {
     renderTopBar();
 
+    expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveTextContent(
+      'AdminPersistence',
+    );
     expect(await screen.findByText('Universe Testing')).toBeInTheDocument();
-    expect(usePreferences.getState().serverId).toBe('universe-testing');
-  });
-
-  it('goes back to the explorer from the brand', async () => {
-    const { onHome } = renderTopBar();
-
-    await userEvent.click(screen.getByRole('button', { name: 'Back to the explorer' }));
-
-    expect(onHome).toHaveBeenCalledOnce();
   });
 
   it('forwards searches', async () => {
@@ -46,15 +37,13 @@ describe('TopBar', () => {
     expect(onSearch).toHaveBeenCalledWith('abc');
   });
 
-  it('toggles live refresh and the theme', async () => {
+  it('toggles live refresh', async () => {
     renderTopBar();
-    usePreferences.setState({ live: true, theme: 'light' });
+    usePreferences.setState({ live: true });
 
     await userEvent.click(screen.getByRole('button', { name: 'Toggle live refresh' }));
+
     expect(usePreferences.getState().live).toBe(false);
     expect(await screen.findByText('Paused')).toBeInTheDocument();
-
-    await userEvent.click(screen.getByRole('button', { name: 'Toggle theme' }));
-    expect(usePreferences.getState().theme).toBe('dark');
   });
 });

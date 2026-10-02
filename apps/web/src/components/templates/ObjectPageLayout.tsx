@@ -18,15 +18,15 @@ interface ObjectPageLayoutProps {
   };
 }
 
-/** Object page from the mock-up (1c): centred column of cards on the dotted background. */
+/** Object page, laid out like every page: title and actions, then cards over the full width. */
 export function ObjectPageLayout(props: ObjectPageLayoutProps) {
   return (
-    <div className="min-h-0 flex-1 overflow-auto bg-surface-2">
-      <div className="mx-auto flex max-w-[1160px] flex-col gap-4.5 px-7 pt-5 pb-10">
+    <div className="min-h-0 flex-1 overflow-auto">
+      <div className="flex flex-col gap-5 p-6">
         {props.header}
         {props.headline}
-        <div className="grid grid-cols-1 gap-4.5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-          <div className="flex min-w-0 flex-col gap-4.5">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+          <div className="flex min-w-0 flex-col gap-5">
             {props.schematic && (
               <Card title={props.labels.schematic} padded>
                 {props.schematic}
@@ -57,11 +57,11 @@ function Card({
   children: ReactNode;
 }) {
   return (
-    <section aria-label={title} className="min-w-0 rounded-[10px] border bg-background pb-3">
-      <h2 className="px-4.5 pt-4 pb-2 text-[11px] font-medium tracking-[.06em] text-fg-3 uppercase">
+    <section aria-label={title} className="min-w-0 rounded-xl border bg-surface-2 pb-3">
+      <h2 className="px-5 pt-4 pb-2 text-2xs font-semibold tracking-[0.15em] text-fg-3 uppercase">
         {title}
       </h2>
-      <div className={padded ? 'px-4.5' : undefined}>{children}</div>
+      <div className={padded ? 'px-5' : undefined}>{children}</div>
     </section>
   );
 }

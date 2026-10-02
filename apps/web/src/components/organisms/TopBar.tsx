@@ -1,56 +1,41 @@
-import { PlusIcon, UploadIcon } from 'lucide-react';
+import { ChevronRightIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { BrandMark } from '@/components/atoms/BrandMark';
 import { LiveToggle } from '@/components/molecules/LiveToggle';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { SearchBar } from '@/components/molecules/SearchBar';
-import { ThemeToggle } from '@/components/molecules/ThemeToggle';
-import { Button } from '@/components/ui/button';
-import { useResolvedTheme } from '@/hooks/useResolvedTheme';
 import { useServers } from '@/hooks/useServers';
 import { LOCALES, type Locale } from '@/i18n';
+import { cn } from '@/lib/cn';
 import { usePreferences } from '@/stores/preferences';
 
 interface TopBarProps {
-  /** Brand click: back to the main view (explorer). */
-  onHome: () => void;
+  /** Breadcrumb of the page on screen, e.g. `Admin › Explorer`. */
+  crumbs: string[];
   onSearch: (query: string) => void;
-  onCreate: () => void;
-  /** Bulk import into the level on screen (ADR 0019). */
-  onImport: () => void;
 }
 
-/** Application header from the mock-up: brand, game server, search, live, theme, language. */
-export function TopBar({ onHome, onSearch, onCreate, onImport }: TopBarProps) {
+/**
+ * Header of the first DyingStar panel: breadcrumb, then search, live refresh, language and the
+ * active game server. Brand, server choice and navigation are in the sidebar; page actions
+ * (Add an item) are in each page's title.
+ */
+export function TopBar({ crumbs, onSearch }: TopBarProps) {
   const { t } = useTranslation();
-  const { live, setLive, locale, setLocale, setTheme } = usePreferences();
-  const resolved = useResolvedTheme();
-  const { servers, selected, select } = useServers();
+  const { live, setLive, locale, setLocale } = usePreferences();
+  const { selected } = useServers();
 
   return (
-    <header className="flex h-12 shrink-0 items-center gap-2.5 border-b bg-background pr-3 pl-4">
-      <div className="flex min-w-0 items-center gap-2 text-[13px]">
-        <button
-          type="button"
-          onClick={onHome}
-          aria-label={t('topBar.home')}
-          title={t('topBar.home')}
-          className="flex items-center gap-2 rounded-md px-1 py-0.5 hover:bg-surface-3"
-        >
-          <BrandMark />
-          <span className="font-semibold tracking-tight">{t('app.brand')}</span>
-          <span className="text-fg-3">/</span>
-          <span className="font-medium">{t('app.section')}</span>
-        </button>
-        <OptionSelect
-          label={t('topBar.server')}
-          value={selected?.id}
-          placeholder={t('topBar.noServer')}
-          options={servers.map((s) => ({ value: s.id, label: s.name }))}
-          onChange={select}
-          className="ml-1 font-mono"
-        />
-      </div>
+    <header className="sticky top-0 z-20 flex shrink-0 items-center gap-3 border-b bg-background/90 px-6 py-3 backdrop-blur">
+      <nav aria-label={t('nav.breadcrumb')} className="flex min-w-0 items-center gap-1.5 text-sm">
+        {crumbs.map((crumb, i) => (
+          <span key={i} className="flex items-center gap-1.5">
+            {i > 0 && <ChevronRightIcon className="size-3.5 text-fg-3" aria-hidden />}
+            <span className={cn(i === crumbs.length - 1 ? 'text-foreground' : 'text-fg-3')}>
+              {crumb}
+            </span>
+          </span>
+        ))}
+      </nav>
       <div className="flex min-w-0 flex-1 justify-center">
         <SearchBar placeholder={t('topBar.searchPlaceholder')} onSubmit={onSearch} />
       </div>
@@ -64,26 +49,21 @@ export function TopBar({ onHome, onSearch, onCreate, onImport }: TopBarProps) {
           hint: t('live.freshness'),
         }}
       />
-      <ThemeToggle
-        resolved={resolved}
-        label={t('theme.toggle')}
-        onToggle={() => setTheme(resolved === 'dark' ? 'light' : 'dark')}
-      />
       <OptionSelect<Locale>
         label={t('language.label')}
         value={locale}
-        options={LOCALES.map((l) => ({ value: l, label: l.toUpperCase() }))}
+        options={LOCALES.map((l) => ({ value: l, label: l === 'en' ? 'English' : 'Français' }))}
         onChange={setLocale}
-        className="w-[62px]"
+        className="w-26"
       />
-      <Button variant="outline" size="sm" onClick={onImport}>
-        <UploadIcon />
-        {t('topBar.import')}
-      </Button>
-      <Button size="sm" onClick={onCreate}>
-        <PlusIcon />
-        {t('topBar.newItem')}
-      </Button>
+      <div className="flex items-center gap-2 border-l pl-3 text-sm">
+        <span
+          aria-hidden
+          className={cn('size-2 rounded-full', selected ? 'bg-success' : 'bg-amber-500')}
+        />
+        <span className="text-fg-3">{t('topBar.serverLabel')}</span>
+        <span className="font-medium text-link">{selected?.name ?? '—'}</span>
+      </div>
     </header>
   );
 }

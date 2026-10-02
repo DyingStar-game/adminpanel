@@ -6,7 +6,7 @@ export function LiveDot({ live, className }: { live: boolean; className?: string
     <span
       aria-hidden
       className={cn(
-        'inline-block size-[7px] rounded-full',
+        'inline-block size-1.75 rounded-full',
         live ? 'bg-green-500' : 'bg-fg-3',
         className,
       )}
