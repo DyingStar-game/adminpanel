@@ -1,6 +1,7 @@
 import { LRUCache } from 'lru-cache';
 import pLimit from 'p-limit';
 import {
+  checkImportFormat,
   EditConflictDetailsSchema,
   ErrorCode,
   MAP_PLACED_THROUGH_PARENT,
@@ -9,6 +10,7 @@ import {
   type ChildrenCountsResponse,
   type CreateItem,
   type DuplicateRequest,
+  type ImportCheckResponse,
   type Item,
   type ListItemsQuery,
   type PaginatedItems,
@@ -19,6 +21,7 @@ import { ApiError, notFound } from '../lib/errors';
 import type { DefinitionsService } from './definitions';
 import { buildBodyMap } from './bodyMap';
 import { planDuplicate } from './duplicate';
+import { buildImportContext, checkImportCoherence } from './importCheck';
 import { mergeEdit, type EditRequest } from './merge';
 
 /** Depth guard when walking `parent_id` up (ADR 0005). */
@@ -241,6 +244,19 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
         ]);
         return buildBodyMap(body, items, placed.flat());
       });
+    },
+
+    /**
+     * Checks an import without writing anything (ADR 0019): format, then coherence with every
+     * item on the server (one full scan) and the type definitions.
+     */
+    async importCheck(items: unknown[]): Promise<ImportCheckResponse> {
+      const [{ definitions: defs }, all] = await Promise.all([definitions.list(), scanAll()]);
+      const rows = checkImportFormat(
+        items,
+        defs.map((d) => d.type),
+      );
+      return { rows: checkImportCoherence(items, rows, buildImportContext(all, defs)) };
     },
 
     /** `scenename` values in use, with their type and count, most used first. */

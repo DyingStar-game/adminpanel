@@ -1,3 +1,4 @@
+import { KNOWN_RELATIONS } from '@dyingstar-admin/schemas';
 import type { z } from 'zod';
 import type { TypeProfileSchema } from './schema';
 
@@ -13,11 +14,7 @@ export const vehicle: z.input<typeof TypeProfileSchema> = {
     ['odometer_km'],
     ['mass', 'cargo_mass'],
   ],
-  relations: [
-    { path: 'pilot_uuid', target: 'player', label: 'pilot' },
-    { path: 'seats.*', target: 'player', label: 'seat' },
-    { path: 'components.*', target: 'vehicle_component', label: 'component' },
-  ],
+  relations: KNOWN_RELATIONS.vehicle ?? [],
   childrenFirst: ['vehicle_component'],
   // A truck is several metres long: 2 m made duplicated vehicles collide.
   spawnDistance: 8,

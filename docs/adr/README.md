@@ -33,3 +33,4 @@ using lightweight ADRs ([Michael Nygard format](https://cognitect.com/blog/2011/
 | [0016](./0016-scene-schematics.md) | Scene schematics: declarative views per `scenename` | Accepted | 2026-10-02 |
 | [0017](./0017-duplicate-items.md) | Duplicating an item, with its children, next to a player | Accepted | 2026-10-02 |
 | [0018](./0018-planetary-map.md) | Planetary map: a 2D view of everything placed on a celestial body | Accepted | 2026-10-02 |
+| [0019](./0019-bulk-import-validation.md) | Bulk import: input and per-item format and coherence checks | Accepted | 2026-10-02 |

@@ -390,3 +390,49 @@ describe('POST /api/items/:uuid/duplicate', () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe('POST /api/items/import/check', () => {
+  const NEW = '11111111-1111-4111-8111-111111111111';
+
+  it('returns a status and findings per item, without writing anything', async () => {
+    const { request, persistence } = buildApp();
+    const res = await request(
+      '/api/items/import/check',
+      json({
+        items: [
+          {
+            object_type: 'vehicle',
+            object_uuid: NEW,
+            object_data: { parent_id: ids.planet, position: { x: 0, y: 0, z: 0 }, speed: 'fast' },
+          },
+          {
+            object_type: 'vehicle',
+            object_uuid: ids.vehicle,
+            object_data: { parent_id: ids.planet },
+          },
+          { object_type: 'spaceship', object_uuid: NEW, object_data: {} },
+        ],
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    const { rows } = await read(res);
+    expect(rows.map((r: { status: string }) => r.status)).toEqual(['new', 'conflict', 'invalid']);
+    expect(rows[0].findings).toContainEqual(
+      expect.objectContaining({ code: 'kindMismatch', path: 'object_data.speed' }),
+    );
+    expect(rows[2].findings.map((f: { code: string }) => f.code)).toEqual([
+      'unknownType',
+      'duplicateUuid',
+    ]);
+    for (const method of ['POST', 'PUT', 'DELETE']) {
+      expect([...persistence.calls.keys()].some((key) => key.startsWith(method))).toBe(false);
+    }
+  });
+
+  it('refuses more items than the import limit', async () => {
+    const items = Array.from({ length: 5001 }, () => ({}));
+    const res = await buildApp().request('/api/items/import/check', json({ items }));
+    expect(res.status).toBe(400);
+  });
+});

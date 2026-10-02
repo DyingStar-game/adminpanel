@@ -4,6 +4,7 @@ import {
   CreateItemRequestSchema,
   DuplicateRequestSchema,
   ExistsRequestSchema,
+  ImportCheckRequestSchema,
   createListItemsQuerySchema,
   UpdateItemRequestSchema,
 } from '@dyingstar-admin/schemas';
@@ -21,6 +22,9 @@ export const itemsRoutes = new Hono<ServerContext>()
   })
   // Declared before `/:uuid` so `scenes` is not read as an item UUID.
   .get('/scenes', async (c) => c.json({ scenes: await c.var.items.scenes() }))
+  .post('/import/check', validate('json', ImportCheckRequestSchema), async (c) =>
+    c.json(await c.var.items.importCheck(c.req.valid('json').items)),
+  )
   .post('/exists', validate('json', ExistsRequestSchema), async (c) =>
     c.json({ existing: await c.var.items.exists(c.req.valid('json').uuids) }),
   )

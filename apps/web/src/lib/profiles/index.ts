@@ -1,3 +1,4 @@
+import { matchesPath } from '@dyingstar-admin/schemas';
 import { miningrock } from './miningrock';
 import { planet } from './planet';
 import { player } from './player';
@@ -25,12 +26,7 @@ const NO_COLUMNS: string[] = [];
 export const tableColumnsFor = (objectType: string | undefined): string[] =>
   profileFor(objectType)?.columns ?? NO_COLUMNS;
 
-/** Matches a reference path (`seats.SeatDriver`) against a profile pattern (`seats.*`). */
-export function matchesPath(pattern: string, path: string): boolean {
-  const a = pattern.split('.');
-  const b = path.split('.');
-  return a.length === b.length && a.every((segment, i) => segment === '*' || segment === b[i]);
-}
+export { matchesPath } from '@dyingstar-admin/schemas';
 
 /** Profile relation describing a reference path, if any. */
 export const relationFor = (profile: TypeProfile | null, path: string) =>
