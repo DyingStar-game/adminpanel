@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { checkImportFormat, type ImportRow } from './import';
+import {
+  checkImportFormat,
+  parseParentAlias,
+  resolveParentAliases,
+  type ImportRow,
+} from './import';
 
 const A = '11111111-1111-4111-8111-111111111111';
 const B = '22222222-2222-4222-8222-222222222222';
@@ -122,5 +127,56 @@ describe('checkImportFormat', () => {
     const rows = checkImportFormat([item(A), item(B), item(A)], TYPES);
     expect(rows.map((r) => r.status)).toEqual(['new', 'new', 'invalid']);
     expect(rows[2]?.findings[0]).toMatchObject({ code: 'duplicateUuid', params: { row: 1 } });
+  });
+
+  it('leaves parent aliases to their resolution', () => {
+    expect(codes(checkImportFormat([item(A, { parent_id: '_planet_SandBox' })], TYPES)[0])).toEqual(
+      [],
+    );
+  });
+});
+
+describe('parent aliases', () => {
+  const types = ['planet', 'poi_village', 'poi', 'spawnbuilding'];
+
+  it('reads _<type>_<name>, the longest known type first', () => {
+    expect(parseParentAlias('_planet_SandBox', types)).toEqual({ type: 'planet', name: 'SandBox' });
+    expect(parseParentAlias('_poi_village_mining_village_54', types)).toEqual({
+      type: 'poi_village',
+      name: 'mining_village_54',
+    });
+    expect(parseParentAlias('_spaceship_X', types)).toBeNull();
+    expect(parseParentAlias('_planet_', types)).toBeNull();
+  });
+
+  it('replaces an alias by the UUID of the only item with that type and name', () => {
+    const candidates = [
+      { object_uuid: A, object_type: 'planet', name: 'SandBox' },
+      { object_uuid: B, object_type: 'spawnbuilding', name: 'tarsis_4-1008' },
+      { object_uuid: C, object_type: 'spawnbuilding', name: 'tarsis_4-1008' },
+    ];
+    const { items, findings } = resolveParentAliases(
+      [
+        item(C, { parent_id: '_planet_SandBox' }),
+        item(C, { parent_id: '_spawnbuilding_tarsis_4-1008' }),
+        item(C, { parent_id: '_planet_Nowhere' }),
+        item(C, { parent_id: B }),
+      ],
+      candidates,
+      types,
+    );
+    expect((items[0] as { object_data: { parent_id: string } }).object_data.parent_id).toBe(A);
+    expect(findings.get(0)?.[0]).toMatchObject({
+      code: 'aliasResolved',
+      severity: 'info',
+      params: { uuid: A },
+    });
+    expect(findings.get(1)?.[0]).toMatchObject({
+      code: 'aliasAmbiguous',
+      severity: 'error',
+      params: { count: 2 },
+    });
+    expect(findings.get(2)?.[0]).toMatchObject({ code: 'aliasNotFound', severity: 'error' });
+    expect(findings.has(3)).toBe(false);
   });
 });

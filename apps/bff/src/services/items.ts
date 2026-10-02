@@ -2,6 +2,7 @@ import { LRUCache } from 'lru-cache';
 import pLimit from 'p-limit';
 import {
   checkImportFormat,
+  resolveParentAliases,
   EditConflictDetailsSchema,
   ErrorCode,
   MAP_PLACED_THROUGH_PARENT,
@@ -252,11 +253,41 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
      */
     async importCheck(items: unknown[]): Promise<ImportCheckResponse> {
       const [{ definitions: defs }, all] = await Promise.all([definitions.list(), scanAll()]);
-      const rows = checkImportFormat(
-        items,
-        defs.map((d) => d.type),
-      );
-      return { rows: checkImportCoherence(items, rows, buildImportContext(all, defs)) };
+      const types = defs.map((d) => d.type);
+      // Parent aliases (`_planet_SandBox`) designate an item of the server or of the import.
+      const own = items.flatMap((item) => {
+        const i = item as {
+          object_uuid?: unknown;
+          object_type?: unknown;
+          object_data?: { name?: unknown };
+        };
+        return typeof i?.object_uuid === 'string' && typeof i.object_type === 'string'
+          ? [{ object_uuid: i.object_uuid, object_type: i.object_type, name: i.object_data?.name }]
+          : [];
+      });
+      const candidates = [
+        ...all.map((i) => ({
+          object_uuid: i.object_uuid,
+          object_type: i.object_type,
+          name: i.object_data.name,
+        })),
+        ...own,
+      ];
+      const aliases = resolveParentAliases(items, candidates, types);
+      const rows = checkImportCoherence(
+        aliases.items,
+        checkImportFormat(aliases.items, types),
+        buildImportContext(all, defs),
+      ).map((row) => {
+        const extra = aliases.findings.get(row.index) ?? [];
+        const blocking = extra.some((f) => f.severity === 'error');
+        return {
+          ...row,
+          status: blocking ? ('invalid' as const) : row.status,
+          findings: [...extra, ...row.findings],
+        };
+      });
+      return { rows, items: aliases.items };
     },
 
     /** `scenename` values in use, with their type and count, most used first. */

@@ -328,7 +328,7 @@ export const en = {
     overwrite: 'Overwrite',
     status: { invalid: 'invalid', new: 'new', conflict: 'exists' },
     outcome: { created: 'created', overwritten: 'overwritten', failed: 'failed' },
-    severity: { error: 'Error', warning: 'Warning' },
+    severity: { error: 'Error', warning: 'Warning', info: 'Information' },
     codes: {
       notObject: 'This item is not a JSON object.',
       typeMissing: 'object_type is missing.',
@@ -342,6 +342,9 @@ export const en = {
       parentSelf: 'The item is its own parent.',
       parentCycle: 'Parent cycle inside the import.',
       badShape: 'Expected a {{expected}}.',
+      aliasNotFound: 'No item matches {{alias}} (_<type>_<name>), on the server or in the import.',
+      aliasAmbiguous: '{{count}} items match {{alias}}: give the parent UUID instead.',
+      aliasResolved: '{{alias}} → {{uuid}}',
       typeMismatch: 'object_data.type differs from the object type ({{expected}}).',
       undeclaredKey: 'Not declared in the type definition: not replicated to clients.',
       kindMismatch: 'Existing items hold a {{expected}} here, this one a {{actual}}.',

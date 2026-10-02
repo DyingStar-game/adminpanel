@@ -101,6 +101,18 @@ type there; `object_data.uuid` stays blocking (no live item differs). Re-checkin
 as an import gives only conflicts, with two warnings: 19 parents not found (real orphans) and
 247 undeclared keys.
 
+### Update (2026-10-02): business rules
+
+Given by the maintainer:
+
+- **`object_uuid: null`** (like a missing UUID) gets a UUID generated on the fly.
+- **Parent alias**: `parent_id` may be `_<object_type>_<name>`, e.g. `_planet_SandBox`. The BFF
+  replaces it by the UUID of the only item of that type with that name, on the server or in the
+  import itself (types contain `_`: the longest known type matching the prefix wins). The row
+  shows the resolution as an information; no match (`aliasNotFound`) or several
+  (`aliasAmbiguous`: 11 spawn building names are shared by up to 16 buildings) is blocking.
+  The check returns the resolved items, which are the ones sent.
+
 ## Consequences
 
 - Most errors appear before anything is sent, with the path of the faulty value.

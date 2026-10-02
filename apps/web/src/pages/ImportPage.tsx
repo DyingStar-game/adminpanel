@@ -84,8 +84,9 @@ export function ImportPage({ search }: ImportPageProps) {
     setOverwrite(new Set());
     reset();
     try {
-      const { rows } = await check.mutateAsync(normalized.items);
-      setChecked({ ...normalized, rows });
+      // The server resolves parent aliases: its items are the ones to send.
+      const { rows, items } = await check.mutateAsync(normalized.items);
+      setChecked({ ...normalized, items, rows });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('import.checkFailed'));
     }

@@ -21,6 +21,10 @@ export const ImportCodeSchema = z.enum([
   'parentSelf',
   'parentCycle',
   'badShape',
+  'aliasNotFound',
+  'aliasAmbiguous',
+  // Information.
+  'aliasResolved',
   // Warnings (coherence with the server's data).
   'typeMismatch',
   'undeclaredKey',
@@ -37,7 +41,7 @@ export type ImportCode = z.infer<typeof ImportCodeSchema>;
 
 export const ImportFindingSchema = z.object({
   code: ImportCodeSchema,
-  severity: z.enum(['error', 'warning']),
+  severity: z.enum(['error', 'warning', 'info']),
   /** Path of the faulty value, e.g. `object_data.position.y`. */
   path: z.string().optional(),
   /** Values for the message (expected kind, other row index, referenced UUID…). */
@@ -66,7 +70,11 @@ export type ImportRow = z.infer<typeof ImportRowSchema>;
 export const ImportCheckRequestSchema = z.object({
   items: z.array(z.unknown()).max(IMPORT_MAX_ITEMS),
 });
-export const ImportCheckResponseSchema = z.object({ rows: z.array(ImportRowSchema) });
+export const ImportCheckResponseSchema = z.object({
+  rows: z.array(ImportRowSchema),
+  /** The items as checked, parent aliases replaced by UUIDs: what is to be sent. */
+  items: z.array(z.unknown()),
+});
 export type ImportCheckResponse = z.infer<typeof ImportCheckResponseSchema>;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -133,7 +141,8 @@ export function checkImportFormat(items: unknown[], knownTypes: readonly string[
       // `object_data.type` is not always the object type (a village's kind, e.g. `mining`):
       // it is checked against the server's items, as a warning (BFF).
       const parent = data.parent_id;
-      if (parent !== undefined && parent !== null) {
+      // An alias left unresolved is reported by the alias resolution, not twice.
+      if (parent !== undefined && parent !== null && !isParentAlias(parent)) {
         if (
           typeof parent !== 'string' ||
           (parent !== '' && !UuidSchema.safeParse(parent).success)
@@ -194,4 +203,75 @@ export function checkImportFormat(items: unknown[], knownTypes: readonly string[
     }
   }
   return rows;
+}
+
+/**
+ * Business rule (ADR 0019): `parent_id` may name its parent instead of giving its UUID, as
+ * `_<object_type>_<name>` (e.g. `_planet_SandBox`). Types contain `_` themselves
+ * (`poi_village`): the longest known type matching the prefix wins.
+ */
+export const isParentAlias = (value: unknown): value is string =>
+  typeof value === 'string' && value.startsWith('_') && value.length > 1;
+
+export function parseParentAlias(
+  value: string,
+  knownTypes: readonly string[],
+): { type: string; name: string } | null {
+  if (!isParentAlias(value)) return null;
+  const body = value.slice(1);
+  const type = [...knownTypes]
+    .sort((a, b) => b.length - a.length)
+    .find((t) => body.startsWith(`${t}_`) && body.length > t.length + 1);
+  return type ? { type, name: body.slice(type.length + 1) } : null;
+}
+
+/** An item that an alias may designate: on the server or in the import. */
+export interface AliasCandidate {
+  object_uuid: string;
+  object_type: string;
+  name: unknown;
+}
+
+/**
+ * Replaces parent aliases by the UUID of the only item of that type with that name, among the
+ * server's items and the import's own. Returns the resolved items and, per row index, an info
+ * (resolved) or an error (not found, ambiguous, unknown type).
+ */
+export function resolveParentAliases(
+  items: unknown[],
+  candidates: AliasCandidate[],
+  knownTypes: readonly string[],
+): { items: unknown[]; findings: Map<number, ImportFinding[]> } {
+  const findings = new Map<number, ImportFinding[]>();
+  const byKey = new Map<string, string[]>();
+  const keyOf = (type: string, name: string) => JSON.stringify([type, name]);
+  for (const c of candidates) {
+    if (typeof c.name !== 'string' || !c.name) continue;
+    const key = keyOf(c.object_type, c.name);
+    const uuids = byKey.get(key) ?? [];
+    if (!uuids.includes(c.object_uuid)) uuids.push(c.object_uuid);
+    byKey.set(key, uuids);
+  }
+  const path = 'object_data.parent_id';
+  const resolved = items.map((raw, index) => {
+    if (!isRecord(raw) || !isRecord(raw.object_data)) return raw;
+    const alias = raw.object_data.parent_id;
+    if (!isParentAlias(alias)) return raw;
+    const parsed = parseParentAlias(alias, knownTypes);
+    const matches = parsed ? (byKey.get(keyOf(parsed.type, parsed.name)) ?? []) : [];
+    const [uuid] = matches;
+    if (parsed && matches.length === 1 && uuid) {
+      findings.set(index, [
+        { code: 'aliasResolved', severity: 'info', path, params: { alias, uuid } },
+      ]);
+      return { ...raw, object_data: { ...raw.object_data, parent_id: uuid } };
+    }
+    findings.set(index, [
+      parsed && matches.length > 1
+        ? error('aliasAmbiguous', path, { alias, count: matches.length })
+        : error('aliasNotFound', path, { alias }),
+    ]);
+    return raw;
+  });
+  return { items: resolved, findings };
 }

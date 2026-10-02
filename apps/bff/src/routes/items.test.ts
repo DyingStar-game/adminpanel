@@ -430,6 +430,34 @@ describe('POST /api/items/import/check', () => {
     }
   });
 
+  it('resolves parent aliases against the server and returns the items to send', async () => {
+    const res = await buildApp().request(
+      '/api/items/import/check',
+      json({
+        items: [
+          {
+            object_type: 'vehicle',
+            object_uuid: NEW,
+            object_data: { parent_id: '_planet_SandBox' },
+          },
+          {
+            object_type: 'vehicle',
+            object_uuid: ids.rock,
+            object_data: { parent_id: '_planet_Mars' },
+          },
+        ],
+      }),
+    );
+    const { rows, items } = await read(res);
+    expect(items[0].object_data.parent_id).toBe(ids.planet);
+    expect(rows[0].findings[0]).toMatchObject({
+      code: 'aliasResolved',
+      params: { uuid: ids.planet },
+    });
+    expect(rows[1]).toMatchObject({ status: 'invalid' });
+    expect(rows[1].findings[0]).toMatchObject({ code: 'aliasNotFound' });
+  });
+
   it('refuses more items than the import limit', async () => {
     const items = Array.from({ length: 5001 }, () => ({}));
     const res = await buildApp().request('/api/items/import/check', json({ items }));

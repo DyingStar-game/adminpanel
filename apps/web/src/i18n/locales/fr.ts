@@ -332,7 +332,7 @@ export const fr: Translations = {
     overwrite: 'Écraser',
     status: { invalid: 'invalide', new: 'nouveau', conflict: 'existe' },
     outcome: { created: 'créé', overwritten: 'écrasé', failed: 'échec' },
-    severity: { error: 'Erreur', warning: 'Avertissement' },
+    severity: { error: 'Erreur', warning: 'Avertissement', info: 'Information' },
     codes: {
       notObject: 'Cet élément n’est pas un objet JSON.',
       typeMissing: 'object_type manque.',
@@ -346,6 +346,11 @@ export const fr: Translations = {
       parentSelf: 'L’objet est son propre parent.',
       parentCycle: 'Boucle de parents dans l’import.',
       badShape: 'Un {{expected}} est attendu.',
+      aliasNotFound:
+        'Aucun objet ne correspond à {{alias}} (_<type>_<nom>), ni sur le serveur ni dans l’import.',
+      aliasAmbiguous:
+        '{{count}} objets correspondent à {{alias}} : indique plutôt l’UUID du parent.',
+      aliasResolved: '{{alias}} → {{uuid}}',
       typeMismatch: 'object_data.type diffère du type d’objet ({{expected}}).',
       undeclaredKey: 'Non déclaré dans la définition du type : pas répliqué vers les clients.',
       kindMismatch: 'Les objets existants ont un {{expected}} ici, celui-ci un {{actual}}.',

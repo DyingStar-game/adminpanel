@@ -46,6 +46,7 @@ describe('normalizeImport', () => {
         { object_type: 'box', object_data: {} },
         { object_type: 'box', object_uuid: 'u', object_data: { parent_id: '' } },
         'not an item',
+        { object_type: 'box', object_uuid: null, object_data: { parent_id: '' } },
       ],
       { defaultParentId: 'level', newUuid: () => `gen-${++n}` },
     );
@@ -53,8 +54,10 @@ describe('normalizeImport', () => {
       { object_type: 'box', object_uuid: 'gen-1', object_data: { parent_id: 'level' } },
       { object_type: 'box', object_uuid: 'u', object_data: { parent_id: '' } },
       'not an item',
+      { object_type: 'box', object_uuid: 'gen-2', object_data: { parent_id: '' } },
     ]);
-    expect([...generated]).toEqual([0]);
+    // Business rule: a `null` UUID is generated too.
+    expect([...generated]).toEqual([0, 3]);
     expect([...parented]).toEqual([0]);
   });
 

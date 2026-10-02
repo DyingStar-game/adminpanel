@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { CircleXIcon, TriangleAlertIcon } from 'lucide-react';
+import { CircleXIcon, InfoIcon, TriangleAlertIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ImportFinding, ImportRow } from '@dyingstar-admin/schemas';
 import { CopyButton } from '@/components/atoms/CopyButton';
@@ -197,14 +197,18 @@ function ImportRowView({
 
 function FindingView({ finding }: { finding: ImportFinding }) {
   const { t } = useTranslation();
-  const Icon = finding.severity === 'error' ? CircleXIcon : TriangleAlertIcon;
+  const Icon = { error: CircleXIcon, warning: TriangleAlertIcon, info: InfoIcon }[finding.severity];
   return (
     <li className="flex items-start gap-1.5 text-xs">
       <Icon
         aria-label={t(`import.severity.${finding.severity}`)}
         className={cn(
           'mt-0.5 size-3.5 shrink-0',
-          finding.severity === 'error' ? 'text-destructive' : 'text-amber-600 dark:text-amber-400',
+          {
+            error: 'text-destructive',
+            warning: 'text-amber-600 dark:text-amber-400',
+            info: 'text-link',
+          }[finding.severity],
         )}
       />
       <span>

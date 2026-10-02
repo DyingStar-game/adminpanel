@@ -74,7 +74,8 @@ export function normalizeImport(
   const normalized = items.map((raw, index) => {
     if (!isRecord(raw)) return raw;
     const item = { ...raw };
-    if (item.object_uuid === undefined) {
+    // Business rule: a missing or `null` UUID is generated on the fly.
+    if (item.object_uuid === undefined || item.object_uuid === null) {
       item.object_uuid = newUuid();
       generated.add(index);
     }
