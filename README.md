@@ -10,7 +10,7 @@
 
 ![Version](https://img.shields.io/badge/version-0.1.0-gold)
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue)
-![Node](https://img.shields.io/badge/node-%3E%3D20-green)
+![Node](https://img.shields.io/badge/node-%3E%3D24-green)
 
 Web administration panel for game servers of the open-source community project **DyingStar** (space MMO, Godot 4).
 
@@ -46,32 +46,61 @@ See [ARCHITECTURE.md](./ARCHITECTURE.md) for the responsibility split.
 
 | Layer | Technologies |
 |--------|----------------|
-| Frontend | React 18, Vite, TypeScript, TailwindCSS v3, React Query, Zustand, React Hook Form + Zod |
-| Backend | Node 20, Express, TypeScript, node-fetch |
-| Monorepo | pnpm workspaces |
+| Frontend (`apps/web`) | React 19, Vite 8, TypeScript 6 (strict), Tailwind CSS 4, shadcn/ui (Radix) in atomic design, TanStack Router, Query and Table, Zustand, React Hook Form + Zod, React Flow, react-i18next (EN/FR) |
+| BFF (`apps/bff`) | Node 24, Hono, Zod validation; the only component holding internal URLs, and it serves the built SPA in production |
+| Shared (`packages/schemas`) | Zod schemas for the persistence contract and the BFF API |
+| Tests | Vitest, Testing Library, MSW; frontend tests run the real BFF in-process |
+| Tooling | pnpm 12 workspaces, ESLint (atomic-design import rules), Prettier, Makefile over Docker or Podman |
+
+Technical decisions are recorded in [docs/adr/](./docs/adr/).
 
 ## Quick start
 
-```bash
-# Prerequisites: Node 20+, pnpm 9+
-corepack enable
-pnpm install
+Prerequisites: **Docker** (with Compose) or **Podman**, and `make`. Node and pnpm run inside the
+container, with pinned versions: nothing to install on the host.
 
-# Configuration
-cp packages/backend/.env.example packages/backend/.env
-cp packages/frontend/.env.example packages/frontend/.env
-
-# Dev (frontend :5173 + backend :3000)
-pnpm dev
-```
-
-With Docker:
+### Try it (testers)
 
 ```bash
-docker compose up --build
+make start   # installs, builds and serves the app
 ```
 
-Open **http://localhost:5173** for the UI (not port 3000 — that is the API only).
+Open **http://localhost:3000**. Stop with `make stop`.
+
+### Develop
+
+```bash
+make up            # start the dev container
+make install       # install dependencies
+make pnpm dev      # Vite (:5173) + BFF (:3000), hot reload
+```
+
+Open **http://localhost:5173** for the UI (port 3000 is the BFF API). Stop with `make down`.
+
+Before committing:
+
+```bash
+make pnpm lint && make pnpm typecheck && make pnpm test && make pnpm format:check
+```
+
+### Configuration
+
+The first `make up` or `make start` creates `.env.local` from [`.env.sample`](./.env.sample).
+Edit it to choose the game servers the admin targets (`SERVERS`: id, name, environment,
+persistence URL) and where object type definitions are read from (`DEFINITIONS_*`).
+
+### Production image
+
+```bash
+make image IMAGE=dyingstar-admin:local
+docker run -p 3000:3000 \
+  -e SERVERS='[{"id":"universe-testing","name":"Universe Testing","environment":"testing","persistenceUrl":"http://46.231.240.213:31001"}]' \
+  dyingstar-admin:local
+```
+
+Pass the variables of [`.env.sample`](./.env.sample) with `-e` (at least `SERVERS`).
+
+`make help` lists every target.
 
 ## Contributor documentation
 
