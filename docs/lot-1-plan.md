@@ -3,12 +3,12 @@
 Scope and decisions: [ADR 0001 → 0018](./adr/README.md). This plan only orders the work;
 when a step needs a new decision, it is written as a new ADR before coding.
 
-## Status (2026-10-02)
+## Status (2026-10-02, end of day)
 
 | Step | Status |
 |------|--------|
 | 1–8 | **Done** (foundation, BFF, design system, explorer, object page, orbit, live, writes) |
-| 9. Bulk import | **Not started** |
+| 9. Bulk import | **Done** ([ADR 0004](./adr/0004-bulk-import-unit-posts.md), [ADR 0019](./adr/0019-bulk-import-validation.md) and its business rules); not yet tried for real on the test server |
 | 10. Documentation | **Partly done**: `README.md` (+ `docs/fr/`) rewritten; `ONBOARDING.md`, `ARCHITECTURE.md`, BFF API doc and `deploy/` still to do |
 
 ### Delivered beyond the plan
@@ -164,7 +164,7 @@ Identical concurrent GETs are coalesced with a short-lived cache (ADR 0009).
 - Delete: confirmation, orphaned children warning, "not propagated to the game" warning.
 - **Done when** create / edit / delete work against the MSW mock and conflicts are tested.
 
-### 9. Bulk import — not started
+### 9. Bulk import — done
 
 - Import screen designed in the mock-up style (none exists yet).
 - JSON array file or paste → preview with statuses (`invalid`, `new`, `conflict`, warnings),
