@@ -20,6 +20,8 @@ export const vehicle: z.input<typeof TypeProfileSchema> = {
   childrenFirst: ['vehicle_component'],
   // A truck is several metres long: 2 m made duplicated vehicles collide.
   spawnDistance: 8,
+  // Spawned at ground level, a duplicated vehicle got stuck in the ground.
+  spawnHeight: 1,
   renderers: {
     doors: 'namedMap',
     seats: 'namedMap',

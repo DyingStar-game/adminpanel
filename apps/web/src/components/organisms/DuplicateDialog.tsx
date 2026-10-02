@@ -25,7 +25,7 @@ import { ApiError } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { itemLabel } from '@/lib/itemLabel';
 import { isValidParentId, parseRaw, toRaw } from '@/lib/propertyForm';
-import { spawnDistanceFor, spawnNextTo } from '@/lib/spawn';
+import { spawnDistanceFor, spawnHeightFor, spawnNextTo } from '@/lib/spawn';
 import { usePreferences } from '@/stores/preferences';
 
 interface DuplicateDialogProps {
@@ -43,8 +43,14 @@ interface Placement {
   reference: string | null;
 }
 
-const placementFrom = (reference: Item, distance: number): Placement | null => {
-  const preset = spawnNextTo(reference, distance);
+/** Gap in front of the reference and height above it, in metres. */
+interface Offsets {
+  distance: number;
+  height: number;
+}
+
+const placementFrom = (reference: Item, { distance, height }: Offsets): Placement | null => {
+  const preset = spawnNextTo(reference, distance, height);
   return preset
     ? {
         parentId: preset.parentId,
@@ -58,8 +64,8 @@ const placementFrom = (reference: Item, distance: number): Placement | null => {
 /**
  * Duplicates an item and its children (ADR 0017). The target placement (parent, position,
  * rotation) is explicit and editable; a reference entity (a player, the original, any item by
- * UUID) fills it: its parent, in front of it at a distance that depends on the copied type
- * (8 m for a vehicle), its yaw.
+ * UUID) fills it: its parent, in front of it and above it by offsets that depend on the copied
+ * type (8 m and 1 m for a vehicle), its yaw.
  */
 export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialogProps) {
   const { t } = useTranslation();
@@ -74,30 +80,35 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
   const [withChildren, setWithChildren] = useState(true);
   const [referenceUuid, setReferenceUuid] = useState('');
   const [error, setError] = useState<string | null>(null);
-  // Gap left between the reference and the copy, by default from the copied type's profile.
-  const [distance, setDistance] = useState<string | null>(null);
+  // Offsets typed by the user, by default from the copied type's profile (raw text).
+  const [rawOffsets, setRawOffsets] = useState<{ distance?: string; height?: string }>({});
   const [referenceItem, setReferenceItem] = useState<Item | null>(null);
-  const gap = Number(distance ?? spawnDistanceFor(source.data?.object_type));
-  const gapOk = Number.isFinite(gap) && gap >= 0;
+  const type = source.data?.object_type;
+  const offsets: Offsets = {
+    distance: Number(rawOffsets.distance ?? spawnDistanceFor(type)),
+    height: Number(rawOffsets.height ?? spawnHeightFor(type)),
+  };
+  const offsetsOk = Object.values(offsets).every((n) => Number.isFinite(n) && n >= 0);
 
   // Until a reference is picked, the copy goes next to the original.
-  const current = placement ?? (source.data && gapOk ? placementFrom(source.data, gap) : null);
+  const current =
+    placement ?? (source.data && offsetsOk ? placementFrom(source.data, offsets) : null);
   const update = (patch: Partial<Placement>) =>
     current &&
     setPlacement({ ...current, ...patch, reference: patch.reference ?? current.reference });
-  const applyReference = (reference: Item, withGap = gap) => {
-    const next = placementFrom(reference, withGap);
+  const applyReference = (reference: Item, withOffsets = offsets) => {
+    const next = placementFrom(reference, withOffsets);
     if (next) {
       setReferenceItem(reference);
       setPlacement(next);
     } else setError(t('duplicate.noPosition', { label: itemLabel(reference) }));
   };
-  /** A new distance recomputes the placement from the current reference. */
-  const changeDistance = (value: string) => {
-    setDistance(value);
-    const next = Number(value);
+  /** A new distance or height recomputes the placement from the current reference. */
+  const changeOffset = (key: keyof Offsets, value: string) => {
+    setRawOffsets((raw) => ({ ...raw, [key]: value }));
+    const next = { ...offsets, [key]: Number(value) };
     const reference = referenceItem ?? source.data;
-    if (reference && value.trim() !== '' && Number.isFinite(next) && next >= 0) {
+    if (reference && value.trim() !== '' && Number.isFinite(next[key]) && next[key] >= 0) {
       applyReference(reference, next);
     }
   };
@@ -105,7 +116,7 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
   const position = current ? parseRaw(current.position, 'vec3') : null;
   const rotation = current ? parseRaw(current.rotation, 'vec3') : null;
   const parentOk = !!current && isValidParentId(current.parentId);
-  const valid = parentOk && gapOk && !!position?.ok && !!rotation?.ok;
+  const valid = parentOk && offsetsOk && !!position?.ok && !!rotation?.ok;
   const children = counts.data?.total ?? 0;
 
   const confirm = async () => {
@@ -208,18 +219,25 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
                 </span>
               )}
             </span>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="duplicate-distance" className="text-[11px]">
-                {t('duplicate.distance')}
-              </Label>
-              <Input
-                id="duplicate-distance"
-                inputMode="decimal"
-                value={distance ?? String(gap)}
-                onChange={(e) => changeDistance(e.target.value)}
-                aria-invalid={!gapOk}
-                className={cn('h-7 w-20 font-mono text-xs', !gapOk && 'border-destructive')}
-              />
+            <div className="flex flex-wrap items-center gap-2">
+              {(['distance', 'height'] as const).map((key) => (
+                <div key={key} className="flex items-center gap-1.5">
+                  <Label htmlFor={`duplicate-${key}`} className="text-[11px]">
+                    {t(`duplicate.${key}`)}
+                  </Label>
+                  <Input
+                    id={`duplicate-${key}`}
+                    inputMode="decimal"
+                    value={rawOffsets[key] ?? String(offsets[key])}
+                    onChange={(e) => changeOffset(key, e.target.value)}
+                    aria-invalid={!Number.isFinite(offsets[key]) || offsets[key] < 0}
+                    className={cn(
+                      'h-7 w-16 font-mono text-xs',
+                      (!Number.isFinite(offsets[key]) || offsets[key] < 0) && 'border-destructive',
+                    )}
+                  />
+                </div>
+              ))}
               <span className="text-[11px] text-fg-3">{t('duplicate.distanceHint')}</span>
             </div>
             <div className="flex flex-col gap-1">

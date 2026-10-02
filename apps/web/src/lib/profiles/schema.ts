@@ -36,6 +36,8 @@ export const TypeProfileSchema = z.object({
   moonWhenParentIs: z.string().optional(),
   /** Gap left when spawning or duplicating this type next to something, in metres. */
   spawnDistance: z.number().positive().optional(),
+  /** Height added above the reference when spawning or duplicating this type, in metres. */
+  spawnHeight: z.number().nonnegative().optional(),
   /** `star`: bodies linked implicitly (single star system, ADR 0008). */
   implicitChildren: z.object({ objectType: z.string(), parentId: z.literal('') }).optional(),
 });

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { SPAWN_DISTANCE, spawnDistanceFor, spawnNextTo } from './spawn';
+import {
+  SPAWN_DISTANCE,
+  SPAWN_HEIGHT,
+  spawnDistanceFor,
+  spawnHeightFor,
+  spawnNextTo,
+} from './spawn';
 
 const player = (data: Record<string, unknown>) => ({
   object_type: 'player',
@@ -38,6 +44,11 @@ describe('spawnNextTo', () => {
     expect(preset?.position.z).toBe(-SPAWN_DISTANCE);
   });
 
+  it('raises the item above the reference', () => {
+    const preset = spawnNextTo(player({ position: { x: 0, y: 0.071, z: 0 } }), 2, 1);
+    expect(preset?.position.y).toBe(1.071);
+  });
+
   it('needs a position', () => {
     expect(spawnNextTo(player({}))).toBeNull();
   });
@@ -48,5 +59,12 @@ describe('spawnDistanceFor', () => {
     expect(spawnDistanceFor('vehicle')).toBe(8);
     expect(spawnDistanceFor('box')).toBe(SPAWN_DISTANCE);
     expect(spawnDistanceFor(undefined)).toBe(SPAWN_DISTANCE);
+  });
+});
+
+describe('spawnHeightFor', () => {
+  it('raises vehicles more than other types', () => {
+    expect(spawnHeightFor('vehicle')).toBe(1);
+    expect(spawnHeightFor('box')).toBe(SPAWN_HEIGHT);
   });
 });

@@ -26,7 +26,7 @@ import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { itemLabel } from '@/lib/itemLabel';
 import { schematicFor } from '@/lib/schematics';
-import { spawnNextTo } from '@/lib/spawn';
+import { SPAWN_DISTANCE, SPAWN_HEIGHT, spawnNextTo } from '@/lib/spawn';
 import { useItemActions } from '@/stores/itemActions';
 
 interface ObjectPageProps {
@@ -74,7 +74,7 @@ function ObjectDetails({
   const changed = useChangedKeys(item.object_data, item.object_uuid);
   const actions = useItemActions();
   const schematic = schematicFor(item.object_data.scenename);
-  const spawn = spawnNextTo(item);
+  const spawn = spawnNextTo(item, SPAWN_DISTANCE, SPAWN_HEIGHT);
   const isMoon =
     !!profile?.moonWhenParentIs &&
     parentTarget?.status === 'found' &&

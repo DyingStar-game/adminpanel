@@ -252,4 +252,24 @@ describe('ItemActionsHost', () => {
 
     expect(await gap()).toBeCloseTo(20, 1);
   });
+
+  it('raises the copy above the reference, by 1 m for a vehicle by default', async () => {
+    const bff = useInProcessBff();
+    renderHost();
+    act(() => useItemActions.getState().duplicate(ids.vehicle));
+    const originalY = (stored(bff, ids.vehicle).object_data.position as { y: number }).y;
+
+    const dialog = await screen.findByRole('dialog');
+    const height = await within(dialog).findByRole('textbox', { name: 'Height (m)' });
+    await within(dialog).findByDisplayValue('8');
+    expect(height).toHaveValue('1');
+    const y = () =>
+      Number(within(dialog).getByRole('textbox', { name: 'position y' }).getAttribute('value'));
+    expect(y()).toBeCloseTo(originalY + 1, 3);
+
+    await userEvent.clear(height);
+    await userEvent.type(height, '3');
+
+    expect(y()).toBeCloseTo(originalY + 3, 3);
+  });
 });

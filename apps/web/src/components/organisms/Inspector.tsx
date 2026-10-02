@@ -20,7 +20,7 @@ import { useChildrenCounts, useDefinitions, useItem } from '@/hooks/queries';
 import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { itemLabel } from '@/lib/itemLabel';
-import { spawnNextTo } from '@/lib/spawn';
+import { SPAWN_DISTANCE, SPAWN_HEIGHT, spawnNextTo } from '@/lib/spawn';
 import { useItemActions } from '@/stores/itemActions';
 import { PropertySections, SectionTitle } from './PropertySections';
 import { RelationsList } from './RelationsList';
@@ -76,7 +76,7 @@ function ItemDetails({
   const { refs, parentId, parentTarget, resolveRef } = useItemRefs(item);
   const changed = useChangedKeys(data, item.object_uuid);
   const actions = useItemActions();
-  const spawn = spawnNextTo(item);
+  const spawn = spawnNextTo(item, SPAWN_DISTANCE, SPAWN_HEIGHT);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
