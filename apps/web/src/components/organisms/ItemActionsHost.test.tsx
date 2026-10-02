@@ -121,11 +121,7 @@ describe('ItemActionsHost', () => {
     expect(await screen.findByText(/Spawned next to ddurieux/)).toBeInTheDocument();
     // The scenename field lists known scenes: typing "truck" finds the truck scene.
     await userEvent.type(screen.getByRole('combobox', { name: 'scenename' }), 'truck');
-    await userEvent.click(
-      await screen.findByRole('option', {
-        name: /scenes\/_universe\/vehicles\/ground\/trucks\/truck\.tscn/,
-      }),
-    );
+    await userEvent.click(await screen.findByRole('option', { name: /truck\.tscn/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Create' }));
 
     await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
@@ -136,6 +132,19 @@ describe('ItemActionsHost', () => {
       position: { x: 1, y: 0, z: 8 },
       rotation: { x: 0, y: 1.5, z: 0 },
     });
+  });
+
+  it('fills the type from a picked scene', async () => {
+    const bff = useInProcessBff();
+    const { onCreated } = renderHost();
+    act(() => useItemActions.getState().create({ parentId: ids.planet }));
+
+    await userEvent.type(await screen.findByRole('combobox', { name: 'scenename' }), 'truck');
+    await userEvent.click(await screen.findByRole('option', { name: /truck\.tscn/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Create' }));
+
+    await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
+    expect(stored(bff, onCreated.mock.calls[0]?.[0].object_uuid).object_type).toBe('vehicle');
   });
 
   it('refuses a UUID that already exists', async () => {

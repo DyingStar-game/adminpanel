@@ -182,6 +182,12 @@ export function ItemCreateSheet({
               definition={selectedType ? definition : null}
               sceneOptions={sceneOptions}
               objectType={selectedType || undefined}
+              // Picking a known scene fills the type when none is chosen yet.
+              onScenePick={(option) => {
+                if (!form.getValues('objectType') && option.objectType) {
+                  form.setValue('objectType', option.objectType, { shouldValidate: true });
+                }
+              }}
             />
           </div>
         </div>

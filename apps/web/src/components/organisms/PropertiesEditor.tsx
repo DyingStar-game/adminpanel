@@ -29,6 +29,8 @@ interface PropertiesEditorProps {
   /** Scenes suggested for `scenename`, those of `objectType` first. */
   sceneOptions?: SceneOption[];
   objectType?: string | undefined;
+  /** A known scene was picked for `scenename`. */
+  onScenePick?: (option: SceneOption) => void;
 }
 
 /**
@@ -42,6 +44,7 @@ export function PropertiesEditor({
   gameChanged,
   sceneOptions = [],
   objectType,
+  onScenePick,
 }: PropertiesEditorProps) {
   const { t } = useTranslation();
   const { fields, append, remove, update } = useFieldArray({ control, name: 'properties' });
@@ -125,6 +128,7 @@ export function PropertiesEditor({
                     id={`property-${field.id}`}
                     value={rawField.value}
                     onChange={rawField.onChange}
+                    onPick={onScenePick}
                     options={sceneOptions}
                     preferredType={objectType}
                     labels={{

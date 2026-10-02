@@ -21,6 +21,8 @@ interface SceneComboboxProps {
   id: string;
   value: string;
   onChange: (value: string) => void;
+  /** A known scene was picked from the list (e.g. to fill an empty type). */
+  onPick?: (option: SceneOption) => void;
   options: SceneOption[];
   /** Scenes of this type are listed first. */
   preferredType?: string | undefined;
@@ -44,6 +46,7 @@ export function SceneCombobox({
   id,
   value,
   onChange,
+  onPick,
   options,
   preferredType,
   labels,
@@ -58,20 +61,29 @@ export function SceneCombobox({
     };
   }, [options, value, preferredType]);
 
-  const pick = (scenename: string) => {
-    onChange(scenename);
+  const pick = (option: SceneOption) => {
+    onChange(option.scenename);
+    onPick?.(option);
     setOpen(false);
   };
   const item = (option: SceneOption) => (
     <CommandItem
       key={`${option.objectType}|${option.scenename}`}
       value={`${option.objectType}|${option.scenename}`}
-      onSelect={() => pick(option.scenename)}
+      onSelect={() => pick(option)}
       className="flex items-center gap-2"
       title={option.scenename}
     >
       {option.objectType && <TypeDot objectType={option.objectType} />}
-      <span className="min-w-0 flex-1 truncate font-mono text-xs">{option.scenename}</span>
+      {/* File name first (what people recognise), folder after, smaller. */}
+      <span className="flex min-w-0 flex-1 items-baseline gap-1.5">
+        <span className="shrink-0 font-mono text-xs font-medium">
+          {option.scenename.split('/').at(-1)}
+        </span>
+        <span className="truncate font-mono text-[10.5px] text-fg-3">
+          {option.scenename.split('/').slice(0, -1).join('/')}
+        </span>
+      </span>
       {option.count > 0 && (
         <MonoText tone="subtle" className="shrink-0 text-[10px]">
           {labels.count(option.count)}
