@@ -302,3 +302,21 @@ describe('read coalescing', () => {
     expect(persistence.calls.get('GET /items/:uuid')).toBe(2);
   });
 });
+
+describe('GET /api/items/scenes', () => {
+  it('lists scenes in use with their type and count, most used first', async () => {
+    const res = await buildApp().request('/api/items/scenes');
+
+    const body = await read(res);
+    expect(body.scenes[0]).toEqual({
+      scenename: 'scenes/_universe/vehicles/components/wheel.tscn',
+      object_type: 'vehicle_component',
+      count: 3,
+    });
+    expect(body.scenes).toContainEqual({
+      scenename: 'scenes/_universe/vehicles/ground/trucks/truck.tscn',
+      object_type: 'vehicle',
+      count: 1,
+    });
+  });
+});

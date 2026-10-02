@@ -16,7 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useDefinitions } from '@/hooks/queries';
 import { useCreateItem } from '@/hooks/mutations';
-import { useSceneNames } from '@/hooks/useSceneNames';
+import { useSceneOptions } from '@/hooks/useScenes';
 import { useWriteTarget } from '@/hooks/useWriteTarget';
 import { ApiError } from '@/lib/api';
 import { dataFromRows, toRaw } from '@/lib/propertyForm';
@@ -71,14 +71,7 @@ export function ItemCreateSheet({
     },
   });
   const selectedType = useWatch({ control: form.control, name: 'objectType' });
-  const scenes = useSceneNames(selectedType || undefined);
-  /** Puts a known scene in the `scenename` property (added back if the user removed it). */
-  const pickScene = (scene: string) => {
-    const rows = form.getValues('properties');
-    const index = rows.findIndex((row) => row.key === 'scenename');
-    if (index >= 0) form.setValue(`properties.${index}.raw`, scene, { shouldDirty: true });
-    else form.setValue('properties', [...rows, { key: 'scenename', kind: 'text', raw: scene }]);
-  };
+  const sceneOptions = useSceneOptions();
   const definition = definitions.data
     ? (definitions.data.definitions.find((d) => d.type === selectedType) ?? null)
     : undefined;
@@ -180,26 +173,6 @@ export function ItemCreateSheet({
               {t('editor.spawnHint', { label: spawn.nearLabel })}
             </p>
           )}
-          {(scenes.data?.length ?? 0) > 0 && (
-            <div className="flex flex-col gap-1">
-              <span className="text-[11px] text-fg-3">{t('editor.knownScenes')}</span>
-              <div className="flex flex-wrap gap-1">
-                {scenes.data?.slice(0, 8).map((scene) => (
-                  <Button
-                    key={scene}
-                    type="button"
-                    variant="outline"
-                    size="xs"
-                    className="max-w-full truncate font-mono"
-                    title={scene}
-                    onClick={() => pickScene(scene)}
-                  >
-                    {scene.split('/').at(-1)}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
           <div className="flex flex-col gap-1.5">
             <span className="text-sm font-medium">object_data</span>
             <PropertiesEditor
@@ -207,6 +180,8 @@ export function ItemCreateSheet({
               control={form.control as unknown as Control<PropertiesFormValues>}
               errors={errors as FieldErrors<PropertiesFormValues>}
               definition={selectedType ? definition : null}
+              sceneOptions={sceneOptions}
+              objectType={selectedType || undefined}
             />
           </div>
         </div>

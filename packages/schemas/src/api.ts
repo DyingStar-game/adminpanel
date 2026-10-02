@@ -39,6 +39,15 @@ export const ExistsRequestSchema = z.object({ uuids: z.array(z.string().min(1)).
 export const ExistsResponseSchema = z.object({ existing: z.array(z.string()) });
 export type ExistsResponse = z.infer<typeof ExistsResponseSchema>;
 
+/** `GET /api/scenes` — `scenename` values in use, with their type and count. */
+export const SceneUsageSchema = z.object({
+  scenename: z.string(),
+  object_type: z.string(),
+  count: z.number().int().positive(),
+});
+export type SceneUsage = z.infer<typeof SceneUsageSchema>;
+export const ScenesResponseSchema = z.object({ scenes: z.array(SceneUsageSchema) });
+
 /**
  * `PUT /api/items/:uuid` — field-level merge on top of the latest stored version (ADR 0009).
  * `base` is the `object_data` the user started editing from; `changes` holds the top-level keys

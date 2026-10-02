@@ -119,7 +119,13 @@ describe('ItemActionsHost', () => {
     );
 
     expect(await screen.findByText(/Spawned next to ddurieux/)).toBeInTheDocument();
-    await userEvent.click(await screen.findByRole('button', { name: 'truck.tscn' }));
+    // The scenename field lists known scenes: typing "truck" finds the truck scene.
+    await userEvent.type(screen.getByRole('combobox', { name: 'scenename' }), 'truck');
+    await userEvent.click(
+      await screen.findByRole('option', {
+        name: /scenes\/_universe\/vehicles\/ground\/trucks\/truck\.tscn/,
+      }),
+    );
     await userEvent.click(screen.getByRole('button', { name: 'Create' }));
 
     await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());

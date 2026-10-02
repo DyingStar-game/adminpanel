@@ -18,6 +18,8 @@ export const itemsRoutes = new Hono<ServerContext>()
     const types = (await c.var.definitions.list()).definitions.map((d) => d.type);
     return c.json(await c.var.items.list(parseQuery(c, createListItemsQuerySchema(types))));
   })
+  // Declared before `/:uuid` so `scenes` is not read as an item UUID.
+  .get('/scenes', async (c) => c.json({ scenes: await c.var.items.scenes() }))
   .post('/exists', validate('json', ExistsRequestSchema), async (c) =>
     c.json({ existing: await c.var.items.exists(c.req.valid('json').uuids) }),
   )

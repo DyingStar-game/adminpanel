@@ -12,6 +12,7 @@ import type { ObjectDefinition } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { PropertyInput } from '@/components/molecules/PropertyInput';
+import { SceneCombobox, type SceneOption } from '@/components/molecules/SceneCombobox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,9 @@ interface PropertiesEditorProps {
   definition: ObjectDefinition | null | undefined;
   /** Keys the game changed since editing started (ADR 0009). */
   gameChanged?: ReadonlySet<string>;
+  /** Scenes suggested for `scenename`, those of `objectType` first. */
+  sceneOptions?: SceneOption[];
+  objectType?: string | undefined;
 }
 
 /**
@@ -36,6 +40,8 @@ export function PropertiesEditor({
   errors,
   definition,
   gameChanged,
+  sceneOptions = [],
+  objectType,
 }: PropertiesEditorProps) {
   const { t } = useTranslation();
   const { fields, append, remove, update } = useFieldArray({ control, name: 'properties' });
@@ -113,16 +119,33 @@ export function PropertiesEditor({
             <Controller
               control={control}
               name={`properties.${index}.raw`}
-              render={({ field: rawField }) => (
-                <PropertyInput
-                  id={`property-${field.id}`}
-                  label={field.key}
-                  kind={rows[index]?.kind ?? field.kind}
-                  value={rawField.value}
-                  onChange={rawField.onChange}
-                  invalid={!!message}
-                />
-              )}
+              render={({ field: rawField }) =>
+                field.key === 'scenename' && (rows[index]?.kind ?? field.kind) === 'text' ? (
+                  <SceneCombobox
+                    id={`property-${field.id}`}
+                    value={rawField.value}
+                    onChange={rawField.onChange}
+                    options={sceneOptions}
+                    preferredType={objectType}
+                    labels={{
+                      field: 'scenename',
+                      preferred: t('editor.scenesOfType', { type: objectType ?? '' }),
+                      others: t('editor.scenesOther'),
+                      empty: t('editor.scenesEmpty'),
+                      count: (count) => t('table.count', { count }),
+                    }}
+                  />
+                ) : (
+                  <PropertyInput
+                    id={`property-${field.id}`}
+                    label={field.key}
+                    kind={rows[index]?.kind ?? field.kind}
+                    value={rawField.value}
+                    onChange={rawField.onChange}
+                    invalid={!!message}
+                  />
+                )
+              }
             />
             {message && (
               <span role="alert" className="text-[11px] text-destructive">

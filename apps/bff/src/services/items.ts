@@ -9,6 +9,7 @@ import {
   type Item,
   type ListItemsQuery,
   type PaginatedItems,
+  type SceneUsage,
 } from '@dyingstar-admin/schemas';
 import type { PersistenceClient } from '../clients/persistence';
 import { ApiError, notFound } from '../lib/errors';
@@ -20,6 +21,8 @@ export const MAX_ANCESTOR_DEPTH = 32;
 /** Below this many UUIDs, existence is checked item by item instead of a full scan. */
 const EXISTS_DIRECT_LOOKUP_MAX = 50;
 const SCAN_PAGE_SIZE = 10_000;
+/** Lifetime of the known scenes list (one full scan per refresh). */
+const SCENES_TTL_MS = 5 * 60 * 1000;
 
 export interface ItemsServiceOptions {
   client: PersistenceClient;
@@ -63,6 +66,35 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
       });
     }
   }
+
+  /** Every item, page by page (full scan: reserved to rare, cached or explicit uses). */
+  async function scanAll(): Promise<Item[]> {
+    const all: Item[] = [];
+    for (let page = 1; ; page++) {
+      const res = await client.list({ page, page_size: SCAN_PAGE_SIZE });
+      all.push(...res.items);
+      if (res.items.length < SCAN_PAGE_SIZE || page * SCAN_PAGE_SIZE >= res.total) break;
+    }
+    return all;
+  }
+
+  // Known scenes change rarely and need a full scan: cached for a few minutes.
+  const scenes = new LRUCache<'scenes', SceneUsage[]>({
+    max: 1,
+    ttl: SCENES_TTL_MS,
+    fetchMethod: async () => {
+      const counts = new Map<string, SceneUsage>();
+      for (const item of await scanAll()) {
+        const scenename = item.object_data.scenename;
+        if (typeof scenename !== 'string' || !scenename) continue;
+        const key = `${item.object_type}|${scenename}`;
+        const entry = counts.get(key) ?? { scenename, object_type: item.object_type, count: 0 };
+        entry.count += 1;
+        counts.set(key, entry);
+      }
+      return [...counts.values()].sort((a, b) => b.count - a.count);
+    },
+  });
 
   async function getOrThrow(uuid: string): Promise<Item> {
     const item = await get(uuid);
@@ -118,6 +150,11 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
       return { total: all, byType, other: Math.max(all - known, 0) };
     },
 
+    /** `scenename` values in use, with their type and count, most used first. */
+    async scenes(): Promise<SceneUsage[]> {
+      return (await scenes.fetch('scenes')) ?? [];
+    },
+
     /** Exact existence check (ADR 0004): direct lookups when few, one full scan otherwise. */
     async exists(uuids: string[]): Promise<string[]> {
       const wanted = [...new Set(uuids)];
@@ -127,12 +164,7 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
         );
         return found.filter((uuid): uuid is string => uuid !== null);
       }
-      const known = new Set<string>();
-      for (let page = 1; ; page++) {
-        const res = await client.list({ page, page_size: SCAN_PAGE_SIZE });
-        res.items.forEach((item) => known.add(item.object_uuid));
-        if (res.items.length < SCAN_PAGE_SIZE || page * SCAN_PAGE_SIZE >= res.total) break;
-      }
+      const known = new Set((await scanAll()).map((item) => item.object_uuid));
       return wanted.filter((uuid) => known.has(uuid));
     },
 

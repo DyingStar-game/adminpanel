@@ -141,7 +141,9 @@ export const en = {
     spawnNext: 'Spawn next to it',
     spawnHint:
       'Spawned next to {{label}}: same parent, 2 m in front of it, same orientation. Positions are relative to the parent; the game currently does not report player positions to the API, so the last saved one is used.',
-    knownScenes: 'Scenes already used by this type:',
+    scenesOfType: 'Used by {{type}}',
+    scenesOther: 'Other scenes',
+    scenesEmpty: 'No known scene matches: the typed value is kept.',
   },
   schematic: {
     title: 'Schematic',

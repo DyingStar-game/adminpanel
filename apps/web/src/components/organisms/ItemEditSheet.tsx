@@ -18,6 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useDefinitions, useItem } from '@/hooks/queries';
 import { useUpdateItem } from '@/hooks/mutations';
+import { useSceneOptions } from '@/hooks/useScenes';
 import { useWriteTarget } from '@/hooks/useWriteTarget';
 import { ApiError } from '@/lib/api';
 import { itemLabel } from '@/lib/itemLabel';
@@ -58,6 +59,7 @@ function EditForm({
     : undefined;
   const { isProduction, server } = useWriteTarget();
   const update = useUpdateItem();
+  const sceneOptions = useSceneOptions();
   const [pending, setPending] = useState<{
     changes: Record<string, unknown>;
     removed: string[];
@@ -137,6 +139,8 @@ function EditForm({
             errors={form.formState.errors}
             definition={definition}
             gameChanged={gameChanged}
+            sceneOptions={sceneOptions}
+            objectType={base.object_type}
           />
         </div>
       </ScrollArea>
