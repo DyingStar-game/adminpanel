@@ -80,7 +80,8 @@ Check shapes against live data rather than guessing (**GET only**, never POST / 
 - Persistence `POST` and `PUT` are upserts; `DELETE` always answers 204 and does not notify the
   game. The BFF adds 409 on create, merge-on-save, and refuses unknown types (ADR 0009, 0015).
 - The game saves an item about **every 60 s** by design: the admin cannot be more live than that.
-  Player positions are not reported yet (players sit at their apartment slot).
+  Player positions do not reach persistence yet (players sit at their apartment slot): a
+  persistence bug the back team is fixing; the map and the move arrow will show them as is.
 - Vehicle `components.Slot_*` are component compartments (not wheels); `seats` map seat names to
   player UUIDs or `""`.
 

@@ -27,10 +27,17 @@ when a step needs a new decision, it is written as a new ADR before coding.
 ### Open questions
 
 - Pole axis and longitude 0 of the bodies (assumed +Y and +Z): to confirm with the game team.
-- `doors.Cube_004` … `Cube_007` on trucks: which doors they are, to draw them on the schematic.
-- Truck `suspension` (one value per wheel): mapping unknown, left out of the schematic.
 - Offered, not decided: map refresh every 15 s instead of 5 s (the game saves every ~60 s);
-  hide overlapping names on the map.
+  hide overlapping names on the map; lighter muted text; Add an item on the orbit view and the
+  map; collapsible sidebar.
+
+Settled (2026-10-02):
+
+- Truck doors (`doors.Cube_004` … `Cube_007`): they will change soon in the game; the schematic
+  stays as it is until then.
+- Truck `suspension`: not important, left out of the schematic.
+- Player positions: not reaching persistence is a persistence bug, fixed by the back team; no
+  change needed in the admin (the map and the move arrow show them once they are saved).
 
 ## Conventions for every step
 
