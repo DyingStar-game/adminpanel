@@ -89,6 +89,8 @@ export const en = {
     more_other: '+{{count}} more',
     reference: 'uuid reference',
     hint: 'click: inspect · double-click: centre',
+    close: 'Close',
+    closeAll: 'Close all groups',
     center: 'Centre graph',
   },
   editor: {

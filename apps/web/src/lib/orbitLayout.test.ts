@@ -27,7 +27,7 @@ describe('orbitLayout', () => {
         { objectType: 'vehicle_component', total: 4 },
         { objectType: 'box', total: 3 },
       ],
-      open: null,
+      open: [],
       refs: [],
     });
 
@@ -52,7 +52,7 @@ describe('orbitLayout', () => {
       center: entity('c'),
       parent: null,
       clusters: [{ objectType: 'box', total: 20 }],
-      open: { objectType: 'box', items, hasMore: true },
+      open: [{ objectType: 'box', items, hasMore: true }],
       refs: [],
     });
 
@@ -66,12 +66,53 @@ describe('orbitLayout', () => {
     expect(nodes.some((n) => n.kind === 'more')).toBe(true);
   });
 
+  it('opens several clusters at once, neighbours on alternate rings without overlap', () => {
+    const page = (type: string) => ({
+      objectType: type,
+      items: Array.from({ length: 8 }, (_, i) => entity(`${type}${i}`, type)),
+      hasMore: false,
+    });
+    const types = ['a', 'b', 'c', 'd', 'e', 'f'];
+    const { nodes } = orbitLayout({
+      center: entity('c0'),
+      parent: null,
+      clusters: types.map((objectType) => ({ objectType, total: 8 })),
+      open: [page('b'), page('c'), page('d')],
+      refs: [],
+    });
+
+    const radius = (type: string) => {
+      const cluster = nodes.find((n) => n.id === `cluster:${type}`);
+      return cluster ? Math.round(distance(cluster, { x: 0, y: 0 })) : 0;
+    };
+    const radii = orbitRadii(types.length);
+    // Positions are rounded to the pixel.
+    const near = (actual: number, expected: number) =>
+      expect(Math.abs(actual - expected)).toBeLessThanOrEqual(1);
+    near(radius('b'), radii.openCluster);
+    near(radius('c'), radii.openClusterOuter);
+    near(radius('d'), radii.openCluster);
+    near(radius('a'), radii.cluster);
+    const kids = nodes.filter((n) => n.kind === 'child');
+    expect(kids).toHaveLength(24);
+    // Children of different clusters keep apart (a node is about 40 px tall).
+    const typeOf = (node: (typeof kids)[number]) =>
+      'entity' in node ? node.entity.objectType : '';
+    for (const kid of kids) {
+      for (const other of kids) {
+        if (typeOf(kid) !== typeOf(other)) {
+          expect(distance(kid, other)).toBeGreaterThan(40);
+        }
+      }
+    }
+  });
+
   it('draws an entity referenced several times once, with every role on its edge', () => {
     const { nodes, edges } = orbitLayout({
       center: entity('c'),
       parent: entity('p', 'planet'),
       clusters: [],
-      open: null,
+      open: [],
       refs: [
         { ...entity('pilot', 'player'), path: 'pilot_uuid', role: 'pilot' },
         { ...entity('pilot', 'player'), path: 'seats.SeatDriver', role: 'SeatDriver' },

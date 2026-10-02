@@ -18,7 +18,7 @@ function OrbitRoute() {
         void navigate({
           to: '/orbit/$uuid',
           params: { uuid: target },
-          search: { page: 1, selected },
+          search: { selected },
         })
       }
       onOpenPage={(target) => void navigate({ to: '/items/$uuid', params: { uuid: target } })}

@@ -15,7 +15,7 @@ function ObjectRoute() {
       }
       onOpenInExplorer={(item) => void navigate({ to: '/explorer', search: searchForItem(item) })}
       onOpenOrbit={(target) =>
-        void navigate({ to: '/orbit/$uuid', params: { uuid: target }, search: { page: 1 } })
+        void navigate({ to: '/orbit/$uuid', params: { uuid: target }, search: {} })
       }
       onOpenMap={(target) => void navigate({ to: '/map/$uuid', params: { uuid: target } })}
     />

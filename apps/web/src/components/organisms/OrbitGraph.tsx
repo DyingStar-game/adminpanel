@@ -22,7 +22,8 @@ interface OrbitGraphProps {
   nodes: OrbitNode[];
   edges: OrbitEdge[];
   selectedId: string | undefined;
-  labels: { more: string };
+  /** `more` labels the "more" node of an open cluster (one per open cluster). */
+  labels: { more: (objectType: string) => string };
   /** Click on an entity: inspect it. */
   onSelect: (uuid: string) => void;
   /** Double-click on an entity: centre the graph on it. */
@@ -212,7 +213,11 @@ function Graph({
         id: node.id,
         type: 'orbit',
         position: { x: node.x, y: node.y },
-        data: { node, selected: node.id === selectedId, moreLabel: labels.more },
+        data: {
+          node,
+          selected: node.id === selectedId,
+          moreLabel: node.kind === 'more' ? labels.more(node.objectType) : '',
+        },
         draggable: false,
         connectable: false,
         ariaLabel:
@@ -220,9 +225,9 @@ function Graph({
             ? node.entity.label
             : node.kind === 'cluster'
               ? node.objectType
-              : labels.more,
+              : labels.more(node.objectType),
       })),
-    [nodes, selectedId, labels.more],
+    [nodes, selectedId, labels],
   );
   const flowEdges: Edge[] = useMemo(
     () =>

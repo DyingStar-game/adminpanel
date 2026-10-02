@@ -91,6 +91,8 @@ export const fr: Translations = {
     more_other: '+{{count}} autres',
     reference: 'référence uuid',
     hint: 'clic : inspecter · double-clic : centrer',
+    close: 'Fermer',
+    closeAll: 'Fermer tous les groupes',
     center: 'Centrer le graphe',
   },
   editor: {

@@ -12,7 +12,7 @@ function renderOrbit(uuid: string, initial: Partial<OrbitSearch> = {}) {
   const onSearchChange = vi.fn();
   const onRecenter = vi.fn();
   function Harness() {
-    const [search, setSearch] = useState<OrbitSearch>({ page: 1, ...initial });
+    const [search, setSearch] = useState<OrbitSearch>({ open: [], pages: {}, ...initial });
     return (
       <div style={{ width: 1200, height: 800 }}>
         <OrbitPage
@@ -79,9 +79,35 @@ describe('OrbitPage', () => {
 
     fireEvent.click(await node('vehicle_component'));
 
-    expect(onSearchChange).toHaveBeenLastCalledWith({ page: 1, open: 'vehicle_component' });
+    expect(onSearchChange).toHaveBeenLastCalledWith({
+      open: ['vehicle_component'],
+      pages: {},
+    });
     expect(await node('Slot_FL')).toBeInTheDocument();
     expect(await screen.findByText('1–2 of 2')).toBeInTheDocument();
+  });
+
+  it('keeps several clusters open at once and closes them one by one or all', async () => {
+    useInProcessBff();
+    const { onSearchChange } = renderOrbit(ids.planet);
+
+    fireEvent.click(await node('vehicle'));
+    fireEvent.click(await node('spawnbuilding'));
+
+    expect(onSearchChange).toHaveBeenLastCalledWith({
+      open: ['vehicle', 'spawnbuilding'],
+      pages: {},
+    });
+    // Unnamed children of an open cluster show their short UUID.
+    expect(await node('4e9a9ff9')).toBeInTheDocument();
+    expect(await node('tarsis_4-1006')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Close · vehicle' }));
+    expect(onSearchChange).toHaveBeenLastCalledWith({ open: ['spawnbuilding'], pages: {} });
+
+    fireEvent.click(await node('miningrock'));
+    await userEvent.click(await screen.findByRole('button', { name: 'Close all groups' }));
+    expect(onSearchChange).toHaveBeenLastCalledWith({ open: [], pages: {} });
   });
 
   it('inspects on click and re-centres on double-click', async () => {
@@ -90,7 +116,11 @@ describe('OrbitPage', () => {
 
     fireEvent.click(await node('SandBox'));
     await waitFor(() =>
-      expect(onSearchChange).toHaveBeenLastCalledWith({ page: 1, selected: ids.planet }),
+      expect(onSearchChange).toHaveBeenLastCalledWith({
+        open: [],
+        pages: {},
+        selected: ids.planet,
+      }),
     );
 
     const sandbox = await node('SandBox');

@@ -19,7 +19,7 @@ function MapRoute() {
         void navigate({ to: '/explorer', search: { parent: target, scope: 'level', page: 1 } })
       }
       onOpenOrbit={(target) =>
-        void navigate({ to: '/orbit/$uuid', params: { uuid: target }, search: { page: 1 } })
+        void navigate({ to: '/orbit/$uuid', params: { uuid: target }, search: {} })
       }
     />
   );

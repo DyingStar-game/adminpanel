@@ -15,13 +15,19 @@ export interface OrbitInput {
   parent: OrbitEntity | null;
   /** Children grouped by type, with their count. */
   clusters: { objectType: string; total: number }[];
-  /** The cluster currently opened, with the page of children loaded for it. */
-  open: { objectType: string; items: OrbitEntity[]; hasMore: boolean } | null;
+  /** Clusters currently opened (several at once), with the page of children loaded for each. */
+  open: OpenCluster[];
   /**
    * Outgoing references (pilot, seats, components…), already resolved. `role` names the
    * reference on the graph (e.g. `pilot`, `SeatDriver`).
    */
   refs: (OrbitEntity & { path: string; role: string })[];
+}
+
+export interface OpenCluster {
+  objectType: string;
+  items: OrbitEntity[];
+  hasMore: boolean;
 }
 
 export type OrbitNode =
@@ -76,6 +82,9 @@ export function orbitRadii(clusterCount: number) {
     cluster,
     /** An open cluster moves outwards only when neighbours would overlap its children. */
     openCluster: clusterCount >= CROWDED_CLUSTERS ? cluster + 160 : cluster,
+    /** Second ring for an open cluster whose previous neighbour is open too (no overlap). */
+    openClusterOuter:
+      (clusterCount >= CROWDED_CLUSTERS ? cluster + 160 : cluster) + 2 * ORBIT.childRadius + 40,
     ref: Math.max(cluster, parent) + 120,
   };
 }
@@ -117,11 +126,26 @@ export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: Orb
 
   // Children clusters around the right, bottom and left sides (the top is the parent's).
   const clusterAngles = spread(input.clusters.length, -30, 210);
+  const opened = new Map(input.open.map((o) => [o.objectType, o]));
+  // Ring of the previous cluster when it was open: neighbours alternate between two rings.
+  let previousRing: 'inner' | 'outer' | null = null;
   input.clusters.forEach((cluster, i) => {
     const angle = clusterAngles[i] ?? 0;
     const id = `cluster:${cluster.objectType}`;
-    const open = input.open?.objectType === cluster.objectType;
-    const position = polar(0, 0, open ? radii.openCluster : radii.cluster, angle);
+    const openCluster = opened.get(cluster.objectType);
+    const open = !!openCluster;
+    const ring = open ? (previousRing === 'inner' ? 'outer' : 'inner') : null;
+    previousRing = ring;
+    const position = polar(
+      0,
+      0,
+      ring === 'outer'
+        ? radii.openClusterOuter
+        : ring === 'inner'
+          ? radii.openCluster
+          : radii.cluster,
+      angle,
+    );
     nodes.push({
       id,
       kind: 'cluster',
@@ -133,9 +157,9 @@ export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: Orb
     edges.push({ id: `edge:${id}`, source: centerId, target: id, kind: 'cluster' });
 
     // An open cluster fans its children outwards, away from the centre.
-    if (open && input.open) {
-      const items = input.open.items.slice(0, ORBIT.pageSize);
-      const slots = items.length + (input.open.hasMore ? 1 : 0);
+    if (openCluster) {
+      const items = openCluster.items.slice(0, ORBIT.pageSize);
+      const slots = items.length + (openCluster.hasMore ? 1 : 0);
       const angles = spread(slots, angle - 80, angle + 80);
       items.forEach((entity, j) => {
         nodes.push({
@@ -146,7 +170,7 @@ export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: Orb
         });
         edges.push({ id: `child:${entity.uuid}`, source: id, target: entity.uuid, kind: 'child' });
       });
-      if (input.open.hasMore) {
+      if (openCluster.hasMore) {
         nodes.push({
           id: `more:${cluster.objectType}`,
           kind: 'more',

@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon, CompassIcon, ExpandIcon } from 'lucide-react';
+import { useCallback, useMemo } from 'react';
+import { ChevronLeftIcon, ChevronRightIcon, CompassIcon, ExpandIcon, XIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Item } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
@@ -9,11 +9,11 @@ import { Inspector } from '@/components/organisms/Inspector';
 import { OrbitGraph } from '@/components/organisms/OrbitGraph';
 import { OrbitLayout } from '@/components/templates/OrbitLayout';
 import { Button } from '@/components/ui/button';
-import { useAncestors, useChildrenCounts, useItem, useItemsPage } from '@/hooks/queries';
+import { useAncestors, useChildrenCounts, useItem, useItemsPages } from '@/hooks/queries';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { itemLabel, shortUuid } from '@/lib/itemLabel';
 import { ORBIT, orbitLayout, type OrbitEntity } from '@/lib/orbitLayout';
-import type { OrbitSearch } from '@/lib/orbitSearch';
+import { pageOf, setClusterPage, toggleCluster, type OrbitSearch } from '@/lib/orbitSearch';
 import { orderChildTypes, profileFor, relationFor, type TypeProfile } from '@/lib/profiles';
 
 /**
@@ -67,17 +67,23 @@ function Orbit({
   const counts = useChildrenCounts(item.object_uuid, true, { live: true });
   const ancestors = useAncestors(item.object_uuid);
   const { refs, parentTarget, parentId, resolveRef } = useItemRefs(item);
-  const openType =
-    search.open && counts.data?.byType.some((c) => c.object_type === search.open)
-      ? search.open
-      : undefined;
-  const children = useItemsPage(
-    { parentId: item.object_uuid, objectType: openType },
-    search.page,
+  // Open clusters still present among the children, in the order they were opened.
+  const openTypes = useMemo(
+    () => search.open.filter((type) => counts.data?.byType.some((c) => c.object_type === type)),
+    [search.open, counts.data],
+  );
+  const loaded = useItemsPages(
+    openTypes.map((type) => ({
+      filter: { parentId: item.object_uuid, objectType: type },
+      page: pageOf(search, type),
+    })),
     ORBIT.pageSize,
     { live: true },
   );
-  const openTotal = counts.data?.byType.find((c) => c.object_type === openType)?.total ?? 0;
+  const totalOf = useCallback(
+    (type: string) => counts.data?.byType.find((c) => c.object_type === type)?.total ?? 0,
+    [counts.data],
+  );
 
   const layout = useMemo(() => {
     const profile = profileFor(item.object_type);
@@ -92,20 +98,23 @@ function Orbit({
         objectType: type,
         total: byType.get(type) ?? 0,
       })),
-      open:
-        openType && children.data && !children.isPlaceholderData
-          ? {
-              objectType: openType,
-              // The cluster already names the type: unnamed children show their short UUID.
-              items: children.data.items.map((child) => {
-                const entity = toEntity(child);
-                return entity.label.startsWith(`${child.object_type} `)
-                  ? { ...entity, label: shortUuid(child.object_uuid) }
-                  : entity;
-              }),
-              hasMore: search.page * ORBIT.pageSize < openTotal,
-            }
-          : null,
+      open: openTypes.flatMap((type, i) => {
+        const data = loaded[i];
+        if (!data) return [];
+        return [
+          {
+            objectType: type,
+            // The cluster already names the type: unnamed children show their short UUID.
+            items: data.items.map((child) => {
+              const entity = toEntity(child);
+              return entity.label.startsWith(`${child.object_type} `)
+                ? { ...entity, label: shortUuid(child.object_uuid) }
+                : entity;
+            }),
+            hasMore: pageOf(search, type) * ORBIT.pageSize < totalOf(type),
+          },
+        ];
+      }),
       refs: refs.flatMap((ref) => {
         const target = resolveRef(ref.uuid);
         // A reference to one of the centre's children (e.g. a vehicle's components) is already
@@ -137,11 +146,10 @@ function Orbit({
     counts.data,
     parentId,
     parentTarget,
-    openType,
-    children.data,
-    children.isPlaceholderData,
-    search.page,
-    openTotal,
+    openTypes,
+    loaded,
+    search,
+    totalOf,
     refs,
     resolveRef,
   ]);
@@ -154,8 +162,25 @@ function Orbit({
     })),
     { id: item.object_uuid, label: itemLabel(item), objectType: item.object_type },
   ];
-  const from = (search.page - 1) * ORBIT.pageSize + 1;
-  const to = Math.min(search.page * ORBIT.pageSize, openTotal);
+  /** Range shown in an open cluster: first and last child of its page. */
+  const rangeOf = (type: string) => {
+    const page = pageOf(search, type);
+    return {
+      from: (page - 1) * ORBIT.pageSize + 1,
+      to: Math.min(page * ORBIT.pageSize, totalOf(type)),
+      total: totalOf(type),
+      page,
+    };
+  };
+  const moreLabel = useCallback(
+    (type: string) => {
+      const page = search.pages[type] ?? 1;
+      const total = counts.data?.byType.find((c) => c.object_type === type)?.total ?? 0;
+      return t('orbit.more', { count: Math.max(total - page * ORBIT.pageSize, 0) });
+    },
+    [search.pages, counts.data, t],
+  );
+  const graphLabels = useMemo(() => ({ more: moreLabel }), [moreLabel]);
 
   return (
     <OrbitLayout
@@ -165,13 +190,11 @@ function Orbit({
           nodes={layout.nodes}
           edges={layout.edges}
           selectedId={search.selected}
-          labels={{ more: t('orbit.more', { count: Math.max(openTotal - to, 0) }) }}
+          labels={graphLabels}
           onSelect={(uuid) => onSearchChange({ ...search, selected: uuid })}
           onRecenter={(uuid) => onRecenter(uuid, uuid)}
-          onToggleCluster={(type) =>
-            onSearchChange({ ...search, open: type === openType ? undefined : type, page: 1 })
-          }
-          onMore={() => onSearchChange({ ...search, page: search.page + 1 })}
+          onToggleCluster={(type) => onSearchChange(toggleCluster(search, type))}
+          onMore={(type) => onSearchChange(setClusterPage(search, type, pageOf(search, type) + 1))}
         />
       }
       overlays={
@@ -191,31 +214,60 @@ function Orbit({
               {t('objectPage.explorer')}
             </Button>
           </div>
-          {openType && (
-            <div className="absolute bottom-3.5 left-4 flex items-center gap-2 rounded-lg border bg-background px-3 py-2 text-xs">
-              <TypeDot objectType={openType} />
-              <MonoText className="font-semibold">{openType}</MonoText>
-              <span className="text-fg-2">
-                {t('pagination.range', { from, to, total: openTotal })}
-              </span>
-              <Button
-                variant="outline"
-                size="icon-xs"
-                aria-label={t('pagination.previous')}
-                disabled={search.page <= 1}
-                onClick={() => onSearchChange({ ...search, page: search.page - 1 })}
-              >
-                <ChevronLeftIcon />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon-xs"
-                aria-label={t('pagination.next')}
-                disabled={to >= openTotal}
-                onClick={() => onSearchChange({ ...search, page: search.page + 1 })}
-              >
-                <ChevronRightIcon />
-              </Button>
+          {openTypes.length > 0 && (
+            <div className="absolute bottom-3.5 left-4 flex flex-col gap-1.5 rounded-lg border bg-background px-3 py-2 text-xs">
+              {openTypes.map((type) => {
+                const range = rangeOf(type);
+                return (
+                  <div key={type} className="flex items-center gap-2">
+                    <TypeDot objectType={type} />
+                    <MonoText className="min-w-0 flex-1 truncate font-semibold">{type}</MonoText>
+                    <span className="text-fg-2">
+                      {t('pagination.range', {
+                        from: range.from,
+                        to: range.to,
+                        total: range.total,
+                      })}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon-xs"
+                      aria-label={`${t('pagination.previous')} · ${type}`}
+                      disabled={range.page <= 1}
+                      onClick={() => onSearchChange(setClusterPage(search, type, range.page - 1))}
+                    >
+                      <ChevronLeftIcon />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon-xs"
+                      aria-label={`${t('pagination.next')} · ${type}`}
+                      disabled={range.to >= range.total}
+                      onClick={() => onSearchChange(setClusterPage(search, type, range.page + 1))}
+                    >
+                      <ChevronRightIcon />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label={`${t('orbit.close')} · ${type}`}
+                      onClick={() => onSearchChange(toggleCluster(search, type))}
+                    >
+                      <XIcon />
+                    </Button>
+                  </div>
+                );
+              })}
+              {openTypes.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  className="self-start"
+                  onClick={() => onSearchChange({ ...search, open: [], pages: {} })}
+                >
+                  {t('orbit.closeAll')}
+                </Button>
+              )}
             </div>
           )}
           <div className="absolute right-4 bottom-3.5 flex flex-col gap-1.5 rounded-lg border bg-background px-3 py-2.5 text-[11px] text-fg-2">

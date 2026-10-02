@@ -105,6 +105,31 @@ export function useItemsPage(
   });
 }
 
+/**
+ * Several list pages at once (open clusters of the orbit view). Resolves to one page per
+ * request, in order, or null while it loads or still shows the previous page's placeholder;
+ * the array is stable while the results do not change.
+ */
+export function useItemsPages(
+  requests: { filter: ListFilter; page: number }[],
+  pageSize: number,
+  { live = false }: LiveOption = {},
+) {
+  const serverId = useServerId();
+  const refetchInterval = useLiveInterval('list', live);
+  return useQueries({
+    queries: requests.map(({ filter, page }) => ({
+      queryKey: queryKeys.list(serverId, filter, page, pageSize),
+      queryFn: () => apiGet(listPath(filter, page, pageSize), PaginatedItemsSchema, { serverId }),
+      enabled: !!serverId,
+      placeholderData: keepPreviousData,
+      refetchInterval,
+    })),
+    combine: (results) =>
+      results.map((result) => (result.data && !result.isPlaceholderData ? result.data : null)),
+  });
+}
+
 /** "Load more" listing used by tree levels (ADR 0005). */
 export function useItemsInfinite(
   filter: ListFilter,
