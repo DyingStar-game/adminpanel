@@ -1,4 +1,4 @@
-import { CompassIcon, NetworkIcon } from 'lucide-react';
+import { CompassIcon, NetworkIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Item } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
@@ -17,6 +17,7 @@ import { useAncestors, useDefinitions, useItem } from '@/hooks/queries';
 import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { itemLabel } from '@/lib/itemLabel';
+import { useItemActions } from '@/stores/itemActions';
 
 interface ObjectPageProps {
   uuid: string;
@@ -61,6 +62,7 @@ function ObjectDetails({
   const ancestors = useAncestors(item.object_uuid);
   const { refs, parentId, parentTarget, resolveRef, profile } = useItemRefs(item);
   const changed = useChangedKeys(item.object_data, item.object_uuid);
+  const actions = useItemActions();
   const isMoon =
     !!profile?.moonWhenParentIs &&
     parentTarget?.status === 'found' &&
@@ -104,6 +106,19 @@ function ObjectDetails({
             <Button variant="outline" size="sm" onClick={() => onOpenOrbit(item.object_uuid)}>
               <NetworkIcon />
               {t('objectPage.orbit')}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => actions.edit(item.object_uuid)}>
+              <PencilIcon />
+              {t('editor.edit')}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive"
+              onClick={() => actions.remove(item.object_uuid)}
+            >
+              <Trash2Icon />
+              {t('editor.delete')}
             </Button>
           </div>
           <MonoText tone="subtle" className="text-[11px] break-all">

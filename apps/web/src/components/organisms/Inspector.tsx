@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ExpandIcon, LocateFixedIcon, NetworkIcon } from 'lucide-react';
+import { ExpandIcon, LocateFixedIcon, NetworkIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Item } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
@@ -13,6 +13,7 @@ import { useChildrenCounts, useDefinitions, useItem } from '@/hooks/queries';
 import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { itemLabel } from '@/lib/itemLabel';
+import { useItemActions } from '@/stores/itemActions';
 import { PropertySections, SectionTitle } from './PropertySections';
 import { RelationsList } from './RelationsList';
 
@@ -66,6 +67,7 @@ function ItemDetails({
   const counts = useChildrenCounts(item.object_uuid, true, { live: true });
   const { refs, parentId, parentTarget, resolveRef } = useItemRefs(item);
   const changed = useChangedKeys(data, item.object_uuid);
+  const actions = useItemActions();
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -101,6 +103,25 @@ function ItemDetails({
           <Button variant="outline" size="xs" onClick={() => onOpen(item.object_uuid)}>
             <ExpandIcon />
             {t('inspector.open')}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon-xs"
+            aria-label={t('editor.edit')}
+            title={t('editor.edit')}
+            onClick={() => actions.edit(item.object_uuid)}
+          >
+            <PencilIcon />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon-xs"
+            aria-label={t('editor.delete')}
+            title={t('editor.delete')}
+            className="text-destructive"
+            onClick={() => actions.remove(item.object_uuid)}
+          >
+            <Trash2Icon />
           </Button>
         </div>
         <h2 className="text-lg leading-tight font-semibold tracking-tight">{itemLabel(item)}</h2>
