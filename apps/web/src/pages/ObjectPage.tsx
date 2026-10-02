@@ -163,22 +163,34 @@ function ObjectDetails({
                 {t('editor.spawnNext')}
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={() => actions.duplicate(item.object_uuid)}>
+            {/* Icon-only actions: the name stays in the accessible label and the tooltip. */}
+            <Button
+              variant="outline"
+              size="icon-sm"
+              aria-label={t('duplicate.action')}
+              title={t('duplicate.action')}
+              onClick={() => actions.duplicate(item.object_uuid)}
+            >
               <CopyIcon />
-              {t('duplicate.action')}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => actions.edit(item.object_uuid)}>
-              <PencilIcon />
-              {t('editor.edit')}
             </Button>
             <Button
               variant="outline"
-              size="sm"
+              size="icon-sm"
+              aria-label={t('editor.edit')}
+              title={t('editor.edit')}
+              onClick={() => actions.edit(item.object_uuid)}
+            >
+              <PencilIcon />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-sm"
               className="text-destructive"
+              aria-label={t('editor.delete')}
+              title={t('editor.delete')}
               onClick={() => actions.remove(item.object_uuid)}
             >
               <Trash2Icon />
-              {t('editor.delete')}
             </Button>
           </div>
           <MonoText tone="subtle" className="text-[11px] break-all">
