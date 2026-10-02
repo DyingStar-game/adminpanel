@@ -25,9 +25,10 @@ export const truck: z.input<typeof SchematicSchema> = {
     { at: [4.5, 4.5], path: 'seats.SeatDriver', label: 'driver' },
     { at: [7.5, 4.5], path: 'seats.SeatPassenger', label: 'passenger' },
   ],
+  // Bed spans y 9 → 19: front and rear bays sit 3 units from its front and rear edges.
   bays: [
-    { at: [0.6, 10.5], path: 'components.Slot_FL', label: 'FL' },
-    { at: [11.4, 10.5], path: 'components.Slot_FR', label: 'FR' },
+    { at: [0.6, 12], path: 'components.Slot_FL', label: 'FL' },
+    { at: [11.4, 12], path: 'components.Slot_FR', label: 'FR' },
     { at: [0.6, 16], path: 'components.Slot_RL', label: 'RL' },
     { at: [11.4, 16], path: 'components.Slot_RR', label: 'RR' },
   ],
