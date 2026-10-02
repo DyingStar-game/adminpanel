@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Controller, useForm, useWatch, type Control, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RefreshCwIcon } from 'lucide-react';
@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { ErrorCode, UuidSchema, type Item } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
+import { SpawnOffsets } from '@/components/molecules/SpawnOffsets';
 import { WriteConfirm } from '@/components/molecules/WriteConfirm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,14 @@ import { useSceneOptions } from '@/hooks/useScenes';
 import { useWriteTarget } from '@/hooks/useWriteTarget';
 import { ApiError } from '@/lib/api';
 import { dataFromRows, toRaw } from '@/lib/propertyForm';
+import {
+  offsetValid,
+  spawnDistanceFor,
+  spawnHeightFor,
+  spawnNextTo,
+  type OffsetKey,
+  type Offsets,
+} from '@/lib/spawn';
 import { PropertiesSchema, type PropertiesFormValues } from '@/lib/propertyFormSchema';
 import type { SpawnContext } from '@/stores/itemActions';
 import { PropertiesEditor } from './PropertiesEditor';
@@ -71,6 +80,33 @@ export function ItemCreateSheet({
     },
   });
   const selectedType = useWatch({ control: form.control, name: 'objectType' });
+
+  // Spawn next to an entity: offsets default to the chosen type's ones (8 m / 1 m for a vehicle).
+  const [rawOffsets, setRawOffsets] = useState<Partial<Record<OffsetKey, string>>>({});
+  const offsets: Offsets = {
+    distance: Number(rawOffsets.distance ?? spawnDistanceFor(selectedType || undefined)),
+    height: Number(rawOffsets.height ?? spawnHeightFor(selectedType || undefined)),
+  };
+  /** Sets one property row, adding it back if the user removed it. */
+  const setRow = useCallback(
+    (key: string, kind: 'text' | 'vec3', raw: string) => {
+      const rows = form.getValues('properties');
+      const index = rows.findIndex((row) => row.key === key);
+      if (index >= 0)
+        form.setValue(`properties.${index}`, { key, kind, raw }, { shouldDirty: true });
+      else form.setValue('properties', [...rows, { key, kind, raw }]);
+    },
+    [form],
+  );
+  // Placement follows the reference whenever the type or the offsets change.
+  useEffect(() => {
+    if (!spawn || !offsetValid(offsets.distance) || !offsetValid(offsets.height)) return;
+    const preset = spawnNextTo(spawn.reference, offsets.distance, offsets.height);
+    if (!preset) return;
+    setRow('parent_id', 'text', preset.parentId);
+    setRow('position', 'vec3', toRaw(preset.position, 'vec3'));
+    setRow('rotation', 'vec3', toRaw(preset.rotation, 'vec3'));
+  }, [spawn, offsets.distance, offsets.height, setRow]);
   const sceneOptions = useSceneOptions();
   const definition = definitions.data
     ? (definitions.data.definitions.find((d) => d.type === selectedType) ?? null)
@@ -169,9 +205,17 @@ export function ItemCreateSheet({
             )}
           </div>
           {spawn && (
-            <p className="rounded-md border border-dashed px-3 py-2 text-xs text-fg-2">
-              {t('editor.spawnHint', { label: spawn.nearLabel })}
-            </p>
+            <div className="flex flex-col gap-2 rounded-md border border-dashed px-3 py-2">
+              <p className="text-xs text-fg-2">
+                {t('editor.spawnHint', { label: spawn.nearLabel })}
+              </p>
+              <SpawnOffsets
+                id="spawn"
+                values={offsets}
+                raw={rawOffsets}
+                onChange={(key, value) => setRawOffsets((raw) => ({ ...raw, [key]: value }))}
+              />
+            </div>
           )}
           <div className="flex flex-col gap-1.5">
             <span className="text-sm font-medium">object_data</span>

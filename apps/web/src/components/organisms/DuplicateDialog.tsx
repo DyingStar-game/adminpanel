@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { ErrorCode, UuidSchema, type Item, type Vec3 } from '@dyingstar-admin/schemas';
 import { EntityPicker } from '@/components/molecules/EntityPicker';
+import { SpawnOffsets } from '@/components/molecules/SpawnOffsets';
 import { PropertyInput } from '@/components/molecules/PropertyInput';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,7 +26,13 @@ import { ApiError } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { itemLabel } from '@/lib/itemLabel';
 import { isValidParentId, parseRaw, toRaw } from '@/lib/propertyForm';
-import { spawnDistanceFor, spawnHeightFor, spawnNextTo } from '@/lib/spawn';
+import {
+  offsetValid,
+  spawnDistanceFor,
+  spawnHeightFor,
+  spawnNextTo,
+  type Offsets,
+} from '@/lib/spawn';
 import { usePreferences } from '@/stores/preferences';
 
 interface DuplicateDialogProps {
@@ -41,12 +48,6 @@ interface Placement {
   rotation: string;
   /** What the placement was computed from, shown to the user. */
   reference: string | null;
-}
-
-/** Gap in front of the reference and height above it, in metres. */
-interface Offsets {
-  distance: number;
-  height: number;
 }
 
 const placementFrom = (reference: Item, { distance, height }: Offsets): Placement | null => {
@@ -88,7 +89,7 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
     distance: Number(rawOffsets.distance ?? spawnDistanceFor(type)),
     height: Number(rawOffsets.height ?? spawnHeightFor(type)),
   };
-  const offsetsOk = Object.values(offsets).every((n) => Number.isFinite(n) && n >= 0);
+  const offsetsOk = Object.values(offsets).every(offsetValid);
 
   // Until a reference is picked, the copy goes next to the original.
   const current =
@@ -108,7 +109,7 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
     setRawOffsets((raw) => ({ ...raw, [key]: value }));
     const next = { ...offsets, [key]: Number(value) };
     const reference = referenceItem ?? source.data;
-    if (reference && value.trim() !== '' && Number.isFinite(next[key]) && next[key] >= 0) {
+    if (reference && value.trim() !== '' && offsetValid(next[key])) {
       applyReference(reference, next);
     }
   };
@@ -219,27 +220,12 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
                 </span>
               )}
             </span>
-            <div className="flex flex-wrap items-center gap-2">
-              {(['distance', 'height'] as const).map((key) => (
-                <div key={key} className="flex items-center gap-1.5">
-                  <Label htmlFor={`duplicate-${key}`} className="text-[11px]">
-                    {t(`duplicate.${key}`)}
-                  </Label>
-                  <Input
-                    id={`duplicate-${key}`}
-                    inputMode="decimal"
-                    value={rawOffsets[key] ?? String(offsets[key])}
-                    onChange={(e) => changeOffset(key, e.target.value)}
-                    aria-invalid={!Number.isFinite(offsets[key]) || offsets[key] < 0}
-                    className={cn(
-                      'h-7 w-16 font-mono text-xs',
-                      (!Number.isFinite(offsets[key]) || offsets[key] < 0) && 'border-destructive',
-                    )}
-                  />
-                </div>
-              ))}
-              <span className="text-[11px] text-fg-3">{t('duplicate.distanceHint')}</span>
-            </div>
+            <SpawnOffsets
+              id="duplicate"
+              values={offsets}
+              raw={rawOffsets}
+              onChange={changeOffset}
+            />
             <div className="flex flex-col gap-1">
               <Label htmlFor="duplicate-parent" className="font-mono text-[11px]">
                 parent_id

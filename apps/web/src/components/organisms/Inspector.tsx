@@ -123,7 +123,7 @@ function ItemDetails({
               onClick={() =>
                 actions.create({
                   parentId: spawn.parentId,
-                  spawn: { preset: spawn, nearLabel: itemLabel(item) },
+                  spawn: { reference: item, preset: spawn, nearLabel: itemLabel(item) },
                 })
               }
             >

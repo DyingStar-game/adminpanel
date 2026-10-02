@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { Item } from '@dyingstar-admin/schemas';
 import type { SpawnPreset } from '@/lib/spawn';
 
 /** Write action in progress, shown by `ItemActionsHost` (one sheet or dialog at a time). */
@@ -8,8 +9,12 @@ export type ItemAction =
   | { kind: 'delete'; uuid: string }
   | { kind: 'duplicate'; uuid: string };
 
-/** Creation next to an entity: its parent, position and yaw, and its label for the UI. */
+/**
+ * Creation next to an entity: the entity itself (placement is recomputed from it when the
+ * distance, height or type change), the initial placement, and its label for the UI.
+ */
 export interface SpawnContext {
+  reference: Item;
   preset: SpawnPreset;
   nearLabel: string;
 }

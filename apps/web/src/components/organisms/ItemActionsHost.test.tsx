@@ -8,6 +8,7 @@ import { useInProcessBff } from '@/test/bff';
 import { Toaster } from '@/components/ui/sonner';
 import { useItemActions } from '@/stores/itemActions';
 import { usePreferences } from '@/stores/preferences';
+import { spawnNextTo, type SpawnPreset } from '@/lib/spawn';
 import { ItemActionsHost } from './ItemActionsHost';
 
 function renderHost() {
@@ -101,37 +102,39 @@ describe('ItemActionsHost', () => {
     });
   });
 
-  it('spawns next to an entity with its parent, position, yaw and a known scene', async () => {
+  it('spawns next to a reference, recomputed from the type and the offsets', async () => {
     const bff = useInProcessBff();
     const { onCreated } = renderHost();
+    const player = stored(bff, ids.player);
     act(() =>
       useItemActions.getState().create({
         parentId: ids.spawnbuilding,
         objectType: 'vehicle',
         spawn: {
+          reference: player,
           nearLabel: 'ddurieux',
-          preset: {
-            parentId: ids.spawnbuilding,
-            position: { x: 1, y: 0, z: 8 },
-            rotation: { x: 0, y: 1.5, z: 0 },
-          },
+          preset: spawnNextTo(player, 3, 0.5) as SpawnPreset,
         },
       }),
     );
 
     expect(await screen.findByText(/Spawned next to ddurieux/)).toBeInTheDocument();
-    // The scenename field lists known scenes: typing "truck" finds the truck scene.
+    // A vehicle keeps 8 m and 1 m from the reference by default.
+    expect(await screen.findByDisplayValue('8')).toBeInTheDocument();
+    const distance = screen.getByRole('textbox', { name: 'Distance (m)' });
+    await userEvent.clear(distance);
+    await userEvent.type(distance, '12');
     await userEvent.type(screen.getByRole('combobox', { name: 'scenename' }), 'truck');
     await userEvent.click(await screen.findByRole('option', { name: /truck\.tscn/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Create' }));
 
     await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
-    const created = onCreated.mock.calls[0]?.[0];
-    expect(stored(bff, created.object_uuid).object_data).toMatchObject({
+    const expected = spawnNextTo(player, 12, 1) as SpawnPreset;
+    expect(stored(bff, onCreated.mock.calls[0]?.[0].object_uuid).object_data).toMatchObject({
       parent_id: ids.spawnbuilding,
       scenename: 'scenes/_universe/vehicles/ground/trucks/truck.tscn',
-      position: { x: 1, y: 0, z: 8 },
-      rotation: { x: 0, y: 1.5, z: 0 },
+      position: expected.position,
+      rotation: expected.rotation,
     });
   });
 

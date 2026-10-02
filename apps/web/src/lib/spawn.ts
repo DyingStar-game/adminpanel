@@ -48,3 +48,14 @@ export function spawnNextTo(
     rotation: { x: 0, y: yaw, z: 0 },
   };
 }
+
+/** Gap in front of the reference and height above it, in metres. */
+export interface Offsets {
+  distance: number;
+  height: number;
+}
+
+export type OffsetKey = keyof Offsets;
+
+/** A usable offset: a finite, non-negative number of metres. */
+export const offsetValid = (n: number) => Number.isFinite(n) && n >= 0;
