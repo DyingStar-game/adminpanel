@@ -194,6 +194,11 @@ export const en = {
     done_one: '{{count}} item created',
     done_other: '{{count}} items created',
   },
+  copy: {
+    uuid: 'Copy UUID',
+    value: 'Copy value (JSON)',
+    done: 'Copied',
+  },
   live: {
     updated: 'updated {{time}}',
     freshness: 'Live data is as fresh as the last save by the game, not the instant game state.',

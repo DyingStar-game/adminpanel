@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Item } from '@dyingstar-admin/schemas';
+import { CopyButton } from '@/components/atoms/CopyButton';
 import { MonoText } from '@/components/atoms/MonoText';
 import { TypeDot } from '@/components/atoms/TypeDot';
 import { CrumbTrail } from '@/components/molecules/CrumbTrail';
@@ -165,6 +166,7 @@ function ObjectDetails({
           </div>
           <MonoText tone="subtle" className="text-[11px] break-all">
             {item.object_uuid}
+            <CopyButton value={item.object_uuid} className="ml-1 inline-grid align-middle" />
             {typeof item.object_data.scenename === 'string' && ` · ${item.object_data.scenename}`}
           </MonoText>
           <UpdatedAt at={updatedAt} />

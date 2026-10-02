@@ -52,4 +52,23 @@ describe('ValueView', () => {
     expect(screen.getByText('SeatDriver')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /ddurieux/ })).toBeInTheDocument();
   });
+
+  it('copies the full UUID of a reference without navigating', async () => {
+    const onNavigate = vi.fn();
+    view(PLAYER, 'pilot_uuid', onNavigate);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Copy UUID' }));
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(PLAYER);
+    expect(onNavigate).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Copy UUID' })).toHaveAttribute('title', 'Copied');
+  });
+
+  it('copies a position as exact JSON', async () => {
+    view({ x: 1.23456, y: 0, z: -2 });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Copy value (JSON)' }));
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith('{"x":1.23456,"y":0,"z":-2}');
+  });
 });

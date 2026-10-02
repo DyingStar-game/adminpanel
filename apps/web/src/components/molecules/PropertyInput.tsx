@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/cn';
-import type { PropertyKind } from '@/lib/propertyForm';
+import { parseVectorText, type PropertyKind } from '@/lib/propertyForm';
 
 interface PropertyInputProps {
   id: string;
@@ -50,6 +50,14 @@ export function PropertyInput({
             onChange={(e) => {
               const next = [0, 1, 2].map((j) => (j === i ? e.target.value : (parts[j] ?? '')));
               onChange(next.join(','));
+            }}
+            onPaste={(e) => {
+              // A whole vector pasted in any axis (copied position, `x,y,z`) fills all three.
+              const vector = parseVectorText(e.clipboardData.getData('text'));
+              if (vector) {
+                e.preventDefault();
+                onChange(vector);
+              }
             }}
           />
         ))}

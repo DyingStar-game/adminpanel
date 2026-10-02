@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronRightIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { CopyButton } from '@/components/atoms/CopyButton';
 import { MonoText } from '@/components/atoms/MonoText';
 import { cn } from '@/lib/cn';
 import { valueShape } from '@/lib/valueShape';
@@ -62,16 +63,23 @@ export function ValueView({ value, name, resolveRef, onNavigate }: ValueViewProp
       );
     case 'vec3':
       return (
-        <MonoText className="block truncate" title="x, y, z">
-          {fixed(shape.value.x)}, {fixed(shape.value.y)}, {fixed(shape.value.z)}
-        </MonoText>
+        <span className="flex min-w-0 items-center gap-1">
+          <MonoText className="block truncate" title="x, y, z">
+            {fixed(shape.value.x)}, {fixed(shape.value.y)}, {fixed(shape.value.z)}
+          </MonoText>
+          {/* Exact values as JSON: pasted into a position field, it fills x, y and z. */}
+          <CopyButton value={JSON.stringify(shape.value)} label={t('copy.value')} />
+        </span>
       );
     case 'quaternion':
       return (
-        <MonoText title="w, x, y, z">
-          {fixed(shape.value.w)}, {fixed(shape.value.x)}, {fixed(shape.value.y)},{' '}
-          {fixed(shape.value.z)}
-        </MonoText>
+        <span className="flex min-w-0 items-center gap-1">
+          <MonoText title="w, x, y, z">
+            {fixed(shape.value.w)}, {fixed(shape.value.x)}, {fixed(shape.value.y)},{' '}
+            {fixed(shape.value.z)}
+          </MonoText>
+          <CopyButton value={JSON.stringify(shape.value)} label={t('copy.value')} />
+        </span>
       );
     case 'array':
     case 'object': {

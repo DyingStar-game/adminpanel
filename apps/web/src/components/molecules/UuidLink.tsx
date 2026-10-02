@@ -1,3 +1,4 @@
+import { CopyButton } from '@/components/atoms/CopyButton';
 import { TypeDot } from '@/components/atoms/TypeDot';
 import { cn } from '@/lib/cn';
 
@@ -27,26 +28,35 @@ const short = (uuid: string) => uuid.slice(0, 8);
 export function UuidLink({ uuid, target, onNavigate, missingLabel }: UuidLinkProps) {
   if (target.status === 'missing') {
     return (
-      <span
-        title={uuid}
-        className="font-mono text-xs text-destructive line-through decoration-dotted"
-      >
-        {short(uuid)} · {missingLabel}
+      <span className="inline-flex max-w-full items-center gap-1">
+        <span
+          title={uuid}
+          className="truncate font-mono text-xs text-destructive line-through decoration-dotted"
+        >
+          {short(uuid)} · {missingLabel}
+        </span>
+        <CopyButton value={uuid} />
       </span>
     );
   }
   return (
-    <button
-      type="button"
-      title={uuid}
-      onClick={() => onNavigate(uuid)}
-      className={cn(
-        'inline-flex max-w-full items-center gap-1.5 truncate text-left font-mono text-xs text-link underline decoration-dotted underline-offset-[3px]',
-        target.status === 'loading' && 'opacity-60',
-      )}
-    >
-      {target.status === 'found' && <TypeDot objectType={target.objectType} className="size-1.5" />}
-      {target.status === 'found' ? target.label : short(uuid)}
-    </button>
+    <span className="inline-flex max-w-full items-center gap-1">
+      <button
+        type="button"
+        title={uuid}
+        onClick={() => onNavigate(uuid)}
+        className={cn(
+          'inline-flex min-w-0 items-center gap-1.5 truncate text-left font-mono text-xs text-link underline decoration-dotted underline-offset-[3px]',
+          target.status === 'loading' && 'opacity-60',
+        )}
+      >
+        {target.status === 'found' && (
+          <TypeDot objectType={target.objectType} className="size-1.5" />
+        )}
+        <span className="truncate">{target.status === 'found' ? target.label : short(uuid)}</span>
+      </button>
+      {/* Copies the full UUID, even when the link shows the entity's name. */}
+      <CopyButton value={uuid} />
+    </span>
   );
 }

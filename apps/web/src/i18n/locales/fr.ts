@@ -197,6 +197,11 @@ export const fr: Translations = {
     done_one: '{{count}} objet créé',
     done_other: '{{count}} objets créés',
   },
+  copy: {
+    uuid: "Copier l'UUID",
+    value: 'Copier la valeur (JSON)',
+    done: 'Copié',
+  },
   live: {
     updated: 'mis à jour à {{time}}',
     freshness: 'Les données live reflètent la dernière sauvegarde du jeu, pas son état instantané.',

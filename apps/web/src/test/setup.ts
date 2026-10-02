@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterAll, afterEach, beforeAll } from 'vitest';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import '@/i18n';
 import { server } from './server';
 
@@ -19,6 +19,11 @@ globalThis.ResizeObserver ??= class {
 };
 Element.prototype.hasPointerCapture ??= () => false;
 Element.prototype.scrollIntoView ??= () => {};
+// jsdom has no clipboard; tests read what was copied from this mock.
+Object.defineProperty(navigator, 'clipboard', {
+  configurable: true,
+  value: { writeText: vi.fn(async () => {}), readText: vi.fn(async () => '') },
+});
 
 // React Flow measures nodes and the viewport (see its testing guide).
 class DOMMatrixReadOnlyMock {

@@ -107,3 +107,22 @@ export function editDiff(
 /** `parent_id` is either empty (root) or a UUID. */
 export const isValidParentId = (value: string) =>
   value === '' || UuidSchema.safeParse(value).success;
+
+/**
+ * Raw `x,y,z` from pasted text: a copied vector (`{"x":1,"y":2,"z":3}`) or three numbers
+ * separated by commas or spaces. Null when the text is not a whole vector.
+ */
+export function parseVectorText(text: string): string | null {
+  const trimmed = text.trim();
+  try {
+    const parsed = Vec3Schema.safeParse(JSON.parse(trimmed));
+    if (parsed.success) return `${parsed.data.x},${parsed.data.y},${parsed.data.z}`;
+  } catch {
+    // Not JSON: try a plain list of numbers below.
+  }
+  const parts = trimmed
+    .split(/[\s,;]+/)
+    .filter(Boolean)
+    .map(Number);
+  return parts.length === 3 && parts.every((n) => Number.isFinite(n)) ? parts.join(',') : null;
+}

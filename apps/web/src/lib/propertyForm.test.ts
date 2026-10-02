@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { dataFromRows, editDiff, inferKind, parseRaw, rowsFromData, toRaw } from './propertyForm';
+import {
+  dataFromRows,
+  editDiff,
+  inferKind,
+  parseRaw,
+  parseVectorText,
+  rowsFromData,
+  toRaw,
+} from './propertyForm';
 
 describe('property form', () => {
   it('picks an editor per value shape', () => {
@@ -40,5 +48,15 @@ describe('property form', () => {
       changes: { speed: 2, engine: true },
       removed: ['horn'],
     });
+  });
+
+  it('reads a whole vector from pasted text', () => {
+    expect(parseVectorText('{"x":4449340.32,"y":2674885.87,"z":-3676467.6}')).toBe(
+      '4449340.32,2674885.87,-3676467.6',
+    );
+    expect(parseVectorText('1, 2, 3')).toBe('1,2,3');
+    expect(parseVectorText('1 2 3')).toBe('1,2,3');
+    expect(parseVectorText('12.5')).toBeNull();
+    expect(parseVectorText('{"w":1,"x":0}')).toBeNull();
   });
 });
