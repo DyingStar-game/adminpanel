@@ -23,7 +23,7 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 | Install dependencies | `make install` |
 | Any pnpm command | `make pnpm <cmd>` — flags go through `ARGS`, e.g. `make pnpm add zod ARGS="--filter @dyingstar-admin/web"` |
 | Dev servers (Vite :5173 + BFF :3000) | `make pnpm dev` |
-| Checks before committing | `make pnpm lint`, `make pnpm typecheck`, `make pnpm test`, `make pnpm format:check` |
+| Checks before committing | `make check` (format, lint, typecheck, test, format check); commit only when it passes |
 | Testers profile (build + serve on :3000) | `make start` / `make stop` |
 | Production image | `make image` |
 | Logs, shell, status | `make logs`, `make shell`, `make status` |
@@ -47,7 +47,55 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
   `fr` (`apps/web/src/i18n/locales/`).
 - Tests next to the code (Vitest, Testing Library, MSW) — ADR 0013.
 - Persistence test server: my own direct calls (curl, scripts) are **GET only**; the app itself
-  does write.
+  does write. See "Data sources" below.
+
+## Where we are
+
+Lot 1 (persistence items): status, work delivered beyond the plan and open questions are kept at
+the top of [`docs/lot-1-plan.md`](./docs/lot-1-plan.md) — read it first, then the ADR index.
+`ONBOARDING.md` and `ARCHITECTURE.md` still describe the previous panel (step 10).
+
+## Data sources — look at the real data first
+
+Check shapes against live data rather than guessing (**GET only**, never POST / PUT / DELETE):
+
+- **Persistence test server**: base URL in [`.env.sample`](./.env.sample) (`SERVERS[0].persistenceUrl`,
+  today `http://46.231.240.213:31001`). Routes: `GET /items?page=1&page_size=50` with exact
+  filters `parent_id` (roots: `parent_id=`), `object_type`, `scenename` (`page_size` up to
+  10000); `GET /items/{uuid}`. Example: `curl -s "$URL/items?object_type=vehicle&page=1&page_size=5"`.
+  SandBox (the planet most things stand on): `c0379c08-1d5b-4ca2-8876-230908141b68`.
+- **Contract**: [persistence OpenAPI](https://github.com/DyingStar-game/services/blob/develop/persistence/openapi.yaml)
+  (copy in `docs/design/persistence/uploads/`). It has no history: only the current state.
+- **Object type definitions**: `*_def.json` in
+  [`DyingStar-game/horizonserver` › `ds_genericprops/props`](https://github.com/DyingStar-game/horizonserver/tree/develop/ds_genericprops/props)
+  (`object_type` = file name without `_def`).
+- **Through the BFF** (dev servers running): `curl -H "X-Server-Id: universe-testing" localhost:3000/api/items?page=1&page_size=5`
+  — also GET only.
+
+## Domain facts
+
+- Positions are relative to the parent; items on a planet are relative to its **centre**
+  (≈ 6,361.6 km for SandBox). Rotations are Godot Euler angles, **order YXZ**, radians
+  (`packages/schemas/src/geometry.ts`, checked against live data).
+- Persistence `POST` and `PUT` are upserts; `DELETE` always answers 204 and does not notify the
+  game. The BFF adds 409 on create, merge-on-save, and refuses unknown types (ADR 0009, 0015).
+- The game saves an item about **every 60 s** by design: the admin cannot be more live than that.
+  Player positions are not reported yet (players sit at their apartment slot).
+- Vehicle `components.Slot_*` are component compartments (not wheels); `seats` map seat names to
+  player UUIDs or `""`.
+
+## Checking in a browser
+
+Visible changes are checked against the dev servers (`make pnpm dev`) with Playwright in a
+container, scripts kept in the session scratchpad, **failing if any non-GET request is sent**:
+
+```sh
+docker run --rm --network host -v "$SCRATCH":/out mcr.microsoft.com/playwright:v1.63.0-noble \
+  sh -c "cd /tmp && npm i -s playwright@1.63.0 >/dev/null 2>&1 && cp /out/check.mjs . && node check.mjs"
+```
+
+The script opens `http://localhost:5173/...`, records `page.on('request')` methods other than GET
+and page errors, and writes screenshots to `/out`.
 
 ## Way of working
 

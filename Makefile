@@ -87,6 +87,16 @@ pnpm: ## Run any pnpm command (usage: make pnpm test, make pnpm add zod ARGS="--
 	@echo "$(CYAN)📦 Running: pnpm $(PNPM_ARGS)$(RESET)"
 	@$(PNPM) $(PNPM_ARGS)
 
+.PHONY: check
+check: ## Format, then lint, typecheck, test and check formatting (run before every commit)
+	@echo "$(CYAN)🔎 Format, lint, typecheck, test, format check...$(RESET)"
+	@$(PNPM) format
+	@$(PNPM) lint
+	@$(PNPM) typecheck
+	@$(PNPM) test
+	@$(PNPM) format:check
+	@echo "$(GREEN)✅ All checks passed$(RESET)"
+
 .PHONY: image
 image: ## Build the production image (docker/Dockerfile.prod), tag with IMAGE=...
 	@echo "$(CYAN)🐳 Building production image $(IMAGE)...$(RESET)"
@@ -146,7 +156,7 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST) | grep -E "^  .{5}(start|stop) "
 	@echo ""
 	@echo "$(YELLOW)Dev Profile (Development):$(RESET)"
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST) | grep -E "^  .{5}(up|down|install|pnpm|image) "
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST) | grep -E "^  .{5}(up|down|install|pnpm|check|image) "
 	@echo ""
 	@echo "$(YELLOW)Utilities:$(RESET)"
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST) | grep -E "^  .{5}(logs|logs-app|logs-dev|shell|status|clean-volumes) "
@@ -156,6 +166,7 @@ help: ## Show this help message
 	@echo "  $(CYAN)make up$(RESET)              # Start dev environment (Dev)"
 	@echo "  $(CYAN)make install$(RESET)         # Install dependencies"
 	@echo "  $(CYAN)make pnpm dev$(RESET)        # Start Vite + BFF dev servers"
+	@echo "  $(CYAN)make check$(RESET)           # Every check before a commit"
 	@echo "  $(CYAN)make pnpm test$(RESET)       # Run all tests"
 	@echo "  $(CYAN)make pnpm lint$(RESET)       # Lint the workspace"
 

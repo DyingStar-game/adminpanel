@@ -1,5 +1,9 @@
 # Guide d'onboarding — DyingStar Admin
 
+> **Obsolète :** ce document décrit l'ancienne version du panneau (backend Express, Keycloak,
+> bannissements…). Il est en cours de réécriture (lot 1, étape 10). En attendant, voir le
+> [README](./README.md), [CLAUDE.md](../../CLAUDE.md) et les [ADR](../adr/).
+
 > Documentation en français. Version anglaise : [ONBOARDING.md](../../ONBOARDING.md)
 
 ## 1. Prérequis

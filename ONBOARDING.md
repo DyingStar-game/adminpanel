@@ -1,5 +1,9 @@
 # Contributor onboarding — DyingStar Admin
 
+> **Outdated:** this document describes the previous version of the panel (Express backend,
+> Keycloak, bans…). It is being rewritten (lot 1, step 10). Until then, see
+> [README.md](./README.md), [CLAUDE.md](./CLAUDE.md) and the [ADRs](./docs/adr/).
+
 Welcome! This guide helps you set up a local environment and understand how to contribute.
 
 ## 1. Prerequisites

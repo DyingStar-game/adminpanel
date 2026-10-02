@@ -1,5 +1,9 @@
 # Architecture — DyingStar Admin Panel
 
+> **Outdated:** this document describes the previous version of the panel (Express backend,
+> Keycloak, bans…). It is being rewritten (lot 1, step 10). Until then, see
+> [README.md](./README.md), [CLAUDE.md](./CLAUDE.md) and the [ADRs](./docs/adr/).
+
 This document describes how the **DyingStar Admin Panel** fits into the **DyingStar** platform and its Kubernetes deployment.
 
 ## DyingStar platform and Kubernetes
