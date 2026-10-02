@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  basisFromEuler,
   SPAWN_DISTANCE,
   SPAWN_HEIGHT,
   spawnDistanceFor,
   spawnHeightFor,
   spawnNextTo,
+  type SpawnPreset,
 } from './spawn';
 
 const player = (data: Record<string, unknown>) => ({
@@ -35,7 +37,7 @@ describe('spawnNextTo', () => {
       player({ position: { x: 0, y: 0, z: 0 }, rotation: { x: 0, y: Math.PI / 2, z: 0 } }),
       2,
     );
-    expect(preset?.position).toEqual({ x: -2, y: 0, z: -0 });
+    expect(preset?.position).toEqual({ x: -2, y: 0, z: 0 });
     expect(preset?.rotation.y).toBeCloseTo(Math.PI / 2);
   });
 
@@ -47,6 +49,44 @@ describe('spawnNextTo', () => {
   it('raises the item above the reference', () => {
     const preset = spawnNextTo(player({ position: { x: 0, y: 0.071, z: 0 } }), 2, 1);
     expect(preset?.position.y).toBe(1.071);
+  });
+
+  it('only keeps the yaw outside a celestial body, even when the reference is tilted', () => {
+    const preset = spawnNextTo(
+      player({ position: { x: 0, y: 0, z: 0 }, rotation: { x: 0.3, y: 1, z: 0.2 } }),
+      2,
+    );
+    expect(preset?.rotation).toEqual({ x: 0, y: 1, z: 0 });
+    expect(preset?.position.y).toBe(0);
+  });
+
+  it('on a planet, raises the item along the radial direction and aligns it with the ground', () => {
+    // A vehicle resting on SandBox (live data): positions are relative to the planet centre.
+    const position = { x: 4450682.975, y: 2674166.505, z: -3675680.385 };
+    const vehicle = {
+      object_type: 'vehicle',
+      object_uuid: 'v',
+      object_data: {
+        parent_id: 'sandbox',
+        position,
+        rotation: { x: -1.135, y: -0.845, z: -0.045 },
+      },
+    };
+    const preset = spawnNextTo(vehicle, 8, 5) as SpawnPreset;
+    const radius = (v: { x: number; y: number; z: number }) => Math.hypot(v.x, v.y, v.z);
+
+    expect(preset.parentId).toBe('sandbox');
+    expect(radius(preset.position) - radius(position)).toBeCloseTo(5, 1);
+    const dx = preset.position.x - position.x;
+    const dy = preset.position.y - position.y;
+    const dz = preset.position.z - position.z;
+    expect(Math.hypot(dx, dy, dz)).toBeCloseTo(Math.hypot(8, 5), 1);
+    // The spawned item's up is the radial direction.
+    const [, up] = basisFromEuler(preset.rotation);
+    const r = radius(position);
+    expect(
+      up[0] * (position.x / r) + up[1] * (position.y / r) + up[2] * (position.z / r),
+    ).toBeCloseTo(1, 3);
   });
 
   it('needs a position', () => {

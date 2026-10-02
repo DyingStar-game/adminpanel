@@ -234,45 +234,59 @@ describe('ItemActionsHost', () => {
     const bff = useInProcessBff();
     renderHost();
     act(() => useItemActions.getState().duplicate(ids.vehicle));
-    const original = stored(bff, ids.vehicle).object_data.position as { x: number; z: number };
+    const original = stored(bff, ids.vehicle);
 
     const dialog = await screen.findByRole('dialog');
-    const gap = async () => {
-      const x = Number(
-        (await within(dialog).findByRole('textbox', { name: 'position x' })).getAttribute('value'),
+    const shown = () =>
+      Object.fromEntries(
+        ['x', 'y', 'z'].map((axis) => [
+          axis,
+          Number(
+            within(dialog)
+              .getByRole('textbox', { name: `position ${axis}` })
+              .getAttribute('value'),
+          ),
+        ]),
       );
-      const z = Number(
-        within(dialog).getByRole('textbox', { name: 'position z' }).getAttribute('value'),
-      );
-      return Math.hypot(x - original.x, z - original.z);
-    };
     // The vehicle's own gap applies once the original is loaded.
     const distance = await within(dialog).findByDisplayValue('8');
-    expect(await gap()).toBeCloseTo(8, 1);
+    await vi.waitFor(() => expect(shown()).toEqual(spawnNextTo(original, 8, 1)?.position));
 
     await userEvent.clear(distance);
     await userEvent.type(distance, '20');
 
-    expect(await gap()).toBeCloseTo(20, 1);
+    await vi.waitFor(() => expect(shown()).toEqual(spawnNextTo(original, 20, 1)?.position));
   });
 
-  it('raises the copy above the reference, by 1 m for a vehicle by default', async () => {
+  it('raises the copy above the reference (radially on a planet), by 1 m for a vehicle by default', async () => {
     const bff = useInProcessBff();
     renderHost();
     act(() => useItemActions.getState().duplicate(ids.vehicle));
-    const originalY = (stored(bff, ids.vehicle).object_data.position as { y: number }).y;
+    // The vehicle stands on the planet: its position is relative to the planet centre.
+    const radius = ({ x, y, z }: { x: number; y: number; z: number }) => Math.hypot(x, y, z);
+    const originalRadius = radius(
+      stored(bff, ids.vehicle).object_data.position as { x: number; y: number; z: number },
+    );
 
     const dialog = await screen.findByRole('dialog');
     const height = await within(dialog).findByRole('textbox', { name: 'Height (m)' });
     await within(dialog).findByDisplayValue('8');
     expect(height).toHaveValue('1');
-    const y = () =>
-      Number(within(dialog).getByRole('textbox', { name: 'position y' }).getAttribute('value'));
-    expect(y()).toBeCloseTo(originalY + 1, 3);
+    const altitude = () => {
+      const [x, y, z] = ['x', 'y', 'z'].map((axis) =>
+        Number(
+          within(dialog)
+            .getByRole('textbox', { name: `position ${axis}` })
+            .getAttribute('value'),
+        ),
+      ) as [number, number, number];
+      return radius({ x, y, z }) - originalRadius;
+    };
+    expect(altitude()).toBeCloseTo(1, 2);
 
     await userEvent.clear(height);
     await userEvent.type(height, '3');
 
-    expect(y()).toBeCloseTo(originalY + 3, 3);
+    expect(altitude()).toBeCloseTo(3, 2);
   });
 });

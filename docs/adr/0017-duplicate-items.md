@@ -24,7 +24,7 @@ no authentication ([ADR 0002](./0002-no-admin-authentication.md)): it does not k
   `object_data.uuid`, …), so the copy is self-consistent.
 - **References to entities outside the copied set are emptied** (`""`): the copy has no pilot,
   no passenger, no external link.
-- The root copy gets the target parent, position and yaw; descendants keep their own positions,
+- The root copy gets the target parent, position and rotation; descendants keep their own positions,
   relative to their (copied) parents.
 - The duplication is done by the BFF (`POST /api/items/{uuid}/duplicate`): read the subtree, map
   UUIDs, then create parents before children through `POST /items`. It is refused above
@@ -32,7 +32,12 @@ no authentication ([ADR 0002](./0002-no-admin-authentication.md)): it does not k
   the middle reports the items already created (`DUPLICATE_PARTIAL`): no rollback.
 - Targets in the UI: **next to a player** (picked in a list, human players first, the choice
   remembered in the browser as "me") or **next to the original**. Placement reuses the
-  "spawn next to" rule: same parent, 2 m in front, same yaw.
+  "spawn next to" rule: same parent, in front of the reference and above it (distance and height
+  per type, editable), facing the same way and upright. "Up" is the local vertical: on a
+  celestial body (reference more than 1 km from its parent's origin, i.e. a planet whose centre
+  is the origin) it is the radial direction and the rotation aligns the copy with the ground;
+  elsewhere it is the parent's +Y and only the yaw is kept. Rotations are Godot Euler angles,
+  order YXZ (checked against the live vehicles resting on SandBox).
 
 ## Consequences
 
