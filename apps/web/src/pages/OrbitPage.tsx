@@ -9,7 +9,13 @@ import { Inspector } from '@/components/organisms/Inspector';
 import { OrbitGraph } from '@/components/organisms/OrbitGraph';
 import { OrbitLayout } from '@/components/templates/OrbitLayout';
 import { Button } from '@/components/ui/button';
-import { useAncestors, useChildrenCounts, useItem, useItemsPages } from '@/hooks/queries';
+import {
+  useAncestors,
+  useChildrenCounts,
+  useItem,
+  useItemsPages,
+  usePrefetchItemsPage,
+} from '@/hooks/queries';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { itemLabel, shortUuid } from '@/lib/itemLabel';
 import { ORBIT, orbitLayout, type OrbitEntity } from '@/lib/orbitLayout';
@@ -81,6 +87,7 @@ function Orbit({
     ORBIT.pageSize,
     { live: true },
   );
+  const prefetch = usePrefetchItemsPage(ORBIT.pageSize);
   const totalOf = useCallback(
     (type: string) => counts.data?.byType.find((c) => c.object_type === type)?.total ?? 0,
     [counts.data],
@@ -101,7 +108,8 @@ function Orbit({
       })),
       open: openTypes.flatMap((type, i) => {
         const data = loaded[i];
-        if (!data) return [];
+        // Still reading its children: open at once, the children follow.
+        if (!data) return [{ objectType: type, items: [], hasMore: false, loading: true }];
         return [
           {
             objectType: type,
@@ -196,6 +204,9 @@ function Orbit({
           onRecenter={(uuid) => onRecenter(uuid, uuid)}
           onToggleCluster={(type) => onSearchChange(toggleCluster(search, type))}
           onMore={(type) => onSearchChange(setClusterPage(search, type, pageOf(search, type) + 1))}
+          onClusterHover={(type) =>
+            prefetch({ parentId: item.object_uuid, objectType: type }, pageOf(search, type))
+          }
         />
       }
       overlays={

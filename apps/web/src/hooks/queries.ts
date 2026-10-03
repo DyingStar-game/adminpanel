@@ -1,4 +1,10 @@
-import { keepPreviousData, useInfiniteQuery, useQueries, useQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   AncestorsResponseSchema,
   ChildrenCountsResponseSchema,
@@ -128,6 +134,17 @@ export function useItemsPages(
     combine: (results) =>
       results.map((result) => (result.data && !result.isPlaceholderData ? result.data : null)),
   });
+}
+
+/** Reads a page ahead of time (e.g. a cluster hovered before it is opened). */
+export function usePrefetchItemsPage(pageSize: number) {
+  const serverId = useServerId();
+  const client = useQueryClient();
+  return (filter: ListFilter, page: number) =>
+    void client.prefetchQuery({
+      queryKey: queryKeys.list(serverId, filter, page, pageSize),
+      queryFn: () => apiGet(listPath(filter, page, pageSize), PaginatedItemsSchema, { serverId }),
+    });
 }
 
 /** "Load more" listing used by tree levels (ADR 0005). */

@@ -28,6 +28,8 @@ export interface OpenCluster {
   objectType: string;
   items: OrbitEntity[];
   hasMore: boolean;
+  /** Children still being read: the cluster shows open at once, its children follow. */
+  loading?: boolean;
 }
 
 export type OrbitNode =
@@ -49,6 +51,7 @@ export type OrbitNode =
       objectType: string;
       total: number;
       open: boolean;
+      loading?: boolean;
     }
   | { id: string; kind: 'more'; x: number; y: number; objectType: string };
 
@@ -185,6 +188,7 @@ export function orbitLayout(input: OrbitInput): { nodes: OrbitNode[]; edges: Orb
       objectType: cluster.objectType,
       total: cluster.total,
       open,
+      ...(openCluster?.loading ? { loading: true } : {}),
     });
     edges.push({ id: `edge:${id}`, source: centerId, target: id, kind: 'cluster' });
 

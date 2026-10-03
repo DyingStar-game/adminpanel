@@ -46,6 +46,18 @@ describe('orbitLayout', () => {
     expect(edges.map((e) => e.kind).sort()).toEqual(['cluster', 'cluster', 'parent']);
   });
 
+  it('shows a cluster open at once while its children are read', () => {
+    const { nodes } = orbitLayout({
+      center: entity('c'),
+      parent: null,
+      clusters: [{ objectType: 'vehicle_component', total: 4 }],
+      open: [{ objectType: 'vehicle_component', items: [], hasMore: false, loading: true }],
+      refs: [],
+    });
+    expect(nodes.find((n) => n.kind === 'cluster')).toMatchObject({ open: true, loading: true });
+    expect(nodes.some((n) => n.kind === 'child')).toBe(false);
+  });
+
   it('fans the open cluster children and adds a "more" node', () => {
     const items = Array.from({ length: 8 }, (_, i) => entity(`k${i}`, 'box'));
     const { nodes } = orbitLayout({

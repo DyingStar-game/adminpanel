@@ -2,12 +2,17 @@ import { memo, useEffect, useMemo, useRef } from 'react';
 import {
   Background,
   BackgroundVariant,
+  BaseEdge,
+  getStraightPath,
   Handle,
   Position,
   ReactFlow,
   ReactFlowProvider,
+  useInternalNode,
   useReactFlow,
   type Edge,
+  type EdgeProps,
+  type InternalNode,
   type Node,
   type NodeProps,
 } from '@xyflow/react';
@@ -30,12 +35,17 @@ interface OrbitGraphProps {
   onRecenter: (uuid: string) => void;
   onToggleCluster: (objectType: string) => void;
   onMore: (objectType: string) => void;
+  /** Pointer over a closed cluster: its children can be read ahead of the click. */
+  onClusterHover?: (objectType: string) => void;
 }
 
 type GraphNodeData = { node: OrbitNode; selected: boolean; moreLabel: string };
 type GraphNode = Node<GraphNodeData>;
 
-/** Invisible centred handle: edges are straight lines between node centres. */
+/**
+ * Invisible handles: React Flow needs them to draw an edge, but `CenterEdge` ignores their
+ * position (it came out a few pixels off the dots) and joins the node centres itself.
+ */
 const CenterHandles = () => (
   <>
     <Handle
@@ -88,7 +98,9 @@ const OrbitNodeView = memo(function OrbitNodeView({ data }: NodeProps<GraphNode>
           className={cn(
             'grid place-items-center rounded-full border-2 bg-background font-mono text-sm font-semibold transition-opacity',
             node.open ? 'opacity-100 shadow-md' : 'opacity-85 hover:opacity-100',
+            node.loading && 'motion-safe:animate-pulse',
           )}
+          aria-busy={node.loading || undefined}
           style={{ width: size, height: size, borderColor: typeColor(node.objectType) }}
         >
           {node.total}
@@ -110,21 +122,33 @@ const OrbitNodeView = memo(function OrbitNodeView({ data }: NodeProps<GraphNode>
     );
   }
 
+  const color = typeColor(node.entity.objectType);
   return (
-    <div className="relative flex flex-col items-center gap-1.5" title={node.entity.uuid}>
+    // The node is the dot alone (edges end at its centre); the label hangs below it.
+    <div className="relative flex flex-col items-center" title={node.entity.uuid}>
+      {selected && (
+        // Selected like the centre: a halo of its own colour, pulsing gently.
+        <span
+          aria-hidden
+          className="absolute top-0 size-3.5 rounded-full motion-safe:animate-ping"
+          style={{ background: `color-mix(in oklab, ${color} 45%, transparent)` }}
+        />
+      )}
       <span
         className={cn(
-          'size-3.5 rounded-full',
+          'relative size-3.5 rounded-full',
           node.entity.missing && 'border-2 border-dashed border-destructive bg-transparent!',
         )}
         style={{
-          background: typeColor(node.entity.objectType),
-          boxShadow: selected ? '0 0 0 4px var(--ds-acc-bg), 0 0 0 5px var(--ds-acc)' : undefined,
+          background: color,
+          boxShadow: selected
+            ? `0 0 0 5px color-mix(in oklab, ${color} 22%, transparent)`
+            : undefined,
         }}
       />
       <span
         className={cn(
-          'rounded bg-surface-2 px-1 text-2xs leading-none whitespace-nowrap',
+          'absolute top-full mt-1.5 rounded bg-surface-2 px-1 text-2xs leading-none whitespace-nowrap',
           selected ? 'font-semibold text-foreground' : 'text-fg-2',
           node.entity.missing && 'text-destructive line-through',
         )}
@@ -138,11 +162,59 @@ const OrbitNodeView = memo(function OrbitNodeView({ data }: NodeProps<GraphNode>
 
 const nodeTypes = { orbit: OrbitNodeView };
 
+const centreOf = (node: InternalNode) => ({
+  x: node.internals.positionAbsolute.x + (node.measured.width ?? 0) / 2,
+  y: node.internals.positionAbsolute.y + (node.measured.height ?? 0) / 2,
+});
+
+/** Straight line from one node centre to the other (dots draw over its ends). */
+function CenterEdge({
+  id,
+  source,
+  target,
+  style,
+  label,
+  labelStyle,
+  labelBgStyle,
+  labelBgPadding,
+  labelBgBorderRadius,
+}: EdgeProps) {
+  const from = useInternalNode(source);
+  const to = useInternalNode(target);
+  if (!from || !to) return null;
+  const a = centreOf(from);
+  const b = centreOf(to);
+  const [path, labelX, labelY] = getStraightPath({
+    sourceX: a.x,
+    sourceY: a.y,
+    targetX: b.x,
+    targetY: b.y,
+  });
+  return (
+    <BaseEdge
+      id={id}
+      path={path}
+      style={style}
+      label={label}
+      labelX={labelX}
+      labelY={labelY}
+      labelStyle={labelStyle}
+      labelBgStyle={labelBgStyle}
+      labelBgPadding={labelBgPadding}
+      labelBgBorderRadius={labelBgBorderRadius}
+    />
+  );
+}
+
+const edgeTypes = { center: CenterEdge };
+
 const edgeStyle: Record<OrbitEdge['kind'], React.CSSProperties> = {
   parent: { stroke: 'var(--ds-fg-3)', strokeWidth: 1.5 },
   cluster: { stroke: 'var(--ds-line-2)', strokeWidth: 1.5 },
   child: { stroke: 'var(--ds-line-2)', strokeWidth: 1, opacity: 0.8 },
-  ref: { stroke: 'var(--ds-fg-3)', strokeWidth: 1.2, strokeDasharray: '5 4' },
+  // Dashes are laid from the referenced entity's dot (see the edges below): a short gap from its
+  // centre, then a dash across its edge, so the line visibly reaches the dot.
+  ref: { stroke: 'var(--ds-fg-3)', strokeWidth: 1.2, strokeDasharray: '5 4', strokeDashoffset: 6 },
 };
 
 /** Navigable orbit graph (React Flow): pan, zoom, click to inspect, double-click to re-centre. */
@@ -206,6 +278,7 @@ function Graph({
   onRecenter,
   onToggleCluster,
   onMore,
+  onClusterHover,
 }: OrbitGraphProps) {
   const flowNodes: GraphNode[] = useMemo(
     () =>
@@ -233,9 +306,11 @@ function Graph({
     () =>
       edges.map((edge) => ({
         id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        type: 'straight',
+        // A reference is drawn from its entity towards the centre: the dash pattern starts at
+        // the small dot, where its phase shows (it ends hidden under the centre's disc).
+        source: edge.kind === 'ref' ? edge.target : edge.source,
+        target: edge.kind === 'ref' ? edge.source : edge.target,
+        type: 'center',
         style: edgeStyle[edge.kind],
         focusable: false,
         ...(edge.label
@@ -263,6 +338,7 @@ function Graph({
       nodes={flowNodes}
       edges={flowEdges}
       nodeTypes={nodeTypes}
+      edgeTypes={edgeTypes}
       nodeOrigin={[0.5, 0.5]}
       fitView
       fitViewOptions={{ padding: 0.15 }}
@@ -272,6 +348,10 @@ function Graph({
       nodesDraggable={false}
       nodesConnectable={false}
       proOptions={{ hideAttribution: true }}
+      onNodeMouseEnter={(_, flowNode) => {
+        const node = byId.get(flowNode.id);
+        if (node?.kind === 'cluster' && !node.open) onClusterHover?.(node.objectType);
+      }}
       onNodeClick={(_, flowNode) => {
         const node = byId.get(flowNode.id);
         if (!node) return;
