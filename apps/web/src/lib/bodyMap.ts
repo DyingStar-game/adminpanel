@@ -40,6 +40,7 @@ const STRUCTURE_TYPES = new Set([
   'mining_depot',
   'miningzone',
   'building',
+  'simple_building',
   'city',
   'storagewarehouse',
   'station',

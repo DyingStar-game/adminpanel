@@ -45,12 +45,9 @@ describe('body map helpers', () => {
   });
 
   it('draws structures as squares, people and vehicles as dots', () => {
-    expect(['spawnbuilding', 'poi_village', 'player', 'vehicle'].map(markerShape)).toEqual([
-      'square',
-      'square',
-      'round',
-      'round',
-    ]);
+    expect(
+      ['spawnbuilding', 'poi_village', 'simple_building', 'player', 'vehicle'].map(markerShape),
+    ).toEqual(['square', 'square', 'square', 'round', 'round']);
   });
 
   it('lists the counted types, most numerous first, without empty ones', () => {

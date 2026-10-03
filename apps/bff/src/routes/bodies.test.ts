@@ -33,7 +33,7 @@ describe('GET /api/bodies/:uuid/map', () => {
     expect((await request('/api/bodies/unknown/map')).status).toBe(404);
   });
 
-  it('omits a type too numerous for the limit instead of failing, shown types first', async () => {
+  it('omits a shown type too numerous for the limit instead of failing', async () => {
     // A crowd of vehicles on the planet, more than the limit.
     const crowd: Item[] = Array.from({ length: MAX_MAP_POINTS + 1 }, (_, i) => ({
       object_type: 'vehicle',
@@ -41,7 +41,7 @@ describe('GET /api/bodies/:uuid/map', () => {
       object_data: { parent_id: ids.planet, position: { x: 0, y: 0, z: 6_361_633 } },
     }));
     const { request } = buildApp({ dataset: [...createDataset(), ...crowd] });
-    const res = await request(`/api/bodies/${ids.planet}/map?hide=vehicle`);
+    const res = await request(`/api/bodies/${ids.planet}/map`);
 
     expect(res.status).toBe(200);
     const body = await read(res);
@@ -54,6 +54,30 @@ describe('GET /api/bodies/:uuid/map', () => {
     expect(
       body.points.some((p: { object_uuid: string }) => p.object_uuid === ids.spawnbuilding),
     ).toBe(true);
+  });
+
+  it('counts the hidden types without loading them, except the included item', async () => {
+    const { request } = buildApp();
+    const hidden = await read(await request(`/api/bodies/${ids.planet}/map?hide=vehicle,player`));
+
+    expect(hidden.omitted).toEqual([]);
+    expect(hidden.points.map((p: { object_uuid: string }) => p.object_uuid)).toEqual([
+      ids.spawnbuilding,
+    ]);
+    expect(hidden.counts).toEqual(
+      expect.arrayContaining([
+        { object_type: 'vehicle', total: 1 },
+        { object_type: 'player', total: 1 },
+      ]),
+    );
+
+    // The selected vehicle stays on the map although its type is hidden.
+    const selected = await read(
+      await request(`/api/bodies/${ids.planet}/map?hide=vehicle,player&include=${ids.vehicle}`),
+    );
+    expect(selected.points.map((p: { object_uuid: string }) => p.object_uuid).sort()).toEqual(
+      [ids.spawnbuilding, ids.vehicle].sort(),
+    );
   });
 
   it('counts every type, players where they are housed', async () => {

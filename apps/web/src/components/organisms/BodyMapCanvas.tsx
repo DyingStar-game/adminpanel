@@ -49,6 +49,8 @@ interface BodyMapCanvasProps {
   selected?: string | undefined;
   focus?: MapFocus | null;
   onSelect: (uuid: string) => void;
+  /** A click on the map background, away from any marker: clears the selection. */
+  onDeselect?: (() => void) | undefined;
   /** Tooltip content of a point (label, type, altitude…). */
   describe: (point: MapPoint) => string;
   /** Types whose names are written above their markers. */
@@ -136,6 +138,15 @@ function FitOnce({ points }: { points: MapPoint[] }) {
     done.current = true;
     map.fitBounds(L.latLngBounds(points.map(toLatLng)), { padding: [40, 40] });
   }, [map, points]);
+  return null;
+}
+
+/**
+ * Clicks on the map background (markers and clusters do not pass theirs on to the map, and a
+ * drag is not a click).
+ */
+function BackgroundClick({ onClick }: { onClick: () => void }) {
+  useMapEvents({ click: onClick });
   return null;
 }
 
@@ -300,6 +311,7 @@ export function BodyMapCanvas({
   selected,
   focus,
   onSelect,
+  onDeselect,
   describe,
   labels,
   named,
@@ -333,6 +345,7 @@ export function BodyMapCanvas({
       <FitOnce points={points} />
       {movement && <MoveArrow {...movement} />}
       <FlyTo focus={focus} />
+      {onDeselect && <BackgroundClick onClick={onDeselect} />}
     </MapContainer>
   );
 }

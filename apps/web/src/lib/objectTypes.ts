@@ -9,6 +9,7 @@ const TYPE_COLORS: Record<string, string> = {
   station: '#8b5cf6',
   city: '#6366f1',
   building: '#64748b',
+  simple_building: '#06b6d4',
   spawnbuilding: '#2563eb',
   poi_village: '#c026d3',
   cargo_depot: '#f97316',

@@ -11,6 +11,7 @@ import { Inspector } from '@/components/organisms/Inspector';
 import { OrbitLayout } from '@/components/templates/OrbitLayout';
 import { Button } from '@/components/ui/button';
 import { useBodyMap } from '@/hooks/useBodyMap';
+import { useItem } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import {
   formatAltitude,
@@ -40,7 +41,9 @@ interface MapPageProps {
 /** Planetary map of a celestial body (ADR 0018), with the inspector on the right. */
 export function MapPage(props: MapPageProps) {
   const { t } = useTranslation();
-  const query = useBodyMap(props.uuid);
+  // The inspector reads the selected item too: same query, shared.
+  const selected = useItem(props.search.selected).data;
+  const query = useBodyMap(props.uuid, selected);
 
   if (query.isPending) return <Message>{t('inspector.loading')}</Message>;
   if (query.isError) {
@@ -87,13 +90,11 @@ function BodyMap({
   const visible = useMemo(
     () =>
       map.points.filter(
-        // A searched or selected item stays visible even when its type is hidden.
-        (p) =>
-          isShown(p.object_type, mapHidden) ||
-          p.object_uuid === focus?.uuid ||
-          p.object_uuid === search.selected,
+        // The selected item (searched or clicked) stays visible even when its type is hidden,
+        // until it is deselected.
+        (p) => isShown(p.object_type, mapHidden) || p.object_uuid === search.selected,
       ),
-    [map.points, mapHidden, focus?.uuid, search.selected],
+    [map.points, mapHidden, search.selected],
   );
 
   // Last known position of the selected item (memory only): a new one draws the move. Derived
@@ -124,6 +125,10 @@ function BodyMap({
 
   const select = useCallback(
     (uuid: string) => onSearchChange({ ...search, selected: uuid }),
+    [onSearchChange, search],
+  );
+  const deselect = useCallback(
+    () => onSearchChange({ ...search, selected: undefined }),
     [onSearchChange, search],
   );
   const focusOn = (uuid: string) => {
@@ -167,6 +172,7 @@ function BodyMap({
             selected={search.selected}
             focus={focus}
             onSelect={select}
+            onDeselect={search.selected ? deselect : undefined}
             describe={describe}
             labels={clusterLabels}
             named={named}

@@ -113,6 +113,16 @@ come with the map (`counts`), so the legend lists types that are not loaded. Chi
 without a definition are counted but not drawn (all live types have one). Drawing every rock
 stays for the spatial index or tiles mentioned above.
 
+### Update (2026-10-04): only the shown types, counts kept a minute
+
+Hidden types are no longer loaded, only counted (`hide`); the selected item of a hidden type is
+added on its own (`include`). Measured on the test server, each filtered persistence query is a
+full scan (1 to 10 s), so the ~30 per-type counts were most of the map's 17 to 20 s. Counts
+(children per type, totals per type) are now cached 60 s in the BFF and served stale while
+refreshed in the background, cleared on any write: a refresh takes the listing of the shown
+types only (about 6 s instead of 17 s). A count route on the persistence side, or an index on
+`parent_id` / `object_type`, is requested from the back team for the first load.
+
 ## Consequences
 
 - A body's content becomes visible at a glance; vehicles, buildings and, later, moving players

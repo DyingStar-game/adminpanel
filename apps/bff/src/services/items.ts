@@ -32,6 +32,12 @@ const EXISTS_DIRECT_LOOKUP_MAX = 50;
 const SCAN_PAGE_SIZE = 10_000;
 /** Lifetime of the known scenes list (one full scan per refresh). */
 const SCENES_TTL_MS = 5 * 60 * 1000;
+/**
+ * Lifetime of counts (children per type, totals per type): each is a full scan on persistence
+ * (1 to 10 s) and the game saves about every 60 s, so they are kept a minute and served stale
+ * while refreshed in the background.
+ */
+export const COUNTS_TTL_MS = 60 * 1000;
 /** Largest subtree duplicated at once (ADR 0017). */
 export const MAX_DUPLICATE = 200;
 /** Largest body map computed at once (ADR 0018). */
@@ -58,6 +64,21 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
   async function read<T>(key: string, load: () => Promise<T>): Promise<T> {
     if (readCacheTtlMs === 0) return load();
     const boxed = await reads.fetch(key, { context: load });
+    return boxed?.value as T;
+  }
+
+  // Counts: slow, slow-changing; a stale value answers at once while the new one is computed.
+  const countCache = new LRUCache<string, { value: unknown }, () => Promise<unknown>>({
+    max: 500,
+    ttl: COUNTS_TTL_MS,
+    allowStale: true,
+    noDeleteOnStaleGet: true,
+    fetchMethod: async (_key, _stale, { context }) => ({ value: await context() }),
+  });
+
+  async function counted<T>(key: string, load: () => Promise<T>): Promise<T> {
+    if (readCacheTtlMs === 0) return load();
+    const boxed = await countCache.fetch(key, { context: load });
     return boxed?.value as T;
   }
 
@@ -113,7 +134,11 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
   });
 
   /** Children count, overall and per known object type. */
-  async function countChildren(uuid: string): Promise<ChildrenCountsResponse> {
+  function countChildren(uuid: string): Promise<ChildrenCountsResponse> {
+    return counted(`children:${uuid}`, () => scanChildrenCounts(uuid));
+  }
+
+  async function scanChildrenCounts(uuid: string): Promise<ChildrenCountsResponse> {
     const [all, { definitions: defs }] = await Promise.all([
       total({ parent_id: uuid }),
       definitions.list(),
@@ -221,6 +246,7 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
         );
       } finally {
         reads.clear();
+        countCache.clear();
       }
       return created;
     },
@@ -231,40 +257,64 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
      * a type that does not fit is `omitted` (not drawn) instead of failing the whole map.
      * Counts cover every type, loaded or not.
      */
-    bodyMap(uuid: string, hidden: string[] = []): Promise<BodyMapResponse> {
+    /**
+     * Map of a body (ADR 0018): every type is counted, only the shown ones are loaded, within
+     * the point budget (smallest first). `include` adds one item of a hidden type (the selected
+     * one) so it stays on the map.
+     */
+    bodyMap(uuid: string, hidden: string[] = [], include?: string): Promise<BodyMapResponse> {
       const hide = [...new Set(hidden)].sort();
-      return read(`map:${uuid}:${hide.join(',')}`, async () => {
+      return read(`map:${uuid}:${hide.join(',')}:${include ?? ''}`, async () => {
         const body = await getOrThrow(uuid);
+        const placedTypes = MAP_PLACED_THROUGH_PARENT.filter((type) => !hide.includes(type));
         const [counts, placedTotals] = await Promise.all([
           countChildren(uuid),
-          Promise.all(MAP_PLACED_THROUGH_PARENT.map((type) => total({ object_type: type }))),
+          Promise.all(
+            MAP_PLACED_THROUGH_PARENT.map((type) =>
+              counted(`total:${type}`, () => total({ object_type: type })),
+            ),
+          ),
         ]);
-        const bySize = (a: { total: number }, b: { total: number }) => a.total - b.total;
-        const shownFirst = [
-          ...counts.byType.filter((c) => !hide.includes(c.object_type)).sort(bySize),
-          ...counts.byType.filter((c) => hide.includes(c.object_type)).sort(bySize),
-        ];
-        let budget = MAX_MAP_POINTS - placedTotals.reduce((sum, n) => sum + n, 0);
+        const shown = counts.byType
+          .filter((c) => !hide.includes(c.object_type))
+          .sort((a, b) => a.total - b.total);
+        let budget =
+          MAX_MAP_POINTS -
+          MAP_PLACED_THROUGH_PARENT.reduce(
+            (sum, type, i) => sum + (placedTypes.includes(type) ? (placedTotals[i] ?? 0) : 0),
+            0,
+          );
         const loaded: string[] = [];
         const omitted: string[] = [];
-        for (const { object_type, total: size } of shownFirst) {
+        for (const { object_type, total: size } of shown) {
           if (size <= budget) {
             loaded.push(object_type);
             budget -= size;
           } else omitted.push(object_type);
         }
-        const [children, placed] = await Promise.all([
+        const [children, placed, extra] = await Promise.all([
           Promise.all(
             loaded.map((type) => limit(() => listAll({ parent_id: uuid, object_type: type }))),
           ),
-          Promise.all(MAP_PLACED_THROUGH_PARENT.map((type) => listAll({ object_type: type }))),
+          Promise.all(placedTypes.map((type) => listAll({ object_type: type }))),
+          include ? get(include) : Promise.resolve(null),
         ]);
-        const map = buildBodyMap(body, children.flat(), placed.flat());
-        // Items placed through a parent (players) are counted where they are placed.
+        const own = children.flat();
+        const around = placed.flat();
+        // The selected item of a hidden type: on the body, or placed through a loaded parent.
+        if (extra && !loaded.includes(extra.object_type)) {
+          if (extra.object_data.parent_id === uuid) own.push(extra);
+          else if (!placedTypes.includes(extra.object_type)) around.push(extra);
+        }
+        const map = buildBodyMap(body, own, around);
+        // Items placed through a parent (players) are counted where they are placed; hidden,
+        // they are not loaded and the server total stands in for them.
         const placedHere = [...map.points, ...map.inOrbit].filter((p) => p.via !== null);
-        const placedCounts = MAP_PLACED_THROUGH_PARENT.map((type) => ({
+        const placedCounts = MAP_PLACED_THROUGH_PARENT.map((type, i) => ({
           object_type: type,
-          total: placedHere.filter((p) => p.object_type === type).length,
+          total: placedTypes.includes(type)
+            ? placedHere.filter((p) => p.object_type === type).length
+            : (placedTotals[i] ?? 0),
         })).filter((c) => c.total > 0);
         return {
           ...map,
@@ -341,6 +391,7 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
       }
       const created = await client.create(item);
       reads.clear();
+      countCache.clear();
       return created;
     },
 
@@ -361,12 +412,14 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
       }
       const updated = await client.replace(uuid, { object_type: objectType, object_data: data });
       reads.clear();
+      countCache.clear();
       return updated;
     },
 
     async remove(uuid: string): Promise<void> {
       await client.remove(uuid);
       reads.clear();
+      countCache.clear();
     },
   };
 }
