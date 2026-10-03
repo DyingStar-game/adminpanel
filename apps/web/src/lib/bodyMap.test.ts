@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { MapPoint } from '@dyingstar-admin/schemas';
 import {
+  ARRIVAL_ZOOM,
   formatAltitude,
   formatLatLon,
   formatDistance,
@@ -169,6 +170,10 @@ describe('body map helpers', () => {
       [],
     );
     expect(trackMovement(again, undefined, truck(0, 0), 0)).toBeNull();
+  });
+
+  it('arrives on an item at the 1 km grid', () => {
+    expect(gridStep(2 ** -ARRIVAL_ZOOM)).toBe(1000);
   });
 
   it('keeps the last moves only', () => {

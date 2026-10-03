@@ -43,6 +43,8 @@ export interface MapFocus {
   at: MapLatLng;
   /** Changes on every request, so asking twice for the same point flies there again. */
   nonce: number;
+  /** Zoom to fly to; by default close enough to split the cluster holding the point. */
+  zoom?: number;
 }
 
 interface BodyMapCanvasProps {
@@ -189,7 +191,9 @@ function FlyTo({ focus }: { focus: MapFocus | null | undefined }) {
   useEffect(() => {
     // Leaflet scales the duration with the zoom change (seconds from a region to metres).
     if (focus)
-      map.flyTo(focus.at, Math.max(map.getZoom(), UNCLUSTER_ZOOM + 1), { duration: FLY_SECONDS });
+      map.flyTo(focus.at, focus.zoom ?? Math.max(map.getZoom(), UNCLUSTER_ZOOM + 1), {
+        duration: FLY_SECONDS,
+      });
   }, [map, focus]);
   return null;
 }

@@ -17,6 +17,7 @@ import {
   formatAltitude,
   formatDistance,
   formatLatLon,
+  ARRIVAL_ZOOM,
   isShown,
   mapLegend,
   markerShape,
@@ -87,10 +88,13 @@ function BodyMap({
     () => new Set(Object.keys(mapNamed).filter((type) => mapNamed[type])),
     [mapNamed],
   );
-  // Arriving with an item selected ("show on map"): the map flies to it once fitted.
+  // Arriving with an item selected ("show on map"): the map flies to it once fitted, at the
+  // 1 km grid.
   const [focus, setFocus] = useState<MapFocus | null>(() => {
     const point = map.points.find((p) => p.object_uuid === search.selected);
-    return point ? { uuid: point.object_uuid, nonce: 0, at: [point.y, point.x] } : null;
+    return point
+      ? { uuid: point.object_uuid, nonce: 0, at: [point.y, point.x], zoom: ARRIVAL_ZOOM }
+      : null;
   });
 
   const byUuid = useMemo(

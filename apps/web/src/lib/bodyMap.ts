@@ -147,6 +147,12 @@ export function gridStep(metresPerPixel: number): number {
   return Math.max(step ?? 10 * magnitude, 0.1);
 }
 
+/**
+ * Zoom of an arrival on an item ("show on map"): 1 m = 2^zoom px, so 2^3.5 ≈ 11.3 m per pixel,
+ * where the grid steps by 1 km — the item among its surroundings.
+ */
+export const ARRIVAL_ZOOM = -3.5;
+
 /** Visible area in projected metres. */
 export interface MapBounds {
   south: number;
