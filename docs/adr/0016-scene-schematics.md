@@ -75,6 +75,14 @@ reached through these hatches:
 - a new readout kind `energy` sums the installed batteries' charge and estimates the autonomy on
   flat ground from the installed engines (180 MJ ≈ 30 min / 50 km with one T1 engine).
 
+### Update (2026-10-03): batteries in kWh, battery schematic
+
+The game shows a battery's charge in kWh (a T1 holds 50 kWh = 180 MJ; `charge_j` of
+172 424 831 J reads 47.9 kWh in game): every charge in the schematics is now written in kWh,
+persistence keeping joules. Batteries get their own schematic
+(`scenes/_universe/props/vehicles/battery_t*.tscn`), a cell drawn as a progress bar of the
+charge against the tier capacity, through a new shape kind `battery`.
+
 ## Consequences
 
 - Adding a model = adding one data file and one line in the index.

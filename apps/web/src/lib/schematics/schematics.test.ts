@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createDataset, ids } from '@dyingstar-admin/testing';
+import { createDataset } from '@dyingstar-admin/testing';
 import { SCHEMATICS, sceneModel, schematicFor, valueAt } from '.';
 
-const vehicle = createDataset().find((i) => i.object_uuid === ids.vehicle);
+const dataset = createDataset();
 
 describe('schematics', () => {
   it('matches the truck by scenename, exactly or by pattern', () => {
@@ -11,9 +11,16 @@ describe('schematics', () => {
     expect(schematicFor(undefined)).toBeNull();
   });
 
+  it('matches batteries of every tier, not engines', () => {
+    expect(schematicFor('scenes/_universe/props/vehicles/battery_t1.tscn')?.id).toBe('battery');
+    expect(schematicFor('scenes/_universe/props/vehicles/battery_t3.tscn')?.id).toBe('battery');
+    expect(schematicFor('scenes/_universe/props/vehicles/engine_t1.tscn')).toBeNull();
+  });
+
   it('only uses paths that exist on a sample item', () => {
-    if (!vehicle) throw new Error('fixture vehicle missing');
     for (const schematic of SCHEMATICS) {
+      const sample = dataset.find((i) => schematicFor(i.object_data.scenename) === schematic);
+      if (!sample) throw new Error(`no fixture for the ${schematic.id} schematic`);
       const paths = [
         ...schematic.seats.map((s) => s.path),
         ...schematic.bays.map((b) => b.path),
@@ -22,8 +29,7 @@ describe('schematics', () => {
           r.kind === 'gauge' || r.kind === 'value' ? [r.path] : [],
         ),
       ];
-      for (const path of paths)
-        expect(valueAt(vehicle.object_data, path), path).not.toBeUndefined();
+      for (const path of paths) expect(valueAt(sample.object_data, path), path).not.toBeUndefined();
     }
   });
 

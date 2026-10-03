@@ -17,8 +17,11 @@ const KINDS: { kind: ComponentKind; model: RegExp }[] = [
   { kind: 'battery', model: /^battery_t(\d+)$/ },
 ];
 
-/** Energy stored by a full battery, per tier, in joules. */
+/** Energy stored by a full battery, per tier, in joules (T1: 180 MJ, shown 50 kWh in game). */
 export const BATTERY_CAPACITY_J: Record<number, number> = { 1: 180e6 };
+
+/** Persistence stores joules (`charge_j`); the game, and so the admin, shows kilowatt-hours. */
+export const kWh = (joules: number) => joules / 3.6e6;
 
 /** Power of an engine, per tier, in watts (T1: 100 kW / 600 N·m). */
 export const ENGINE_POWER_W: Record<number, number> = { 1: 100e3 };

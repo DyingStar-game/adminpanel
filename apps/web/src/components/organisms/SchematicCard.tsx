@@ -11,6 +11,7 @@ import {
   BATTERY_CAPACITY_J,
   batteryLevel,
   componentModel,
+  kWh,
 } from '@/lib/schematics/components';
 
 interface SchematicCardProps {
@@ -24,6 +25,9 @@ interface SchematicCardProps {
 const U = 22;
 const number = (value: unknown) => (typeof value === 'number' ? value : null);
 const reference = (value: unknown) => (typeof value === 'string' && value !== '' ? value : null);
+/** Colour of a charge level: green above half, amber above a fifth, red below. */
+const levelColor = (level: number) =>
+  level > 0.5 ? 'var(--ds-ok)' : level > 0.2 ? '#f59e0b' : 'var(--ds-danger)';
 
 /** Generic renderer of a declarative scene schematic (ADR 0016), bound to live data. */
 export function SchematicCard({ schematic, data, resolveRef, onNavigate }: SchematicCardProps) {
@@ -50,6 +54,20 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
       >
         {schematic.shapes.map((shape) => {
           const value = shape.value ? number(valueAt(data, shape.value.path)) : null;
+          if (shape.kind === 'battery') {
+            const model = componentModel(data.scenename);
+            return (
+              <BatteryCell
+                key={shape.label}
+                at={shape.at}
+                size={shape.size}
+                chargeJ={value}
+                capacityJ={model ? BATTERY_CAPACITY_J[model.tier] : undefined}
+                label={label(shape.label)}
+                format={format}
+              />
+            );
+          }
           return (
             <g key={shape.label}>
               <rect
@@ -193,17 +211,11 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
                   ? '…'
                   : t('schematic.empty');
           // Engines in the component colour; batteries by their charge.
-          const color =
-            level === null
-              ? typeColor('vehicle_component')
-              : level > 0.5
-                ? 'var(--ds-ok)'
-                : level > 0.2
-                  ? '#f59e0b'
-                  : 'var(--ds-danger)';
+          const color = level === null ? typeColor('vehicle_component') : levelColor(level);
+          const capacityJ = kind ? (BATTERY_CAPACITY_J[kind.tier] ?? 0) : 0;
           const charge =
-            level !== null && kind
-              ? ` · ${format.format((level * (BATTERY_CAPACITY_J[kind.tier] ?? 0)) / 1e6)} / ${format.format((BATTERY_CAPACITY_J[kind.tier] ?? 0) / 1e6)} MJ`
+            level !== null
+              ? ` · ${format.format(kWh(level * capacityJ))} / ${format.format(kWh(capacityJ))} kWh`
               : '';
           const box = 1.8 * U;
           return (
@@ -388,6 +400,86 @@ function Slot({
   );
 }
 
+/**
+ * A battery cell drawn as a progress bar: outline with its terminal, filled to the charge, the
+ * charge in kWh and its share of the capacity written over it.
+ */
+function BatteryCell({
+  at,
+  size,
+  chargeJ,
+  capacityJ,
+  label,
+  format,
+}: {
+  at: [number, number];
+  size: [number, number];
+  chargeJ: number | null;
+  capacityJ: number | undefined;
+  label: string;
+  format: Intl.NumberFormat;
+}) {
+  const level =
+    chargeJ !== null && capacityJ ? Math.min(1, Math.max(0, chargeJ / capacityJ)) : null;
+  const [x, y, w, h] = [at[0] * U, at[1] * U, size[0] * U, size[1] * U];
+  const pad = 4;
+  const text =
+    chargeJ === null
+      ? '—'
+      : capacityJ
+        ? `${format.format(kWh(chargeJ))} / ${format.format(kWh(capacityJ))} kWh`
+        : `${format.format(kWh(chargeJ))} kWh`;
+  return (
+    <g
+      role="meter"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={level === null ? undefined : Math.round(level * 100)}
+      aria-valuetext={text}
+    >
+      <title>{`${label} · ${text}`}</title>
+      <rect
+        x={x}
+        y={y}
+        width={w}
+        height={h}
+        rx={8}
+        fill="var(--ds-bg)"
+        stroke="var(--ds-line-2)"
+        strokeWidth={1.5}
+      />
+      {/* Positive terminal. */}
+      <rect x={x + w} y={y + h / 3} width={U / 2} height={h / 3} rx={3} fill="var(--ds-line-2)" />
+      {level !== null && (
+        <rect
+          x={x + pad}
+          y={y + pad}
+          width={Math.max(0, (w - 2 * pad) * level)}
+          height={h - 2 * pad}
+          rx={5}
+          fill={`color-mix(in oklab, ${levelColor(level)} 45%, var(--ds-bg))`}
+          stroke={levelColor(level)}
+          strokeWidth={1}
+        />
+      )}
+      <text
+        x={x + w / 2}
+        y={y + h / 2 - 3}
+        textAnchor="middle"
+        fontSize={16}
+        fontWeight={600}
+        fill="var(--ds-fg)"
+      >
+        {level === null ? '—' : `${Math.round(level * 100)} %`}
+      </text>
+      <text x={x + w / 2} y={y + h / 2 + 15} textAnchor="middle" fontSize={11} fill="var(--ds-fg)">
+        {text}
+      </text>
+    </g>
+  );
+}
+
 /** Batteries and engines installed in the bays, for the energy readout. */
 function installed(
   schematic: Schematic,
@@ -440,7 +532,7 @@ function Readouts({
               className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs"
               title={
                 batteries.length > 0
-                  ? `${format.format(chargeJ / 1e6)} / ${format.format(capacityJ / 1e6)} MJ · ${t('schematic.autonomyHint')}`
+                  ? `${format.format(kWh(chargeJ))} / ${format.format(kWh(capacityJ))} kWh · ${t('schematic.autonomyHint')}`
                   : undefined
               }
             >

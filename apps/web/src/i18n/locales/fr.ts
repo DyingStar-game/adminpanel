@@ -205,6 +205,8 @@ export const fr: Translations = {
       headlights: 'Phares',
       mass: 'Masse',
       energy: 'Énergie',
+      battery: 'Batterie',
+      charge: 'Charge',
     },
   },
   duplicate: {

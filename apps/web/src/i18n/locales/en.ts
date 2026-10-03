@@ -202,6 +202,8 @@ export const en = {
       headlights: 'Headlights',
       mass: 'Mass',
       energy: 'Energy',
+      battery: 'Battery',
+      charge: 'Charge',
     },
   },
   duplicate: {

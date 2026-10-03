@@ -100,7 +100,7 @@ Views adapt to the data through declarative files, validated with Zod at load ti
   1. Look at real items of that model first (`GET /items?scenename=…`) to get the paths.
   2. Create `apps/web/src/lib/schematics/<model>.ts` on the model of `truck.ts`: exact
      `scenename` (or a `*` pattern within one path segment), grid `size`, then `shapes`
-     (`body`, `cargo`), `seats`, `bays` (with an optional access `hatch`, drawn like a door),
+     (`body`, `cargo`, `battery` — a charge bar in kWh), `seats`, `bays` (with an optional access `hatch`, drawn like a door),
      `doors` (a door hinges at its front end and swings out on its side of the drawing) and
      `readouts` (`gauge`, `toggle`, `value`, `energy`). Component kinds and tiers (engine,
      battery capacity, engine power) are in `lib/schematics/components.ts`. Fields:

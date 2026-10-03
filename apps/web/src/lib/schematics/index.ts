@@ -1,10 +1,11 @@
 import { SchematicSchema, type Schematic } from './schema';
+import { battery } from './battery';
 import { truck } from './truck';
 
 export type { Schematic } from './schema';
 
 /** Every schematic, validated at load time: a typo in a file fails early (and in tests). */
-export const SCHEMATICS: Schematic[] = [truck].map((raw) => SchematicSchema.parse(raw));
+export const SCHEMATICS: Schematic[] = [truck, battery].map((raw) => SchematicSchema.parse(raw));
 
 const matches = (pattern: string, scenename: string) => {
   const a = pattern.split('/');

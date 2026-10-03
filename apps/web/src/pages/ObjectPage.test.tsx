@@ -45,6 +45,17 @@ describe('ObjectPage', () => {
     expect(onNavigate).toHaveBeenCalledWith(ids.player);
   });
 
+  it('draws a battery as a progress bar of its charge in kWh', async () => {
+    useInProcessBff();
+    renderPage(ids.wheelFr);
+
+    const schematic = await screen.findByRole('region', { name: 'Schematic' });
+    // T1 battery at 90 of 180 MJ: 25 of 50 kWh.
+    const charge = within(schematic).getByRole('meter', { name: 'Charge' });
+    expect(charge).toHaveAttribute('aria-valuenow', '50');
+    expect(charge).toHaveAttribute('aria-valuetext', '25 / 50 kWh');
+  });
+
   it('draws the truck schematic bound to the data', async () => {
     useInProcessBff();
     const { onNavigate } = renderPage(ids.vehicle);
@@ -58,7 +69,7 @@ describe('ObjectPage', () => {
       await within(schematic).findByRole('link', { name: 'FL · Engine T1' }),
     ).toBeInTheDocument();
     expect(
-      await within(schematic).findByRole('link', { name: 'FR · Battery T1 · 90 / 180 MJ' }),
+      await within(schematic).findByRole('link', { name: 'FR · Battery T1 · 25 / 50 kWh' }),
     ).toBeInTheDocument();
     // 50 % on the battery, and on the energy readout (the only battery).
     expect(within(schematic).getAllByText('50 %')).toHaveLength(2);

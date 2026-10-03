@@ -19,7 +19,11 @@ export const SchematicSchema = z.object({
   size: Point,
   shapes: z.array(
     z.object({
-      kind: z.enum(['body', 'cargo']),
+      /**
+       * `battery`: a cell drawn as a progress bar filled to `value` (a charge in joules) against
+       * the capacity of the item's own tier (`battery_t1` → 180 MJ).
+       */
+      kind: z.enum(['body', 'cargo', 'battery']),
       at: Point,
       size: Point,
       label: z.string(),
