@@ -32,21 +32,21 @@ describe('planDuplicate', () => {
         rotation: { x: 0, y: 1, z: 0 },
         // Own components point to their copies; the dangling one is emptied.
         components: {
-          Slot_FL: '00000000-0000-4000-8000-000000000002',
-          Slot_FR: '00000000-0000-4000-8000-000000000003',
-          Slot_RL: '',
-          Slot_RR: '',
+          slot_fl: '00000000-0000-4000-8000-000000000002',
+          slot_fr: '00000000-0000-4000-8000-000000000003',
+          slot_rl: '',
+          slot_rr: '',
         },
         // The copy has no pilot and no passenger.
         pilot_uuid: '',
-        seats: { SeatDriver: '', SeatPassenger: '' },
+        seats: { seat_driver: '', seat_passenger: '' },
         speed: 28.7,
       },
     });
     // Children follow the copied parent and keep their relative position.
     expect(fl?.object_data).toMatchObject({
       parent_id: '00000000-0000-4000-8000-000000000001',
-      slot_id: 'Slot_FL',
+      slot_id: 'slot_fl',
       position: byId.get(ids.wheelFl)?.object_data.position,
     });
     expect(fr?.object_uuid).toBe('00000000-0000-4000-8000-000000000003');
@@ -56,10 +56,10 @@ describe('planDuplicate', () => {
     const [vehicle] = planDuplicate(pick(ids.vehicle), { parentId: ids.planet }, sequence());
 
     expect(vehicle?.object_data.components).toEqual({
-      Slot_FL: '',
-      Slot_FR: '',
-      Slot_RL: '',
-      Slot_RR: '',
+      slot_fl: '',
+      slot_fr: '',
+      slot_rl: '',
+      slot_rr: '',
     });
     // Without a target position the original one is kept.
     expect(vehicle?.object_data.position).toEqual(byId.get(ids.vehicle)?.object_data.position);

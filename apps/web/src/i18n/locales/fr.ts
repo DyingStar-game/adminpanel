@@ -179,6 +179,7 @@ export const fr: Translations = {
   },
   schematic: {
     title: 'Schéma',
+    hatch: 'Trappe {{bay}}',
     open: 'ouverte',
     closed: 'fermée',
     unknown: 'inconnu (non utilisé)',

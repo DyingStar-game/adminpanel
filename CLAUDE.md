@@ -82,8 +82,9 @@ Check shapes against live data rather than guessing (**GET only**, never POST / 
 - The game saves an item about **every 60 s** by design: the admin cannot be more live than that.
   Player positions do not reach persistence yet (players sit at their apartment slot): a
   persistence bug the back team is fixing; the map and the move arrow will show them as is.
-- Vehicle `components.Slot_*` are component compartments (not wheels); `seats` map seat names to
-  player UUIDs or `""`.
+- Vehicle keys are snake_case since 2026-10-03: `components.slot_fl` … `slot_rr` are component
+  compartments (not wheels), `seats.seat_driver` / `seat_passenger` hold a player UUID or `""`,
+  `doors` has `front_l_door`, `front_r_door` and the compartment hatches `hatch_fl` … `hatch_rr`.
 
 ## Extension points
 

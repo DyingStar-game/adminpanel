@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /** Grid point `[x, y]` of a schematic, in grid units (top view). */
 const Point = z.tuple([z.number(), z.number()]);
-/** Dotted path into `object_data`, e.g. `seats.SeatDriver`. */
+/** Dotted path into `object_data`, e.g. `seats.seat_driver`. */
 const Path = z.string().min(1);
 
 /**
@@ -30,7 +30,17 @@ export const SchematicSchema = z.object({
   /** Seats: reference to the player sitting there, or `""` when empty. */
   seats: z.array(z.object({ at: Point, path: Path, label: z.string() })).default([]),
   /** Component compartments: reference to the installed component, or `""` when empty. */
-  bays: z.array(z.object({ at: Point, path: Path, label: z.string() })).default([]),
+  bays: z
+    .array(
+      z.object({
+        at: Point,
+        path: Path,
+        label: z.string(),
+        /** Boolean open state of the compartment's hatch (e.g. `doors.hatch_fl`), if it has one. */
+        hatch: Path.optional(),
+      }),
+    )
+    .default([]),
   /** Doors: boolean open state; absent while the model is not in use. */
   doors: z.array(z.object({ at: Point, path: Path, label: z.string() })).default([]),
   readouts: z

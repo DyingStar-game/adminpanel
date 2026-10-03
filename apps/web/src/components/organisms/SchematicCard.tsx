@@ -33,7 +33,8 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
       <svg
         role="img"
         aria-label={label(schematic.title)}
-        viewBox={`${-U} ${-U / 2} ${(width + 2) * U} ${(height + 1) * U}`}
+        // Two units of margin on the sides: open compartment hatches swing out of the bays.
+        viewBox={`${-2 * U} ${-U / 2} ${(width + 4) * U} ${(height + 1) * U}`}
         className="mx-auto max-h-110 w-full max-w-80 font-mono"
       >
         {schematic.shapes.map((shape) => {
@@ -148,6 +149,23 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
           );
         })}
 
+        {/* Compartment hatches: a short leaf on the bay's outer side, swung out when open. */}
+        {schematic.bays.map((bay) => {
+          if (!bay.hatch) return null;
+          const open = valueAt(data, bay.hatch);
+          const left = bay.at[0] < width / 2;
+          return (
+            <Door
+              key={bay.hatch}
+              hinge={[(bay.at[0] + (left ? -0.9 : 0.9)) * U, (bay.at[1] - 0.9) * U]}
+              side={left ? 'left' : 'right'}
+              open={open}
+              length={1.8 * U}
+              title={`${t('schematic.hatch', { bay: bay.label })} · ${t(`schematic.${doorState(open)}`)}`}
+            />
+          );
+        })}
+
         {schematic.bays.map((bay) => {
           const uuid = reference(valueAt(data, bay.path));
           const target = uuid ? resolveRef(uuid) : null;
@@ -228,18 +246,21 @@ function Door({
   side,
   open,
   title,
+  length = DOOR_LENGTH,
 }: {
   hinge: [number, number];
   side: 'left' | 'right';
   open: unknown;
   title: string;
+  /** Leaf length in pixels: a door by default, shorter for a compartment hatch. */
+  length?: number;
 }) {
   const state = doorState(open);
   // SVG angles turn clockwise: positive swings the free end to the left.
   const angle = state === 'open' ? (side === 'left' ? DOOR_SWING : -DOOR_SWING) : 0;
   const radians = (DOOR_SWING * Math.PI) / 180;
-  const endX = hx + (side === 'left' ? -1 : 1) * DOOR_LENGTH * Math.sin(radians);
-  const endY = hy + DOOR_LENGTH * Math.cos(radians);
+  const endX = hx + (side === 'left' ? -1 : 1) * length * Math.sin(radians);
+  const endY = hy + length * Math.cos(radians);
   return (
     <g aria-label={title} data-state={state}>
       <title>{title}</title>
@@ -250,13 +271,13 @@ function Door({
             x1={hx}
             y1={hy}
             x2={hx}
-            y2={hy + DOOR_LENGTH}
+            y2={hy + length}
             stroke="var(--ds-ok)"
             strokeWidth={2}
             strokeDasharray="3 3"
           />
           <path
-            d={`M ${hx} ${hy + DOOR_LENGTH} A ${DOOR_LENGTH} ${DOOR_LENGTH} 0 0 ${side === 'left' ? 1 : 0} ${endX} ${endY}`}
+            d={`M ${hx} ${hy + length} A ${length} ${length} 0 0 ${side === 'left' ? 1 : 0} ${endX} ${endY}`}
             fill="none"
             stroke="var(--ds-fg-3)"
             strokeWidth={1}
@@ -268,7 +289,7 @@ function Door({
         x={hx - 3}
         y={hy}
         width={6}
-        height={DOOR_LENGTH}
+        height={length}
         rx={3}
         fill={
           state === 'open' ? 'var(--ds-ok)' : state === 'closed' ? 'var(--ds-fg-3)' : 'transparent'

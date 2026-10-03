@@ -22,19 +22,19 @@ export const truck: z.input<typeof SchematicSchema> = {
     },
   ],
   seats: [
-    { at: [4.5, 4.5], path: 'seats.SeatDriver', label: 'driver' },
-    { at: [7.5, 4.5], path: 'seats.SeatPassenger', label: 'passenger' },
+    { at: [4.5, 4.5], path: 'seats.seat_driver', label: 'driver' },
+    { at: [7.5, 4.5], path: 'seats.seat_passenger', label: 'passenger' },
   ],
   // Bed spans y 9 → 19: front and rear bays sit 3 units from its front and rear edges.
   bays: [
-    { at: [0.6, 12], path: 'components.Slot_FL', label: 'FL' },
-    { at: [11.4, 12], path: 'components.Slot_FR', label: 'FR' },
-    { at: [0.6, 16], path: 'components.Slot_RL', label: 'RL' },
-    { at: [11.4, 16], path: 'components.Slot_RR', label: 'RR' },
+    { at: [0.6, 12], path: 'components.slot_fl', label: 'FL', hatch: 'doors.hatch_fl' },
+    { at: [11.4, 12], path: 'components.slot_fr', label: 'FR', hatch: 'doors.hatch_fr' },
+    { at: [0.6, 16], path: 'components.slot_rl', label: 'RL', hatch: 'doors.hatch_rl' },
+    { at: [11.4, 16], path: 'components.slot_rr', label: 'RR', hatch: 'doors.hatch_rr' },
   ],
   doors: [
-    { at: [2, 5.5], path: 'doors.Front_l_door', label: 'leftDoor' },
-    { at: [10, 5.5], path: 'doors.Front_r_door', label: 'rightDoor' },
+    { at: [2, 5.5], path: 'doors.front_l_door', label: 'leftDoor' },
+    { at: [10, 5.5], path: 'doors.front_r_door', label: 'rightDoor' },
   ],
   readouts: [
     { kind: 'gauge', path: 'speed', label: 'speed', unit: 'km/h', max: 'limiter_kmh' },

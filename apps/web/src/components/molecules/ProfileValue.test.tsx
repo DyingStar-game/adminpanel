@@ -10,10 +10,10 @@ describe('ProfileValue', () => {
       <ProfileValue
         {...base}
         renderer="namedMap"
-        value={{ Front_l_door: true, Front_r_door: false }}
+        value={{ front_l_door: true, front_r_door: false }}
       />,
     );
-    expect(screen.getByText('Front_l_door')).toBeInTheDocument();
+    expect(screen.getByText('front_l_door')).toBeInTheDocument();
     expect(screen.getByText('false')).toBeInTheDocument();
   });
 

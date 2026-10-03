@@ -346,7 +346,7 @@ describe('POST /api/items/:uuid/duplicate', () => {
       parent_id: ids.spawnbuilding,
       position: { x: 1, y: 0, z: 2 },
       pilot_uuid: '',
-      components: { Slot_FL: created[1].object_uuid, Slot_FR: created[2].object_uuid },
+      components: { slot_fl: created[1].object_uuid, slot_fr: created[2].object_uuid },
     });
     // The original is untouched.
     expect(persistence.items.get(ids.vehicle)?.object_data.pilot_uuid).toBe(ids.player);

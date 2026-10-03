@@ -103,21 +103,21 @@ describe('checkImportCoherence', () => {
     const [row] = check([
       truck({
         pilot_uuid: ids.player,
-        seats: { SeatDriver: ids.spawnbuilding, SeatPassenger: '' },
-        components: { Slot_FL: '99999999-9999-4999-8999-999999999999' },
+        seats: { seat_driver: ids.spawnbuilding, seat_passenger: '' },
+        components: { slot_fl: '99999999-9999-4999-8999-999999999999' },
       }),
     ]);
     expect(row?.findings).toEqual([
       {
         code: 'refWrongType',
         severity: 'warning',
-        path: 'object_data.seats.SeatDriver',
+        path: 'object_data.seats.seat_driver',
         params: { expected: 'player', actual: 'spawnbuilding' },
       },
       {
         code: 'refNotFound',
         severity: 'warning',
-        path: 'object_data.components.Slot_FL',
+        path: 'object_data.components.slot_fl',
         params: { uuid: '99999999-9999-4999-8999-999999999999' },
       },
     ]);

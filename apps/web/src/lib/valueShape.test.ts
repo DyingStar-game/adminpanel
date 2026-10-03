@@ -28,12 +28,12 @@ describe('collectUuids', () => {
   it('finds references at any depth, ignoring empty strings', () => {
     const data = {
       pilot_uuid: '',
-      seats: { SeatDriver: '1b029618-ee3b-4045-abaa-ed1fafd9f8f8', SeatPassenger: '' },
+      seats: { seat_driver: '1b029618-ee3b-4045-abaa-ed1fafd9f8f8', seat_passenger: '' },
       apartments: [{ player_uuid: '0fbdbed2-a747-ac5f-6f0d-5825b4e8ead4' }],
     };
 
     expect(collectUuids(data)).toEqual([
-      { path: 'seats.SeatDriver', uuid: '1b029618-ee3b-4045-abaa-ed1fafd9f8f8' },
+      { path: 'seats.seat_driver', uuid: '1b029618-ee3b-4045-abaa-ed1fafd9f8f8' },
       { path: 'apartments[0].player_uuid', uuid: '0fbdbed2-a747-ac5f-6f0d-5825b4e8ead4' },
     ]);
   });

@@ -18,7 +18,7 @@ import { orderChildTypes, profileFor, relationFor, type TypeProfile } from '@/li
 
 /**
  * Name of a reference on the graph: the profile label for a fixed path (`pilot_uuid` → pilot),
- * the slot name for a wildcard one (`seats.SeatDriver` → SeatDriver), else the raw path.
+ * the slot name for a wildcard one (`seats.seat_driver` → seat_driver), else the raw path.
  */
 function referenceRole(profile: TypeProfile | null, path: string): string {
   const relation = relationFor(profile, path);

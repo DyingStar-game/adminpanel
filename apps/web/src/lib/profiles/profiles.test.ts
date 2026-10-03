@@ -11,9 +11,9 @@ describe('type profiles', () => {
   });
 
   it('matches reference paths segment by segment', () => {
-    expect(matchesPath('seats.*', 'seats.SeatDriver')).toBe(true);
+    expect(matchesPath('seats.*', 'seats.seat_driver')).toBe(true);
     expect(matchesPath('seats.*', 'seats')).toBe(false);
-    expect(relationFor(profileFor('vehicle'), 'components.Slot_FL')?.target).toBe(
+    expect(relationFor(profileFor('vehicle'), 'components.slot_fl')?.target).toBe(
       'vehicle_component',
     );
   });

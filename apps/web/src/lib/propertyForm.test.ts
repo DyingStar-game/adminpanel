@@ -16,7 +16,7 @@ describe('property form', () => {
     expect(inferKind(false)).toBe('boolean');
     expect(inferKind({ x: 1, y: 2, z: 3 })).toBe('vec3');
     expect(inferKind({ w: 1, x: 0, y: 0, z: 0 })).toBe('json');
-    expect(inferKind({ SeatDriver: '' })).toBe('json');
+    expect(inferKind({ seat_driver: '' })).toBe('json');
     expect(inferKind(null)).toBe('json');
   });
 

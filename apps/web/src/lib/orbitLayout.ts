@@ -19,7 +19,7 @@ export interface OrbitInput {
   open: OpenCluster[];
   /**
    * Outgoing references (pilot, seats, components…), already resolved. `role` names the
-   * reference on the graph (e.g. `pilot`, `SeatDriver`).
+   * reference on the graph (e.g. `pilot`, `seat_driver`).
    */
   refs: (OrbitEntity & { path: string; role: string })[];
 }
@@ -57,7 +57,7 @@ export interface OrbitEdge {
   source: string;
   target: string;
   kind: 'parent' | 'cluster' | 'child' | 'ref';
-  /** References only: roles joined, e.g. `pilot · SeatDriver`. */
+  /** References only: roles joined, e.g. `pilot · seat_driver`. */
   label?: string;
 }
 

@@ -167,18 +167,18 @@ describe('orbitLayout', () => {
       open: [],
       refs: [
         { ...entity('pilot', 'player'), path: 'pilot_uuid', role: 'pilot' },
-        { ...entity('pilot', 'player'), path: 'seats.SeatDriver', role: 'SeatDriver' },
+        { ...entity('pilot', 'player'), path: 'seats.seat_driver', role: 'seat_driver' },
         { ...entity('p', 'planet'), path: 'spawn', role: 'spawn' },
       ],
     });
 
     const refNodes = nodes.filter((n) => n.kind === 'ref');
     expect(refNodes.map((n) => n.id)).toEqual(['pilot']);
-    expect(refNodes[0]).toMatchObject({ roles: ['pilot', 'SeatDriver'] });
+    expect(refNodes[0]).toMatchObject({ roles: ['pilot', 'seat_driver'] });
     // Never on the parent's vertical axis.
     expect(refNodes[0]?.x).not.toBe(0);
     const refEdges = edges.filter((e) => e.kind === 'ref');
     expect(refEdges).toHaveLength(1);
-    expect(refEdges[0]?.label).toBe('pilot · SeatDriver');
+    expect(refEdges[0]?.label).toBe('pilot · seat_driver');
   });
 });

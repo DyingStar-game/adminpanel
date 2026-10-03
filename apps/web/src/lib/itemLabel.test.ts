@@ -10,7 +10,7 @@ const item = (object_data: Record<string, unknown>) => ({
 describe('itemLabel', () => {
   it('prefers the name, then the slot, then type and short UUID', () => {
     expect(itemLabel(item({ name: 'SandBox' }))).toBe('SandBox');
-    expect(itemLabel(item({ slot_id: 'Slot_FL' }))).toBe('Slot_FL');
+    expect(itemLabel(item({ slot_id: 'slot_fl' }))).toBe('slot_fl');
     expect(itemLabel(item({ name: '' }))).toBe('vehicle 4e9a9ff9');
   });
 });

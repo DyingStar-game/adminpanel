@@ -26,8 +26,8 @@ describe('schematics', () => {
   });
 
   it('reads nested paths and model names', () => {
-    expect(valueAt({ seats: { SeatDriver: 'p' } }, 'seats.SeatDriver')).toBe('p');
-    expect(valueAt({ seats: null }, 'seats.SeatDriver')).toBeUndefined();
+    expect(valueAt({ seats: { seat_driver: 'p' } }, 'seats.seat_driver')).toBe('p');
+    expect(valueAt({ seats: null }, 'seats.seat_driver')).toBeUndefined();
     expect(sceneModel('scenes/_universe/props/vehicles/engine_t1.tscn')).toBe('engine_t1');
   });
 });

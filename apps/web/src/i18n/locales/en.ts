@@ -176,6 +176,7 @@ export const en = {
   },
   schematic: {
     title: 'Schematic',
+    hatch: 'Hatch {{bay}}',
     open: 'open',
     closed: 'closed',
     unknown: 'unknown (not in use)',

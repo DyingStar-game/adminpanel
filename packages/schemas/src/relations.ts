@@ -1,6 +1,6 @@
 /**
  * Known references between items (ADR 0008): a path in `object_data` holding the UUID of an
- * item of another type, `*` matching one path segment (`seats.SeatDriver`). Shared by the type
+ * item of another type, `*` matching one path segment (`seats.seat_driver`). Shared by the type
  * profiles (views) and the bulk import checks (ADR 0019).
  */
 export interface KnownRelation {
@@ -18,7 +18,7 @@ export const KNOWN_RELATIONS: Record<string, KnownRelation[]> = {
   player: [{ path: 'spawn_appartment_id', target: 'spawnbuilding', label: 'spawn apartment' }],
 };
 
-/** Matches a reference path (`seats.SeatDriver`) against a pattern (`seats.*`). */
+/** Matches a reference path (`seats.seat_driver`) against a pattern (`seats.*`). */
 export function matchesPath(pattern: string, path: string): boolean {
   const a = pattern.split('.');
   const b = path.split('.');

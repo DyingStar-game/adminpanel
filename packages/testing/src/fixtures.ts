@@ -120,15 +120,22 @@ const vehicle: Item = {
     position: { x: 4449340.32, y: 2674885.87, z: -3676467.6 },
     rotation: { x: -1.025, y: 2.93, z: -2.19 },
     pilot_uuid: ids.player,
-    seats: { SeatDriver: ids.player, SeatPassenger: '' },
-    // Slot_RR is an empty compartment.
+    seats: { seat_driver: ids.player, seat_passenger: '' },
+    // slot_rr is an empty compartment.
     components: {
-      Slot_FL: ids.wheelFl,
-      Slot_FR: ids.wheelFr,
-      Slot_RL: ids.missingComponent,
-      Slot_RR: '',
+      slot_fl: ids.wheelFl,
+      slot_fr: ids.wheelFr,
+      slot_rl: ids.missingComponent,
+      slot_rr: '',
     },
-    doors: { Front_l_door: true, Front_r_door: false },
+    doors: {
+      front_l_door: true,
+      front_r_door: false,
+      hatch_fl: false,
+      hatch_fr: true,
+      hatch_rl: false,
+      hatch_rr: false,
+    },
     speed: 28.7,
     engine: true,
     handbrake: false,
@@ -156,9 +163,9 @@ const wheel = (uuid: string, slot: string): Item => ({
 });
 
 const orphanComponent: Item = {
-  ...wheel(ids.orphanComponent, 'Slot_RR'),
+  ...wheel(ids.orphanComponent, 'slot_rr'),
   object_data: {
-    ...wheel(ids.orphanComponent, 'Slot_RR').object_data,
+    ...wheel(ids.orphanComponent, 'slot_rr').object_data,
     parent_id: ids.missingParent,
   },
 };
@@ -190,8 +197,8 @@ export function createDataset(): Item[] {
     spawnbuilding,
     player,
     vehicle,
-    wheel(ids.wheelFl, 'Slot_FL'),
-    wheel(ids.wheelFr, 'Slot_FR'),
+    wheel(ids.wheelFl, 'slot_fl'),
+    wheel(ids.wheelFr, 'slot_fr'),
     orphanComponent,
     rock,
   ]);

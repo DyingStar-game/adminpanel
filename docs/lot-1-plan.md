@@ -33,8 +33,8 @@ when a step needs a new decision, it is written as a new ADR before coding.
 
 Settled (2026-10-02):
 
-- Truck doors (`doors.Cube_004` … `Cube_007`): they will change soon in the game; the schematic
-  stays as it is until then.
+- Truck doors: the game renamed the vehicle keys to snake_case (2026-10-03); `Cube_004` …
+  `Cube_007` became the compartment hatches `hatch_fl` … `hatch_rr`, drawn on the schematic.
 - Truck `suspension`: not important, left out of the schematic.
 - Player positions: not reaching persistence is a persistence bug, fixed by the back team; no
   change needed in the admin (the map and the move arrow show them once they are saved).

@@ -70,7 +70,7 @@ describe('OrbitPage', () => {
     const labels = within(screen.getByRole('region', { name: 'Orbit' }))
       .queryAllByRole('group', { hidden: true })
       .map((el) => el.getAttribute('aria-label'));
-    expect(labels).not.toContain('Slot_FL');
+    expect(labels).not.toContain('slot_fl');
   });
 
   it('opens a cluster and fans its children out', async () => {
@@ -83,7 +83,7 @@ describe('OrbitPage', () => {
       open: ['vehicle_component'],
       pages: {},
     });
-    expect(await node('Slot_FL')).toBeInTheDocument();
+    expect(await node('slot_fl')).toBeInTheDocument();
     expect(await screen.findByText('1–2 of 2')).toBeInTheDocument();
   });
 

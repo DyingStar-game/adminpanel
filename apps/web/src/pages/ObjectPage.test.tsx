@@ -34,7 +34,7 @@ describe('ObjectPage', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('limiter_on / limiter_kmh')).toBeInTheDocument();
     const relations = section('Relations');
-    expect(await within(relations).findByText('components.Slot_FL')).toBeInTheDocument();
+    expect(await within(relations).findByText('components.slot_fl')).toBeInTheDocument();
     expect(within(relations).getAllByText('component')).toHaveLength(3);
     expect(within(relations).getByText('pilot')).toBeInTheDocument();
     expect(await within(relations).findByText(/missing item/)).toBeInTheDocument();
@@ -57,12 +57,21 @@ describe('ObjectPage', () => {
     expect(await within(schematic).findByLabelText('RL · missing item')).toBeInTheDocument();
     expect(within(schematic).getByLabelText('RR · empty')).toBeInTheDocument();
     expect(within(schematic).getByText('28.7 km/h')).toBeInTheDocument();
-    // Front_l_door is open: its leaf swings out; Front_r_door is closed.
+    // front_l_door is open: its leaf swings out; front_r_door is closed.
     expect(within(schematic).getByLabelText('Left door · open')).toHaveAttribute(
       'data-state',
       'open',
     );
     expect(within(schematic).getByLabelText('Right door · closed')).toHaveAttribute(
+      'data-state',
+      'closed',
+    );
+    // Compartment hatches (`doors.hatch_*`): FR is open, the others closed.
+    expect(within(schematic).getByLabelText('Hatch FR · open')).toHaveAttribute(
+      'data-state',
+      'open',
+    );
+    expect(within(schematic).getByLabelText('Hatch FL · closed')).toHaveAttribute(
       'data-state',
       'closed',
     );
@@ -173,7 +182,7 @@ describe('ObjectPage', () => {
     useInProcessBff();
     renderPage(ids.wheelFl);
 
-    await screen.findByRole('heading', { level: 1, name: 'Slot_FL' });
+    await screen.findByRole('heading', { level: 1, name: 'slot_fl' });
     expect(screen.queryByRole('button', { name: 'Show on map' })).not.toBeInTheDocument();
   });
 

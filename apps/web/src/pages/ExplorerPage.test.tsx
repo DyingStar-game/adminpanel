@@ -114,7 +114,7 @@ describe('ExplorerPage', () => {
     });
 
     await screen.findByRole('heading', { name: /vehicle 4e9a9ff9/ });
-    // The pilot is referenced twice (pilot_uuid and seats.SeatDriver).
+    // The pilot is referenced twice (pilot_uuid and seats.seat_driver).
     const [pilot] = await within(inspector()).findAllByRole('button', { name: /ddurieux/ });
     await userEvent.click(pilot as HTMLElement);
 

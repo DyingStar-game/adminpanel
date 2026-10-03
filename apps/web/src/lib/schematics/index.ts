@@ -26,7 +26,7 @@ export const schematicFor = (scenename: unknown): Schematic | null =>
     ? (SCHEMATICS.find((s) => matches(s.scenename, scenename)) ?? null)
     : null;
 
-/** Reads a dotted path in `object_data` (`seats.SeatDriver`). */
+/** Reads a dotted path in `object_data` (`seats.seat_driver`). */
 export function valueAt(data: Record<string, unknown>, path: string): unknown {
   return path.split('.').reduce<unknown>((value, key) => {
     if (value && typeof value === 'object' && !Array.isArray(value)) {

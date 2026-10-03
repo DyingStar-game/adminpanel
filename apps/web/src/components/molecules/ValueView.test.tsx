@@ -44,12 +44,12 @@ describe('ValueView', () => {
   });
 
   it('collapses nested objects and resolves references inside', async () => {
-    view({ SeatDriver: PLAYER, SeatPassenger: '' });
+    view({ seat_driver: PLAYER, seat_passenger: '' });
 
     const toggle = screen.getByRole('button', { name: '2 keys' });
-    expect(screen.queryByText('SeatDriver')).not.toBeInTheDocument();
+    expect(screen.queryByText('seat_driver')).not.toBeInTheDocument();
     await userEvent.click(toggle);
-    expect(screen.getByText('SeatDriver')).toBeInTheDocument();
+    expect(screen.getByText('seat_driver')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /ddurieux/ })).toBeInTheDocument();
   });
 
