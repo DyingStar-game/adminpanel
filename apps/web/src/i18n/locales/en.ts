@@ -177,6 +177,11 @@ export const en = {
   schematic: {
     title: 'Schematic',
     hatch: 'Hatch {{bay}}',
+    kinds: { engine: 'Engine', battery: 'Battery' },
+    noBattery: 'no battery',
+    autonomy: '≈ {{minutes}} min · ≈ {{km}} km',
+    autonomyHint:
+      'estimate on flat ground, engines at full power (game team figures, to be validated)',
     open: 'open',
     closed: 'closed',
     unknown: 'unknown (not in use)',
@@ -196,6 +201,7 @@ export const en = {
       handbrake: 'Handbrake',
       headlights: 'Headlights',
       mass: 'Mass',
+      energy: 'Energy',
     },
   },
   duplicate: {

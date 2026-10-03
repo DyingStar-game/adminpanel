@@ -52,8 +52,18 @@ describe('ObjectPage', () => {
     const schematic = await screen.findByRole('region', { name: 'Schematic' });
     const driver = await within(schematic).findByRole('link', { name: 'Driver · ddurieux' });
     expect(within(schematic).getByLabelText('Passenger · empty')).toBeInTheDocument();
-    // Compartments show the installed component model, a broken reference or an empty bay.
-    expect(await within(schematic).findByRole('link', { name: 'FL · wheel' })).toBeInTheDocument();
+    // Compartments show the installed component (kind and tier, a battery's charge), a broken
+    // reference or an empty bay.
+    expect(
+      await within(schematic).findByRole('link', { name: 'FL · Engine T1' }),
+    ).toBeInTheDocument();
+    expect(
+      await within(schematic).findByRole('link', { name: 'FR · Battery T1 · 90 / 180 MJ' }),
+    ).toBeInTheDocument();
+    // 50 % on the battery, and on the energy readout (the only battery).
+    expect(within(schematic).getAllByText('50 %')).toHaveLength(2);
+    // Energy: one half-charged T1 battery, one T1 engine: 90 MJ / 100 kW = 15 min, 25 km.
+    expect(within(schematic).getByText('≈ 15 min · ≈ 25 km')).toBeInTheDocument();
     expect(await within(schematic).findByLabelText('RL · missing item')).toBeInTheDocument();
     expect(within(schematic).getByLabelText('RR · empty')).toBeInTheDocument();
     expect(within(schematic).getByText('28.7 km/h')).toBeInTheDocument();

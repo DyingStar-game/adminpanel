@@ -308,10 +308,11 @@ describe('GET /api/items/scenes', () => {
     const res = await buildApp().request('/api/items/scenes');
 
     const body = await read(res);
+    // Two engines (FL and the orphan), one battery.
     expect(body.scenes[0]).toEqual({
-      scenename: 'scenes/_universe/vehicles/components/wheel.tscn',
+      scenename: 'scenes/_universe/props/vehicles/engine_t1.tscn',
       object_type: 'vehicle_component',
-      count: 3,
+      count: 2,
     });
     expect(body.scenes).toContainEqual({
       scenename: 'scenes/_universe/vehicles/ground/trucks/truck.tscn',

@@ -6,6 +6,12 @@ import type { RefTarget } from '@/components/molecules/UuidLink';
 import { cn } from '@/lib/cn';
 import { typeColor } from '@/lib/objectTypes';
 import { sceneModel, valueAt, type Schematic } from '@/lib/schematics';
+import {
+  autonomy,
+  BATTERY_CAPACITY_J,
+  batteryLevel,
+  componentModel,
+} from '@/lib/schematics/components';
 
 interface SchematicCardProps {
   schematic: Schematic;
@@ -29,12 +35,17 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
 
   return (
     <div className="flex flex-col gap-3">
-      <Readouts schematic={schematic} data={data} label={label} format={format} />
+      <Readouts
+        schematic={schematic}
+        data={data}
+        label={label}
+        format={format}
+        resolveRef={resolveRef}
+      />
       <svg
         role="img"
         aria-label={label(schematic.title)}
-        // Two units of margin on the sides: open compartment hatches swing out of the bays.
-        viewBox={`${-2 * U} ${-U / 2} ${(width + 4) * U} ${(height + 1) * U}`}
+        viewBox={`${-U} ${-U / 2} ${(width + 2) * U} ${(height + 1) * U}`}
         className="mx-auto max-h-110 w-full max-w-80 font-mono"
       >
         {schematic.shapes.map((shape) => {
@@ -149,18 +160,16 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
           );
         })}
 
-        {/* Compartment hatches: a short leaf on the bay's outer side, swung out when open. */}
+        {/* Compartment hatches, on the body's edge like the cab doors. */}
         {schematic.bays.map((bay) => {
           if (!bay.hatch) return null;
-          const open = valueAt(data, bay.hatch);
-          const left = bay.at[0] < width / 2;
+          const open = valueAt(data, bay.hatch.path);
           return (
             <Door
-              key={bay.hatch}
-              hinge={[(bay.at[0] + (left ? -0.9 : 0.9)) * U, (bay.at[1] - 0.9) * U]}
-              side={left ? 'left' : 'right'}
+              key={bay.hatch.path}
+              hinge={[bay.hatch.at[0] * U, (bay.hatch.at[1] - 1) * U]}
+              side={bay.hatch.at[0] < width / 2 ? 'left' : 'right'}
               open={open}
-              length={1.8 * U}
               title={`${t('schematic.hatch', { bay: bay.label })} · ${t(`schematic.${doorState(open)}`)}`}
             />
           );
@@ -170,27 +179,45 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
           const uuid = reference(valueAt(data, bay.path));
           const target = uuid ? resolveRef(uuid) : null;
           const missing = target?.status === 'missing';
-          const model =
-            target?.status === 'found'
-              ? (sceneModel(target.scenename) ?? target.label)
+          const found = target?.status === 'found' ? target : null;
+          const kind = found ? componentModel(found.scenename) : null;
+          const level =
+            kind?.kind === 'battery' ? batteryLevel(kind.tier, found?.data?.charge_j) : null;
+          const model = kind
+            ? `${t(`schematic.kinds.${kind.kind}`)} T${kind.tier}`
+            : found
+              ? (sceneModel(found.scenename) ?? found.label)
               : missing
                 ? t('value.brokenLink')
                 : uuid
                   ? '…'
                   : t('schematic.empty');
-          const color = typeColor('vehicle_component');
+          // Engines in the component colour; batteries by their charge.
+          const color =
+            level === null
+              ? typeColor('vehicle_component')
+              : level > 0.5
+                ? 'var(--ds-ok)'
+                : level > 0.2
+                  ? '#f59e0b'
+                  : 'var(--ds-danger)';
+          const charge =
+            level !== null && kind
+              ? ` · ${format.format((level * (BATTERY_CAPACITY_J[kind.tier] ?? 0)) / 1e6)} / ${format.format((BATTERY_CAPACITY_J[kind.tier] ?? 0) / 1e6)} MJ`
+              : '';
+          const box = 1.8 * U;
           return (
             <Slot
               key={bay.path}
               uuid={missing ? null : uuid}
               onNavigate={onNavigate}
-              title={`${bay.label} · ${model}`}
+              title={`${bay.label} · ${model}${charge}`}
             >
               <rect
                 x={(bay.at[0] - 0.9) * U}
                 y={(bay.at[1] - 0.9) * U}
-                width={1.8 * U}
-                height={1.8 * U}
+                width={box}
+                height={box}
                 rx={5}
                 fill={
                   uuid && !missing
@@ -201,6 +228,17 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
                 strokeWidth={1.5}
                 strokeDasharray={uuid ? undefined : '3 3'}
               />
+              {level !== null && (
+                // Charge gauge along the bottom of the compartment.
+                <rect
+                  x={(bay.at[0] - 0.9) * U + 3}
+                  y={(bay.at[1] + 0.9) * U - 6}
+                  width={Math.max(0, (box - 6) * level)}
+                  height={3}
+                  rx={1.5}
+                  fill={color}
+                />
+              )}
               <text
                 x={bay.at[0] * U}
                 y={bay.at[1] * U + 4}
@@ -220,6 +258,17 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
               >
                 {model}
               </text>
+              {level !== null && (
+                <text
+                  x={bay.at[0] * U}
+                  y={bay.at[1] * U + U * 2.05}
+                  textAnchor="middle"
+                  fontSize={9.5}
+                  fill={color}
+                >
+                  {Math.round(level * 100)} %
+                </text>
+              )}
             </Slot>
           );
         })}
@@ -339,22 +388,83 @@ function Slot({
   );
 }
 
+/** Batteries and engines installed in the bays, for the energy readout. */
+function installed(
+  schematic: Schematic,
+  data: ObjectData,
+  resolveRef: (uuid: string) => RefTarget,
+) {
+  const batteries: { chargeJ: number; capacityJ: number }[] = [];
+  const engines: number[] = [];
+  for (const bay of schematic.bays) {
+    const uuid = reference(valueAt(data, bay.path));
+    const target = uuid ? resolveRef(uuid) : null;
+    if (target?.status !== 'found') continue;
+    const model = componentModel(target.scenename);
+    if (model?.kind === 'engine') engines.push(model.tier);
+    const capacityJ = model ? BATTERY_CAPACITY_J[model.tier] : undefined;
+    const chargeJ = target.data?.charge_j;
+    if (model?.kind === 'battery' && capacityJ && typeof chargeJ === 'number') {
+      batteries.push({ chargeJ, capacityJ });
+    }
+  }
+  return { batteries, engines };
+}
+
 function Readouts({
   schematic,
   data,
   label,
   format,
+  resolveRef,
 }: {
   schematic: Schematic;
   data: ObjectData;
   label: (key: string) => string;
   format: Intl.NumberFormat;
+  resolveRef: (uuid: string) => RefTarget;
 }) {
   const { t } = useTranslation();
   if (schematic.readouts.length === 0) return null;
   return (
     <div className="flex flex-wrap gap-2">
       {schematic.readouts.map((readout) => {
+        if (readout.kind === 'energy') {
+          const { batteries, engines } = installed(schematic, data, resolveRef);
+          const chargeJ = batteries.reduce((sum, b) => sum + b.chargeJ, 0);
+          const capacityJ = batteries.reduce((sum, b) => sum + b.capacityJ, 0);
+          const range = batteries.length > 0 ? autonomy(chargeJ, engines) : null;
+          return (
+            <span
+              key="energy"
+              className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs"
+              title={
+                batteries.length > 0
+                  ? `${format.format(chargeJ / 1e6)} / ${format.format(capacityJ / 1e6)} MJ · ${t('schematic.autonomyHint')}`
+                  : undefined
+              }
+            >
+              {label(readout.label)}
+              {batteries.length === 0 ? (
+                <MonoText tone="subtle">{t('schematic.noBattery')}</MonoText>
+              ) : (
+                <>
+                  <MonoText className="font-semibold">
+                    {Math.round((chargeJ / capacityJ) * 100)} %
+                  </MonoText>
+                  {range && (
+                    <MonoText tone="subtle">
+                      {t('schematic.autonomy', {
+                        minutes: format.format(Math.round(range.seconds / 60)),
+                        km: format.format(Math.round(range.metres / 100) / 10),
+                      })}
+                    </MonoText>
+                  )}
+                </>
+              )}
+            </span>
+          );
+        }
         const value = valueAt(data, readout.path);
         // Every readout is the same chip, aligned on one line.
         const chip =

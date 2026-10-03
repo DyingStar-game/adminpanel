@@ -36,8 +36,11 @@ export const SchematicSchema = z.object({
         at: Point,
         path: Path,
         label: z.string(),
-        /** Boolean open state of the compartment's hatch (e.g. `doors.hatch_fl`), if it has one. */
-        hatch: Path.optional(),
+        /**
+         * Access hatch of the compartment, drawn like a door: `at` is the middle of its leaf on
+         * the body's edge, `path` its boolean open state (e.g. `doors.hatch_fl`).
+         */
+        hatch: z.object({ at: Point, path: Path }).optional(),
       }),
     )
     .default([]),
@@ -55,6 +58,11 @@ export const SchematicSchema = z.object({
           max: Path.optional(),
         }),
         z.object({ kind: z.literal('toggle'), path: Path, label: z.string() }),
+        /**
+         * Energy of the batteries installed in the bays (charge against their tier capacity) and
+         * the autonomy estimated from the installed engines.
+         */
+        z.object({ kind: z.literal('energy'), label: z.string() }),
         z.object({
           kind: z.literal('value'),
           path: Path,

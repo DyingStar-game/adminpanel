@@ -60,6 +60,21 @@ when closed, swung out by 55° when open, towards the left for doors on the left
 drawing and the right otherwise, with its swing arc and the opening left in the body. How to add
 a schematic is summed up in [`CLAUDE.md`](../../CLAUDE.md) ("Extension points").
 
+### Update (2026-10-03): compartment hatches, component kinds and energy
+
+The game renamed the vehicle keys to snake_case and replaced `Cube_004` … `Cube_007` by the
+compartment hatches `doors.hatch_fl` … `hatch_rr`. The compartments are under the cargo bed,
+reached through these hatches:
+
+- a bay may declare a `hatch` (`at` on the body's edge, `path` of its open state), drawn like a
+  cab door; the truck's bays sit inside the bed, their hatches on its sides;
+- `lib/schematics/components.ts` reads a component's kind and tier from its scene
+  (`engine_t1`, `battery_t1`) and holds what a tier gives (battery capacity 180 MJ and engine
+  power 100 kW for T1, game team figures to be validated); a battery bay shows its charge
+  (`charge_j` against the capacity) as a percentage and a gauge;
+- a new readout kind `energy` sums the installed batteries' charge and estimates the autonomy on
+  flat ground from the installed engines (180 MJ ≈ 30 min / 50 km with one T1 engine).
+
 ## Consequences
 
 - Adding a model = adding one data file and one line in the index.

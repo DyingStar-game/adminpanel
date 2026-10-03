@@ -18,7 +18,9 @@ describe('schematics', () => {
         ...schematic.seats.map((s) => s.path),
         ...schematic.bays.map((b) => b.path),
         ...schematic.shapes.flatMap((s) => (s.value ? [s.value.path] : [])),
-        ...schematic.readouts.filter((r) => r.kind !== 'toggle').map((r) => r.path),
+        ...schematic.readouts.flatMap((r) =>
+          r.kind === 'gauge' || r.kind === 'value' ? [r.path] : [],
+        ),
       ];
       for (const path of paths)
         expect(valueAt(vehicle.object_data, path), path).not.toBeUndefined();

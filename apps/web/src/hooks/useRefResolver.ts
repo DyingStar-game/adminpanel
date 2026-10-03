@@ -21,6 +21,7 @@ export function useRefResolver(uuids: string[]): (uuid: string) => RefTarget {
           objectType: result.data.object_type,
           parentId: result.data.object_data.parent_id,
           scenename: result.data.object_data.scenename,
+          data: result.data.object_data,
         });
       }
     });

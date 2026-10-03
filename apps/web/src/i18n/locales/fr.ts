@@ -180,6 +180,11 @@ export const fr: Translations = {
   schematic: {
     title: 'Schéma',
     hatch: 'Trappe {{bay}}',
+    kinds: { engine: 'Moteur', battery: 'Batterie' },
+    noBattery: 'aucune batterie',
+    autonomy: '≈ {{minutes}} min · ≈ {{km}} km',
+    autonomyHint:
+      'estimation sur le plat, moteurs à pleine puissance (chiffres de l’équipe jeu, à valider)',
     open: 'ouverte',
     closed: 'fermée',
     unknown: 'inconnu (non utilisé)',
@@ -199,6 +204,7 @@ export const fr: Translations = {
       handbrake: 'Frein à main',
       headlights: 'Phares',
       mass: 'Masse',
+      energy: 'Énergie',
     },
   },
   duplicate: {

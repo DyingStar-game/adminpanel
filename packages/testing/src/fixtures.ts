@@ -148,7 +148,13 @@ const vehicle: Item = {
   },
 };
 
-const wheel = (uuid: string, slot: string): Item => ({
+/** A vehicle component: an engine by default, a battery (`charge_j` in joules) when given. */
+const wheel = (
+  uuid: string,
+  slot: string,
+  model: 'engine_t1' | 'battery_t1' = 'engine_t1',
+  extra: Record<string, unknown> = {},
+): Item => ({
   object_type: 'vehicle_component',
   object_uuid: uuid,
   object_data: {
@@ -156,7 +162,9 @@ const wheel = (uuid: string, slot: string): Item => ({
     uuid,
     parent_id: ids.vehicle,
     slot_id: slot,
-    scenename: 'scenes/_universe/vehicles/components/wheel.tscn',
+    scenename: `scenes/_universe/props/vehicles/${model}.tscn`,
+    weight: 25,
+    ...extra,
     position: { x: -1227.515, y: -811.175, z: -7231.805 },
     rotation: { x: 1.245, y: 1.17, z: 1.125 },
   },
@@ -198,7 +206,8 @@ export function createDataset(): Item[] {
     player,
     vehicle,
     wheel(ids.wheelFl, 'slot_fl'),
-    wheel(ids.wheelFr, 'slot_fr'),
+    // A T1 battery at half charge (90 of 180 MJ).
+    wheel(ids.wheelFr, 'slot_fr', 'battery_t1', { charge_j: 90e6 }),
     orphanComponent,
     rock,
   ]);
