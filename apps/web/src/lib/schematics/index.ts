@@ -27,6 +27,16 @@ export const schematicFor = (scenename: unknown): Schematic | null =>
     ? (SCHEMATICS.find((s) => matches(s.scenename, scenename)) ?? null)
     : null;
 
+/** Top-level keys of `object_data` a schematic shows: the page does not repeat them. */
+export function schematicKeys(schematic: Schematic): Set<string> {
+  const paths = [
+    ...schematic.shapes.flatMap((s) => (s.value ? [s.value.path] : [])),
+    ...schematic.lights.map((l) => l.path),
+    ...schematic.readouts.flatMap((r) => ('path' in r ? [r.path] : [])),
+  ];
+  return new Set(paths.filter((path) => !path.includes('.')));
+}
+
 /** Reads a dotted path in `object_data` (`seats.seat_driver`). */
 export function valueAt(data: Record<string, unknown>, path: string): unknown {
   return path.split('.').reduce<unknown>((value, key) => {

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { ObjectData } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
@@ -11,7 +11,10 @@ import {
   BATTERY_CAPACITY_J,
   batteryLevel,
   componentModel,
+  installedEnergy,
   kWh,
+  levelColor,
+  lookup,
 } from '@/lib/schematics/components';
 
 interface SchematicCardProps {
@@ -23,11 +26,10 @@ interface SchematicCardProps {
 
 /** Pixels per grid unit of a schematic. */
 const U = 22;
+/** Length of a lit headlight's small cone, within the margin above the drawing. */
+const CONE_LENGTH = 0.45 * U;
 const number = (value: unknown) => (typeof value === 'number' ? value : null);
 const reference = (value: unknown) => (typeof value === 'string' && value !== '' ? value : null);
-/** Colour of a charge level: green above half, amber above a fifth, red below. */
-const levelColor = (level: number) =>
-  level > 0.5 ? 'var(--ds-ok)' : level > 0.2 ? '#f59e0b' : 'var(--ds-danger)';
 
 /** Generic renderer of a declarative scene schematic (ADR 0016), bound to live data. */
 export function SchematicCard({ schematic, data, resolveRef, onNavigate }: SchematicCardProps) {
@@ -108,6 +110,19 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
                 </text>
               )}
             </g>
+          );
+        })}
+
+        {schematic.lights.map((light) => {
+          const on = valueAt(data, light.path);
+          const state = on === true ? t('schematic.on') : on === false ? t('schematic.off') : '—';
+          return (
+            <Light
+              key={light.label}
+              at={[light.at[0] * U, light.at[1] * U]}
+              on={on === true}
+              title={`${label(light.label)} · ${state}`}
+            />
           );
         })}
 
@@ -365,6 +380,45 @@ function Door({
   );
 }
 
+/**
+ * A light on the body's front edge: a lens, and when on a cone of light widening ahead of it and
+ * fading out; dimmed lens when off.
+ */
+function Light({ at: [x, y], on, title }: { at: [number, number]; on: boolean; title: string }) {
+  const gradient = useId();
+  const lens = 0.9 * U;
+  const spread = 0.25 * U;
+  return (
+    <g aria-label={title} data-state={on ? 'on' : 'off'}>
+      <title>{title}</title>
+      {on && (
+        <>
+          <defs>
+            <linearGradient id={gradient} x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0" stopColor="var(--ds-acc)" stopOpacity={0.6} />
+              <stop offset="1" stopColor="var(--ds-acc)" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <path
+            aria-hidden
+            d={`M ${x - lens / 2} ${y} L ${x - lens / 2 - spread} ${y - CONE_LENGTH} L ${x + lens / 2 + spread} ${y - CONE_LENGTH} L ${x + lens / 2} ${y} Z`}
+            fill={`url(#${gradient})`}
+          />
+        </>
+      )}
+      <rect
+        x={x - lens / 2}
+        y={y - 2}
+        width={lens}
+        height={5}
+        rx={2.5}
+        fill={on ? 'var(--ds-acc)' : 'var(--ds-fg-3)'}
+        stroke={on ? 'var(--ds-acc)' : 'var(--ds-line-2)'}
+      />
+    </g>
+  );
+}
+
 /** Clickable slot when it references an existing entity. */
 function Slot({
   uuid,
@@ -480,29 +534,6 @@ function BatteryCell({
   );
 }
 
-/** Batteries and engines installed in the bays, for the energy readout. */
-function installed(
-  schematic: Schematic,
-  data: ObjectData,
-  resolveRef: (uuid: string) => RefTarget,
-) {
-  const batteries: { chargeJ: number; capacityJ: number }[] = [];
-  const engines: number[] = [];
-  for (const bay of schematic.bays) {
-    const uuid = reference(valueAt(data, bay.path));
-    const target = uuid ? resolveRef(uuid) : null;
-    if (target?.status !== 'found') continue;
-    const model = componentModel(target.scenename);
-    if (model?.kind === 'engine') engines.push(model.tier);
-    const capacityJ = model ? BATTERY_CAPACITY_J[model.tier] : undefined;
-    const chargeJ = target.data?.charge_j;
-    if (model?.kind === 'battery' && capacityJ && typeof chargeJ === 'number') {
-      batteries.push({ chargeJ, capacityJ });
-    }
-  }
-  return { batteries, engines };
-}
-
 function Readouts({
   schematic,
   data,
@@ -522,22 +553,24 @@ function Readouts({
     <div className="flex flex-wrap gap-2">
       {schematic.readouts.map((readout) => {
         if (readout.kind === 'energy') {
-          const { batteries, engines } = installed(schematic, data, resolveRef);
-          const chargeJ = batteries.reduce((sum, b) => sum + b.chargeJ, 0);
-          const capacityJ = batteries.reduce((sum, b) => sum + b.capacityJ, 0);
-          const range = batteries.length > 0 ? autonomy(chargeJ, engines) : null;
+          const { chargeJ, capacityJ, batteries, engines } = installedEnergy(
+            schematic,
+            data,
+            lookup(resolveRef),
+          );
+          const range = batteries > 0 ? autonomy(chargeJ, engines) : null;
           return (
             <span
               key="energy"
               className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs"
               title={
-                batteries.length > 0
+                batteries > 0
                   ? `${format.format(kWh(chargeJ))} / ${format.format(kWh(capacityJ))} kWh · ${t('schematic.autonomyHint')}`
                   : undefined
               }
             >
               {label(readout.label)}
-              {batteries.length === 0 ? (
+              {batteries === 0 ? (
                 <MonoText tone="subtle">{t('schematic.noBattery')}</MonoText>
               ) : (
                 <>

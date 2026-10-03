@@ -48,6 +48,11 @@ export const SchematicSchema = z.object({
       }),
     )
     .default([]),
+  /**
+   * Lights drawn on the body's edge (`at` is their middle), lit with a beam when `path` is
+   * true (e.g. the truck's headlights at the front of the cab).
+   */
+  lights: z.array(z.object({ at: Point, path: Path, label: z.string() })).default([]),
   /** Doors: boolean open state; absent while the model is not in use. */
   doors: z.array(z.object({ at: Point, path: Path, label: z.string() })).default([]),
   readouts: z

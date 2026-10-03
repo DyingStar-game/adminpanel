@@ -101,6 +101,7 @@ Views adapt to the data through declarative files, validated with Zod at load ti
   2. Create `apps/web/src/lib/schematics/<model>.ts` on the model of `truck.ts`: exact
      `scenename` (or a `*` pattern within one path segment), grid `size`, then `shapes`
      (`body`, `cargo`, `battery` — a charge bar in kWh), `seats`, `bays` (with an optional access `hatch`, drawn like a door),
+     `lights` (a lens on the body's edge, a small cone when its boolean is true),
      `doors` (a door hinges at its front end and swings out on its side of the drawing) and
      `readouts` (`gauge`, `toggle`, `value`, `energy`). Component kinds and tiers (engine,
      battery capacity, engine power) are in `lib/schematics/components.ts`. Fields:

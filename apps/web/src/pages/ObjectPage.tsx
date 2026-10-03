@@ -29,7 +29,8 @@ import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { hasMap, mapBodyOf } from '@/lib/bodyMap';
 import { itemLabel } from '@/lib/itemLabel';
-import { schematicFor } from '@/lib/schematics';
+import { schematicFor, schematicKeys } from '@/lib/schematics';
+import { hasEnergy, installedEnergy, lookup } from '@/lib/schematics/components';
 import { SPAWN_DISTANCE, SPAWN_HEIGHT, spawnNextTo } from '@/lib/spawn';
 import { useItemActions } from '@/stores/itemActions';
 
@@ -89,6 +90,10 @@ function ObjectDetails({
   const changed = useChangedKeys(item.object_data, item.object_uuid);
   const actions = useItemActions();
   const schematic = schematicFor(item.object_data.scenename);
+  const energy =
+    schematic && hasEnergy(schematic)
+      ? installedEnergy(schematic, item.object_data, lookup(resolveRef))
+      : null;
   const spawn = spawnNextTo(item, SPAWN_DISTANCE, SPAWN_HEIGHT);
   const isMoon =
     !!profile?.moonWhenParentIs &&
@@ -222,6 +227,8 @@ function ObjectDetails({
           resolveRef={resolveRef}
           onNavigate={onNavigate}
           changed={changed}
+          hidden={schematic ? schematicKeys(schematic) : undefined}
+          energy={energy}
         />
       }
       relations={

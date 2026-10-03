@@ -83,6 +83,13 @@ persistence keeping joules. Batteries get their own schematic
 (`scenes/_universe/props/vehicles/battery_t*.tscn`), a cell drawn as a progress bar of the
 charge against the tier capacity, through a new shape kind `battery`.
 
+### Update (2026-10-03): headlights, no repeated facts
+
+The truck's headlights are drawn on the front edge of the cab (`lights`, bound to
+`headlights`), with a small cone when on. The object page no longer repeats in its key facts
+the values the schematic already shows (a fact made only of keys read by the schematic is left
+out); the energy left (kWh over the capacity, with a charge bar) joins the key facts.
+
 ## Consequences
 
 - Adding a model = adding one data file and one line in the index.

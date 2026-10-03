@@ -189,6 +189,8 @@ export const en = {
     on: 'on',
     off: 'off',
     labels: {
+      leftHeadlight: 'Left headlight',
+      rightHeadlight: 'Right headlight',
       truck: 'Truck',
       cab: 'Cab',
       bed: 'Cargo bed',

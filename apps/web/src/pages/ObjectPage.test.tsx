@@ -73,6 +73,15 @@ describe('ObjectPage', () => {
     ).toBeInTheDocument();
     // 50 % on the battery, and on the energy readout (the only battery).
     expect(within(schematic).getAllByText('50 %')).toHaveLength(2);
+    // Headlights at the front of the cab, on in the fixture.
+    expect(within(schematic).getByLabelText('Left headlight · on')).toHaveAttribute(
+      'data-state',
+      'on',
+    );
+    // Energy among the key facts: 25 of 50 kWh left, with its charge bar.
+    const bar = screen.getByRole('progressbar', { name: 'Energy' });
+    expect(bar).toHaveAttribute('aria-valuenow', '50');
+    expect(bar).toHaveAttribute('aria-valuetext', '25 kWh');
     // Energy: one half-charged T1 battery, one T1 engine: 90 MJ / 100 kW = 15 min, 25 km.
     expect(within(schematic).getByText('≈ 15 min · ≈ 25 km')).toBeInTheDocument();
     expect(await within(schematic).findByLabelText('RL · missing item')).toBeInTheDocument();

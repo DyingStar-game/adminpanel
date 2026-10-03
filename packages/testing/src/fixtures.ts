@@ -139,6 +139,7 @@ const vehicle: Item = {
     speed: 28.7,
     engine: true,
     handbrake: false,
+    headlights: true,
     limiter_on: false,
     limiter_kmh: 30,
     mass: 1450,

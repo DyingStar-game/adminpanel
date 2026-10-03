@@ -192,6 +192,8 @@ export const fr: Translations = {
     on: 'oui',
     off: 'non',
     labels: {
+      leftHeadlight: 'Phare gauche',
+      rightHeadlight: 'Phare droit',
       truck: 'Camion',
       cab: 'Cabine',
       bed: 'Benne',

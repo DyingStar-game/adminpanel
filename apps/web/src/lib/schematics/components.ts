@@ -1,4 +1,4 @@
-import { sceneModel } from './index';
+import { sceneModel, valueAt, type Schematic } from './index';
 
 /**
  * Vehicle component models (ADR 0016): what a component is, read from its `scenename`
@@ -66,4 +66,64 @@ export function autonomy(
     seconds: chargeJ / power,
     metres: (chargeJ * METRES_PER_J_AT_100_KW * 100e3) / power,
   };
+}
+
+/** Colour of a charge level: green above half, amber above a fifth, red below. */
+export const levelColor = (level: number) =>
+  level > 0.5 ? 'var(--ds-ok)' : level > 0.2 ? '#f59e0b' : 'var(--ds-danger)';
+
+/** What a bay reference resolves to: the installed item's model and data, or null. */
+export type InstalledLookup = (
+  uuid: string,
+) => { scenename?: unknown; data?: Record<string, unknown> | undefined } | null;
+
+export interface InstalledEnergy {
+  /** Charge of the installed batteries, summed. */
+  chargeJ: number;
+  /** Their capacity, summed. */
+  capacityJ: number;
+  batteries: number;
+  /** Tiers of the installed engines. */
+  engines: number[];
+}
+
+/** Whether a schematic reports energy (an `energy` readout). */
+export const hasEnergy = (schematic: Schematic) =>
+  schematic.readouts.some((readout) => readout.kind === 'energy');
+
+/** A lookup from a reference resolver: only found references count. */
+export const lookup =
+  (
+    resolve: (uuid: string) => {
+      status: string;
+      scenename?: unknown;
+      data?: Record<string, unknown> | undefined;
+    },
+  ): InstalledLookup =>
+  (uuid) => {
+    const target = resolve(uuid);
+    return target.status === 'found' ? target : null;
+  };
+
+/** Batteries and engines installed in a schematic's bays, for the energy readouts. */
+export function installedEnergy(
+  schematic: Schematic,
+  data: Record<string, unknown>,
+  lookup: InstalledLookup,
+): InstalledEnergy {
+  const energy: InstalledEnergy = { chargeJ: 0, capacityJ: 0, batteries: 0, engines: [] };
+  for (const bay of schematic.bays) {
+    const uuid = valueAt(data, bay.path);
+    const target = typeof uuid === 'string' && uuid !== '' ? lookup(uuid) : null;
+    const model = target ? componentModel(target.scenename) : null;
+    if (model?.kind === 'engine') energy.engines.push(model.tier);
+    const capacityJ = model ? BATTERY_CAPACITY_J[model.tier] : undefined;
+    const chargeJ = target?.data?.charge_j;
+    if (model?.kind === 'battery' && capacityJ && typeof chargeJ === 'number') {
+      energy.chargeJ += chargeJ;
+      energy.capacityJ += capacityJ;
+      energy.batteries += 1;
+    }
+  }
+  return energy;
 }

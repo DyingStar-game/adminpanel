@@ -53,6 +53,11 @@ export const truck: z.input<typeof SchematicSchema> = {
       hatch: { at: [10, 16.5], path: 'doors.hatch_rr' },
     },
   ],
+  // Headlights on the front edge of the cab (y 1), one on each side.
+  lights: [
+    { at: [3.5, 1], path: 'headlights', label: 'leftHeadlight' },
+    { at: [8.5, 1], path: 'headlights', label: 'rightHeadlight' },
+  ],
   doors: [
     { at: [2, 5.5], path: 'doors.front_l_door', label: 'leftDoor' },
     { at: [10, 5.5], path: 'doors.front_r_door', label: 'rightDoor' },
