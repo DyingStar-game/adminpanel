@@ -280,6 +280,7 @@ export const fr: Translations = {
     grid: 'Grille {{step}} · traits forts {{major}}',
     names: 'Noms : {{type}}',
     moved: 'Déplacement de {{distance}} · reçu à {{time}}',
+    omitted: 'trop nombreux pour être dessinés',
     inOrbit: 'En orbite',
     altitude: 'altitude {{value}}',
     via: 'dans {{label}}',

@@ -7,6 +7,7 @@ import {
   gridLines,
   gridStep,
   hasMap,
+  hiddenTypes,
   isShown,
   mapLegend,
   markerShape,
@@ -52,12 +53,22 @@ describe('body map helpers', () => {
     ]);
   });
 
-  it('counts the types, most numerous first', () => {
-    const points = [point('a', 'player'), point('b', 'vehicle'), point('c', 'player')];
-    expect(mapLegend(points)).toEqual([
+  it('lists the counted types, most numerous first, without empty ones', () => {
+    const counts = [
+      { object_type: 'vehicle', total: 1 },
+      { object_type: 'player', total: 2 },
+      { object_type: 'poi_village', total: 0 },
+      { object_type: 'planet', total: 1 },
+    ];
+    expect(mapLegend(counts)).toEqual([
       { objectType: 'player', count: 2 },
       { objectType: 'vehicle', count: 1 },
     ]);
+  });
+
+  it('hides the profile defaults unless shown, and the types the viewer hid', () => {
+    expect(hiddenTypes({})).toEqual(['miningrock']);
+    expect(hiddenTypes({ miningrock: false, vehicle: true })).toEqual(['vehicle']);
   });
 
   it('labels unnamed points by type and short UUID', () => {

@@ -112,6 +112,26 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
     },
   });
 
+  /** Children count, overall and per known object type. */
+  async function countChildren(uuid: string): Promise<ChildrenCountsResponse> {
+    const [all, { definitions: defs }] = await Promise.all([
+      total({ parent_id: uuid }),
+      definitions.list(),
+    ]);
+    if (all === 0) return { total: 0, byType: [], other: 0 };
+    const counts = await Promise.all(
+      defs.map((d) =>
+        limit(async () => ({
+          object_type: d.type,
+          total: await total({ parent_id: uuid, object_type: d.type }),
+        })),
+      ),
+    );
+    const byType = counts.filter((c) => c.total > 0);
+    const known = byType.reduce((sum, c) => sum + c.total, 0);
+    return { total: all, byType, other: Math.max(all - known, 0) };
+  }
+
   async function getOrThrow(uuid: string): Promise<Item> {
     const item = await get(uuid);
     if (!item) throw notFound(`Item ${uuid} not found`);
@@ -147,24 +167,7 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
     },
 
     /** Children count, overall and per known object type. */
-    async childrenCounts(uuid: string): Promise<ChildrenCountsResponse> {
-      const [all, { definitions: defs }] = await Promise.all([
-        total({ parent_id: uuid }),
-        definitions.list(),
-      ]);
-      if (all === 0) return { total: 0, byType: [], other: 0 };
-      const counts = await Promise.all(
-        defs.map((d) =>
-          limit(async () => ({
-            object_type: d.type,
-            total: await total({ parent_id: uuid, object_type: d.type }),
-          })),
-        ),
-      );
-      const byType = counts.filter((c) => c.total > 0);
-      const known = byType.reduce((sum, c) => sum + c.total, 0);
-      return { total: all, byType, other: Math.max(all - known, 0) };
-    },
+    childrenCounts: countChildren,
 
     /**
      * Duplicates an item, and its descendants when asked, next to a target (ADR 0017).
@@ -222,28 +225,52 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
       return created;
     },
 
-    /** Map of a celestial body: its children and the players they house (ADR 0018). */
-    bodyMap(uuid: string): Promise<BodyMapResponse> {
-      return read(`map:${uuid}`, async () => {
+    /**
+     * Map of a celestial body: its children and the players they house (ADR 0018). Types are
+     * loaded within `MAX_MAP_POINTS`: the shown ones first, then the hidden ones, smallest first;
+     * a type that does not fit is `omitted` (not drawn) instead of failing the whole map.
+     * Counts cover every type, loaded or not.
+     */
+    bodyMap(uuid: string, hidden: string[] = []): Promise<BodyMapResponse> {
+      const hide = [...new Set(hidden)].sort();
+      return read(`map:${uuid}:${hide.join(',')}`, async () => {
         const body = await getOrThrow(uuid);
-        const [children, ...placedTotals] = await Promise.all([
-          total({ parent_id: uuid }),
-          ...MAP_PLACED_THROUGH_PARENT.map((type) => total({ object_type: type })),
+        const [counts, placedTotals] = await Promise.all([
+          countChildren(uuid),
+          Promise.all(MAP_PLACED_THROUGH_PARENT.map((type) => total({ object_type: type }))),
         ]);
-        const size = placedTotals.reduce((sum, n) => sum + n, children);
-        if (size > MAX_MAP_POINTS) {
-          throw new ApiError(
-            400,
-            ErrorCode.mapTooLarge,
-            `A map of more than ${MAX_MAP_POINTS} items is not computed`,
-            { max: MAX_MAP_POINTS, size },
-          );
+        const bySize = (a: { total: number }, b: { total: number }) => a.total - b.total;
+        const shownFirst = [
+          ...counts.byType.filter((c) => !hide.includes(c.object_type)).sort(bySize),
+          ...counts.byType.filter((c) => hide.includes(c.object_type)).sort(bySize),
+        ];
+        let budget = MAX_MAP_POINTS - placedTotals.reduce((sum, n) => sum + n, 0);
+        const loaded: string[] = [];
+        const omitted: string[] = [];
+        for (const { object_type, total: size } of shownFirst) {
+          if (size <= budget) {
+            loaded.push(object_type);
+            budget -= size;
+          } else omitted.push(object_type);
         }
-        const [items, ...placed] = await Promise.all([
-          listAll({ parent_id: uuid }),
-          ...MAP_PLACED_THROUGH_PARENT.map((type) => listAll({ object_type: type })),
+        const [children, placed] = await Promise.all([
+          Promise.all(
+            loaded.map((type) => limit(() => listAll({ parent_id: uuid, object_type: type }))),
+          ),
+          Promise.all(MAP_PLACED_THROUGH_PARENT.map((type) => listAll({ object_type: type }))),
         ]);
-        return buildBodyMap(body, items, placed.flat());
+        const map = buildBodyMap(body, children.flat(), placed.flat());
+        // Items placed through a parent (players) are counted where they are placed.
+        const placedHere = [...map.points, ...map.inOrbit].filter((p) => p.via !== null);
+        const placedCounts = MAP_PLACED_THROUGH_PARENT.map((type) => ({
+          object_type: type,
+          total: placedHere.filter((p) => p.object_type === type).length,
+        })).filter((c) => c.total > 0);
+        return {
+          ...map,
+          counts: [...counts.byType, ...placedCounts],
+          omitted: omitted.sort(),
+        };
       });
     },
 

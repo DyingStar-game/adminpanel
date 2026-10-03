@@ -82,7 +82,8 @@ function BodyMap({
     () => new Map(map.points.map((point) => [point.object_uuid, point])),
     [map.points],
   );
-  const legend = useMemo(() => mapLegend(map.points), [map.points]);
+  const legend = useMemo(() => mapLegend(map.counts), [map.counts]);
+  const totalCount = legend.reduce((sum, entry) => sum + entry.count, 0);
   const visible = useMemo(
     () =>
       map.points.filter(
@@ -184,7 +185,7 @@ function BodyMap({
                 <h1 className="text-sm font-semibold">{t('map.title', { name })}</h1>
               </div>
               <MonoText tone="subtle" className="text-2xs">
-                {t('map.summary', { shown: visible.length, total: map.points.length })}
+                {t('map.summary', { shown: visible.length, total: totalCount })}
               </MonoText>
             </div>
             <MapSearch
@@ -225,6 +226,7 @@ function BodyMap({
                 shown: isShown(entry.objectType, mapHidden),
                 shape: markerShape(entry.objectType),
                 named: named.has(entry.objectType),
+                omitted: map.omitted.includes(entry.objectType),
               }))}
               onToggle={(type, shown) => setMapHidden(type, !shown)}
               onToggleNames={setMapNamed}
@@ -232,6 +234,7 @@ function BodyMap({
                 title: t('map.types'),
                 toggle: (type) => t('map.toggle', { type }),
                 names: (type) => t('map.names', { type }),
+                omitted: t('map.omitted'),
               }}
             />
             {map.inOrbit.length > 0 && (

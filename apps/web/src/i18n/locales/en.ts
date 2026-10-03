@@ -277,6 +277,7 @@ export const en = {
     grid: 'Grid {{step}} · thick lines {{major}}',
     names: 'Names of {{type}}',
     moved: 'Moved {{distance}} · received at {{time}}',
+    omitted: 'too many to draw',
     inOrbit: 'In orbit',
     altitude: 'altitude {{value}}',
     via: 'in {{label}}',

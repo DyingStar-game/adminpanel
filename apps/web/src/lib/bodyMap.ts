@@ -1,7 +1,7 @@
 import { MAP_PLACED_THROUGH_PARENT, type Item, type MapPoint } from '@dyingstar-admin/schemas';
 import { shortUuid } from './itemLabel';
 import { typeColor } from './objectTypes';
-import { profileFor } from './profiles';
+import { mapHiddenTypes, profileFor } from './profiles';
 
 /** Whether items of this type have a planetary map (ADR 0018). */
 export const hasMap = (objectType: string | undefined) => !!profileFor(objectType)?.map?.body;
@@ -58,14 +58,24 @@ export interface LegendEntry {
   count: number;
 }
 
-/** Types present on the map with their counts, most numerous first. */
-export function mapLegend(points: MapPoint[]): LegendEntry[] {
-  const counts = new Map<string, number>();
-  for (const point of points)
-    counts.set(point.object_type, (counts.get(point.object_type) ?? 0) + 1);
-  return [...counts]
-    .map(([objectType, count]) => ({ objectType, count }))
+/**
+ * Types on the body with their counts (from the BFF, loaded or not), most numerous first.
+ * Bodies (moons) have their own map and no point here: they are left out.
+ */
+export function mapLegend(counts: { object_type: string; total: number }[]): LegendEntry[] {
+  return counts
+    .filter((c) => c.total > 0 && !profileFor(c.object_type)?.map?.body)
+    .map((c) => ({ objectType: c.object_type, count: c.total }))
     .sort((a, b) => b.count - a.count || a.objectType.localeCompare(b.objectType));
+}
+
+/**
+ * Types the viewer hides (profile defaults not overridden, and their own choices), sent to the
+ * BFF so it loads them last and may leave out the too numerous ones (ADR 0018).
+ */
+export function hiddenTypes(choices: Record<string, boolean>): string[] {
+  const types = new Set([...mapHiddenTypes(), ...Object.keys(choices)]);
+  return [...types].filter((type) => !isShown(type, choices)).sort();
 }
 
 /** Points matching a search on name, UUID or type (case-insensitive), names first. */

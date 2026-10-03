@@ -133,5 +133,9 @@ export const BodyMapResponseSchema = z.object({
   points: z.array(MapPointSchema),
   /** Items too high above the surface to be drawn (stations…). */
   inOrbit: z.array(MapPointSchema),
+  /** Every type on the body with its count, loaded or not. */
+  counts: z.array(z.object({ object_type: z.string(), total: z.number().int() })),
+  /** Types too numerous to be loaded within the limit: counted, not drawn. */
+  omitted: z.array(z.string()),
 });
 export type BodyMapResponse = z.infer<typeof BodyMapResponseSchema>;

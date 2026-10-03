@@ -33,7 +33,11 @@ function median(values: number[]): number {
  * Map of a celestial body (ADR 0018) from its direct children and the items placed through one
  * of them (players in their building). Positions are relative to the body centre.
  */
-export function buildBodyMap(body: Item, children: Item[], placed: Item[]): BodyMapResponse {
+export function buildBodyMap(
+  body: Item,
+  children: Item[],
+  placed: Item[],
+): Omit<BodyMapResponse, 'counts' | 'omitted'> {
   const located: { item: Item; via: string | null; world: V }[] = [];
   const parents = new Map<string, { world: V; item: Item }>();
   for (const child of children) {

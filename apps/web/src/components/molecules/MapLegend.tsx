@@ -13,6 +13,8 @@ export interface MapLegendEntry {
   shape: 'round' | 'square';
   /** Names written above the markers. */
   named: boolean;
+  /** Too numerous to be drawn (counted only). */
+  omitted?: boolean;
 }
 
 interface MapLegendProps {
@@ -23,6 +25,8 @@ interface MapLegendProps {
     title: string;
     toggle: (objectType: string) => string;
     names: (objectType: string) => string;
+    /** Shown under a type too numerous to be drawn. */
+    omitted: string;
   };
 }
 
@@ -35,7 +39,12 @@ export function MapLegend({ entries, onToggle, onToggleNames, labels }: MapLegen
         {entries.map((entry) => (
           <li key={entry.objectType} className="flex items-center gap-2">
             <TypeDot objectType={entry.objectType} shape={entry.shape} />
-            <MonoText className="min-w-0 flex-1 truncate text-xs">{entry.objectType}</MonoText>
+            <span className="flex min-w-0 flex-1 flex-col">
+              <MonoText className="truncate text-xs">{entry.objectType}</MonoText>
+              {entry.omitted && entry.shown && (
+                <span className="text-3xs text-amber-400">{labels.omitted}</span>
+              )}
+            </span>
             <MonoText tone="subtle" className="text-2xs tabular-nums">
               {entry.count}
             </MonoText>

@@ -16,6 +16,10 @@ const PROFILES: Map<string, TypeProfile> = new Map(
   }),
 );
 
+/** Types hidden on planetary maps until the viewer shows them (`map.hidden`, ADR 0018). */
+export const mapHiddenTypes = (): string[] =>
+  [...PROFILES.values()].filter((p) => p.map?.hidden).map((p) => p.type);
+
 /** Profile of a type, or null: such types use the generic renderer only. */
 export const profileFor = (objectType: string | undefined): TypeProfile | null =>
   (objectType && PROFILES.get(objectType)) || null;

@@ -100,6 +100,19 @@ thick line every 5 cells, and a caption with the current step next to the scale 
 projection keeps distances (below 0.3 % error at the edge of SandBox's region), so the grid
 measures the map at any zoom. Latitude / longitude stay in the tooltips.
 
+### Update (2026-10-03): a budget instead of a refusal
+
+SandBox now holds about 19 500 mining rocks, and the whole map was refused (`MAP_TOO_LARGE`).
+At the maintainer's request the BFF no longer refuses: it **counts every type** of the body
+(cheap `total` queries) and **loads them within the 20 000-point budget**, the types the viewer
+shows first and the smallest first, the hidden ones last (`GET /api/bodies/:uuid/map?hide=a,b`,
+sent by the web app from the profile defaults and the viewer's choices). A type that does not
+fit is left out and listed in `omitted`; the legend still gives its count, marked "too many to
+draw". Players placed through their building take their share of the budget first. The counts
+come with the map (`counts`), so the legend lists types that are not loaded. Children of a type
+without a definition are counted but not drawn (all live types have one). Drawing every rock
+stays for the spatial index or tiles mentioned above.
+
 ## Consequences
 
 - A body's content becomes visible at a glance; vehicles, buildings and, later, moving players
@@ -107,8 +120,8 @@ measures the map at any zoom. Latitude / longitude stay in the tooltips.
 - Three new dependencies in the web app (Leaflet, react-leaflet, markercluster) and a new BFF
   endpoint with its schema in `packages/schemas`.
 - Labels of latitude / longitude depend on an unconfirmed pole convention.
-- The map loads the whole body content at once: fine for about a thousand points today, bounded
-  by `MAP_TOO_LARGE` beyond.
+- The map loads the body content at once within a 20 000-point budget; a type that does not fit
+  is counted but not drawn (update of 2026-10-03).
 - Later: click on the map to choose a spawn or duplicate position (ADR 0017), terrain background
   if the game provides one, other nested types if needed.
 
