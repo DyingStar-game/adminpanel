@@ -30,6 +30,16 @@ function median(values: number[]): number {
 }
 
 /**
+ * Projection frame of a body's map: centre direction and reference radius. Computed from the
+ * items on the first map, then reused: computed on every refresh, it followed the loaded items
+ * (shown types, moving vehicles) and every point shifted, faking moves.
+ */
+export interface BodyFrame {
+  center: V;
+  referenceRadius: number;
+}
+
+/**
  * Map of a celestial body (ADR 0018) from its direct children and the items placed through one
  * of them (players in their building). Positions are relative to the body centre.
  */
@@ -37,7 +47,8 @@ export function buildBodyMap(
   body: Item,
   children: Item[],
   placed: Item[],
-): Omit<BodyMapResponse, 'counts' | 'omitted'> {
+  frame?: BodyFrame,
+): Omit<BodyMapResponse, 'counts' | 'omitted'> & { frame: BodyFrame | null } {
   const located: { item: Item; via: string | null; world: V }[] = [];
   const parents = new Map<string, { world: V; item: Item }>();
   for (const child of children) {
@@ -59,9 +70,9 @@ export function buildBodyMap(
     located.push({ item, via: parent.item.object_uuid, world });
   }
 
-  const referenceRadius = median(
-    located.filter((l) => l.via === null).map((l) => Math.hypot(...l.world)),
-  );
+  const referenceRadius =
+    frame?.referenceRadius ??
+    median(located.filter((l) => l.via === null).map((l) => Math.hypot(...l.world)));
   const entries = located.flatMap((l) => {
     const distance = Math.hypot(...l.world);
     const direction = normalize(l.world);
@@ -73,7 +84,8 @@ export function buildBodyMap(
     (acc, e) => [acc[0] + e.direction[0], acc[1] + e.direction[1], acc[2] + e.direction[2]],
     [0, 0, 0],
   );
-  const center = normalize(sum) ?? ([0, 0, 1] as V);
+  const mean = normalize(sum);
+  const center = frame?.center ?? mean ?? ([0, 0, 1] as V);
   const project = azimuthalEquidistant(center, referenceRadius);
 
   const toPoint = (e: (typeof entries)[number]): MapPoint => {
@@ -105,5 +117,7 @@ export function buildBodyMap(
     center: { lat: round(centerLatLon.lat, 6), lon: round(centerLatLon.lon, 6) },
     points: drawn.map(toPoint),
     inOrbit: entries.filter((e) => e.altitude > ORBIT_ALTITUDE).map(toPoint),
+    // No frame from an empty map: the next one with points sets it.
+    frame: frame ?? (mean ? { center, referenceRadius } : null),
   };
 }

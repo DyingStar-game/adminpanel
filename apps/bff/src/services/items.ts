@@ -20,7 +20,7 @@ import {
 import type { PersistenceClient } from '../clients/persistence';
 import { ApiError, notFound } from '../lib/errors';
 import type { DefinitionsService } from './definitions';
-import { buildBodyMap } from './bodyMap';
+import { buildBodyMap, type BodyFrame } from './bodyMap';
 import { planDuplicate } from './duplicate';
 import { buildImportContext, checkImportCoherence } from './importCheck';
 import { mergeEdit, type EditRequest } from './merge';
@@ -75,6 +75,9 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
     noDeleteOnStaleGet: true,
     fetchMethod: async (_key, _stale, { context }) => ({ value: await context() }),
   });
+
+  // Map frame per body, kept while the BFF runs: points stay put between refreshes.
+  const frames = new LRUCache<string, BodyFrame>({ max: 100 });
 
   async function counted<T>(key: string, load: () => Promise<T>): Promise<T> {
     if (readCacheTtlMs === 0) return load();
@@ -306,7 +309,8 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
           if (extra.object_data.parent_id === uuid) own.push(extra);
           else if (!placedTypes.includes(extra.object_type)) around.push(extra);
         }
-        const map = buildBodyMap(body, own, around);
+        const { frame, ...map } = buildBodyMap(body, own, around, frames.get(uuid));
+        if (frame && !frames.has(uuid)) frames.set(uuid, frame);
         // Items placed through a parent (players) are counted where they are placed; hidden,
         // they are not loaded and the server total stands in for them.
         const placedHere = [...map.points, ...map.inOrbit].filter((p) => p.via !== null);

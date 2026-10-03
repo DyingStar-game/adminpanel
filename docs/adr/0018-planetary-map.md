@@ -123,6 +123,14 @@ refreshed in the background, cleared on any write: a refresh takes the listing o
 types only (about 6 s instead of 17 s). A count route on the persistence side, or an index on
 `parent_id` / `object_type`, is requested from the back team for the first load.
 
+### Update (2026-10-04): a fixed projection frame
+
+The projection centre (mean direction of the drawn items) and reference radius (their median
+distance) were computed on every map: showing or hiding a type, or vehicles moving, shifted
+every point (by more than 100 km on SandBox), and the selected item's move arrow drew these
+shifts as moves. The BFF now computes the frame on a body's first map with points and keeps it
+while it runs; a BFF restart computes it anew.
+
 ## Consequences
 
 - A body's content becomes visible at a glance; vehicles, buildings and, later, moving players

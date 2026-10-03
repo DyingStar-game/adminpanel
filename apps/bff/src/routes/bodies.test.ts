@@ -80,6 +80,19 @@ describe('GET /api/bodies/:uuid/map', () => {
     );
   });
 
+  it('keeps every point in place whatever the shown types', async () => {
+    const { request } = buildApp();
+    const vehicleAt = async (query: string) => {
+      const body = await read(await request(`/api/bodies/${ids.planet}/map${query}`));
+      const point = body.points.find((p: { object_uuid: string }) => p.object_uuid === ids.vehicle);
+      return { x: point.x, y: point.y };
+    };
+
+    const first = await vehicleAt('');
+    // Fewer loaded items moved the projection centre, and every point with it.
+    expect(await vehicleAt(`?hide=spawnbuilding,player`)).toEqual(first);
+  });
+
   it('counts every type, players where they are housed', async () => {
     const body = await read(await buildApp().request(`/api/bodies/${ids.planet}/map`));
     expect(body.omitted).toEqual([]);
