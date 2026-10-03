@@ -243,7 +243,7 @@ export const fr: Translations = {
   live: {
     updated: 'mis à jour à {{time}}',
     freshness: 'Les données live reflètent la dernière sauvegarde du jeu, pas son état instantané.',
-    on: 'Live · 2 s',
+    on: 'Live · 5 s',
     off: 'En pause',
     toggle: 'Activer ou suspendre le live',
   },

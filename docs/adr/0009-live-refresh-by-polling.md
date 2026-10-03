@@ -55,6 +55,11 @@ position meanwhile, a stale `PUT` would move the entity back.
 - If a field the user changed was also changed by the game meanwhile, the user is asked
   to confirm.
 
+### Update (2026-10-04): entity every 5 s
+
+The game saves an item about every 60 s, so polling the selected entity every 2 s showed
+nothing more than every 5 s: at the maintainer's request it now follows the list rate, 5 s.
+
 ## Consequences
 
 - "Live" means "as fresh as the game's last save", which must be stated in the UI.

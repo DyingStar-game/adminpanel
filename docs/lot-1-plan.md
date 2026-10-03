@@ -149,7 +149,7 @@ Identical concurrent GETs are coalesced with a short-lived cache (ADR 0009).
 
 ### 7. Live refresh — done
 
-- TanStack Query polling: 2 s on the selected entity, 5 s on the visible page / level,
+- TanStack Query polling: 5 s on the selected entity (2 s until 2026-10-04), 5 s on the visible page / level,
   paused on hidden tab and by the toggle; "last refresh" indicator; "as fresh as the last game
   save" hint.
 - Snapshot diff → field highlight, appeared / vanished rows.

@@ -4,7 +4,7 @@
  */
 export const LIVE_INTERVALS = {
   /** The entity on screen: inspector, object page, orbit centre. */
-  entity: 2000,
+  entity: 5000,
   /** The visible table page and expanded tree levels. */
   list: 5000,
   /** Child counts cost one full scan per known type on the service. */

@@ -240,7 +240,7 @@ export const en = {
   live: {
     updated: 'updated {{time}}',
     freshness: 'Live data is as fresh as the last save by the game, not the instant game state.',
-    on: 'Live · 2 s',
+    on: 'Live · 5 s',
     off: 'Paused',
     toggle: 'Toggle live refresh',
   },
