@@ -140,7 +140,7 @@ describe('body map helpers', () => {
   it('keeps the trail of the selected item until another one is selected', () => {
     const truck = (x: number, y: number) => ({ ...point('t', 'vehicle'), x, y });
     const first = trackMovement(null, 't', truck(0, 0), 1000);
-    expect(first).toEqual({ uuid: 't', last: [0, 0], moves: [] });
+    expect(first).toEqual({ uuid: 't', frame: '', last: [0, 0], moves: [] });
     // Same position on the next refresh: unchanged tracker, nothing drawn.
     expect(trackMovement(first, 't', truck(0, 0), 6000)).toBe(first);
 
@@ -160,6 +160,9 @@ describe('body map helpers', () => {
     ]);
     // A refresh without the item keeps the trail.
     expect(trackMovement(again, 't', undefined, 0)).toBe(again);
+
+    // Positions in another projection frame are not compared: start over.
+    expect(trackMovement(again, 't', truck(9, 9), 0, 'other')?.moves).toEqual([]);
 
     // Another selection starts over; no selection forgets everything.
     expect(trackMovement(again, 'p', { ...point('p', 'player'), x: 5, y: 5 }, 0)?.moves).toEqual(

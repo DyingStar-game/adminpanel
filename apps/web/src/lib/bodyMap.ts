@@ -208,6 +208,8 @@ export const MAX_TRAIL = 100;
 /** Last known position of the selected item, and its moves since selected. Memory only. */
 export interface MovementTracker {
   uuid: string;
+  /** Projection frame the positions are in (the map centre); another one starts over. */
+  frame: string;
   last: MapLatLng;
   /** Successive moves, oldest first. */
   moves: Movement[];
@@ -224,13 +226,17 @@ export function trackMovement(
   selected: string | undefined,
   point: MapPoint | undefined,
   receivedAt: number,
+  frame = '',
 ): MovementTracker | null {
   if (!selected) return null;
   if (!point || point.object_uuid !== selected) {
     return tracker?.uuid === selected ? tracker : null;
   }
   const position: MapLatLng = [point.y, point.x];
-  if (!tracker || tracker.uuid !== selected) return { uuid: selected, last: position, moves: [] };
+  // Positions in another frame (the BFF restarted) cannot be compared: start over.
+  if (!tracker || tracker.uuid !== selected || tracker.frame !== frame) {
+    return { uuid: selected, frame, last: position, moves: [] };
+  }
   if (tracker.last[0] === position[0] && tracker.last[1] === position[1]) return tracker;
   const move: Movement = {
     from: tracker.last,
@@ -238,7 +244,12 @@ export function trackMovement(
     at: receivedAt,
     distance: Math.hypot(position[0] - tracker.last[0], position[1] - tracker.last[1]),
   };
-  return { uuid: selected, last: position, moves: [...tracker.moves, move].slice(-MAX_TRAIL) };
+  return {
+    uuid: selected,
+    frame,
+    last: position,
+    moves: [...tracker.moves, move].slice(-MAX_TRAIL),
+  };
 }
 
 /** Heading of a movement in degrees, clockwise from north (map up). */

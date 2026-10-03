@@ -45,6 +45,7 @@ export function MapPage(props: MapPageProps) {
   // The inspector reads the selected item too: same query, shared.
   const selected = useItem(props.search.selected).data;
   const query = useBodyMap(props.uuid, selected);
+  const [mountedAt] = useState(() => Date.now());
 
   if (query.isPending) return <Message>{t('inspector.loading')}</Message>;
   if (query.isError) {
@@ -58,7 +59,16 @@ export function MapPage(props: MapPageProps) {
     }
     return <Message>{t('map.error')}</Message>;
   }
-  return <BodyMap {...props} map={query.data} updatedAt={query.dataUpdatedAt} />;
+  return (
+    <BodyMap
+      {...props}
+      map={query.data}
+      updatedAt={query.dataUpdatedAt}
+      // Data kept from an earlier visit or another set of types is shown at once, but is not
+      // a position to draw a move from.
+      fresh={!query.isPlaceholderData && query.dataUpdatedAt >= mountedAt}
+    />
+  );
 }
 
 function BodyMap({
@@ -69,7 +79,8 @@ function BodyMap({
   onOpenInExplorer,
   onOpenOrbit,
   updatedAt,
-}: MapPageProps & { map: BodyMapResponse; updatedAt: number }) {
+  fresh,
+}: MapPageProps & { map: BodyMapResponse; updatedAt: number; fresh: boolean }) {
   const { t } = useTranslation();
   const { mapHidden, setMapHidden, mapNamed, setMapNamed } = usePreferences();
   const named = useMemo(
@@ -104,8 +115,9 @@ function BodyMap({
   const nextTracker = trackMovement(
     tracker,
     search.selected,
-    search.selected ? byUuid.get(search.selected) : undefined,
+    search.selected && fresh ? byUuid.get(search.selected) : undefined,
     updatedAt,
+    `${map.center.lat},${map.center.lon}`,
   );
   if (nextTracker !== tracker) setTracker(nextTracker);
   const moves = nextTracker?.moves;
