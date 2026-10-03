@@ -75,6 +75,8 @@ describe('ObjectPage', () => {
     expect(within(schematic).getAllByText('50 %')).toHaveLength(2);
     // Energy: one half-charged T1 battery, one T1 engine: 90 MJ / 100 kW = 15 min, 25 km.
     expect(within(schematic).getByText('≈ 15 min · ≈ 25 km')).toBeInTheDocument();
+    // …with the energy left in kWh (90 MJ = 25 kWh).
+    expect(within(schematic).getByText('25 kWh')).toBeInTheDocument();
     expect(await within(schematic).findByLabelText('RL · missing item')).toBeInTheDocument();
     expect(within(schematic).getByLabelText('RR · empty')).toBeInTheDocument();
     expect(within(schematic).getByText('28.7 km/h')).toBeInTheDocument();
