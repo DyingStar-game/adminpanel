@@ -544,7 +544,6 @@ function Readouts({
                   <MonoText className="font-semibold">
                     {Math.round((chargeJ / capacityJ) * 100)} %
                   </MonoText>
-                  <MonoText>{format.format(kWh(chargeJ))} kWh</MonoText>
                   {range && (
                     <MonoText tone="subtle">
                       {t('schematic.autonomy', {
