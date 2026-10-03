@@ -3,6 +3,7 @@ import {
   Background,
   BackgroundVariant,
   BaseEdge,
+  EdgeLabelRenderer,
   getStraightPath,
   Handle,
   Position,
@@ -162,23 +163,16 @@ const OrbitNodeView = memo(function OrbitNodeView({ data }: NodeProps<GraphNode>
 
 const nodeTypes = { orbit: OrbitNodeView };
 
-const centreOf = (node: InternalNode) => ({
-  x: node.internals.positionAbsolute.x + (node.measured.width ?? 0) / 2,
-  y: node.internals.positionAbsolute.y + (node.measured.height ?? 0) / 2,
-});
+// Nodes are placed by their centre (`nodeOrigin` 0.5): their position is the centre, whatever
+// their measured size (re-measured, and briefly unknown, when the nodes are rebuilt).
+const centreOf = (node: InternalNode) => node.internals.userNode.position;
 
-/** Straight line from one node centre to the other (dots draw over its ends). */
-function CenterEdge({
-  id,
-  source,
-  target,
-  style,
-  label,
-  labelStyle,
-  labelBgStyle,
-  labelBgPadding,
-  labelBgBorderRadius,
-}: EdgeProps) {
+/**
+ * Straight line from one node centre to the other (dots draw over its ends). Its label is HTML
+ * centred by CSS: React Flow's SVG label measures its text once, and measured before the mono
+ * font loaded it jumped when the edge was drawn again (on a selection).
+ */
+function CenterEdge({ id, source, target, style, label }: EdgeProps) {
   const from = useInternalNode(source);
   const to = useInternalNode(target);
   if (!from || !to) return null;
@@ -191,18 +185,19 @@ function CenterEdge({
     targetY: b.y,
   });
   return (
-    <BaseEdge
-      id={id}
-      path={path}
-      style={style}
-      label={label}
-      labelX={labelX}
-      labelY={labelY}
-      labelStyle={labelStyle}
-      labelBgStyle={labelBgStyle}
-      labelBgPadding={labelBgPadding}
-      labelBgBorderRadius={labelBgBorderRadius}
-    />
+    <>
+      <BaseEdge id={id} path={path} style={style} />
+      {label && (
+        <EdgeLabelRenderer>
+          <div
+            className="pointer-events-none absolute rounded-sm bg-background px-1 py-0.5 font-mono text-2xs whitespace-nowrap text-fg-2"
+            style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
+          >
+            {label}
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
   );
 }
 
@@ -313,19 +308,7 @@ function Graph({
         type: 'center',
         style: edgeStyle[edge.kind],
         focusable: false,
-        ...(edge.label
-          ? {
-              label: edge.label,
-              labelStyle: {
-                fill: 'var(--ds-fg-2)',
-                fontFamily: 'var(--font-mono)',
-                fontSize: 11,
-              },
-              labelBgStyle: { fill: 'var(--ds-bg)' },
-              labelBgPadding: [4, 2] as [number, number],
-              labelBgBorderRadius: 3,
-            }
-          : {}),
+        ...(edge.label ? { label: edge.label } : {}),
       })),
     [edges],
   );
