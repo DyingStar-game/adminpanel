@@ -131,6 +131,9 @@ every point (by more than 100 km on SandBox), and the selected item's move arrow
 shifts as moves. The BFF now computes the frame on a body's first map with points and keeps it
 while it runs; a BFF restart computes it anew.
 
+The selected item now keeps its whole trail (up to 100 moves, earlier ones fainter, each with
+its distance and time), cleared when another item is selected or the selection is cleared.
+
 ## Consequences
 
 - A body's content becomes visible at a glance; vehicles, buildings and, later, moving players

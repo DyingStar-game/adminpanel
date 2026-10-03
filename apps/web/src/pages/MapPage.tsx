@@ -23,6 +23,7 @@ import {
   pointLabel,
   searchPoints,
   trackMovement,
+  type Movement,
   type MovementTracker,
 } from '@/lib/bodyMap';
 import type { MapSearch as MapSearchState } from '@/lib/mapSearch';
@@ -102,25 +103,27 @@ function BodyMap({
   const [tracker, setTracker] = useState<MovementTracker | null>(null);
   const nextTracker = trackMovement(
     tracker,
+    search.selected,
     search.selected ? byUuid.get(search.selected) : undefined,
     updatedAt,
   );
   if (nextTracker !== tracker) setTracker(nextTracker);
-  const move = nextTracker?.movement;
+  const moves = nextTracker?.moves;
   const selectedPoint = search.selected ? byUuid.get(search.selected) : undefined;
   const movement = useMemo(
     () =>
-      move && selectedPoint
+      moves && moves.length > 0 && selectedPoint
         ? {
-            move,
+            moves,
             color: typeColor(selectedPoint.object_type),
-            label: t('map.moved', {
-              distance: formatDistance(move.distance),
-              time: new Date(move.at).toLocaleTimeString(),
-            }),
+            label: (move: Movement) =>
+              t('map.moved', {
+                distance: formatDistance(move.distance),
+                time: new Date(move.at).toLocaleTimeString(),
+              }),
           }
         : null,
-    [move, selectedPoint, t],
+    [moves, selectedPoint, t],
   );
 
   const select = useCallback(

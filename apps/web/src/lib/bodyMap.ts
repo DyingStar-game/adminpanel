@@ -202,39 +202,43 @@ export interface Movement {
   distance: number;
 }
 
-/** Last known position of the selected item, and its last move. Kept in memory only. */
+/** Longest trail kept for the selected item (oldest moves dropped first). */
+export const MAX_TRAIL = 100;
+
+/** Last known position of the selected item, and its moves since selected. Memory only. */
 export interface MovementTracker {
   uuid: string;
   last: MapLatLng;
-  movement: Movement | null;
+  /** Successive moves, oldest first. */
+  moves: Movement[];
 }
 
 /**
- * Follows the selected item between refreshes: a new position becomes the end of a movement
- * from the previous one. Returns the same tracker when nothing changed (safe to compare), and
- * starts over when another item is selected.
+ * Follows the selected item between refreshes: each new position adds a move from the previous
+ * one to its trail. Returns the same tracker when nothing changed (safe to compare); another
+ * selection starts over, no selection forgets everything. A refresh without the item (being
+ * reloaded) keeps the trail.
  */
 export function trackMovement(
   tracker: MovementTracker | null,
+  selected: string | undefined,
   point: MapPoint | undefined,
   receivedAt: number,
 ): MovementTracker | null {
-  if (!point) return null;
-  const position: MapLatLng = [point.y, point.x];
-  if (!tracker || tracker.uuid !== point.object_uuid) {
-    return { uuid: point.object_uuid, last: position, movement: null };
+  if (!selected) return null;
+  if (!point || point.object_uuid !== selected) {
+    return tracker?.uuid === selected ? tracker : null;
   }
+  const position: MapLatLng = [point.y, point.x];
+  if (!tracker || tracker.uuid !== selected) return { uuid: selected, last: position, moves: [] };
   if (tracker.last[0] === position[0] && tracker.last[1] === position[1]) return tracker;
-  return {
-    uuid: point.object_uuid,
-    last: position,
-    movement: {
-      from: tracker.last,
-      to: position,
-      at: receivedAt,
-      distance: Math.hypot(position[0] - tracker.last[0], position[1] - tracker.last[1]),
-    },
+  const move: Movement = {
+    from: tracker.last,
+    to: position,
+    at: receivedAt,
+    distance: Math.hypot(position[0] - tracker.last[0], position[1] - tracker.last[1]),
   };
+  return { uuid: selected, last: position, moves: [...tracker.moves, move].slice(-MAX_TRAIL) };
 }
 
 /** Heading of a movement in degrees, clockwise from north (map up). */

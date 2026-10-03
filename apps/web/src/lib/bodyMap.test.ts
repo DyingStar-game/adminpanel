@@ -11,6 +11,7 @@ import {
   isShown,
   mapLegend,
   markerShape,
+  MAX_TRAIL,
   movementHeading,
   pointLabel,
   searchPoints,
@@ -136,22 +137,44 @@ describe('body map helpers', () => {
     expect(formatDistance(0.5)).toBe('0.5 m');
   });
 
-  it('remembers the selected item and draws its move once its position changes', () => {
+  it('keeps the trail of the selected item until another one is selected', () => {
     const truck = (x: number, y: number) => ({ ...point('t', 'vehicle'), x, y });
-    const first = trackMovement(null, truck(0, 0), 1000);
-    expect(first).toEqual({ uuid: 't', last: [0, 0], movement: null });
+    const first = trackMovement(null, 't', truck(0, 0), 1000);
+    expect(first).toEqual({ uuid: 't', last: [0, 0], moves: [] });
     // Same position on the next refresh: unchanged tracker, nothing drawn.
-    expect(trackMovement(first, truck(0, 0), 6000)).toBe(first);
+    expect(trackMovement(first, 't', truck(0, 0), 6000)).toBe(first);
 
-    const moved = trackMovement(first, truck(300, 400), 61_000);
-    expect(moved?.movement).toEqual({ from: [0, 0], to: [400, 300], at: 61_000, distance: 500 });
-    // The next move starts from the last known position.
-    expect(trackMovement(moved, truck(300, 1400), 121_000)?.movement?.from).toEqual([400, 300]);
+    const moved = trackMovement(first, 't', truck(300, 400), 61_000);
+    expect(moved?.moves).toEqual([{ from: [0, 0], to: [400, 300], at: 61_000, distance: 500 }]);
+    // Every move is kept, each starting from the previous position.
+    const again = trackMovement(moved, 't', truck(300, 1400), 121_000);
+    expect(again?.moves.map((m) => [m.from, m.to])).toEqual([
+      [
+        [0, 0],
+        [400, 300],
+      ],
+      [
+        [400, 300],
+        [1400, 300],
+      ],
+    ]);
+    // A refresh without the item keeps the trail.
+    expect(trackMovement(again, 't', undefined, 0)).toBe(again);
 
     // Another selection starts over; no selection forgets everything.
-    expect(trackMovement(moved, { ...point('p', 'player'), x: 5, y: 5 }, 0)?.movement).toBeNull();
-    expect(trackMovement(moved, undefined, 0)).toBeNull();
-    expect(trackMovement(null, undefined, 0)).toBeNull();
+    expect(trackMovement(again, 'p', { ...point('p', 'player'), x: 5, y: 5 }, 0)?.moves).toEqual(
+      [],
+    );
+    expect(trackMovement(again, undefined, truck(0, 0), 0)).toBeNull();
+  });
+
+  it('keeps the last moves only', () => {
+    let tracker = trackMovement(null, 't', { ...point('t', 'vehicle'), x: 0, y: 0 }, 0);
+    for (let i = 1; i <= MAX_TRAIL + 5; i++) {
+      tracker = trackMovement(tracker, 't', { ...point('t', 'vehicle'), x: i, y: 0 }, i);
+    }
+    expect(tracker?.moves).toHaveLength(MAX_TRAIL);
+    expect(tracker?.moves.at(-1)?.to).toEqual([0, MAX_TRAIL + 5]);
   });
 
   it('gives the heading of a move, clockwise from north', () => {

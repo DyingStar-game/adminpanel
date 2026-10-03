@@ -2,6 +2,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
 import {
+  CircleMarker,
   MapContainer,
   Marker,
   Polyline,
@@ -58,7 +59,9 @@ interface BodyMapCanvasProps {
   /** Name written above a point of a named type. */
   nameOf: (point: MapPoint) => string;
   /** Last move of the selected item, drawn as an arrow. */
-  movement?: { move: Movement; color: string; label: string } | null | undefined;
+  /** Moves of the selected item since it was selected, drawn as a trail ending in an arrow. */
+  movement?:
+    { moves: Movement[]; color: string; label: (move: Movement) => string } | null | undefined;
   labels: { cluster: (count: number) => string; grid: (step: string, major: string) => string };
 }
 
@@ -102,29 +105,59 @@ function markerIcon(objectType: string, selected: boolean, name: string | null):
 }
 
 /** Arrow of the last move: a line from the previous position, a head at the new one. */
-function MoveArrow({ move, color, label }: { move: Movement; color: string; label: string }) {
-  // The head keeps its size on screen: a marker rotated to the heading, moved back so its tip
-  // touches the selected marker instead of hiding under it.
+function MoveTrail({
+  moves,
+  color,
+  label,
+}: {
+  moves: Movement[];
+  color: string;
+  label: (move: Movement) => string;
+}) {
+  const last = moves.at(-1);
+  // The head keeps its size on screen: a marker rotated to the last heading, moved back so its
+  // tip touches the selected marker instead of hiding under it.
   const head = useMemo(
     () =>
+      last &&
       L.divIcon({
         className: '',
         iconSize: [18, 18],
         html: `<svg viewBox="0 0 18 18" width="18" height="18" style="transform:rotate(${movementHeading(
-          move,
+          last,
         )}deg) translateY(${HEAD_BACK_PX}px)"><path d="M9 1 L16 16 L9 12 L2 16 Z" fill="${color}" stroke="var(--background)" stroke-width="1.5" stroke-linejoin="round"/></svg>`,
       }),
-    [move, color],
+    [last, color],
   );
   return (
     <>
-      <Polyline
-        positions={[move.from, move.to]}
-        pathOptions={{ color, weight: 3, opacity: 0.9, dashArray: '8 6' }}
-      >
-        <Tooltip sticky>{label}</Tooltip>
-      </Polyline>
-      <Marker position={move.to} icon={head} interactive={false} zIndexOffset={900} />
+      {/* Earlier moves fainter, the last one plain; each tells its distance and time. */}
+      {moves.map((move, i) => (
+        <Polyline
+          key={`${move.at}-${i}`}
+          positions={[move.from, move.to]}
+          pathOptions={{
+            color,
+            weight: 3,
+            opacity: move === last ? 0.9 : 0.45,
+            dashArray: '8 6',
+          }}
+        >
+          <Tooltip sticky>{label(move)}</Tooltip>
+        </Polyline>
+      ))}
+      {moves.slice(0, -1).map((move, i) => (
+        <CircleMarker
+          key={`stop-${move.at}-${i}`}
+          center={move.to}
+          radius={3}
+          interactive={false}
+          pathOptions={{ color, weight: 1, fillColor: color, fillOpacity: 0.6, opacity: 0.6 }}
+        />
+      ))}
+      {last && head && (
+        <Marker position={last.to} icon={head} interactive={false} zIndexOffset={900} />
+      )}
     </>
   );
 }
@@ -343,7 +376,7 @@ export function BodyMapCanvas({
       />
       <ScaleControl position="bottomright" imperial={false} />
       <FitOnce points={points} />
-      {movement && <MoveArrow {...movement} />}
+      {movement && <MoveTrail {...movement} />}
       <FlyTo focus={focus} />
       {onDeselect && <BackgroundClick onClick={onDeselect} />}
     </MapContainer>
