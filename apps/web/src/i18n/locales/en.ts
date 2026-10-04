@@ -215,7 +215,7 @@ export const en = {
   duplicate: {
     action: 'Duplicate',
     title: 'Duplicate {{label}}',
-    body: 'The copy gets new UUIDs; its own references are remapped to the copies.',
+    body: 'The copy is written like a new item (scene, position, rotation, new UUID), its children too, still linked to it; the game sets the rest.',
     reference: 'Reference (fills the placement below)',
     pickPlayer: 'Search a player (remembered as "me")',
     referenceUuid: 'or any item UUID',

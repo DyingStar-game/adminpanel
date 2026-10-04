@@ -218,7 +218,7 @@ export const fr: Translations = {
   duplicate: {
     action: 'Dupliquer',
     title: 'Dupliquer {{label}}',
-    body: 'La copie reçoit de nouveaux UUID ; ses propres références sont remappées vers les copies.',
+    body: 'La copie est écrite comme un nouvel objet (scène, position, rotation, nouvel UUID), ses enfants aussi, toujours reliés à elle ; le jeu complète le reste.',
     reference: 'Référence (remplit le placement ci-dessous)',
     pickPlayer: 'Chercher un joueur (mémorisé comme « moi »)',
     referenceUuid: "ou l'UUID de n'importe quel objet",

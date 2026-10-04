@@ -196,7 +196,8 @@ describe('ItemActionsHost', () => {
     await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
     expect(bff.persistence.items.size).toBe(before + 3);
     const root = stored(bff, onCreated.mock.calls[0]?.[0].object_uuid);
-    expect(root.object_data).toMatchObject({ parent_id: ids.spawnbuilding, pilot_uuid: '' });
+    expect(root.object_data).toMatchObject({ parent_id: ids.spawnbuilding });
+    expect(root.object_data).not.toHaveProperty('pilot_uuid');
     // The player is remembered as "me".
     expect(usePreferences.getState().me).toBe(ids.player);
   });

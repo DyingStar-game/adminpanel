@@ -39,6 +39,18 @@ no authentication ([ADR 0002](./0002-no-admin-authentication.md)): it does not k
   elsewhere it is the parent's +Y and only the yaw is kept. Rotations are Godot Euler angles,
   order YXZ (checked against the live vehicles resting on SandBox).
 
+### Update (2026-10-04): a copy is written like a new item
+
+A duplicated truck appeared upright, then sank into the ground, while "spawn next to it", with
+the same placement, did not: spawning writes only the parent, scene, position and rotation, the
+duplicate copied the whole state of the moment (compressed `suspension`, `speed`…). At the
+maintainer's request, each copy — the item and its children alike — is now written like a new
+item: `type`, `uuid` (new), `parent_id`, `scenename`, `position`, `rotation`. What binds the
+copies together is kept: references to copied items, remapped (a truck's `components.slot_fl`),
+and a child's place in its parent — the field whose value is the key the parent refers to it by
+(the component's `slot_id`). Everything else (pilot, seats, doors, speed, suspension, battery
+charge…) is left to the game's defaults. The rule needs no per-type list.
+
 ## Consequences
 
 - One request from the browser; the copy is created in a few `POST /items`, each pushed live to

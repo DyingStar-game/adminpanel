@@ -346,9 +346,11 @@ describe('POST /api/items/:uuid/duplicate', () => {
     expect(copy?.object_data).toMatchObject({
       parent_id: ids.spawnbuilding,
       position: { x: 1, y: 0, z: 2 },
-      pilot_uuid: '',
       components: { slot_fl: created[1].object_uuid, slot_fr: created[2].object_uuid },
     });
+    // Written like a new item: no pilot, no state of the moment.
+    expect(copy?.object_data).not.toHaveProperty('pilot_uuid');
+    expect(copy?.object_data).not.toHaveProperty('speed');
     // The original is untouched.
     expect(persistence.items.get(ids.vehicle)?.object_data.pilot_uuid).toBe(ids.player);
   });

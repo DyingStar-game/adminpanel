@@ -11,7 +11,7 @@ const sequence = () => {
 };
 
 describe('planDuplicate', () => {
-  it('copies the vehicle and its components with remapped references', () => {
+  it('writes each copy like a new item, keeping what binds the copies together', () => {
     const [vehicle, fl, fr] = planDuplicate(
       pick(ids.vehicle, ids.wheelFl, ids.wheelFr),
       {
@@ -22,45 +22,44 @@ describe('planDuplicate', () => {
       sequence(),
     );
 
-    expect(vehicle).toMatchObject({
+    // Identity, parent, scene, placement, and the components that were copied (remapped):
+    // nothing of the state of the moment (speed, suspension, pilot, seats, doors…).
+    expect(vehicle).toEqual({
       object_type: 'vehicle',
       object_uuid: '00000000-0000-4000-8000-000000000001',
       object_data: {
+        type: 'vehicle',
         uuid: '00000000-0000-4000-8000-000000000001',
         parent_id: ids.spawnbuilding,
+        scenename: 'scenes/_universe/vehicles/ground/trucks/truck.tscn',
         position: { x: 1, y: 2, z: 3 },
         rotation: { x: 0, y: 1, z: 0 },
-        // Own components point to their copies; the dangling one is emptied.
         components: {
           slot_fl: '00000000-0000-4000-8000-000000000002',
           slot_fr: '00000000-0000-4000-8000-000000000003',
-          slot_rl: '',
-          slot_rr: '',
         },
-        // The copy has no pilot and no passenger.
-        pilot_uuid: '',
-        seats: { seat_driver: '', seat_passenger: '' },
-        speed: 28.7,
       },
     });
-    // Children follow the copied parent and keep their relative position.
-    expect(fl?.object_data).toMatchObject({
+    // Children follow the copied parent, keep their relative placement and their place in it
+    // (`slot_id`, the key the parent refers to them by), and nothing else (charge, weight).
+    const source = byId.get(ids.wheelFr)?.object_data;
+    expect(fr?.object_data).toEqual({
+      type: 'vehicle_component',
+      uuid: '00000000-0000-4000-8000-000000000003',
       parent_id: '00000000-0000-4000-8000-000000000001',
-      slot_id: 'slot_fl',
-      position: byId.get(ids.wheelFl)?.object_data.position,
+      slot_id: 'slot_fr',
+      scenename: source?.scenename,
+      position: source?.position,
+      rotation: source?.rotation,
     });
-    expect(fr?.object_uuid).toBe('00000000-0000-4000-8000-000000000003');
+    expect(fl?.object_data).toMatchObject({ slot_id: 'slot_fl' });
   });
 
-  it('empties references to children that are not copied', () => {
+  it('keeps no reference to items outside the copy', () => {
     const [vehicle] = planDuplicate(pick(ids.vehicle), { parentId: ids.planet }, sequence());
 
-    expect(vehicle?.object_data.components).toEqual({
-      slot_fl: '',
-      slot_fr: '',
-      slot_rl: '',
-      slot_rr: '',
-    });
+    expect(vehicle?.object_data).not.toHaveProperty('components');
+    expect(vehicle?.object_data).not.toHaveProperty('pilot_uuid');
     // Without a target position the original one is kept.
     expect(vehicle?.object_data.position).toEqual(byId.get(ids.vehicle)?.object_data.position);
   });
