@@ -5,7 +5,13 @@ import type { SpawnPreset } from '@/lib/spawn';
 /** Write action in progress, shown by `ItemActionsHost` (one sheet or dialog at a time). */
 export type ItemAction =
   | { kind: 'edit'; uuid: string }
-  | { kind: 'create'; parentId: string; objectType?: string | undefined; spawn?: SpawnContext }
+  | {
+      kind: 'create';
+      parentId: string;
+      objectType?: string | undefined;
+      spawn?: SpawnContext;
+      place?: PlaceContext;
+    }
   | { kind: 'delete'; uuid: string }
   | { kind: 'duplicate'; uuid: string };
 
@@ -19,6 +25,12 @@ export interface SpawnContext {
   nearLabel: string;
 }
 
+/** Creation at a fixed place (clicked on the map): position and orientation, and its label. */
+export interface PlaceContext {
+  preset: SpawnPreset;
+  label: string;
+}
+
 interface ItemActionsState {
   action: ItemAction | null;
   edit: (uuid: string) => void;
@@ -26,6 +38,7 @@ interface ItemActionsState {
     parentId: string;
     objectType?: string | undefined;
     spawn?: SpawnContext;
+    place?: PlaceContext;
   }) => void;
   remove: (uuid: string) => void;
   duplicate: (uuid: string) => void;

@@ -172,6 +172,8 @@ export const en = {
     spawnNext: 'Spawn next to it',
     spawnHint:
       'Spawned next to {{label}}: same parent, in front of it, same orientation. Positions are relative to the parent; the game currently does not report player positions to the API, so the last saved one is used.',
+    placeHint:
+      'Placed where the map was clicked ({{label}}): on the ground near the closest item, upright, facing north. Positions are relative to the body centre.',
     scenesOfType: 'Used by {{type}}',
     scenesOther: 'Other scenes',
     scenesEmpty: 'No known scene matches: the typed value is kept.',
@@ -269,6 +271,8 @@ export const en = {
     keys_other: '{{count}} keys',
   },
   map: {
+    menu: 'Actions at this place',
+    addHere: 'Add an item here',
     open: 'Map',
     showOn: 'Show on map',
     title: 'Map of {{name}}',

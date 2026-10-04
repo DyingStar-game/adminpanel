@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { basisFromEuler } from '@dyingstar-admin/schemas';
+import { basisFromEuler, directionOf, dot } from '@dyingstar-admin/schemas';
 import {
   SPAWN_DISTANCE,
   SPAWN_HEIGHT,
   spawnDistanceFor,
   spawnHeightFor,
+  placeOnBody,
   spawnNextTo,
   type SpawnPreset,
 } from './spawn';
@@ -106,5 +107,17 @@ describe('spawnHeightFor', () => {
   it('raises vehicles more than other types', () => {
     expect(spawnHeightFor('vehicle')).toBe(1);
     expect(spawnHeightFor('box')).toBe(SPAWN_HEIGHT);
+  });
+
+  it('places an item on a body where the map was clicked: upright, facing north', () => {
+    const direction = directionOf(19.2, 132.6);
+    const preset = placeOnBody('body', direction, 6_360_000);
+    expect(preset.parentId).toBe('body');
+    const { x, y, z } = preset.position;
+    expect(Math.hypot(x, y, z)).toBeCloseTo(6_360_000, 0);
+    const [, up, back] = basisFromEuler(preset.rotation);
+    // Its +Y along the local vertical, its forward (−Z) towards the pole.
+    up.forEach((value, i) => expect(value).toBeCloseTo(direction[i] ?? 0, 3));
+    expect(dot(back, [0, 1, 0])).toBeLessThan(0);
   });
 });

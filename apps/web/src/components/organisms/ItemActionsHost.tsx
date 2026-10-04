@@ -28,6 +28,7 @@ export function ItemActionsHost({ onCreated, onDeleted }: ItemActionsHostProps) 
               parentId={action.parentId}
               objectType={action.objectType}
               spawn={action.spawn}
+              place={action.place}
               onCancel={close}
               onCreated={(item) => {
                 close();

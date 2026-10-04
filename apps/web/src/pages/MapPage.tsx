@@ -1,7 +1,14 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CompassIcon, ExpandIcon, NetworkIcon, PlusIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { ErrorCode, type BodyMapResponse, type MapPoint } from '@dyingstar-admin/schemas';
+import {
+  azimuthalEquidistantInverse,
+  directionOf,
+  ErrorCode,
+  latLonOf,
+  type BodyMapResponse,
+  type MapPoint,
+} from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
 import { TypeDot } from '@/components/atoms/TypeDot';
 import { MapLegend } from '@/components/molecules/MapLegend';
@@ -18,6 +25,7 @@ import {
   formatAltitude,
   formatDistance,
   formatLatLon,
+  type MapLatLng,
   ARRIVAL_ZOOM,
   isShown,
   mapLegend,
@@ -30,6 +38,7 @@ import {
 } from '@/lib/bodyMap';
 import type { MapSearch as MapSearchState } from '@/lib/mapSearch';
 import { typeColor } from '@/lib/objectTypes';
+import { placeOnBody, spawnHeightFor } from '@/lib/spawn';
 import { usePreferences } from '@/stores/preferences';
 
 interface MapPageProps {
@@ -152,6 +161,46 @@ function BodyMap({
     () => onSearchChange({ ...search, selected: undefined }),
     [onSearchChange, search],
   );
+
+  // Menu opened by a right click on the map background, at that place.
+  const [menu, setMenu] = useState<{ at: MapLatLng; x: number; y: number } | null>(null);
+  const closeMenu = useCallback(() => setMenu(null), []);
+  useEffect(() => {
+    if (!menu) return;
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && setMenu(null);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [menu]);
+  /**
+   * Creates an item where the map was clicked: the direction from the projection, the height of
+   * the closest item on the ground (the relief is unknown), standing upright.
+   */
+  const addHere = ([north, east]: MapLatLng) => {
+    setMenu(null);
+    const inverse = azimuthalEquidistantInverse(
+      directionOf(map.center.lat, map.center.lon),
+      map.referenceRadius,
+    );
+    const direction = inverse(east, north);
+    const closest = map.points
+      .filter((p) => p.via === null)
+      .reduce<MapPoint | null>(
+        (best, p) =>
+          !best || Math.hypot(p.x - east, p.y - north) < Math.hypot(best.x - east, best.y - north)
+            ? p
+            : best,
+        null,
+      );
+    const ground = map.referenceRadius + (closest?.altitude ?? 0);
+    const { lat, lon } = latLonOf(direction);
+    actions.create({
+      parentId: map.body.object_uuid,
+      place: {
+        preset: placeOnBody(map.body.object_uuid, direction, ground + spawnHeightFor(undefined)),
+        label: formatLatLon(lat, lon),
+      },
+    });
+  };
   const focusOn = (uuid: string) => {
     select(uuid);
     const point = byUuid.get(uuid);
@@ -193,7 +242,12 @@ function BodyMap({
             selected={search.selected}
             focus={focus}
             onSelect={select}
-            onDeselect={search.selected ? deselect : undefined}
+            onDeselect={() => {
+              closeMenu();
+              if (search.selected) deselect();
+            }}
+            onContextMenu={(at, { x, y }) => setMenu({ at, x, y })}
+            onViewChange={closeMenu}
             describe={describe}
             labels={clusterLabels}
             named={named}
@@ -204,6 +258,25 @@ function BodyMap({
       }
       overlays={
         <>
+          {menu && (
+            <div
+              role="menu"
+              aria-label={t('map.menu')}
+              className="absolute z-[1100] flex min-w-44 flex-col rounded-md border bg-background p-1 text-sm shadow-lg"
+              style={{ left: menu.x, top: menu.y }}
+            >
+              <button
+                type="button"
+                role="menuitem"
+                autoFocus
+                onClick={() => addHere(menu.at)}
+                className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-left hover:bg-white/5 focus-visible:bg-white/5 focus-visible:outline-none"
+              >
+                <PlusIcon size={14} />
+                {t('map.addHere')}
+              </button>
+            </div>
+          )}
           <div className="absolute top-3.5 left-14 z-[1000] flex w-80 max-w-[40%] flex-col gap-2">
             {/* Title on its own line (never cut), the count under it. */}
             <div className="flex flex-col gap-0.5 rounded-lg border bg-background px-3 py-2">

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { MapPoint } from '@dyingstar-admin/schemas';
 import {
+  fitPoints,
   ARRIVAL_ZOOM,
   formatAltitude,
   formatLatLon,
@@ -174,6 +175,14 @@ describe('body map helpers', () => {
 
   it('arrives on an item at the 1 km grid', () => {
     expect(gridStep(2 ** -ARRIVAL_ZOOM)).toBe(1000);
+  });
+
+  it('fits the first view on the main group, not on lone far points', () => {
+    const group = Array.from({ length: 50 }, (_, i) => ({ x: (i % 10) * 1000, y: i * 100 }));
+    const far = { x: 14_000_000, y: 0 };
+    expect(fitPoints([...group, far])).toEqual(group);
+    // Few points: all of them.
+    expect(fitPoints([{ x: 0, y: 0 }, far])).toHaveLength(2);
   });
 
   it('keeps the last moves only', () => {

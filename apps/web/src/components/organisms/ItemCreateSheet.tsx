@@ -30,7 +30,7 @@ import {
   type Offsets,
 } from '@/lib/spawn';
 import { PropertiesSchema, type PropertiesFormValues } from '@/lib/propertyFormSchema';
-import type { SpawnContext } from '@/stores/itemActions';
+import type { PlaceContext, SpawnContext } from '@/stores/itemActions';
 import { PropertiesEditor } from './PropertiesEditor';
 
 interface ItemCreateSheetProps {
@@ -39,6 +39,8 @@ interface ItemCreateSheetProps {
   objectType?: string | undefined;
   /** Spawn next to an entity: position and yaw prefilled, relative to the shared parent. */
   spawn?: SpawnContext | undefined;
+  /** Fixed place (clicked on the map): position and orientation prefilled. */
+  place?: PlaceContext | undefined;
   onCreated: (item: Item) => void;
   onCancel: () => void;
 }
@@ -55,9 +57,11 @@ export function ItemCreateSheet({
   parentId,
   objectType,
   spawn,
+  place,
   onCreated,
   onCancel,
 }: ItemCreateSheetProps) {
+  const preset = spawn?.preset ?? place?.preset;
   const { t } = useTranslation();
   const definitions = useDefinitions();
   const create = useCreateItem();
@@ -70,11 +74,11 @@ export function ItemCreateSheet({
       objectType: objectType ?? '',
       uuid: crypto.randomUUID(),
       properties: [
-        { key: 'parent_id', kind: 'text', raw: spawn?.preset.parentId ?? parentId },
+        { key: 'parent_id', kind: 'text', raw: preset?.parentId ?? parentId },
         { key: 'scenename', kind: 'text', raw: '' },
-        { key: 'position', kind: 'vec3', raw: toRaw(spawn?.preset.position, 'vec3') },
-        ...(spawn
-          ? [{ key: 'rotation', kind: 'vec3' as const, raw: toRaw(spawn.preset.rotation, 'vec3') }]
+        { key: 'position', kind: 'vec3', raw: toRaw(preset?.position, 'vec3') },
+        ...(preset
+          ? [{ key: 'rotation', kind: 'vec3' as const, raw: toRaw(preset.rotation, 'vec3') }]
           : []),
       ],
     },
@@ -204,6 +208,11 @@ export function ItemCreateSheet({
               </span>
             )}
           </div>
+          {place && (
+            <p className="rounded-md border border-dashed px-3 py-2 text-xs text-fg-2">
+              {t('editor.placeHint', { label: place.label })}
+            </p>
+          )}
           {spawn && (
             <div className="flex flex-col gap-2 rounded-md border border-dashed px-3 py-2">
               <p className="text-xs text-fg-2">

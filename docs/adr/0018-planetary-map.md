@@ -149,6 +149,16 @@ grows with the body: the lasting answer is on the persistence side (ADR 0021).
 The game confirms the body frame: +Y is the pole and +Z longitude 0. The map no longer shows
 the "assume +Y is the pole" caption.
 
+### Update (2026-10-04): add an item where the map is right-clicked, first view on the main group
+
+A right click on the map background opens a menu, "Add an item here": the create form comes
+with the body as parent, the clicked place (inverse projection, `azimuthalEquidistantInverse`)
+at the height of the closest item on the ground (the relief is unknown) plus the usual
+spawn height, upright and facing north (`placeOnBody`). The first view is fitted on the main
+group of items: two vehicles driven 3,400 and 14,300 km away zoomed it out to the whole planet.
+Points beyond 3 times the 90th percentile distance from the median point are left out of the
+fit (they stay on the map).
+
 ## Consequences
 
 - A body's content becomes visible at a glance; vehicles, buildings and, later, moving players

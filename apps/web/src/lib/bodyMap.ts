@@ -261,3 +261,23 @@ export function trackMovement(
 /** Heading of a movement in degrees, clockwise from north (map up). */
 export const movementHeading = ({ from, to }: Pick<Movement, 'from' | 'to'>) =>
   (Math.atan2(to[1] - from[1], to[0] - from[0]) * 180) / Math.PI;
+
+/** A point further than this many times the 90th percentile distance is left out of the fit. */
+const FIT_OUTLIER_FACTOR = 3;
+
+/**
+ * Points the first view is fitted on: all of them but the lone ones far from the rest (a
+ * vehicle driven to the other side of the planet would zoom the view out to the whole body).
+ * Distances are taken from the median point; the outliers stay on the map, out of the frame.
+ */
+export function fitPoints<P extends { x: number; y: number }>(points: P[]): P[] {
+  if (points.length < 10) return points;
+  const median = (values: number[]) => [...values].sort((a, b) => a - b)[values.length >> 1] ?? 0;
+  const cx = median(points.map((p) => p.x));
+  const cy = median(points.map((p) => p.y));
+  const distances = points.map((p) => Math.hypot(p.x - cx, p.y - cy));
+  const sorted = [...distances].sort((a, b) => a - b);
+  const p90 = sorted[Math.floor(sorted.length * 0.9)] ?? 0;
+  const kept = points.filter((_, i) => (distances[i] ?? 0) <= FIT_OUTLIER_FACTOR * p90);
+  return kept.length > 0 ? kept : points;
+}

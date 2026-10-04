@@ -95,3 +95,27 @@ export type OffsetKey = keyof Offsets;
 
 /** A usable offset: a finite, non-negative number of metres. */
 export const offsetValid = (n: number) => Number.isFinite(n) && n >= 0;
+
+/** North pole of a body frame (+Y, confirmed by the game team). */
+const POLE: V = [0, 1, 0];
+
+/**
+ * Placement on a celestial body at a direction from its centre and a distance from it: the item
+ * is a child of the body, upright (its +Y along the local vertical) and facing north (its −Z,
+ * Godot's forward, towards the pole). Used to add an item where the map was clicked.
+ */
+export function placeOnBody(bodyId: string, direction: V, distance: number): SpawnPreset {
+  const up = normalize(direction) ?? POLE;
+  const north = normalize(addScaled(POLE, up, -dot(POLE, up))) ?? normalize(cross(up, [1, 0, 0]));
+  const back = north ? ([-north[0], -north[1], -north[2]] as V) : ([0, 0, 1] as V);
+  const angles = eulerFromBasis([cross(up, back), up, back]);
+  return {
+    parentId: bodyId,
+    position: {
+      x: round(up[0] * distance) + 0,
+      y: round(up[1] * distance) + 0,
+      z: round(up[2] * distance) + 0,
+    },
+    rotation: { x: round(angles.x) + 0, y: round(angles.y) + 0, z: round(angles.z) + 0 },
+  };
+}

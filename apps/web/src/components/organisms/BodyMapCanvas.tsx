@@ -16,6 +16,7 @@ import 'leaflet/dist/leaflet.css';
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.css';
 import type { MapPoint } from '@dyingstar-admin/schemas';
 import {
+  fitPoints,
   formatDistance,
   gridLines,
   gridStep,
@@ -56,6 +57,13 @@ interface BodyMapCanvasProps {
   onSelect: (uuid: string) => void;
   /** A click on the map background, away from any marker: clears the selection. */
   onDeselect?: (() => void) | undefined;
+  /**
+   * Right click on the map background: where (projected metres) and on screen (pixels from the
+   * map's top-left corner), for a menu of actions at that place.
+   */
+  onContextMenu?: ((at: MapLatLng, screen: { x: number; y: number }) => void) | undefined;
+  /** Any move or zoom of the view (closes a menu opened at a place). */
+  onViewChange?: (() => void) | undefined;
   /** Tooltip content of a point (label, type, altitude…). */
   describe: (point: MapPoint) => string;
   /** Types whose names are written above their markers. */
@@ -173,7 +181,7 @@ function FitOnce({ points }: { points: MapPoint[] }) {
   useEffect(() => {
     if (done.current || points.length === 0) return;
     done.current = true;
-    map.fitBounds(L.latLngBounds(points.map(toLatLng)), { padding: [40, 40] });
+    map.fitBounds(L.latLngBounds(fitPoints(points).map(toLatLng)), { padding: [40, 40] });
   }, [map, points]);
   return null;
 }
@@ -184,6 +192,25 @@ function FitOnce({ points }: { points: MapPoint[] }) {
  */
 function BackgroundClick({ onClick }: { onClick: () => void }) {
   useMapEvents({ click: onClick });
+  return null;
+}
+
+/** Right clicks on the map background, and view changes (markers keep their own clicks). */
+function BackgroundMenu({
+  onContextMenu,
+  onViewChange,
+}: Pick<BodyMapCanvasProps, 'onContextMenu' | 'onViewChange'>) {
+  useMapEvents({
+    contextmenu: (event) => {
+      event.originalEvent.preventDefault();
+      onContextMenu?.([event.latlng.lat, event.latlng.lng], {
+        x: event.containerPoint.x,
+        y: event.containerPoint.y,
+      });
+    },
+    movestart: () => onViewChange?.(),
+    zoomstart: () => onViewChange?.(),
+  });
   return null;
 }
 
@@ -400,6 +427,8 @@ export function BodyMapCanvas({
   focus,
   onSelect,
   onDeselect,
+  onContextMenu,
+  onViewChange,
   describe,
   labels,
   named,
@@ -435,6 +464,7 @@ export function BodyMapCanvas({
       <FlyTo focus={focus} />
       <DeclutterNames />
       {onDeselect && <BackgroundClick onClick={onDeselect} />}
+      <BackgroundMenu onContextMenu={onContextMenu} onViewChange={onViewChange} />
     </MapContainer>
   );
 }

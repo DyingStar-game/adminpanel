@@ -101,3 +101,22 @@ export function azimuthalEquidistant(center: V, radius: number) {
     return { x: radius * k * dot(direction, east), y: radius * k * dot(direction, north) };
   };
 }
+
+/**
+ * Inverse of `azimuthalEquidistant`: the unit direction from the body centre of a point given
+ * by its east / north map coordinates in metres.
+ */
+export function azimuthalEquidistantInverse(center: V, radius: number) {
+  const east = normalize(cross(POLE, center)) ?? ([1, 0, 0] as V);
+  const north = cross(center, east);
+  return (x: number, y: number): V => {
+    const rho = Math.hypot(x, y);
+    if (rho < 1e-9) return center;
+    const angle = rho / radius;
+    const along = addScaled(addScaled([0, 0, 0], east, x / rho), north, y / rho);
+    return (
+      normalize(addScaled(addScaled([0, 0, 0], center, Math.cos(angle)), along, Math.sin(angle))) ??
+      center
+    );
+  };
+}
