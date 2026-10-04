@@ -11,6 +11,7 @@ export const en = {
     activeServer: 'Active server',
     soon: 'soon',
     collapse: 'Collapse the menu',
+    wiki: 'Dev wiki (project documentation)',
     expand: 'Expand the menu',
     sections: {
       supervision: 'Supervision',

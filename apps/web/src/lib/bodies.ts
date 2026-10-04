@@ -7,6 +7,9 @@ import { sceneModel } from './schematics';
  * `tarsis_3_1.tscn` its first moon, described on the planet's page. Data only: a new body is
  * one entry; values follow the wiki, not the game.
  */
+/** Home of the project's dev wiki, its main documentation. */
+export const WIKI_HOME = 'https://developer.dyingstar-game.com/docs/';
+
 export const WIKI_BASE =
   'https://developer.dyingstar-game.com/docs/project/GDD/worldbuilding/5_01_geographie/system_tarsis/';
 

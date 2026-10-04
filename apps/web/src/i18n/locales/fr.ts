@@ -13,6 +13,7 @@ export const fr: Translations = {
     activeServer: 'Serveur actif',
     soon: 'bientôt',
     collapse: 'Réduire le menu',
+    wiki: 'Wiki de dev (documentation du projet)',
     expand: 'Déplier le menu',
     sections: {
       supervision: 'Supervision',

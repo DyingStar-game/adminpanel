@@ -1,4 +1,5 @@
 import {
+  BookOpenIcon,
   BoxesIcon,
   LayoutDashboardIcon,
   PanelLeftCloseIcon,
@@ -14,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { GithubMark } from '@/components/atoms/GithubMark';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { useServers } from '@/hooks/useServers';
+import { WIKI_HOME } from '@/lib/bodies';
 import { cn } from '@/lib/cn';
 import { usePreferences } from '@/stores/preferences';
 
@@ -175,15 +177,28 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
         )}
       >
         {!collapsed && <span>v{version}</span>}
-        <a
-          href="https://github.com/DyingStar-game"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="GitHub"
-          className="transition-all duration-150 hover:text-link"
-        >
-          <GithubMark size={16} />
-        </a>
+        <span className={cn('flex items-center gap-3', collapsed && 'flex-col')}>
+          <a
+            href={WIKI_HOME}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={t('nav.wiki')}
+            title={t('nav.wiki')}
+            className="transition-all duration-150 hover:text-link"
+          >
+            <BookOpenIcon size={16} />
+          </a>
+          <a
+            href="https://github.com/DyingStar-game"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="GitHub"
+            title="GitHub"
+            className="transition-all duration-150 hover:text-link"
+          >
+            <GithubMark size={16} />
+          </a>
+        </span>
       </div>
     </aside>
   );
