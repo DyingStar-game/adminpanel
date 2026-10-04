@@ -30,7 +30,10 @@ export const en = {
     },
   },
   topBar: {
-    searchPlaceholder: 'Go to a UUID…',
+    searchPlaceholder: 'Search (name, UUID)',
+    searchEmpty: 'No item matches.',
+    searchLoading: 'Searching the whole universe…',
+    searchMore: '{{shown}} of {{total}}: type more to narrow down',
     import: 'Import',
     newItem: 'New item',
     home: 'Back to the explorer',
@@ -39,7 +42,7 @@ export const en = {
     noServer: 'No server configured',
   },
   search: {
-    uuidOnly: 'Enter a full UUID — the persistence API has no name search.',
+    uuidOnly: 'No item matches “{{query}}”.',
   },
   explorer: {
     pageTitle: 'Persistence — Items',

@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { ChevronRightIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LiveToggle } from '@/components/molecules/LiveToggle';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
-import { SearchBar } from '@/components/molecules/SearchBar';
+import { ItemSearch } from '@/components/molecules/ItemSearch';
+import { useItemSearch } from '@/hooks/useItemSearch';
 import { useServers } from '@/hooks/useServers';
 import { LOCALES, type Locale } from '@/i18n';
 import { cn } from '@/lib/cn';
@@ -11,6 +13,7 @@ import { usePreferences } from '@/stores/preferences';
 interface TopBarProps {
   /** Breadcrumb of the page on screen, e.g. `Admin › Explorer`. */
   crumbs: string[];
+  /** An item picked in the search, or a query submitted with no result (a full UUID). */
   onSearch: (query: string) => void;
 }
 
@@ -23,6 +26,9 @@ export function TopBar({ crumbs, onSearch }: TopBarProps) {
   const { t } = useTranslation();
   const { live, setLive, locale, setLocale } = usePreferences();
   const { selected } = useServers();
+  // Search of the whole universe by a piece of name or UUID.
+  const [query, setQuery] = useState('');
+  const search = useItemSearch(query);
 
   return (
     <header className="sticky top-0 z-20 flex shrink-0 items-center gap-3 border-b bg-background/90 px-6 py-3 backdrop-blur">
@@ -37,7 +43,25 @@ export function TopBar({ crumbs, onSearch }: TopBarProps) {
         ))}
       </nav>
       <div className="flex min-w-0 flex-1 justify-center">
-        <SearchBar placeholder={t('topBar.searchPlaceholder')} onSubmit={onSearch} />
+        <ItemSearch
+          className="w-110 max-w-full"
+          query={query}
+          onQueryChange={setQuery}
+          results={search.results}
+          loading={search.loading}
+          total={search.total}
+          onPick={onSearch}
+          onSubmit={(value) => {
+            setQuery('');
+            onSearch(value);
+          }}
+          labels={{
+            field: t('topBar.searchPlaceholder'),
+            empty: t('topBar.searchEmpty'),
+            loading: t('topBar.searchLoading'),
+            more: (shown, total) => t('topBar.searchMore', { shown, total }),
+          }}
+        />
       </div>
       <LiveToggle
         live={live}

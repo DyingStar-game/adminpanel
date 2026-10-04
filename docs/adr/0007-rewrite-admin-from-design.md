@@ -67,6 +67,12 @@ persistence offers a search by a piece of name (ADR 0021, item 4), only that fun
 the route, the web app and the route tests stay. First search of a large level: about 4–5 s for
 SandBox's 20,000 children when not already cached, about 1 s for the 1,263 players.
 
+The top bar's field, which only opened full UUIDs, searches **the whole universe** the same
+way (`q` without a level): the first 8 matches with their parent, their total, "searching the
+whole universe…" while the BFF reads persistence whole (about 7 s the first time, then cached
+30 s); a full UUID submitted with Enter still opens directly. The map's search and the top bar's
+share one molecule, `ItemSearch`.
+
 ## Consequences
 
 - ADRs 0003–0006 describe the target, not fixes to the existing code.

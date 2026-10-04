@@ -32,7 +32,10 @@ export const fr: Translations = {
     },
   },
   topBar: {
-    searchPlaceholder: 'Aller à un UUID…',
+    searchPlaceholder: 'Rechercher (nom, UUID)',
+    searchEmpty: 'Aucun objet ne correspond.',
+    searchLoading: 'Recherche dans tout l’univers…',
+    searchMore: '{{shown}} sur {{total}} : précise la recherche',
     import: 'Importer',
     newItem: 'Nouvel objet',
     home: "Retour à l'explorateur",
@@ -41,7 +44,7 @@ export const fr: Translations = {
     noServer: 'Aucun serveur configuré',
   },
   search: {
-    uuidOnly: "Saisis un UUID complet — l'API persistence ne permet pas de chercher par nom.",
+    uuidOnly: 'Aucun objet ne correspond à « {{query}} ».',
   },
   explorer: {
     pageTitle: 'Persistance — Items',

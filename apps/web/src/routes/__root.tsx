@@ -34,7 +34,8 @@ function RootLayout() {
 
   // The API has no name search (ADR 0007): only full UUIDs can be opened.
   const search = async (query: string) => {
-    if (!UuidSchema.safeParse(query).success) return void toast.error(t('search.uuidOnly'));
+    if (!UuidSchema.safeParse(query).success)
+      return void toast.error(t('search.uuidOnly', { query }));
     const item = await goToItem(query);
     if (!item) return void toast.error(t('explorer.notFound', { uuid: query }));
     openInExplorer(item);

@@ -25,7 +25,7 @@ import { MonoText } from '@/components/atoms/MonoText';
 import { TypeDot } from '@/components/atoms/TypeDot';
 import { MapLegend } from '@/components/molecules/MapLegend';
 import { ContextMenu } from '@/components/molecules/ContextMenu';
-import { MapSearch } from '@/components/molecules/MapSearch';
+import { ItemSearch } from '@/components/molecules/ItemSearch';
 import { BodyMapCanvas, type MapFocus } from '@/components/organisms/BodyMapCanvas';
 import { Inspector } from '@/components/organisms/Inspector';
 import { OrbitLayout } from '@/components/templates/OrbitLayout';
@@ -111,6 +111,7 @@ function BodyMap({
   const { t, i18n } = useTranslation();
   const { mapHidden, setMapHidden, mapNamed, setMapNamed } = usePreferences();
   const actions = useItemActions();
+  const [mapQuery, setMapQuery] = useState('');
   // Shared with the inspector's query of the same item.
   const selectedItem = useItem(search.selected).data ?? null;
   // The body's own item (its scene), for its facts from the project wiki.
@@ -425,15 +426,19 @@ function BodyMap({
                 </div>
               )}
             </div>
-            <MapSearch
+            <ItemSearch
               labels={{ field: t('map.search'), empty: t('map.noMatch') }}
-              search={(q) =>
-                searchPoints([...map.points, ...map.inOrbit], q).map((point) => ({
-                  uuid: point.object_uuid,
-                  label: pointLabel(point),
-                  objectType: point.object_type,
-                  hint: isShown(point.object_type, mapHidden) ? undefined : t('map.hidden'),
-                }))
+              query={mapQuery}
+              onQueryChange={setMapQuery}
+              results={
+                mapQuery.trim()
+                  ? searchPoints([...map.points, ...map.inOrbit], mapQuery).map((point) => ({
+                      uuid: point.object_uuid,
+                      label: pointLabel(point),
+                      objectType: point.object_type,
+                      hint: isShown(point.object_type, mapHidden) ? undefined : t('map.hidden'),
+                    }))
+                  : []
               }
               onPick={focusOn}
             />
