@@ -17,6 +17,8 @@ export interface BodyFacts {
   name?: string;
   /** Wiki page, relative to `WIKI_BASE`. */
   page: string;
+  /** Anchor of the body's section on that page (a moon on its planet's page). */
+  anchor?: string;
   radiusKm: number;
   /** Surface gravity, m/s². */
   gravity?: number;
@@ -62,10 +64,12 @@ const BODIES: Record<string, BodyFacts> = {
     dayHours: 25,
     orbitDays: 219.77,
   },
-  // The wiki lists them under "Tarsis IV.M1 / M2" on the Tarsis III page; persistence has them
-  // under SandBox (P3_M1, P3_M2): taken as Tarsis III's moons.
+  // The wiki lists them under "Tarsis IV.M1 / M2" on the Tarsis III page (anchors `tarsis-ivm*`,
+  // and Gaea's moon is `tarsis-iiim1`); persistence has them under SandBox (P3_M1, P3_M2):
+  // taken as Tarsis III's moons, linked to the anchors as they are.
   tarsis_3_1: {
     designation: 'Tarsis III.M1',
+    anchor: 'tarsis-ivm1',
     name: 'Korax',
     page: 'tarsis_III/',
     radiusKm: 1500,
@@ -74,6 +78,7 @@ const BODIES: Record<string, BodyFacts> = {
   },
   tarsis_3_2: {
     designation: 'Tarsis III.M2',
+    anchor: 'tarsis-ivm2',
     name: 'Xarok',
     page: 'tarsis_III/',
     radiusKm: 700,
@@ -91,6 +96,7 @@ const BODIES: Record<string, BodyFacts> = {
   },
   tarsis_4_1: {
     designation: 'Tarsis IV.M1',
+    anchor: 'tarsis-iiim1',
     page: 'tarsis_IV/',
     radiusKm: 1146.42,
     gravity: 1.759059592,
@@ -106,6 +112,7 @@ const BODIES: Record<string, BodyFacts> = {
   },
   tarsis_5_1: {
     designation: 'Tarsis V.M1',
+    anchor: 'tarsis-vm1',
     page: 'tarsis_V/',
     radiusKm: 2552,
     gravity: 2.33,
@@ -113,6 +120,7 @@ const BODIES: Record<string, BodyFacts> = {
   },
   tarsis_5_2: {
     designation: 'Tarsis V.M2',
+    anchor: 'tarsis-vm2',
     page: 'tarsis_V/',
     radiusKm: 5900,
     gravity: 3.14,
@@ -120,6 +128,7 @@ const BODIES: Record<string, BodyFacts> = {
   },
   tarsis_5_3: {
     designation: 'Tarsis V.M3',
+    anchor: 'tarsis-vm3',
     page: 'tarsis_V/',
     radiusKm: 3632,
     gravity: 3.57,
@@ -127,6 +136,7 @@ const BODIES: Record<string, BodyFacts> = {
   },
   tarsis_5_4: {
     designation: 'Tarsis V.M4',
+    anchor: 'tarsis-vm4',
     page: 'tarsis_V/',
     radiusKm: 7757,
     gravity: 2.54,
@@ -134,6 +144,7 @@ const BODIES: Record<string, BodyFacts> = {
   },
   tarsis_5_5: {
     designation: 'Tarsis V.M5',
+    anchor: 'tarsis-vm5',
     page: 'tarsis_V/',
     radiusKm: 809,
     gravity: 0.61,
@@ -141,6 +152,7 @@ const BODIES: Record<string, BodyFacts> = {
   },
   tarsis_5_6: {
     designation: 'Tarsis V.M6',
+    anchor: 'tarsis-vm6',
     page: 'tarsis_V/',
     radiusKm: 10023,
     gravity: 5.32,
@@ -156,6 +168,7 @@ const BODIES: Record<string, BodyFacts> = {
   },
   tarsis_6_1: {
     designation: 'Tarsis VI.M1',
+    anchor: 'tarsis-vim1',
     page: 'tarsis_VI/',
     radiusKm: 5775,
     gravity: 3.07163221,
@@ -163,6 +176,7 @@ const BODIES: Record<string, BodyFacts> = {
   },
   tarsis_6_2: {
     designation: 'Tarsis VI.M2',
+    anchor: 'tarsis-vim2',
     page: 'tarsis_VI/',
     radiusKm: 3568,
     gravity: 3.475468481,
@@ -193,7 +207,8 @@ export function bodyFacts(scenename: unknown): BodyFacts | null {
 }
 
 /** Full URL of a body's wiki page. */
-export const wikiUrl = (facts: BodyFacts) => `${WIKI_BASE}${facts.page}`;
+export const wikiUrl = (facts: BodyFacts) =>
+  `${WIKI_BASE}${facts.page}${facts.anchor ? `#${facts.anchor}` : ''}`;
 
 export type BodyFactKey = 'radius' | 'gravity' | 'day' | 'orbit' | 'temperature';
 

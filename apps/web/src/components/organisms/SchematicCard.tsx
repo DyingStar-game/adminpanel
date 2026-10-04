@@ -54,17 +54,34 @@ export function SchematicCard({
   return (
     <div className="flex flex-col gap-3">
       {body && (
-        // The body's page on the project wiki, like on the map.
-        <a
-          href={wikiUrl(body)}
-          target="_blank"
-          rel="noreferrer"
-          title={t('body.wikiHint')}
-          className="inline-flex items-center gap-1 self-end text-xs text-link hover:underline"
-        >
-          <BookOpenIcon size={13} />
-          {t('body.wiki')}
-        </a>
+        // The body's facts in chips, like the truck's readouts, and its wiki page.
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs">
+            <span className="font-semibold text-link">{body.name ?? body.designation}</span>
+            {body.name && <MonoText tone="subtle">{body.designation}</MonoText>}
+          </span>
+          {bodyFactList(body).map((fact) => (
+            <span
+              key={fact.key}
+              className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs"
+            >
+              {t(`body.${fact.key}`)}
+              <MonoText className="font-semibold">
+                {format.format(fact.value)} {fact.unit === 'd' ? t('body.days') : fact.unit}
+              </MonoText>
+            </span>
+          ))}
+          <a
+            href={wikiUrl(body)}
+            target="_blank"
+            rel="noreferrer"
+            title={t('body.wikiHint')}
+            className="ml-auto inline-flex items-center gap-1 text-xs text-link hover:underline"
+          >
+            <BookOpenIcon size={13} />
+            {t('body.wiki')}
+          </a>
+        </div>
       )}
       <Readouts
         schematic={schematic}
@@ -498,10 +515,9 @@ function Slot({
 
 /**
  * A body in its system, from the wiki facts: the star with its planets, a planet with its moons,
- * a moon in its planet's system (itself highlighted). The centre shows its designation and name,
- * radius and gravity (temperature for the star) and, with a known day, an arrow for its
- * rotation. Bodies around sit on their orbits, innermost first, sized to their radius against
- * the largest; each one with an item opens it.
+ * a moon in its planet's system (itself highlighted and pulsing). Only names are drawn: the
+ * facts are in the chips above. Bodies around sit on their orbits, innermost first, sized to
+ * their radius against the largest; each one with an item opens it.
  */
 function CelestialDiagram({
   at,
@@ -546,17 +562,6 @@ function CelestialDiagram({
     const uuid = bodies.get(model);
     return uuid && model !== system.current ? () => onNavigate(uuid) : undefined;
   };
-  const under = [
-    `R ${km(centre.radiusKm)}`,
-    centre.gravity !== undefined ? `g ${format.format(centre.gravity)} m/s²` : null,
-    centre.temperatureK !== undefined ? `${format.format(centre.temperatureK)} K` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
-  const self = factsOfModel(system.current);
-  const arc = r0 + 7;
-  const [a1, a2] = [(-150 * Math.PI) / 180, (-30 * Math.PI) / 180];
-  const end = [cx + arc * Math.cos(a2), cy + arc * Math.sin(a2)] as const;
   const centreOpen = open(system.centre);
 
   return (
@@ -637,25 +642,6 @@ function CelestialDiagram({
           </g>
         );
       })}
-      {centre.dayHours !== undefined && (
-        <g>
-          <path
-            d={`M ${cx + arc * Math.cos(a1)} ${cy + arc * Math.sin(a1)} A ${arc} ${arc} 0 0 1 ${end[0]} ${end[1]}`}
-            fill="none"
-            stroke="var(--ds-fg-3)"
-            strokeWidth={1.2}
-          />
-          <path
-            d={`M ${end[0]} ${end[1]} l -7 -2 m 7 2 l -2 -7`}
-            fill="none"
-            stroke="var(--ds-fg-3)"
-            strokeWidth={1.2}
-          />
-          <text x={cx} y={cy - arc - 6} textAnchor="middle" fontSize={11} fill="var(--ds-fg-2)">
-            {t('schematic.day', { hours: format.format(centre.dayHours) })}
-          </text>
-        </g>
-      )}
       <g
         role={centreOpen ? 'link' : undefined}
         aria-label={centreOpen ? (centre.name ?? centre.designation) : undefined}
@@ -665,6 +651,28 @@ function CelestialDiagram({
         className={centreOpen ? 'cursor-pointer' : undefined}
       >
         <title>{[centre.designation, centre.name].filter(Boolean).join(' · ')}</title>
+        {system.centre === system.current && (
+          // The body on screen pulses, like a moon: a ring growing out of the disc (a scaled
+          // copy of a disc this size would cover the orbits).
+          <circle
+            aria-hidden
+            cx={cx}
+            cy={cy}
+            r={r0}
+            fill="none"
+            stroke="var(--ds-acc)"
+            strokeWidth={2}
+            className="motion-reduce:hidden"
+          >
+            <animate
+              attributeName="r"
+              values={`${r0};${r0 + 14}`}
+              dur="1.6s"
+              repeatCount="indefinite"
+            />
+            <animate attributeName="opacity" values="0.7;0" dur="1.6s" repeatCount="indefinite" />
+          </circle>
+        )}
         <circle
           cx={cx}
           cy={cy}
@@ -689,30 +697,6 @@ function CelestialDiagram({
           </text>
         )}
       </g>
-      <text x={cx} y={cy + r0 + 17} textAnchor="middle" fontSize={11} fill="var(--ds-fg-2)">
-        {under}
-      </text>
-      {self && (
-        // The body on screen, whatever is drawn at the centre: a moon's own size, gravity and
-        // revolution around its planet; a planet's day and year.
-        <text
-          x={cx}
-          y={(at[1] + size[1]) * U - 2}
-          textAnchor="middle"
-          fontSize={12}
-          fill="var(--ds-fg)"
-        >
-          <tspan fontWeight={600} fill="var(--ds-acc)">
-            {self.name ? `${self.name} · ${self.designation}` : self.designation}
-          </tspan>
-          {`  ${bodyFactList(self)
-            .map(
-              (fact) =>
-                `${t(`body.${fact.key}`)} ${format.format(fact.value)} ${fact.unit === 'd' ? t('body.days') : fact.unit}`,
-            )
-            .join(' · ')}`}
-        </text>
-      )}
     </g>
   );
 }

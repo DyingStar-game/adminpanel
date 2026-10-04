@@ -6,7 +6,10 @@ describe('body facts from the wiki', () => {
     const sandbox = bodyFacts('scenes/systems/tarsis/tarsis_3.tscn');
     expect(sandbox).toMatchObject({ designation: 'Tarsis III', name: 'Sandbox', radiusKm: 6356 });
     expect(sandbox && wikiUrl(sandbox)).toMatch(/system_tarsis\/tarsis_III\/$/);
-    expect(bodyFacts('scenes/systems/tarsis/tarsis_3_1.tscn')).toMatchObject({ name: 'Korax' });
+    const korax = bodyFacts('scenes/systems/tarsis/tarsis_3_1.tscn');
+    expect(korax).toMatchObject({ name: 'Korax' });
+    // A moon links to its section of its planet's page.
+    expect(korax && wikiUrl(korax)).toMatch(/tarsis_III\/#tarsis-ivm1$/);
     expect(bodyFacts('scenes/_universe/environment/space/star.tscn')).toMatchObject({
       temperatureK: 4831,
     });

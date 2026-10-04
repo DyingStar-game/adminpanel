@@ -182,7 +182,6 @@ export const en = {
   },
   schematic: {
     title: 'Schematic',
-    day: '↻ {{hours}} h day',
     noFacts: 'No facts on this body in the wiki',
     hatch: 'Hatch {{bay}}',
     kinds: { engine: 'Engine', battery: 'Battery' },

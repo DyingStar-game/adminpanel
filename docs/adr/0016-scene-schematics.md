@@ -100,6 +100,10 @@ to their radius against the planet's. The drawing takes the page's whole width; 
 drawn around another opens its page (the star shows its planets, a moon its planet's system
 with itself highlighted and pulsing), and a line gives the facts of the body on screen (a
 moon's own radius, gravity and revolution). The wiki page is linked above the drawing.
+Then, at the maintainer's request, like the truck's readouts: the facts of the body on screen
+are chips above the drawing, which keeps only names (no day arrow, no figures around the disc);
+the body on screen pulses, at the centre too; a moon's wiki link opens its section of its
+planet's page (anchor).
 
 ## Consequences
 
