@@ -12,7 +12,12 @@ interface OrbitLayoutProps {
 export function OrbitLayout({ graph, overlays, inspector, labels }: OrbitLayoutProps) {
   return (
     <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_clamp(400px,30vw,520px)]">
-      <section aria-label={labels.graph} className="relative min-h-0 overflow-hidden bg-surface-2">
+      {/* `isolate`: the canvas's own layers (Leaflet panes up to z 1000, floating panels) stay
+          inside it, under the sheets and dialogs opened over the page. */}
+      <section
+        aria-label={labels.graph}
+        className="relative isolate min-h-0 overflow-hidden bg-surface-2"
+      >
         {graph}
         {overlays}
       </section>
