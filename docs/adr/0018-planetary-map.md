@@ -134,6 +134,16 @@ while it runs; a BFF restart computes it anew.
 The selected item now keeps its whole trail (up to 100 moves, earlier ones fainter, each with
 its distance and time), cleared when another item is selected or the selection is cleared.
 
+### Update (2026-10-04): one listing of the body
+
+Counts and per-type lists made about forty filtered queries per map, each a full scan on
+persistence, served one after another (ADR 0021). The BFF now reads all the body's children in
+one plain listing (3 pages for SandBox's 20,470 items, about 4.3 s) and the players, keeps them
+30 s (`SNAPSHOT_TTL_MS`) served stale while refreshed in the background, cleared on any write;
+counts come from that listing. First map 17 s → 5.4 s, showing or hiding a type 6–17 s → under
+0.03 s. Every type on the body is counted and drawn, with or without a definition. This copy
+grows with the body: the lasting answer is on the persistence side (ADR 0021).
+
 ## Consequences
 
 - A body's content becomes visible at a glance; vehicles, buildings and, later, moving players

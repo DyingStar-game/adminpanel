@@ -16,8 +16,10 @@ describe('GET /api/bodies/:uuid/map', () => {
     expect(body.body).toMatchObject({ object_uuid: ids.planet, name: 'SandBox' });
     const byUuid = new Map(body.points.map((p: { object_uuid: string }) => [p.object_uuid, p]));
     // The moon has no position: not on the map. The components belong to the vehicle: left
-    // out. The rock's type has no definition in the test mock: types are loaded by definition.
-    expect([...byUuid.keys()].sort()).toEqual([ids.spawnbuilding, ids.vehicle, ids.player].sort());
+    // out. Every type on the body is drawn, the rock too (hidden by the web app by default).
+    expect([...byUuid.keys()].sort()).toEqual(
+      [ids.spawnbuilding, ids.vehicle, ids.player, ids.rock].sort(),
+    );
     expect(byUuid.get(ids.player)).toMatchObject({
       object_type: 'player',
       name: 'ddurieux',
@@ -58,7 +60,9 @@ describe('GET /api/bodies/:uuid/map', () => {
 
   it('counts the hidden types without loading them, except the included item', async () => {
     const { request } = buildApp();
-    const hidden = await read(await request(`/api/bodies/${ids.planet}/map?hide=vehicle,player`));
+    const hidden = await read(
+      await request(`/api/bodies/${ids.planet}/map?hide=vehicle,player,miningrock`),
+    );
 
     expect(hidden.omitted).toEqual([]);
     expect(hidden.points.map((p: { object_uuid: string }) => p.object_uuid)).toEqual([
@@ -73,7 +77,9 @@ describe('GET /api/bodies/:uuid/map', () => {
 
     // The selected vehicle stays on the map although its type is hidden.
     const selected = await read(
-      await request(`/api/bodies/${ids.planet}/map?hide=vehicle,player&include=${ids.vehicle}`),
+      await request(
+        `/api/bodies/${ids.planet}/map?hide=vehicle,player,miningrock&include=${ids.vehicle}`,
+      ),
     );
     expect(selected.points.map((p: { object_uuid: string }) => p.object_uuid).sort()).toEqual(
       [ids.spawnbuilding, ids.vehicle].sort(),
