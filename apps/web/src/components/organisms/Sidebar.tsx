@@ -81,7 +81,13 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
         collapsed ? 'w-16' : 'w-64',
       )}
     >
-      <div className={cn('border-b py-5', collapsed ? 'px-0' : 'px-5')}>
+      {/* Brand, and the button reducing the menu to its icons: at the top, where it is seen. */}
+      <div
+        className={cn(
+          'flex items-center border-b py-5',
+          collapsed ? 'flex-col gap-3 px-0' : 'justify-between gap-2 px-5',
+        )}
+      >
         <button
           type="button"
           onClick={onHome}
@@ -98,6 +104,15 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
               <span className="block text-3xs tracking-wider text-fg-3">{t('nav.adminPanel')}</span>
             </span>
           )}
+        </button>
+        <button
+          type="button"
+          onClick={() => setCollapsed(!collapsed)}
+          aria-label={t(collapsed ? 'nav.expand' : 'nav.collapse')}
+          title={t(collapsed ? 'nav.expand' : 'nav.collapse')}
+          className="rounded-md p-1.5 text-fg-3 transition-all duration-150 hover:bg-white/5 hover:text-link"
+        >
+          {collapsed ? <PanelLeftOpenIcon size={18} /> : <PanelLeftCloseIcon size={18} />}
         </button>
       </div>
 
@@ -159,16 +174,7 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
           collapsed ? 'flex-col gap-3 px-0' : 'justify-between gap-3 px-5',
         )}
       >
-        <button
-          type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          aria-label={t(collapsed ? 'nav.expand' : 'nav.collapse')}
-          title={t(collapsed ? 'nav.expand' : 'nav.collapse')}
-          className="transition-all duration-150 hover:text-link"
-        >
-          {collapsed ? <PanelLeftOpenIcon size={16} /> : <PanelLeftCloseIcon size={16} />}
-        </button>
-        {!collapsed && <span className="flex-1">v{version}</span>}
+        {!collapsed && <span>v{version}</span>}
         <a
           href="https://github.com/DyingStar-game"
           target="_blank"
