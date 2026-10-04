@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   BookOpenIcon,
   CompassIcon,
@@ -24,6 +24,7 @@ import {
 import { MonoText } from '@/components/atoms/MonoText';
 import { TypeDot } from '@/components/atoms/TypeDot';
 import { MapLegend } from '@/components/molecules/MapLegend';
+import { ContextMenu } from '@/components/molecules/ContextMenu';
 import { MapSearch } from '@/components/molecules/MapSearch';
 import { BodyMapCanvas, type MapFocus } from '@/components/organisms/BodyMapCanvas';
 import { Inspector } from '@/components/organisms/Inspector';
@@ -33,7 +34,6 @@ import { useBodyMap } from '@/hooks/useBodyMap';
 import { useItemActions } from '@/stores/itemActions';
 import { useItem } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
-import { cn } from '@/lib/cn';
 import {
   formatAltitude,
   formatDistance,
@@ -190,12 +190,6 @@ function BodyMap({
     | null
   >(null);
   const closeMenu = useCallback(() => setMenu(null), []);
-  useEffect(() => {
-    if (!menu) return;
-    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && setMenu(null);
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [menu]);
   /**
    * Creates an item where the map was clicked: the direction from the projection, the height of
    * the closest item on the ground (the relief is unknown), standing upright.
@@ -330,9 +324,8 @@ function BodyMap({
       overlays={
         <>
           {menu && (
-            <div
-              role="menu"
-              aria-label={
+            <ContextMenu
+              label={
                 menu.kind === 'place'
                   ? t('map.menu')
                   : (() => {
@@ -340,68 +333,59 @@ function BodyMap({
                       return point ? pointLabel(point) : menu.uuid;
                     })()
               }
-              className="absolute z-[1100] flex min-w-44 flex-col rounded-md border bg-background p-1 text-sm shadow-lg"
-              style={{ left: menu.x, top: menu.y }}
-            >
-              {menu.kind === 'place' ? (
-                <>
-                  <MenuItem
-                    autoFocus
-                    icon={<PlusIcon size={14} />}
-                    onClick={() => addHere(menu.at)}
-                  >
-                    {t('map.addHere')}
-                  </MenuItem>
-                  {movable && (
-                    <MenuItem icon={<MoveIcon size={14} />} onClick={() => moveHere(menu.at)}>
-                      {t('map.moveHere', { label: itemLabel(movable) })}
-                    </MenuItem>
-                  )}
-                </>
-              ) : (
-                <>
-                  <MenuItem
-                    autoFocus
-                    icon={<ExpandIcon size={14} />}
-                    onClick={() => {
-                      closeMenu();
-                      onOpenPage(menu.uuid);
-                    }}
-                  >
-                    {t('inspector.open')}
-                  </MenuItem>
-                  <MenuItem
-                    icon={<PencilIcon size={14} />}
-                    onClick={() => {
-                      closeMenu();
-                      actions.edit(menu.uuid);
-                    }}
-                  >
-                    {t('editor.edit')}
-                  </MenuItem>
-                  <MenuItem
-                    icon={<CopyIcon size={14} />}
-                    onClick={() => {
-                      closeMenu();
-                      actions.duplicate(menu.uuid);
-                    }}
-                  >
-                    {t('duplicate.action')}
-                  </MenuItem>
-                  {/* Still confirmed: deleting applies live in the game. */}
-                  <MenuItem
-                    destructive
-                    icon={<Trash2Icon size={14} />}
-                    onClick={() => {
-                      closeMenu();
-                      actions.remove(menu.uuid);
-                    }}
-                  >
-                    {t('editor.delete')}
-                  </MenuItem>
-                </>
-              )}
-            </div>
+              x={menu.x}
+              y={menu.y}
+              onClose={closeMenu}
+              items={
+                menu.kind === 'place'
+                  ? [
+                      {
+                        key: 'add',
+                        icon: <PlusIcon size={14} />,
+                        label: t('map.addHere'),
+                        onSelect: () => addHere(menu.at),
+                      },
+                      ...(movable
+                        ? [
+                            {
+                              key: 'move',
+                              icon: <MoveIcon size={14} />,
+                              label: t('map.moveHere', { label: itemLabel(movable) }),
+                              onSelect: () => moveHere(menu.at),
+                            },
+                          ]
+                        : []),
+                    ]
+                  : [
+                      {
+                        key: 'open',
+                        icon: <ExpandIcon size={14} />,
+                        label: t('inspector.open'),
+                        onSelect: () => onOpenPage(menu.uuid),
+                      },
+                      {
+                        key: 'edit',
+                        icon: <PencilIcon size={14} />,
+                        label: t('editor.edit'),
+                        onSelect: () => actions.edit(menu.uuid),
+                      },
+                      {
+                        key: 'duplicate',
+                        icon: <CopyIcon size={14} />,
+                        label: t('duplicate.action'),
+                        onSelect: () => actions.duplicate(menu.uuid),
+                      },
+                      // Still confirmed: deleting applies live in the game.
+                      {
+                        key: 'delete',
+                        icon: <Trash2Icon size={14} />,
+                        label: t('editor.delete'),
+                        onSelect: () => actions.remove(menu.uuid),
+                        destructive: true,
+                      },
+                    ]
+              }
+            />
           )}
           <div className="absolute top-3.5 left-14 z-[1000] flex w-80 max-w-[40%] flex-col gap-2">
             {/* Title on its own line (never cut), the count under it. */}
@@ -539,34 +523,4 @@ function frameOf(item: Item): ParentFrame | null {
   return position.success && rotation.success
     ? { position: position.data, rotation: rotation.data }
     : null;
-}
-
-function MenuItem({
-  icon,
-  children,
-  onClick,
-  autoFocus,
-  destructive,
-}: {
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  onClick: () => void;
-  autoFocus?: boolean;
-  destructive?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      autoFocus={autoFocus}
-      onClick={onClick}
-      className={cn(
-        'flex items-center gap-2 rounded-sm px-2 py-1.5 text-left hover:bg-white/5 focus-visible:bg-white/5 focus-visible:outline-none',
-        destructive && 'text-destructive',
-      )}
-    >
-      {icon}
-      {children}
-    </button>
-  );
 }

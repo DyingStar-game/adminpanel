@@ -2,6 +2,7 @@ import { useId, type ReactNode } from 'react';
 import { BookOpenIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ObjectData } from '@dyingstar-admin/schemas';
+import { Chip } from '@/components/atoms/Chip';
 import { MonoText } from '@/components/atoms/MonoText';
 import type { RefTarget } from '@/components/molecules/UuidLink';
 import { cn } from '@/lib/cn';
@@ -63,42 +64,31 @@ export function SchematicCard({
       {body && (
         // The body's facts in chips, like the truck's readouts, and its wiki page.
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs">
-            <span className="font-semibold text-link">{body.name ?? body.designation}</span>
+          <Chip>
+            <span className="font-semibold">{body.name ?? body.designation}</span>
             {body.name && <MonoText tone="subtle">{body.designation}</MonoText>}
-          </span>
+          </Chip>
           {orbited && (
             // The star a planet orbits (persistence links them only implicitly, ADR 0008).
-            <button
-              type="button"
-              onClick={() => onNavigate(orbited.uuid)}
-              className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs transition-colors hover:border-link hover:text-link"
-            >
-              <span aria-hidden className="size-2 rounded-full bg-amber-500" />
+            <Chip variant="link" onClick={() => onNavigate(orbited.uuid)}>
               {t('body.star')}
               <span className="font-semibold">{orbited.facts.designation}</span>
-            </button>
+            </Chip>
           )}
           {bodyFactList(body).map((fact) => (
-            <span
-              key={fact.key}
-              className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs"
-            >
+            <Chip key={fact.key}>
               {t(`body.${fact.key}`)}
               <MonoText className="font-semibold">
                 {format.format(fact.value)} {fact.unit === 'd' ? t('body.days') : fact.unit}
               </MonoText>
-            </span>
+            </Chip>
           ))}
           {typeof data.soi === 'number' && (
             // Persistence's own value: where the body's gravity prevails over the star's.
-            <span
-              className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs"
-              title={t('body.soiHint')}
-            >
+            <Chip title={t('body.soiHint')}>
               {t('body.soi')}
               <MonoText className="font-semibold">{format.format(data.soi / 1000)} km</MonoText>
-            </span>
+            </Chip>
           )}
           <a
             href={wikiUrl(body)}
@@ -836,9 +826,8 @@ function Readouts({
           );
           const range = batteries > 0 ? autonomy(chargeJ, engines) : null;
           return (
-            <span
+            <Chip
               key="energy"
-              className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs"
               title={
                 batteries > 0
                   ? `${format.format(kWh(chargeJ))} / ${format.format(kWh(capacityJ))} kWh · ${t('schematic.autonomyHint')}`
@@ -863,19 +852,17 @@ function Readouts({
                   )}
                 </>
               )}
-            </span>
+            </Chip>
           );
         }
         const value = valueAt(data, readout.path);
-        // Every readout is the same chip, aligned on one line.
-        const chip =
-          'inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs';
         if (readout.kind === 'toggle') {
           // The dot carries the state (green on, grey off); the word stays for screen readers.
           const state =
             value === true ? t('schematic.on') : value === false ? t('schematic.off') : '—';
           return (
-            <span key={readout.path} className={chip} title={`${label(readout.label)} · ${state}`}>
+            // Every readout is the same chip, aligned on one line.
+            <Chip key={readout.path} title={`${label(readout.label)} · ${state}`}>
               <span
                 aria-hidden
                 className={cn(
@@ -889,17 +876,17 @@ function Readouts({
               />
               {label(readout.label)}
               <span className="sr-only">{state}</span>
-            </span>
+            </Chip>
           );
         }
         const n = number(value);
         return (
-          <span key={readout.path} className={chip}>
+          <Chip key={readout.path}>
             {label(readout.label)}
             <MonoText className="font-semibold">
               {n === null ? '—' : format.format(n)} {readout.unit}
             </MonoText>
-          </span>
+          </Chip>
         );
       })}
     </div>
