@@ -31,6 +31,35 @@ describe('GET /api/items', () => {
     expect(body.total).toBe(2);
   });
 
+  it('searches a level by a piece of name or UUID, case-insensitive, on every page', async () => {
+    const { request } = buildApp();
+    const uuids = async (query: string) =>
+      (await read(await request(`/api/items?${query}`))).items.map(
+        (i: { object_uuid: string }) => i.object_uuid,
+      );
+
+    // SandBox's children: a piece of a name, in another case…
+    expect(await uuids(`parent_id=${ids.planet}&q=TARSIS_4`)).toEqual([ids.spawnbuilding]);
+    // …a piece of a UUID (the vehicle has no name)…
+    expect(await uuids(`parent_id=${ids.planet}&q=9ff9-2c69`)).toEqual([ids.vehicle]);
+    // …within the listed level only (the player lives in the building).
+    expect(await uuids(`parent_id=${ids.planet}&q=ddurieux`)).toEqual([]);
+    expect(await uuids(`object_type=player&q=durieux`)).toEqual([ids.player]);
+  });
+
+  it('pages the matches of a search and gives their total', async () => {
+    const { request } = buildApp();
+    // Every child of SandBox has an "a" in its UUID or name: several matches.
+    const all = await read(await request(`/api/items?parent_id=${ids.planet}&q=a`));
+    expect(all.total).toBeGreaterThan(1);
+
+    const second = await read(
+      await request(`/api/items?parent_id=${ids.planet}&q=a&page=2&page_size=1`),
+    );
+    expect(second).toMatchObject({ total: all.total, page: 2, page_size: 1 });
+    expect(second.items).toEqual([all.items[1]]);
+  });
+
   it('only accepts known object types as filter', async () => {
     const { request } = buildApp();
 

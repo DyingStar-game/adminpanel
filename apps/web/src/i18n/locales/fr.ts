@@ -70,11 +70,11 @@ export const fr: Translations = {
     scopeType: 'Tous les {{type}}',
     count_one: '{{count}} objet',
     count_other: '{{count}} objets',
-    filterPage: 'Filtrer la page (nom, uuid)',
+    filterPage: 'Rechercher dans le niveau (nom, uuid)',
     kind: 'nature',
     loading: 'Chargement…',
     empty: 'Aucun objet à ce niveau.',
-    noMatch: 'Aucun objet de cette page ne correspond au filtre.',
+    noMatch: 'Aucun objet de ce niveau ne correspond à la recherche.',
     error: 'Impossible de charger les objets.',
   },
   inspector: {

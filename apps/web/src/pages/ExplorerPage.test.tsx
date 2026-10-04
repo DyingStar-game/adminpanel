@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ids } from '@dyingstar-admin/testing';
 import { renderWithProviders } from '@/test/render';
@@ -146,17 +146,18 @@ describe('ExplorerPage', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
-  it('filters the current page locally', async () => {
+  it('searches the whole level by a piece of name or UUID', async () => {
     useInProcessBff();
     renderExplorer();
     await within(table()).findByText('SandBox');
 
     await userEvent.type(
-      screen.getByRole('textbox', { name: 'Filter the page (name, uuid)' }),
-      'tar',
+      screen.getByRole('textbox', { name: 'Search the level (name, uuid)' }),
+      'TAR',
     );
 
-    expect(within(table()).queryByText('SandBox')).not.toBeInTheDocument();
+    // Once typing pauses, the BFF answers with the matches of every page.
+    await waitFor(() => expect(within(table()).queryByText('SandBox')).not.toBeInTheDocument());
     expect(within(table()).getByText('Tarsis')).toBeInTheDocument();
   });
 });

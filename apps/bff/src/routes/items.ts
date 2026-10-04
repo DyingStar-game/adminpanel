@@ -7,6 +7,7 @@ import {
   ImportCheckRequestSchema,
   createListItemsQuerySchema,
   UpdateItemRequestSchema,
+  ItemsSearchSchema,
 } from '@dyingstar-admin/schemas';
 import { parseQuery, validate } from '../lib/validate';
 import type { ServerContext } from '../middleware/server';
@@ -18,7 +19,8 @@ export const itemsRoutes = new Hono<ServerContext>()
   .get('/', async (c) => {
     // Allowed object types come from the definitions (ADR 0006).
     const types = (await c.var.definitions.list()).definitions.map((d) => d.type);
-    return c.json(await c.var.items.list(parseQuery(c, createListItemsQuerySchema(types))));
+    const query = parseQuery(c, createListItemsQuerySchema(types).extend(ItemsSearchSchema.shape));
+    return c.json(await c.var.items.list(query));
   })
   // Declared before `/:uuid` so `scenes` is not read as an item UUID.
   .get('/scenes', async (c) => c.json({ scenes: await c.var.items.scenes() }))

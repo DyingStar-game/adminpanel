@@ -189,6 +189,39 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
     return { total: all, byType, other: Math.max(all - known, 0) };
   }
 
+  /**
+   * Items of a level whose name or UUID contains `q`, case-insensitive, a page of them and
+   * their total. The persistence API cannot filter on a piece of name yet (ADR 0021, item 4):
+   * the level is read whole, kept `SNAPSHOT_TTL_MS` like the map's listings (the same entry for
+   * a body's children), and filtered here. Once persistence filters by name, only this function
+   * changes: its contract stays.
+   */
+  async function searchLevel(
+    { page, page_size, ...level }: ListItemsQuery,
+    q: string,
+  ): Promise<PaginatedItems> {
+    const items = await snapshot(
+      level.parent_id && !level.object_type && !level.scenename
+        ? `children:${level.parent_id}`
+        : `level:${JSON.stringify(level)}`,
+      () => listAll(level),
+    );
+    const needle = q.toLowerCase();
+    const matches = items.filter((item) => {
+      const name = item.object_data.name;
+      return (
+        item.object_uuid.toLowerCase().includes(needle) ||
+        (typeof name === 'string' && name.toLowerCase().includes(needle))
+      );
+    });
+    return {
+      items: matches.slice((page - 1) * page_size, page * page_size),
+      total: matches.length,
+      page,
+      page_size,
+    };
+  }
+
   async function getOrThrow(uuid: string): Promise<Item> {
     const item = await get(uuid);
     if (!item) throw notFound(`Item ${uuid} not found`);
@@ -196,8 +229,9 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
   }
 
   return {
-    list(query: ListItemsQuery): Promise<PaginatedItems> {
-      return list(query);
+    /** A page of a level, or of the matches of a search in it (`q`). */
+    list({ q, ...query }: ListItemsQuery & { q?: string | undefined }): Promise<PaginatedItems> {
+      return q ? searchLevel(query, q) : list(query);
     },
 
     get: getOrThrow,

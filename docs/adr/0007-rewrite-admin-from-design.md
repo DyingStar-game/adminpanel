@@ -56,6 +56,17 @@ The mock-up is **an inspiration**, not a specification; its visual style is like
 - ~~UI languages~~ → EN + FR.
 - ~~Existing code~~ → removed in one go.
 
+### Update (2026-10-04): search within a level, through the BFF
+
+Filtering only the page on screen was too limiting (a player among 1,263, a building among
+605). The explorer's field now searches the **whole listed level** by a piece of name or UUID,
+case-insensitive: `GET /api/items?…&q=` (BFF contract, `ItemsSearchSchema`). As persistence
+has no such filter yet, one BFF function (`searchLevel`) reads the level whole — kept 30 s like
+the map's listings, sharing a body's children with it — filters and pages the matches. When
+persistence offers a search by a piece of name (ADR 0021, item 4), only that function changes;
+the route, the web app and the route tests stay. First search of a large level: about 4–5 s for
+SandBox's 20,000 children when not already cached, about 1 s for the 1,263 players.
+
 ## Consequences
 
 - ADRs 0003–0006 describe the target, not fixes to the existing code.

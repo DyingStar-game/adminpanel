@@ -1,4 +1,5 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useDebounce } from 'use-debounce';
 import { ListFilterIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { createColumnHelper, tableFeatures, useTable } from '@tanstack/react-table';
@@ -84,13 +85,34 @@ function celestialKind(
   return parent.status === 'found' && parent.objectType === moonParentType ? 'moon' : 'planet';
 }
 
-/** Paginated table of one level or one type, with page-local filtering (mock-up 1b). */
+/**
+ * Paginated table of one level or one type (mock-up 1b), with a search over the whole level by a
+ * piece of name or UUID: the BFF finds the matches on every page and pages them.
+ */
 export function ItemsTable(props: ItemsTableProps) {
   const { parentId, objectType, scope, page, selectedId, embedded = false } = props;
   const { t } = useTranslation();
   const [filter, setFilter] = useState('');
+  // Searched once typing pauses, not on every key.
+  const [q] = useDebounce(filter.trim(), 300);
+  const level = `${scope}|${parentId}|${objectType ?? ''}`;
+  // Another level starts without a search.
+  const [searchedLevel, setSearchedLevel] = useState(level);
+  if (searchedLevel !== level) {
+    setSearchedLevel(level);
+    setFilter('');
+  }
+  // A new search starts on its first page.
+  const { onPageChange } = props;
+  useEffect(() => {
+    if (q) onPageChange(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the search changes
+  }, [q]);
   const query = useItemsPage(
-    scope === 'type' ? { objectType } : { parentId, objectType },
+    {
+      ...(scope === 'type' ? { objectType } : { parentId, objectType }),
+      ...(q ? { q } : {}),
+    },
     page,
     TABLE_PAGE_SIZE,
     { live: true },
@@ -99,16 +121,7 @@ export function ItemsTable(props: ItemsTableProps) {
   const extraKeys = tableColumnsFor(objectType);
   const moonParentType = profileFor(objectType)?.moonWhenParentIs;
 
-  const rows = useMemo(() => {
-    const items = query.data?.items ?? [];
-    const needle = filter.trim().toLowerCase();
-    return needle
-      ? items.filter(
-          (item) =>
-            itemLabel(item).toLowerCase().includes(needle) || item.object_uuid.includes(needle),
-        )
-      : items;
-  }, [query.data, filter]);
+  const rows = useMemo(() => query.data?.items ?? [], [query.data]);
   // Rows that appeared or changed since the previous refresh of this page (ADR 0009).
   const changedRows = useChangedRows(
     query.data?.items,

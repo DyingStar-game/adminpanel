@@ -95,6 +95,15 @@ export const DuplicateRequestSchema = z.object({
 });
 export type DuplicateRequest = z.input<typeof DuplicateRequestSchema>;
 
+/**
+ * Search added by the BFF to the item listing (`GET /api/items?q=…`): items of the listed level
+ * whose name or UUID contains `q`, case-insensitive. The persistence API has no such filter yet
+ * (ADR 0021, item 4); the contract stays when it does.
+ */
+export const ItemsSearchSchema = z.object({
+  q: z.string().trim().min(1).max(100).optional(),
+});
+
 /** Created copies, the root first, parents before children. */
 export const DuplicateResponseSchema = z.object({ created: z.array(ItemSchema) });
 

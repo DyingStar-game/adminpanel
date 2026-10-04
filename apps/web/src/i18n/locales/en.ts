@@ -68,11 +68,11 @@ export const en = {
     scopeType: 'All {{type}}',
     count_one: '{{count}} item',
     count_other: '{{count}} items',
-    filterPage: 'Filter the page (name, uuid)',
+    filterPage: 'Search the level (name, uuid)',
     kind: 'kind',
     loading: 'Loading…',
     empty: 'No item at this level.',
-    noMatch: 'No item on this page matches the filter.',
+    noMatch: 'No item of this level matches the search.',
     error: 'Could not load items.',
   },
   inspector: {

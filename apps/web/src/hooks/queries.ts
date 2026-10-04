@@ -21,12 +21,15 @@ import { useLiveInterval } from './useLive';
 export interface ListFilter {
   parentId?: string | undefined;
   objectType?: string | undefined;
+  /** Search in the whole level: a piece of name or UUID (the BFF's `q`). */
+  q?: string | undefined;
 }
 
-const listPath = ({ parentId, objectType }: ListFilter, page: number, pageSize: number) => {
+const listPath = ({ parentId, objectType, q }: ListFilter, page: number, pageSize: number) => {
   const params = new URLSearchParams({ page: String(page), page_size: String(pageSize) });
   if (parentId !== undefined) params.set('parent_id', parentId);
   if (objectType) params.set('object_type', objectType);
+  if (q) params.set('q', q);
   return `/api/items?${params}`;
 };
 
