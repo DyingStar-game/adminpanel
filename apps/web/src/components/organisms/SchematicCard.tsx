@@ -50,6 +50,13 @@ export function SchematicCard({
   const [width, height] = schematic.size;
   const celestial = schematic.shapes.some((shape) => shape.kind === 'celestial');
   const body = celestial ? bodyFacts(data.scenename) : null;
+  // A planet orbits the star: a link to it (moons show their planet in the drawing).
+  const starFacts = factsOfModel('star');
+  const starUuid = bodies.get('star');
+  const orbited =
+    body && starFacts && starUuid && /^tarsis_\d+$/.test(sceneModel(data.scenename) ?? '')
+      ? { uuid: starUuid, facts: starFacts }
+      : null;
 
   return (
     <div className="flex flex-col gap-3">
@@ -71,6 +78,18 @@ export function SchematicCard({
               </MonoText>
             </span>
           ))}
+          {orbited && (
+            // The star a planet orbits (persistence links them only implicitly, ADR 0008).
+            <button
+              type="button"
+              onClick={() => onNavigate(orbited.uuid)}
+              className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs transition-colors hover:border-link hover:text-link"
+            >
+              <span aria-hidden className="size-2 rounded-full bg-amber-500" />
+              {t('body.star')}
+              <span className="font-semibold">{orbited.facts.designation}</span>
+            </button>
+          )}
           {typeof data.soi === 'number' && (
             // Persistence's own value: where the body's gravity prevails over the star's.
             <span

@@ -275,6 +275,7 @@ export const en = {
     keys_other: '{{count}} keys',
   },
   body: {
+    star: 'Star',
     soi: 'Sphere of influence',
     soiHint: "Radius where the body's gravity prevails over the star's (persistence: soi)",
     days: 'd',
