@@ -12,6 +12,8 @@ export const fr: Translations = {
     adminPanel: 'Admin Panel',
     activeServer: 'Serveur actif',
     soon: 'bientôt',
+    collapse: 'Réduire le menu',
+    expand: 'Déplier le menu',
     sections: {
       supervision: 'Supervision',
       gameWorld: 'Monde du jeu',

@@ -30,6 +30,21 @@ describe('Sidebar', () => {
     expect(usePreferences.getState().serverId).toBe('universe-testing');
   });
 
+  it('collapses to its icons and expands again, remembered', async () => {
+    renderSidebar();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Collapse the menu' }));
+
+    expect(usePreferences.getState().sidebarCollapsed).toBe(true);
+    // Items keep their name for screen readers and in their tooltip.
+    expect(screen.getByRole('button', { name: 'Persistence — Items' })).toHaveAttribute(
+      'title',
+      'Persistence — Items',
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Expand the menu' }));
+    expect(usePreferences.getState().sidebarCollapsed).toBe(false);
+  });
+
   it('goes back to the explorer from the brand', async () => {
     const { onHome } = renderSidebar();
 

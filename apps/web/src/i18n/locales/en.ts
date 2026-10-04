@@ -10,6 +10,8 @@ export const en = {
     adminPanel: 'Admin Panel',
     activeServer: 'Active server',
     soon: 'soon',
+    collapse: 'Collapse the menu',
+    expand: 'Expand the menu',
     sections: {
       supervision: 'Supervision',
       gameWorld: 'Game world',
