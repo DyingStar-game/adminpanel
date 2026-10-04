@@ -24,30 +24,35 @@ import { ApiError } from '@/lib/api';
 import { itemLabel } from '@/lib/itemLabel';
 import { dataFromRows, editDiff, rowsFromData } from '@/lib/propertyForm';
 import { EditFormSchema, type PropertiesFormValues } from '@/lib/propertyFormSchema';
+import type { MoveContext } from '@/stores/itemActions';
 import { PropertiesEditor } from './PropertiesEditor';
 
 interface ItemEditSheetProps {
   uuid: string;
+  /** Move prefilled (map "move here"): new position and rotation, saved like any edit. */
+  move?: MoveContext | undefined;
   onDone: () => void;
 }
 
 /** Edits an item: loads it, then edits from a frozen base while live keeps flowing. */
-export function ItemEditSheet({ uuid, onDone }: ItemEditSheetProps) {
+export function ItemEditSheet({ uuid, move, onDone }: ItemEditSheetProps) {
   const { t } = useTranslation();
   const query = useItem(uuid, { live: true });
   if (query.isPending) return <p className="p-6 text-sm text-fg-3">{t('inspector.loading')}</p>;
   if (!query.data)
     return <p className="p-6 text-sm text-fg-3">{t('inspector.notFound', { uuid })}</p>;
-  return <EditForm base={query.data} latest={query.data} onDone={onDone} />;
+  return <EditForm base={query.data} latest={query.data} move={move} onDone={onDone} />;
 }
 
 function EditForm({
   base: initial,
   latest,
+  move,
   onDone,
 }: {
   base: Item;
   latest: Item;
+  move?: MoveContext | undefined;
   onDone: () => void;
 }) {
   const { t } = useTranslation();
@@ -68,7 +73,13 @@ function EditForm({
 
   const form = useForm<PropertiesFormValues>({
     resolver: zodResolver(EditFormSchema),
-    defaultValues: { properties: rowsFromData(base.object_data) },
+    defaultValues: {
+      properties: rowsFromData(
+        move
+          ? { ...base.object_data, position: move.preset.position, rotation: move.preset.rotation }
+          : base.object_data,
+      ),
+    },
   });
 
   /** Keys the game saved since the editor opened. */
@@ -134,6 +145,11 @@ function EditForm({
       </SheetHeader>
       <ScrollArea className="min-h-0 flex-1">
         <div className="p-4">
+          {move && (
+            <p className="mb-3 rounded-md border border-dashed px-3 py-2 text-xs text-fg-2">
+              {t('editor.moveHint', { label: move.label })}
+            </p>
+          )}
           <PropertiesEditor
             control={form.control}
             errors={form.formState.errors}

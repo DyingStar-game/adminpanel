@@ -4,7 +4,7 @@ import type { SpawnPreset } from '@/lib/spawn';
 
 /** Write action in progress, shown by `ItemActionsHost` (one sheet or dialog at a time). */
 export type ItemAction =
-  | { kind: 'edit'; uuid: string }
+  | { kind: 'edit'; uuid: string; move?: MoveContext }
   | {
       kind: 'create';
       parentId: string;
@@ -25,6 +25,12 @@ export interface SpawnContext {
   nearLabel: string;
 }
 
+/** Edit that moves the item (map "move here"): its new placement, and the place's label. */
+export interface MoveContext {
+  preset: SpawnPreset;
+  label: string;
+}
+
 /** Creation at a fixed place (clicked on the map): position and orientation, and its label. */
 export interface PlaceContext {
   preset: SpawnPreset;
@@ -33,7 +39,7 @@ export interface PlaceContext {
 
 interface ItemActionsState {
   action: ItemAction | null;
-  edit: (uuid: string) => void;
+  edit: (uuid: string, move?: MoveContext) => void;
   create: (context: {
     parentId: string;
     objectType?: string | undefined;
@@ -47,7 +53,7 @@ interface ItemActionsState {
 
 export const useItemActions = create<ItemActionsState>()((set) => ({
   action: null,
-  edit: (uuid) => set({ action: { kind: 'edit', uuid } }),
+  edit: (uuid, move) => set({ action: { kind: 'edit', uuid, ...(move ? { move } : {}) } }),
   create: (context) => set({ action: { kind: 'create', ...context } }),
   remove: (uuid) => set({ action: { kind: 'delete', uuid } }),
   duplicate: (uuid) => set({ action: { kind: 'duplicate', uuid } }),

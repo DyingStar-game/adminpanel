@@ -119,3 +119,46 @@ export function placeOnBody(bodyId: string, direction: V, distance: number): Spa
     rotation: { x: round(angles.x) + 0, y: round(angles.y) + 0, z: round(angles.z) + 0 },
   };
 }
+
+/** Rotates `v` by the rotation taking unit vector `from` onto unit vector `to` (Rodrigues). */
+function rotateOnto(v: V, from: V, to: V): V {
+  const axis = normalize(cross(from, to));
+  if (!axis) return v;
+  const cos = Math.max(-1, Math.min(1, dot(from, to)));
+  const sin = Math.sqrt(1 - cos * cos);
+  return addScaled(
+    addScaled(addScaled([0, 0, 0], v, cos), cross(axis, v), sin),
+    axis,
+    dot(axis, v) * (1 - cos),
+  );
+}
+
+/**
+ * New placement of an item of a celestial body moved to a direction from its centre and a
+ * distance from it: the item turns with the ground (the rotation taking its old vertical onto
+ * the new one), so it stays upright and keeps its heading. Without a rotation, it is placed
+ * upright facing north.
+ */
+export function moveOnBody(item: Item, direction: V, distance: number): SpawnPreset {
+  const up = normalize(direction) ?? POLE;
+  const position = Vec3Schema.safeParse(item.object_data.position);
+  const rotation = Vec3Schema.safeParse(item.object_data.rotation);
+  const parentId = item.object_data.parent_id ?? '';
+  const from = position.success
+    ? normalize([position.data.x, position.data.y, position.data.z])
+    : null;
+  if (!from || !rotation.success) return placeOnBody(parentId, up, distance);
+  const [right, ownUp, back] = basisFromEuler(rotation.data).map((axis) =>
+    rotateOnto(axis, from, up),
+  ) as [V, V, V];
+  const angles = eulerFromBasis([right, ownUp, back]);
+  return {
+    parentId,
+    position: {
+      x: round(up[0] * distance) + 0,
+      y: round(up[1] * distance) + 0,
+      z: round(up[2] * distance) + 0,
+    },
+    rotation: { x: round(angles.x) + 0, y: round(angles.y) + 0, z: round(angles.z) + 0 },
+  };
+}

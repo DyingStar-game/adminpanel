@@ -165,6 +165,11 @@ stays on screen and is refreshed (the body listing is cleared on writes): a dele
 cleared, a created or duplicated item becomes the selection. The orbit view does the same for
 its selection and the children of its centre.
 
+With an item selected (standing directly on the body), the background menu also offers "Move
+… here": its editor opens with the new position (ground taken from the closest other item, plus
+its type's spawn height) and its rotation turned with the ground (the rotation taking its old
+vertical onto the new one: upright, same heading, `moveOnBody`); saved like any edit.
+
 ## Consequences
 
 - A body's content becomes visible at a glance; vehicles, buildings and, later, moving players

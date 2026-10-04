@@ -3,6 +3,7 @@ import {
   CompassIcon,
   CopyIcon,
   ExpandIcon,
+  MoveIcon,
   NetworkIcon,
   PencilIcon,
   PlusIcon,
@@ -46,8 +47,9 @@ import {
   type MovementTracker,
 } from '@/lib/bodyMap';
 import type { MapSearch as MapSearchState } from '@/lib/mapSearch';
+import { itemLabel } from '@/lib/itemLabel';
 import { typeColor } from '@/lib/objectTypes';
-import { placeOnBody, spawnHeightFor } from '@/lib/spawn';
+import { moveOnBody, placeOnBody, spawnHeightFor } from '@/lib/spawn';
 import { usePreferences } from '@/stores/preferences';
 
 interface MapPageProps {
@@ -104,6 +106,8 @@ function BodyMap({
   const { t } = useTranslation();
   const { mapHidden, setMapHidden, mapNamed, setMapNamed } = usePreferences();
   const actions = useItemActions();
+  // Shared with the inspector's query of the same item.
+  const selectedItem = useItem(search.selected).data ?? null;
   const named = useMemo(
     () => new Set(Object.keys(mapNamed).filter((type) => mapNamed[type])),
     [mapNamed],
@@ -189,15 +193,19 @@ function BodyMap({
    * Creates an item where the map was clicked: the direction from the projection, the height of
    * the closest item on the ground (the relief is unknown), standing upright.
    */
-  const addHere = ([north, east]: MapLatLng) => {
-    setMenu(null);
+  /**
+   * A place clicked on the map: its direction from the body centre (inverse projection), the
+   * ground distance from the centre taken from the closest item (the relief is unknown; the
+   * moved item itself left out), and a label.
+   */
+  const placeAt = ([north, east]: MapLatLng, exclude?: string) => {
     const inverse = azimuthalEquidistantInverse(
       directionOf(map.center.lat, map.center.lon),
       map.referenceRadius,
     );
     const direction = inverse(east, north);
     const closest = map.points
-      .filter((p) => p.via === null)
+      .filter((p) => p.via === null && p.object_uuid !== exclude)
       .reduce<MapPoint | null>(
         (best, p) =>
           !best || Math.hypot(p.x - east, p.y - north) < Math.hypot(best.x - east, best.y - north)
@@ -205,14 +213,41 @@ function BodyMap({
             : best,
         null,
       );
-    const ground = map.referenceRadius + (closest?.altitude ?? 0);
     const { lat, lon } = latLonOf(direction);
+    return {
+      direction,
+      ground: map.referenceRadius + (closest?.altitude ?? 0),
+      label: formatLatLon(lat, lon),
+    };
+  };
+  /** Creates an item where the map was clicked, standing upright. */
+  const addHere = (at: MapLatLng) => {
+    setMenu(null);
+    const { direction, ground, label } = placeAt(at);
     actions.create({
       parentId: map.body.object_uuid,
       place: {
         preset: placeOnBody(map.body.object_uuid, direction, ground + spawnHeightFor(undefined)),
-        label: formatLatLon(lat, lon),
+        label,
       },
+    });
+  };
+  // The selected item, when it stands directly on the body, can be moved where the map is
+  // right-clicked (players, placed through their building, cannot).
+  const movable =
+    selectedItem &&
+    selectedItem.object_data.parent_id === map.body.object_uuid &&
+    byUuid.get(selectedItem.object_uuid)?.via === null
+      ? selectedItem
+      : null;
+  /** Opens the selected item's editor with its placement moved where the map was clicked. */
+  const moveHere = (at: MapLatLng) => {
+    setMenu(null);
+    if (!movable) return;
+    const { direction, ground, label } = placeAt(at, movable.object_uuid);
+    actions.edit(movable.object_uuid, {
+      preset: moveOnBody(movable, direction, ground + spawnHeightFor(movable.object_type)),
+      label,
     });
   };
   const focusOn = (uuid: string) => {
@@ -292,9 +327,20 @@ function BodyMap({
               style={{ left: menu.x, top: menu.y }}
             >
               {menu.kind === 'place' ? (
-                <MenuItem autoFocus icon={<PlusIcon size={14} />} onClick={() => addHere(menu.at)}>
-                  {t('map.addHere')}
-                </MenuItem>
+                <>
+                  <MenuItem
+                    autoFocus
+                    icon={<PlusIcon size={14} />}
+                    onClick={() => addHere(menu.at)}
+                  >
+                    {t('map.addHere')}
+                  </MenuItem>
+                  {movable && (
+                    <MenuItem icon={<MoveIcon size={14} />} onClick={() => moveHere(menu.at)}>
+                      {t('map.moveHere', { label: itemLabel(movable) })}
+                    </MenuItem>
+                  )}
+                </>
               ) : (
                 <>
                   <MenuItem

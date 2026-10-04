@@ -5,6 +5,7 @@ import {
   SPAWN_HEIGHT,
   spawnDistanceFor,
   spawnHeightFor,
+  moveOnBody,
   placeOnBody,
   spawnNextTo,
   type SpawnPreset,
@@ -119,5 +120,33 @@ describe('spawnHeightFor', () => {
     // Its +Y along the local vertical, its forward (−Z) towards the pole.
     up.forEach((value, i) => expect(value).toBeCloseTo(direction[i] ?? 0, 3));
     expect(dot(back, [0, 1, 0])).toBeLessThan(0);
+  });
+
+  it('moves an item on a body: upright at the new place, same heading, same item when in place', () => {
+    const from = directionOf(19.2, 132.6);
+    // A building as the game places it: upright, any heading.
+    const start = placeOnBody('body', from, 6_361_600);
+    const [, , startBack] = basisFromEuler(start.rotation);
+    const yawed = { x: start.rotation.x, y: start.rotation.y, z: start.rotation.z };
+    const item = {
+      object_type: 'simple_building',
+      object_uuid: 'b',
+      object_data: { parent_id: 'body', position: start.position, rotation: yawed },
+    };
+
+    const to = directionOf(20.5, 135.1);
+    const moved = moveOnBody(item, to, 6_361_700);
+    const [, up, back] = basisFromEuler(moved.rotation);
+    up.forEach((value, i) => expect(value).toBeCloseTo(to[i] ?? 0, 3));
+    expect(Math.hypot(moved.position.x, moved.position.y, moved.position.z)).toBeCloseTo(
+      6_361_700,
+      0,
+    );
+    // Still facing about the same way (north here): a small turn for a move of a few degrees.
+    expect(dot(back, startBack)).toBeGreaterThan(0.99);
+
+    // Moved onto itself: the same rotation.
+    const still = moveOnBody(item, from, 6_361_600);
+    expect(still.rotation).toEqual(start.rotation);
   });
 });

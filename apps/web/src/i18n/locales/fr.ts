@@ -175,6 +175,8 @@ export const fr: Translations = {
     spawnNext: 'Faire apparaître à côté',
     spawnHint:
       "Apparition à côté de {{label}} : même parent, devant, même orientation. Les positions sont relatives au parent ; le jeu ne transmet pas encore la position des joueurs à l'API, c'est donc la dernière sauvegardée qui est utilisée.",
+    moveHint:
+      "Déplacé à l'endroit cliqué sur la carte ({{label}}) : au sol près de l'objet le plus proche, tourné avec le sol pour rester droit et garder son cap. Vérifie, puis enregistre.",
     placeHint:
       "Placé à l'endroit cliqué sur la carte ({{label}}) : au sol près de l'objet le plus proche, vertical, tourné vers le nord. Les positions sont relatives au centre du corps.",
     scenesOfType: 'Utilisées par {{type}}',
@@ -275,6 +277,7 @@ export const fr: Translations = {
   },
   map: {
     menu: 'Actions à cet endroit',
+    moveHere: 'Déplacer {{label}} ici',
     addHere: 'Ajouter un objet ici',
     open: 'Carte',
     showOn: 'Voir sur la carte',
