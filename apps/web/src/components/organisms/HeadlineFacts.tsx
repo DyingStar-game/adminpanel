@@ -14,8 +14,6 @@ interface HeadlineFactsProps {
   changed?: ReadonlySet<string>;
   /** Keys the model's schematic already shows: facts made only of them are left out. */
   hidden?: ReadonlySet<string>;
-  /** Tiles added after the item's own facts (a body's facts from the wiki). */
-  extra?: { key: string; label: string; value: string }[];
   /** Energy of the installed batteries, when the model reports it (a truck). */
   energy?: InstalledEnergy | null;
 }
@@ -27,7 +25,6 @@ export function HeadlineFacts({
   onNavigate,
   changed,
   hidden,
-  extra = [],
   energy,
 }: HeadlineFactsProps) {
   const { t, i18n } = useTranslation();
@@ -36,7 +33,7 @@ export function HeadlineFacts({
   const facts = (profile?.headline ?? []).filter(
     (keys) => keys.some((key) => key in data) && !keys.every((key) => hidden?.has(key)),
   );
-  if (facts.length === 0 && !energy && extra.length === 0) return null;
+  if (facts.length === 0 && !energy) return null;
 
   return (
     <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-2">
@@ -69,17 +66,6 @@ export function HeadlineFacts({
               ),
             )}
           </div>
-        </div>
-      ))}
-      {extra.map((fact) => (
-        <div
-          key={fact.key}
-          className="flex flex-col gap-1 rounded-xl border bg-surface-2 px-4 py-3"
-        >
-          <span className="text-3xs font-semibold tracking-[0.15em] text-fg-3 uppercase">
-            {fact.label}
-          </span>
-          <MonoText className="text-sm">{fact.value}</MonoText>
         </div>
       ))}
       {energy && <EnergyFact energy={energy} language={i18n.language} />}

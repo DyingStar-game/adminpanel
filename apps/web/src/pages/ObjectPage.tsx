@@ -31,7 +31,7 @@ import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { hasMap, mapBodyOf } from '@/lib/bodyMap';
 import { itemLabel } from '@/lib/itemLabel';
-import { bodyFactList, bodyFacts, wikiUrl } from '@/lib/bodies';
+import { bodyFacts, wikiUrl } from '@/lib/bodies';
 import { schematicFor, schematicKeys } from '@/lib/schematics';
 import { hasEnergy, installedEnergy, lookup } from '@/lib/schematics/components';
 import { SPAWN_DISTANCE, SPAWN_HEIGHT, spawnNextTo } from '@/lib/spawn';
@@ -81,7 +81,7 @@ function ObjectDetails({
   onOpenMap,
   updatedAt,
 }: Omit<ObjectPageProps, 'uuid'> & { item: Item; updatedAt: number }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const definitions = useDefinitions();
   // undefined while loading, null when the type has no definition.
   const definition = definitions.data
@@ -96,7 +96,6 @@ function ObjectDetails({
   const body = bodyFacts(item.object_data.scenename);
   // Bodies drawn around this one (its moons, planets, siblings) open their own page.
   const bodies = useBodyIndex(body !== null);
-  const numbers = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 2 });
   const energy =
     schematic && hasEnergy(schematic)
       ? installedEnergy(schematic, item.object_data, lookup(resolveRef))
@@ -246,26 +245,6 @@ function ObjectDetails({
           changed={changed}
           hidden={schematic ? schematicKeys(schematic) : undefined}
           energy={energy}
-          extra={
-            body
-              ? [
-                  ...(body.name
-                    ? [
-                        {
-                          key: 'wikiName',
-                          label: t('body.name'),
-                          value: `${body.name} · ${body.designation}`,
-                        },
-                      ]
-                    : [{ key: 'wikiName', label: t('body.name'), value: body.designation }]),
-                  ...bodyFactList(body).map((fact) => ({
-                    key: fact.key,
-                    label: t(`body.${fact.key}`),
-                    value: `${numbers.format(fact.value)} ${fact.unit === 'd' ? t('body.days') : fact.unit}`,
-                  })),
-                ]
-              : []
-          }
         />
       }
       relations={
