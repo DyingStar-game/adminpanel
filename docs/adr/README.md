@@ -35,3 +35,4 @@ using lightweight ADRs ([Michael Nygard format](https://cognitect.com/blog/2011/
 | [0018](./0018-planetary-map.md) | Planetary map: a 2D view of everything placed on a celestial body | Accepted | 2026-10-02 |
 | [0019](./0019-bulk-import-validation.md) | Bulk import: input and per-item format and coherence checks | Accepted | 2026-10-02 |
 | [0020](./0020-visual-identity-first-panel.md) | Visual identity: back to the first DyingStar panel's look | Accepted | 2026-10-02 |
+| [0021](./0021-persistence-query-needs-at-scale.md) | Persistence query needs for the admin at game scale | Proposed | 2026-10-04 |
