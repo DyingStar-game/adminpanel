@@ -76,16 +76,20 @@ const POLE: V = [0, 1, 0];
 const DEG = 180 / Math.PI;
 const clamp = (n: number) => Math.max(-1, Math.min(1, n));
 
-/** Latitude / longitude in degrees of a unit direction from the body centre. */
+/**
+ * Latitude / longitude in degrees of a unit direction from the body centre, as the game shows
+ * them: pole on +Y, longitude 0 on +X and positive towards +Z (checked against the in-game
+ * readout on 2026-10-04: a truck at 15.0968°, −44.6275° shows "15.0967° N 44.6275° O").
+ */
 export const latLonOf = ([x, y, z]: V) => ({
   lat: Math.asin(clamp(y)) * DEG,
-  lon: Math.atan2(x, z) * DEG,
+  lon: Math.atan2(z, x) * DEG,
 });
 
-/** Unit direction from the body centre of a latitude / longitude in degrees. */
+/** Unit direction from the body centre of a latitude / longitude in degrees (`latLonOf`'s inverse). */
 export function directionOf(lat: number, lon: number): V {
   const [phi, lambda] = [lat / DEG, lon / DEG];
-  return [Math.cos(phi) * Math.sin(lambda), Math.sin(phi), Math.cos(phi) * Math.cos(lambda)];
+  return [Math.cos(phi) * Math.cos(lambda), Math.sin(phi), Math.cos(phi) * Math.sin(lambda)];
 }
 
 /**

@@ -31,7 +31,8 @@ when a step needs a new decision, it is written as a new ADR before coding.
 
 Settled:
 
-- Pole axis and longitude 0 of the bodies: +Y and +Z, confirmed on 2026-10-04.
+- Body frame: pole on +Y, longitude 0 on +X growing towards +Z, altitude above the wiki radius —
+  checked against the in-game readout on 2026-10-04 (ADR 0018).
 - Offered options done on 2026-10-04: overlapping names hidden on the map, lighter muted text
   (ADR 0020), Add an item on the orbit view and the map, collapsible sidebar. The map refresh
   question is moot: the map reads a body listing kept 30 s (ADR 0018).

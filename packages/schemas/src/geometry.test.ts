@@ -23,4 +23,16 @@ describe('azimuthal equidistant projection', () => {
       expect(back.lon).toBeCloseTo(lon, 9);
     }
   });
+
+  it('reads latitude and longitude like the game (truck f22d41bb, in-game readout)', () => {
+    const { lat, lon } = latLonOf(normalizeOrThrow([4370144.815, 1656479.76, -4313726.46]));
+    expect(lat).toBeCloseTo(15.0968, 3);
+    // Shown in game as 44.6275° O (west).
+    expect(lon).toBeCloseTo(-44.6275, 3);
+  });
 });
+
+function normalizeOrThrow(v: [number, number, number]): [number, number, number] {
+  const n = Math.hypot(...v);
+  return [v[0] / n, v[1] / n, v[2] / n];
+}

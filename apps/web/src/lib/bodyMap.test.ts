@@ -4,6 +4,7 @@ import {
   fitPoints,
   ARRIVAL_ZOOM,
   formatAltitude,
+  gameAltitude,
   formatLatLon,
   formatDistance,
   gridLines,
@@ -101,6 +102,7 @@ describe('body map helpers', () => {
 
   it('formats altitudes and coordinates', () => {
     expect(formatAltitude(301.4)).toBe('301 m');
+    expect(formatAltitude(4058)).toBe('4.06 km');
     expect(formatAltitude(394651)).toBe('394.7 km');
     expect(formatLatLon(22.605108, -130.748103)).toBe('22.605° N · 130.748° W');
   });
@@ -183,6 +185,12 @@ describe('body map helpers', () => {
     expect(fitPoints([...group, far])).toEqual(group);
     // Few points: all of them.
     expect(fitPoints([{ x: 0, y: 0 }, far])).toHaveLength(2);
+  });
+
+  it('gives altitudes like the game, above the wiki radius', () => {
+    // A truck 2 m above the ground level measured on the items (6,360,056 m), SandBox 6,356 km.
+    expect(gameAltitude(2, 6_360_056, 6356)).toBe(4058);
+    expect(gameAltitude(2, 6_360_056, undefined)).toBe(2);
   });
 
   it('keeps the last moves only', () => {

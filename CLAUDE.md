@@ -85,7 +85,9 @@ Check shapes against live data rather than guessing (**GET only**, never POST / 
 
 - Positions are relative to the parent; items on a planet are relative to its **centre**
   (≈ 6,361.6 km for SandBox). Rotations are Godot Euler angles, **order YXZ**, radians
-  (`packages/schemas/src/geometry.ts`, checked against live data).
+  (`packages/schemas/src/geometry.ts`, checked against live data). Latitude / longitude as in
+  game: pole on +Y, longitude 0 on +X growing towards +Z; in-game altitude is above the wiki
+  radius (SandBox's ground ≈ 4 km above its 6,356 km).
 - Persistence `POST` and `PUT` are upserts; `DELETE` always answers 204 and does not notify the
   game. The BFF adds 409 on create, merge-on-save, and refuses unknown types (ADR 0009, 0015).
 - The game saves an item about **every 60 s** by design: the admin cannot be more live than that.

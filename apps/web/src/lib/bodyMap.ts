@@ -122,7 +122,22 @@ export function typeMixGradient(objectTypes: string[]): string {
 
 /** Altitude in metres or kilometres. */
 export const formatAltitude = (metres: number) =>
-  Math.abs(metres) >= 10_000 ? `${(metres / 1000).toFixed(1)} km` : `${Math.round(metres)} m`;
+  Math.abs(metres) >= 10_000
+    ? `${(metres / 1000).toFixed(1)} km`
+    : Math.abs(metres) >= 1000
+      ? `${(metres / 1000).toFixed(2)} km`
+      : `${Math.round(metres)} m`;
+
+/**
+ * Altitude as the game shows it: above the body's radius from the wiki (SandBox's ground stands
+ * about 4 km above its 6,356 km). The map's own altitudes are above the ground level measured on
+ * its items (`referenceRadius`); without the wiki radius, they are kept.
+ */
+export const gameAltitude = (
+  altitude: number,
+  referenceRadius: number,
+  radiusKm: number | undefined,
+) => (radiusKm === undefined ? altitude : altitude + referenceRadius - radiusKm * 1000);
 
 /** Latitude / longitude with hemispheres, e.g. `22.605° N · 130.748° E`. */
 export const formatLatLon = (lat: number, lon: number) =>

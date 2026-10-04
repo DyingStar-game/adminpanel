@@ -36,6 +36,7 @@ import { useItem } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import {
   formatAltitude,
+  gameAltitude,
   formatDistance,
   formatLatLon,
   type MapLatLng,
@@ -273,13 +274,15 @@ function BodyMap({
         pointLabel(point),
         point.object_type,
         via ? t('map.via', { label: pointLabel(via) }) : null,
-        t('map.altitude', { value: formatAltitude(point.altitude) }),
+        t('map.altitude', {
+          value: formatAltitude(gameAltitude(point.altitude, map.referenceRadius, body?.radiusKm)),
+        }),
         formatLatLon(point.lat, point.lon),
       ]
         .filter(Boolean)
         .join(' · ');
     },
-    [byUuid, t],
+    [byUuid, t, map.referenceRadius, body?.radiusKm],
   );
   const clusterLabels = useMemo(
     () => ({
@@ -489,7 +492,9 @@ function BodyMap({
                     <TypeDot objectType={point.object_type} />
                     <span className="min-w-0 flex-1 truncate text-xs">{pointLabel(point)}</span>
                     <MonoText tone="subtle" className="text-2xs">
-                      {formatAltitude(point.altitude)}
+                      {formatAltitude(
+                        gameAltitude(point.altitude, map.referenceRadius, body?.radiusKm),
+                      )}
                     </MonoText>
                   </button>
                 ))}

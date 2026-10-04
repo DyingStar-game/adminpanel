@@ -146,7 +146,7 @@ grows with the body: the lasting answer is on the persistence side (ADR 0021).
 
 ### Update (2026-10-04): pole axis confirmed
 
-The game confirms the body frame: +Y is the pole and +Z longitude 0. The map no longer shows
+The game confirms the body frame: +Y is the pole (longitude: see the next update). The map no longer shows
 the "assume +Y is the pole" caption.
 
 ### Update (2026-10-04): add an item where the map is right-clicked, first view on the main group
@@ -183,6 +183,21 @@ scene, and shows them on the body's page (key facts and a link to its wiki page)
 header. The map's altitudes keep the ground level measured on the items (median ≈ 6,360 km for
 SandBox) as reference: the wiki's radius (6,356 km) would show trucks standing on the ground
 about 4 km up.
+
+### Update (2026-10-04): longitude and altitude as the game shows them
+
+The in-game readout of truck `f22d41bb` ("alt 4.06 km · sol +0 m", "15.0968° N 44.6278° O")
+checked against its saved position settles both:
+
+- **Longitude** is 0 on **+X** and grows towards **+Z** (`atan2(z, x)`), not 0 on +Z: the admin
+  showed 134.63° E for that truck. `latLonOf` / `directionOf` follow the game. The map itself is
+  unchanged (the body seen from above, north up): there the game's longitude grows towards the
+  left, i.e. its "east" is on the left of a north-up view from above — to check with the game
+  team (a mirrored convention, or "O" meaning Ost).
+- **Altitude** is measured above the body's radius from the wiki (6,356 km for SandBox): its
+  ground stands about 4 km above (6,360,058 m from the centre for the truck, 4.06 km in game).
+  The map shows altitudes that way (`gameAltitude`); its orbit limit and the ground taken for
+  "add / move here" still use the ground level measured on the items.
 
 ## Consequences
 

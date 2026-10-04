@@ -14,9 +14,9 @@ const at = (lat: number, lon: number, altitude = 0) => {
   const [phi, lambda] = [(lat * Math.PI) / 180, (lon * Math.PI) / 180];
   const r = R + altitude;
   return {
-    x: r * Math.cos(phi) * Math.sin(lambda),
+    x: r * Math.cos(phi) * Math.cos(lambda),
     y: r * Math.sin(phi),
-    z: r * Math.cos(phi) * Math.cos(lambda),
+    z: r * Math.cos(phi) * Math.sin(lambda),
   };
 };
 
@@ -52,18 +52,20 @@ describe('buildBodyMap', () => {
       [],
     );
     const [a, , c] = map.points;
-    // One degree of longitude on the equator, east of the centre (one third of the way).
+    // One degree of longitude on the equator (one third of the way). The map is the body seen
+    // from above, north up: the game's longitude grows towards +Z, which is on the left.
     const degree = (R * Math.PI) / 180;
     expect(Math.hypot((c?.x ?? 0) - (a?.x ?? 0), (c?.y ?? 0) - (a?.y ?? 0))).toBeCloseTo(
       degree,
       -1,
     );
-    expect(c?.x).toBeGreaterThan(a?.x ?? 0);
+    expect(c?.x).toBeLessThan(a?.x ?? 0);
     expect(Math.abs((c?.y ?? 0) - (a?.y ?? 0))).toBeLessThan(1);
   });
 
   it('places players through their building: position and rotation of the parent', () => {
-    const building = at(0, 0);
+    // On +Z (longitude 90°), where the body's X is horizontal.
+    const building = at(0, 90);
     const map = buildBodyMap(
       planet,
       [
