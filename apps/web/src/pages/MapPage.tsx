@@ -15,6 +15,8 @@ import {
   directionOf,
   ErrorCode,
   latLonOf,
+  Vec3Schema,
+  type Item,
   type BodyMapResponse,
   type MapPoint,
 } from '@dyingstar-admin/schemas';
@@ -49,7 +51,7 @@ import {
 import type { MapSearch as MapSearchState } from '@/lib/mapSearch';
 import { itemLabel } from '@/lib/itemLabel';
 import { typeColor } from '@/lib/objectTypes';
-import { moveOnBody, placeOnBody, spawnHeightFor } from '@/lib/spawn';
+import { moveOnBody, placeOnBody, spawnHeightFor, type ParentFrame } from '@/lib/spawn';
 import { usePreferences } from '@/stores/preferences';
 
 interface MapPageProps {
@@ -232,12 +234,16 @@ function BodyMap({
       },
     });
   };
-  // The selected item, when it stands directly on the body, can be moved where the map is
-  // right-clicked (players, placed through their building, cannot).
+  // The selected item can be moved where the map is right-clicked: standing on the body, or
+  // placed in an item that does (a player in its building, which keeps it as parent).
+  const via = selectedItem ? byUuid.get(selectedItem.object_uuid)?.via : undefined;
+  const parentItem = useItem(via ?? undefined).data ?? null;
+  const parentFrame = parentItem ? frameOf(parentItem) : null;
   const movable =
     selectedItem &&
-    selectedItem.object_data.parent_id === map.body.object_uuid &&
-    byUuid.get(selectedItem.object_uuid)?.via === null
+    (via === null
+      ? selectedItem.object_data.parent_id === map.body.object_uuid
+      : !!via && parentFrame !== null && selectedItem.object_data.parent_id === via)
       ? selectedItem
       : null;
   /** Opens the selected item's editor with its placement moved where the map was clicked. */
@@ -246,7 +252,12 @@ function BodyMap({
     if (!movable) return;
     const { direction, ground, label } = placeAt(at, movable.object_uuid);
     actions.edit(movable.object_uuid, {
-      preset: moveOnBody(movable, direction, ground + spawnHeightFor(movable.object_type)),
+      preset: moveOnBody(
+        movable,
+        direction,
+        ground + spawnHeightFor(movable.object_type),
+        via ? (parentFrame ?? undefined) : undefined,
+      ),
       label,
     });
   };
@@ -489,6 +500,15 @@ function Message({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid size-full flex-1 place-items-center text-sm text-fg-3">{children}</div>
   );
+}
+
+/** Position and rotation of an item, when it has both (the frame its children are placed in). */
+function frameOf(item: Item): ParentFrame | null {
+  const position = Vec3Schema.safeParse(item.object_data.position);
+  const rotation = Vec3Schema.safeParse(item.object_data.rotation);
+  return position.success && rotation.success
+    ? { position: position.data, rotation: rotation.data }
+    : null;
 }
 
 function MenuItem({

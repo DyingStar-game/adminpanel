@@ -133,32 +133,74 @@ function rotateOnto(v: V, from: V, to: V): V {
   );
 }
 
+/** Frame of the item an item is placed in (its parent, standing on the body). */
+export interface ParentFrame {
+  position: Vec3;
+  rotation: Vec3;
+}
+
 /**
  * New placement of an item of a celestial body moved to a direction from its centre and a
  * distance from it: the item turns with the ground (the rotation taking its old vertical onto
  * the new one), so it stays upright and keeps its heading. Without a rotation, it is placed
- * upright facing north.
+ * upright facing north. An item placed in another one standing on the body (a player in its
+ * building) keeps that parent: the new placement is given in the parent's frame.
  */
-export function moveOnBody(item: Item, direction: V, distance: number): SpawnPreset {
+export function moveOnBody(
+  item: Item,
+  direction: V,
+  distance: number,
+  parent?: ParentFrame,
+): SpawnPreset {
   const up = normalize(direction) ?? POLE;
   const position = Vec3Schema.safeParse(item.object_data.position);
   const rotation = Vec3Schema.safeParse(item.object_data.rotation);
   const parentId = item.object_data.parent_id ?? '';
-  const from = position.success
-    ? normalize([position.data.x, position.data.y, position.data.z])
+  const parentAxes = parent ? basisFromEuler(parent.rotation) : null;
+  const parentOrigin: V = parent
+    ? [parent.position.x, parent.position.y, parent.position.z]
+    : [0, 0, 0];
+  // Parent frame → body frame, and back.
+  const toBody = (v: V): V =>
+    parentAxes
+      ? addScaled(
+          addScaled(addScaled([0, 0, 0], parentAxes[0], v[0]), parentAxes[1], v[1]),
+          parentAxes[2],
+          v[2],
+        )
+      : v;
+  const toParent = (v: V): V =>
+    parentAxes ? [dot(v, parentAxes[0]), dot(v, parentAxes[1]), dot(v, parentAxes[2])] : v;
+
+  const target: V = [up[0] * distance, up[1] * distance, up[2] * distance];
+  const local = toParent(addScaled(target, parentOrigin, -1));
+  const placed = {
+    x: round(local[0]) + 0,
+    y: round(local[1]) + 0,
+    z: round(local[2]) + 0,
+  };
+  const at = position.success
+    ? addScaled(parentOrigin, toBody([position.data.x, position.data.y, position.data.z]), 1)
     : null;
-  if (!from || !rotation.success) return placeOnBody(parentId, up, distance);
-  const [right, ownUp, back] = basisFromEuler(rotation.data).map((axis) =>
-    rotateOnto(axis, from, up),
+  const from = at ? normalize(at) : null;
+  if (!from || !rotation.success) {
+    const upright = placeOnBody(parentId, up, distance);
+    if (!parentAxes) return upright;
+    const axes = basisFromEuler(upright.rotation).map(toParent) as [V, V, V];
+    const angles = eulerFromBasis(axes);
+    return {
+      parentId,
+      position: placed,
+      rotation: { x: round(angles.x) + 0, y: round(angles.y) + 0, z: round(angles.z) + 0 },
+    };
+  }
+  const axes = basisFromEuler(rotation.data).map((axis) =>
+    toParent(rotateOnto(toBody(axis), from, up)),
   ) as [V, V, V];
-  const angles = eulerFromBasis([right, ownUp, back]);
+  const angles = eulerFromBasis(axes);
   return {
     parentId,
-    position: {
-      x: round(up[0] * distance) + 0,
-      y: round(up[1] * distance) + 0,
-      z: round(up[2] * distance) + 0,
-    },
+    position: placed,
     rotation: { x: round(angles.x) + 0, y: round(angles.y) + 0, z: round(angles.z) + 0 },
   };
 }

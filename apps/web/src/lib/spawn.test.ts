@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { basisFromEuler, directionOf, dot } from '@dyingstar-admin/schemas';
+import { basisFromEuler, directionOf, dot, toParentFrame } from '@dyingstar-admin/schemas';
 import {
   SPAWN_DISTANCE,
   SPAWN_HEIGHT,
@@ -148,5 +148,37 @@ describe('spawnHeightFor', () => {
     // Moved onto itself: the same rotation.
     const still = moveOnBody(item, from, 6_361_600);
     expect(still.rotation).toEqual(start.rotation);
+  });
+
+  it('moves a player in its building: same parent, placement given in the building frame', () => {
+    const buildingAt = directionOf(19.2, 132.6);
+    const building = placeOnBody('body', buildingAt, 6_361_600);
+    const player = {
+      object_type: 'player',
+      object_uuid: 'p',
+      object_data: {
+        parent_id: 'building',
+        position: { x: -3.2, y: 0.07, z: 8 },
+        rotation: { x: 0, y: 1.7, z: 0 },
+      },
+    };
+    const to = directionOf(19.21, 132.61);
+    const moved = moveOnBody(player, to, 6_361_601, building);
+
+    expect(moved.parentId).toBe('building');
+    // Back in the body frame: at the clicked place, at the given distance, upright.
+    const world = toParentFrame(
+      [moved.position.x, moved.position.y, moved.position.z],
+      [building.position.x, building.position.y, building.position.z],
+      building.rotation,
+    );
+    expect(Math.hypot(...world)).toBeCloseTo(6_361_601, 0);
+    const dir = world.map((v) => v / Math.hypot(...world));
+    dir.forEach((value, i) => expect(value).toBeCloseTo(to[i] ?? 0, 6));
+    const [, buildingUp] = basisFromEuler(building.rotation);
+    const [, localUp] = basisFromEuler(moved.rotation);
+    // Its up, expressed in the building, stays the building's up (about: the ground turns a bit).
+    expect(localUp[1]).toBeGreaterThan(0.999);
+    expect(dot(buildingUp, buildingAt)).toBeCloseTo(1, 6);
   });
 });
