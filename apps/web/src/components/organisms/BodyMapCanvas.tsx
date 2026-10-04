@@ -62,6 +62,8 @@ interface BodyMapCanvasProps {
    * map's top-left corner), for a menu of actions at that place.
    */
   onContextMenu?: ((at: MapLatLng, screen: { x: number; y: number }) => void) | undefined;
+  /** Right click on a marker: its item, and where on screen (for a menu of its actions). */
+  onPointMenu?: ((uuid: string, screen: { x: number; y: number }) => void) | undefined;
   /** Any move or zoom of the view (closes a menu opened at a place). */
   onViewChange?: (() => void) | undefined;
   /** Tooltip content of a point (label, type, altitude…). */
@@ -326,13 +328,14 @@ const Points = memo(function Points({
   points,
   selected,
   onSelect,
+  onPointMenu,
   describe,
   labels,
   named,
   nameOf,
 }: Pick<
   BodyMapCanvasProps,
-  'points' | 'selected' | 'onSelect' | 'describe' | 'labels' | 'named' | 'nameOf'
+  'points' | 'selected' | 'onSelect' | 'onPointMenu' | 'describe' | 'labels' | 'named' | 'nameOf'
 >) {
   const clusterIcon = useMemo(
     () => (cluster: L.MarkerCluster) => {
@@ -367,6 +370,7 @@ const Points = memo(function Points({
               point={point}
               selected={false}
               onSelect={onSelect}
+              onMenu={onPointMenu}
               describe={describe}
               name={named.has(point.object_type) ? nameOf(point) : null}
             />
@@ -381,6 +385,7 @@ const Points = memo(function Points({
             point={point}
             selected
             onSelect={onSelect}
+            onMenu={onPointMenu}
             describe={describe}
             name={named.has(point.object_type) ? nameOf(point) : null}
           />
@@ -393,12 +398,14 @@ function PointMarker({
   point,
   selected,
   onSelect,
+  onMenu,
   describe,
   name,
 }: {
   point: MapPoint;
   selected: boolean;
   onSelect: (uuid: string) => void;
+  onMenu?: ((uuid: string, screen: { x: number; y: number }) => void) | undefined;
   describe: (point: MapPoint) => string;
   name: string | null;
 }) {
@@ -407,7 +414,13 @@ function PointMarker({
       position={toLatLng(point)}
       icon={markerIcon(point.object_type, selected, name)}
       zIndexOffset={selected ? 1000 : 0}
-      eventHandlers={{ click: () => onSelect(point.object_uuid) }}
+      eventHandlers={{
+        click: () => onSelect(point.object_uuid),
+        contextmenu: (event) => {
+          event.originalEvent.preventDefault();
+          onMenu?.(point.object_uuid, { x: event.containerPoint.x, y: event.containerPoint.y });
+        },
+      }}
       keyboard={false}
     >
       <Tooltip direction="top" offset={[0, -6]}>
@@ -428,6 +441,7 @@ export function BodyMapCanvas({
   onSelect,
   onDeselect,
   onContextMenu,
+  onPointMenu,
   onViewChange,
   describe,
   labels,
@@ -453,6 +467,7 @@ export function BodyMapCanvas({
         points={points}
         selected={selected}
         onSelect={onSelect}
+        onPointMenu={onPointMenu}
         describe={describe}
         labels={labels}
         named={named}

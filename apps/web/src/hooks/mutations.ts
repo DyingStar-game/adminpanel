@@ -10,7 +10,7 @@ import { apiSend } from '@/lib/api';
 import { usePreferences } from '@/stores/preferences';
 
 /** Data that a write may affect: refreshed right after it (lists, counts, ancestors, the item). */
-const AFFECTED = ['item', 'items', 'items-infinite', 'children-counts', 'ancestors'];
+const AFFECTED = ['item', 'items', 'items-infinite', 'children-counts', 'ancestors', 'body-map'];
 
 export function useAfterWrite() {
   const queryClient = useQueryClient();

@@ -10,9 +10,17 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useGoToItem } from '@/hooks/useGoToItem';
 import { ExplorerSearchSchema, searchForItem } from '@/lib/explorerSearch';
+import { MapSearchSchema } from '@/lib/mapSearch';
+import { OrbitSearchSchema } from '@/lib/orbitSearch';
 import { useExplorerTree, groupNodeId } from '@/stores/explorerTree';
 
 const ROOTS = { parent: '', scope: 'level', page: 1 } as const;
+
+/** Canvas on screen (`/map/:uuid`, `/orbit/:uuid`) and its body / centre. */
+const canvasOfPath = (pathname: string) => {
+  const match = /^\/(map|orbit)\/([^/]+)/.exec(pathname);
+  return match ? { view: match[1] as 'map' | 'orbit', uuid: match[2] ?? '' } : null;
+};
 
 /** Item shown by the current route (`/items/:uuid`, `/orbit/:uuid`), if any. */
 const itemOfPath = (pathname: string) => /^\/(?:items|orbit)\/([^/]+)/.exec(pathname)?.[1];
@@ -56,7 +64,10 @@ function RootLayout() {
     void navigate({ to: '/import', search: level ? { parent: level.parentId } : {} });
   };
 
-  /** Leaves the views of a deleted item: to its parent's page, or the explorer level. */
+  /**
+   * Leaves the views of a deleted item: to its parent's page, or the explorer level. On the map
+   * and the orbit view, the page stays (refreshed) and only the selection is cleared.
+   */
   const afterDelete = (item: Item) => {
     const parent = item.object_data.parent_id || '';
     if (itemOfPath(location.pathname) === item.object_uuid) {
@@ -65,10 +76,58 @@ function RootLayout() {
         : navigate({ to: '/explorer', search: ROOTS }));
       return;
     }
+    const canvas = canvasOfPath(location.pathname);
+    if (canvas) {
+      const map = MapSearchSchema.safeParse(location.search);
+      if (canvas.view === 'map' && map.success && map.data.selected === item.object_uuid) {
+        void navigate({ to: '/map/$uuid', params: { uuid: canvas.uuid }, search: {} });
+      }
+      const orbit = OrbitSearchSchema.safeParse(location.search);
+      if (canvas.view === 'orbit' && orbit.success && orbit.data.selected === item.object_uuid) {
+        void navigate({
+          to: '/orbit/$uuid',
+          params: { uuid: canvas.uuid },
+          search: { ...orbit.data, selected: undefined },
+        });
+      }
+      return;
+    }
     const explorer = ExplorerSearchSchema.safeParse(location.search);
     if (explorer.success && explorer.data.selected === item.object_uuid) {
       void navigate({ to: '/explorer', search: { ...explorer.data, selected: undefined } });
     }
+  };
+
+  /**
+   * After a creation (or a duplication): on the map, stay and select the new item; on the orbit
+   * view, select it if it is a child of the centre; elsewhere, show it in the explorer.
+   */
+  const afterCreate = (item: Item) => {
+    const canvas = canvasOfPath(location.pathname);
+    if (canvas?.view === 'map') {
+      void navigate({
+        to: '/map/$uuid',
+        params: { uuid: canvas.uuid },
+        search: { selected: item.object_uuid },
+      });
+      return;
+    }
+    if (canvas?.view === 'orbit' && item.object_data.parent_id === canvas.uuid) {
+      const orbit = OrbitSearchSchema.parse(location.search);
+      void navigate({
+        to: '/orbit/$uuid',
+        params: { uuid: canvas.uuid },
+        search: {
+          ...orbit,
+          open: orbit.open.includes(item.object_type)
+            ? orbit.open
+            : [...orbit.open, item.object_type],
+          selected: item.object_uuid,
+        },
+      });
+      return;
+    }
+    openInExplorer(item);
   };
 
   return (
@@ -93,7 +152,7 @@ function RootLayout() {
       >
         <Outlet />
       </AppShell>
-      <ItemActionsHost onCreated={openInExplorer} onDeleted={afterDelete} />
+      <ItemActionsHost onCreated={afterCreate} onDeleted={afterDelete} />
       {/* Dark only, like the first panel. */}
       <Toaster theme="dark" />
     </TooltipProvider>

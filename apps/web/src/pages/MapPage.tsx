@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CompassIcon, ExpandIcon, NetworkIcon, PlusIcon } from 'lucide-react';
+import {
+  CompassIcon,
+  CopyIcon,
+  ExpandIcon,
+  NetworkIcon,
+  PencilIcon,
+  PlusIcon,
+  Trash2Icon,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
   azimuthalEquidistantInverse,
@@ -21,6 +29,7 @@ import { useBodyMap } from '@/hooks/useBodyMap';
 import { useItemActions } from '@/stores/itemActions';
 import { useItem } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
+import { cn } from '@/lib/cn';
 import {
   formatAltitude,
   formatDistance,
@@ -163,7 +172,12 @@ function BodyMap({
   );
 
   // Menu opened by a right click on the map background, at that place.
-  const [menu, setMenu] = useState<{ at: MapLatLng; x: number; y: number } | null>(null);
+  // A place (right click on the background) or an item (right click on its marker).
+  const [menu, setMenu] = useState<
+    | { kind: 'place'; at: MapLatLng; x: number; y: number }
+    | { kind: 'item'; uuid: string; x: number; y: number }
+    | null
+  >(null);
   const closeMenu = useCallback(() => setMenu(null), []);
   useEffect(() => {
     if (!menu) return;
@@ -246,7 +260,12 @@ function BodyMap({
               closeMenu();
               if (search.selected) deselect();
             }}
-            onContextMenu={(at, { x, y }) => setMenu({ at, x, y })}
+            onContextMenu={(at, { x, y }) => setMenu({ kind: 'place', at, x, y })}
+            onPointMenu={(uuid, { x, y }) => {
+              // The item becomes the selection too: the inspector shows what the menu acts on.
+              select(uuid);
+              setMenu({ kind: 'item', uuid, x, y });
+            }}
             onViewChange={closeMenu}
             describe={describe}
             labels={clusterLabels}
@@ -261,20 +280,64 @@ function BodyMap({
           {menu && (
             <div
               role="menu"
-              aria-label={t('map.menu')}
+              aria-label={
+                menu.kind === 'place'
+                  ? t('map.menu')
+                  : (() => {
+                      const point = byUuid.get(menu.uuid);
+                      return point ? pointLabel(point) : menu.uuid;
+                    })()
+              }
               className="absolute z-[1100] flex min-w-44 flex-col rounded-md border bg-background p-1 text-sm shadow-lg"
               style={{ left: menu.x, top: menu.y }}
             >
-              <button
-                type="button"
-                role="menuitem"
-                autoFocus
-                onClick={() => addHere(menu.at)}
-                className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-left hover:bg-white/5 focus-visible:bg-white/5 focus-visible:outline-none"
-              >
-                <PlusIcon size={14} />
-                {t('map.addHere')}
-              </button>
+              {menu.kind === 'place' ? (
+                <MenuItem autoFocus icon={<PlusIcon size={14} />} onClick={() => addHere(menu.at)}>
+                  {t('map.addHere')}
+                </MenuItem>
+              ) : (
+                <>
+                  <MenuItem
+                    autoFocus
+                    icon={<ExpandIcon size={14} />}
+                    onClick={() => {
+                      closeMenu();
+                      onOpenPage(menu.uuid);
+                    }}
+                  >
+                    {t('inspector.open')}
+                  </MenuItem>
+                  <MenuItem
+                    icon={<PencilIcon size={14} />}
+                    onClick={() => {
+                      closeMenu();
+                      actions.edit(menu.uuid);
+                    }}
+                  >
+                    {t('editor.edit')}
+                  </MenuItem>
+                  <MenuItem
+                    icon={<CopyIcon size={14} />}
+                    onClick={() => {
+                      closeMenu();
+                      actions.duplicate(menu.uuid);
+                    }}
+                  >
+                    {t('duplicate.action')}
+                  </MenuItem>
+                  {/* Still confirmed: deleting applies live in the game. */}
+                  <MenuItem
+                    destructive
+                    icon={<Trash2Icon size={14} />}
+                    onClick={() => {
+                      closeMenu();
+                      actions.remove(menu.uuid);
+                    }}
+                  >
+                    {t('editor.delete')}
+                  </MenuItem>
+                </>
+              )}
             </div>
           )}
           <div className="absolute top-3.5 left-14 z-[1000] flex w-80 max-w-[40%] flex-col gap-2">
@@ -379,5 +442,35 @@ function BodyMap({
 function Message({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid size-full flex-1 place-items-center text-sm text-fg-3">{children}</div>
+  );
+}
+
+function MenuItem({
+  icon,
+  children,
+  onClick,
+  autoFocus,
+  destructive,
+}: {
+  icon: React.ReactNode;
+  children: React.ReactNode;
+  onClick: () => void;
+  autoFocus?: boolean;
+  destructive?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      role="menuitem"
+      autoFocus={autoFocus}
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-2 rounded-sm px-2 py-1.5 text-left hover:bg-white/5 focus-visible:bg-white/5 focus-visible:outline-none',
+        destructive && 'text-destructive',
+      )}
+    >
+      {icon}
+      {children}
+    </button>
   );
 }

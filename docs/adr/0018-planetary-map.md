@@ -159,6 +159,12 @@ group of items: two vehicles driven 3,400 and 14,300 km away zoomed it out to th
 Points beyond 3 times the 90th percentile distance from the median point are left out of the
 fit (they stay on the map).
 
+A right click on a marker selects its item and offers its actions: open, edit, duplicate,
+delete (still confirmed: it applies live in the game). After a write made from the map, the map
+stays on screen and is refreshed (the body listing is cleared on writes): a deleted selection is
+cleared, a created or duplicated item becomes the selection. The orbit view does the same for
+its selection and the children of its centre.
+
 ## Consequences
 
 - A body's content becomes visible at a glance; vehicles, buildings and, later, moving players
