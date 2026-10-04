@@ -36,6 +36,8 @@ const UNCLUSTER_ZOOM = 1;
 const FLY_SECONDS = 1.2;
 /** Arrow head tip (8 px from its centre) set back to the selected marker's edge (10 px). */
 const HEAD_BACK_PX = 19;
+/** Space kept between two names on the map. */
+const NAME_GAP_PX = 4;
 
 export interface MapFocus {
   uuid: string;
@@ -91,12 +93,12 @@ function markerIcon(objectType: string, selected: boolean, name: string | null):
     const square = markerShape(objectType) === 'square';
     const size = (selected ? 20 : 14) + (square ? 2 : 0);
     const label = name
-      ? `<span class="pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap text-sm font-semibold leading-none text-foreground [text-shadow:0_0_3px_var(--background),0_0_3px_var(--background),0_0_2px_var(--background)]">${escapeHtml(name)}</span>`
+      ? `<span class="map-name pointer-events-none absolute bottom-full left-1/2 mb-1 -translate-x-1/2 whitespace-nowrap text-sm font-semibold leading-none text-foreground [text-shadow:0_0_3px_var(--background),0_0_3px_var(--background),0_0_2px_var(--background)]">${escapeHtml(name)}</span>`
       : '';
     icon = L.divIcon({
       className: '',
       iconSize: [size, size],
-      html: `<span data-type="${objectType}" class="relative block size-full ${square ? 'rounded-xs' : 'rounded-full'} border border-background shadow-sm${
+      html: `<span data-type="${objectType}"${selected ? ' data-selected' : ''} class="relative block size-full ${square ? 'rounded-xs' : 'rounded-full'} border border-background shadow-sm${
         selected ? ' ring-2 ring-foreground' : ''
       }" style="background:${typeColor(objectType)}">${label}</span>`,
     });
@@ -182,6 +184,55 @@ function FitOnce({ points }: { points: MapPoint[] }) {
  */
 function BackgroundClick({ onClick }: { onClick: () => void }) {
   useMapEvents({ click: onClick });
+  return null;
+}
+
+/**
+ * Hides the names that would overlap one already shown: the selected item's name first, then
+ * the others in drawing order. Run after every move, zoom or change of the markers (clusters
+ * splitting add and remove them), on the next frame once they are laid out.
+ */
+function DeclutterNames() {
+  const map = useMap();
+  useEffect(() => {
+    const pane = map.getPane('markerPane');
+    if (!pane) return;
+    let frame = 0;
+    const run = () => {
+      frame = 0;
+      const names = [...pane.querySelectorAll<HTMLElement>('.map-name')];
+      for (const name of names) name.style.visibility = '';
+      const selectedFirst = [
+        ...names.filter((n) => n.parentElement?.hasAttribute('data-selected')),
+        ...names.filter((n) => !n.parentElement?.hasAttribute('data-selected')),
+      ];
+      const shown: DOMRect[] = [];
+      for (const name of selectedFirst) {
+        const box = name.getBoundingClientRect();
+        const clash = shown.some(
+          (other) =>
+            box.left < other.right + NAME_GAP_PX &&
+            other.left < box.right + NAME_GAP_PX &&
+            box.top < other.bottom + NAME_GAP_PX &&
+            other.top < box.bottom + NAME_GAP_PX,
+        );
+        if (clash) name.style.visibility = 'hidden';
+        else shown.push(box);
+      }
+    };
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(run);
+    };
+    const observer = new MutationObserver(schedule);
+    observer.observe(pane, { childList: true });
+    map.on('moveend zoomend', schedule);
+    schedule();
+    return () => {
+      observer.disconnect();
+      map.off('moveend zoomend', schedule);
+      cancelAnimationFrame(frame);
+    };
+  }, [map]);
   return null;
 }
 
@@ -382,6 +433,7 @@ export function BodyMapCanvas({
       <FitOnce points={points} />
       {movement && <MoveTrail {...movement} />}
       <FlyTo focus={focus} />
+      <DeclutterNames />
       {onDeselect && <BackgroundClick onClick={onDeselect} />}
     </MapContainer>
   );

@@ -295,7 +295,6 @@ export const fr: Translations = {
       'Ce corps contient trop d’éléments pour dessiner une carte ({{size}}, limite {{max}}).',
     error: 'Impossible de charger la carte.',
     summary: '{{shown}} éléments affichés sur {{total}}',
-    assumption: 'Latitude / longitude supposent que +Y est le pôle (ADR 0018).',
   },
   import: {
     title: 'Persistance — Import JSON',

@@ -291,7 +291,6 @@ export const en = {
     tooLarge: 'This body holds too many items to draw a map ({{size}}, limit {{max}}).',
     error: 'Could not load the map.',
     summary: '{{shown}} of {{total}} items shown',
-    assumption: 'Latitude / longitude assume +Y is the pole (ADR 0018).',
   },
   import: {
     title: 'Persistence — Import JSON',

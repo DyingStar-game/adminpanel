@@ -1,5 +1,12 @@
 import { useCallback, useMemo } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon, CompassIcon, ExpandIcon, XIcon } from 'lucide-react';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CompassIcon,
+  ExpandIcon,
+  PlusIcon,
+  XIcon,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Item } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
@@ -9,6 +16,7 @@ import { Inspector } from '@/components/organisms/Inspector';
 import { OrbitGraph } from '@/components/organisms/OrbitGraph';
 import { OrbitLayout } from '@/components/templates/OrbitLayout';
 import { Button } from '@/components/ui/button';
+import { useItemActions } from '@/stores/itemActions';
 import {
   useAncestors,
   useChildrenCounts,
@@ -72,6 +80,7 @@ function Orbit({
 }: OrbitPageProps & { item: Item }) {
   const { t } = useTranslation();
   const counts = useChildrenCounts(item.object_uuid, true, { live: true });
+  const actions = useItemActions();
   const ancestors = useAncestors(item.object_uuid);
   const { refs, parentTarget, parentId, resolveRef } = useItemRefs(item);
   // Open clusters still present among the children, in the order they were opened.
@@ -224,6 +233,11 @@ function Orbit({
             <Button variant="outline" size="sm" onClick={() => onOpenInExplorer(item)}>
               <CompassIcon />
               {t('objectPage.explorer')}
+            </Button>
+            {/* A new child of the centre: it appears in its type's cluster once saved. */}
+            <Button size="sm" onClick={() => actions.create({ parentId: item.object_uuid })}>
+              <PlusIcon />
+              {t('explorer.addItem')}
             </Button>
           </div>
           {openTypes.length > 0 && (

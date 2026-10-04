@@ -144,13 +144,18 @@ counts come from that listing. First map 17 s → 5.4 s, showing or hiding a typ
 0.03 s. Every type on the body is counted and drawn, with or without a definition. This copy
 grows with the body: the lasting answer is on the persistence side (ADR 0021).
 
+### Update (2026-10-04): pole axis confirmed
+
+The game confirms the body frame: +Y is the pole and +Z longitude 0. The map no longer shows
+the "assume +Y is the pole" caption.
+
 ## Consequences
 
 - A body's content becomes visible at a glance; vehicles, buildings and, later, moving players
   can be found and opened from the map.
 - Three new dependencies in the web app (Leaflet, react-leaflet, markercluster) and a new BFF
   endpoint with its schema in `packages/schemas`.
-- Labels of latitude / longitude depend on an unconfirmed pole convention.
+- Labels of latitude / longitude follow the pole convention (+Y), confirmed on 2026-10-04.
 - The map loads the body content at once within a 20 000-point budget; a type that does not fit
   is counted but not drawn (update of 2026-10-03).
 - Later: click on the map to choose a spawn or duplicate position (ADR 0017), terrain background

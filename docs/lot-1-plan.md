@@ -26,13 +26,15 @@ when a step needs a new decision, it is written as a new ADR before coding.
 
 ### Open questions
 
-- Pole axis and longitude 0 of the bodies (assumed +Y and +Z): to confirm with the game team.
-- Offered, not decided: map refresh every 15 s instead of 5 s (the game saves every ~60 s);
-  hide overlapping names on the map; lighter muted text; Add an item on the orbit view and the
-  map; collapsible sidebar.
+- None left for lot 1. Step 10 docs wait for the next lots (Keycloak authentication, a new
+  game service), which will change the architecture.
 
-Settled (2026-10-02):
+Settled:
 
+- Pole axis and longitude 0 of the bodies: +Y and +Z, confirmed on 2026-10-04.
+- Offered options done on 2026-10-04: overlapping names hidden on the map, lighter muted text
+  (ADR 0020), Add an item on the orbit view and the map, collapsible sidebar. The map refresh
+  question is moot: the map reads a body listing kept 30 s (ADR 0018).
 - Truck doors: the game renamed the vehicle keys to snake_case (2026-10-03); `Cube_004` …
   `Cube_007` became the compartment hatches `hatch_fl` … `hatch_rr`, drawn on the schematic.
 - Truck `suspension`: not important, left out of the schematic.

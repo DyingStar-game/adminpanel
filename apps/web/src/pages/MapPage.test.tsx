@@ -7,6 +7,7 @@ import { renderWithProviders } from '@/test/render';
 import { useInProcessBff } from '@/test/bff';
 import type { MapSearch } from '@/lib/mapSearch';
 import { usePreferences } from '@/stores/preferences';
+import { useItemActions } from '@/stores/itemActions';
 import { MapPage } from './MapPage';
 
 function renderMap(uuid: string) {
@@ -70,6 +71,18 @@ describe('MapPage', () => {
     expect(names).toHaveAttribute('aria-pressed', 'true');
     // jsdom gives the map no size: markers stay clustered, labels are checked in a browser.
     expect(usePreferences.getState().mapNamed).toMatchObject({ player: true });
+  });
+
+  it('adds an item on the body', async () => {
+    useInProcessBff();
+    renderMap(ids.planet);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Add an item' }));
+
+    expect(useItemActions.getState().action).toMatchObject({
+      kind: 'create',
+      parentId: ids.planet,
+    });
   });
 
   it('finds an item, selects it and shows it in the inspector', async () => {

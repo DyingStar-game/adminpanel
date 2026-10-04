@@ -6,6 +6,7 @@ import { ids } from '@dyingstar-admin/testing';
 import { renderWithProviders } from '@/test/render';
 import { useInProcessBff } from '@/test/bff';
 import type { OrbitSearch } from '@/lib/orbitSearch';
+import { useItemActions } from '@/stores/itemActions';
 import { OrbitPage } from './OrbitPage';
 
 function renderOrbit(uuid: string, initial: Partial<OrbitSearch> = {}) {
@@ -71,6 +72,18 @@ describe('OrbitPage', () => {
       .queryAllByRole('group', { hidden: true })
       .map((el) => el.getAttribute('aria-label'));
     expect(labels).not.toContain('slot_fl');
+  });
+
+  it('adds an item under the centre', async () => {
+    useInProcessBff();
+    renderOrbit(ids.vehicle);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Add an item' }));
+
+    expect(useItemActions.getState().action).toMatchObject({
+      kind: 'create',
+      parentId: ids.vehicle,
+    });
   });
 
   it('opens a cluster and fans its children out', async () => {

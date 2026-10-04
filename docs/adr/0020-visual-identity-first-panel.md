@@ -44,6 +44,12 @@ The first panel's look, read from its sources:
   `clamp(…)` stay possible).
 - The mock-up in `docs/design/` remains the reference for the views' structure, not their look.
 
+### Update (2026-10-04): lighter muted text, adding from the canvases
+
+At the maintainer's request, muted text goes from `#6b6b80` (3.1 to 3.7:1 on the backgrounds)
+to `#8a8aa0` (4.8 to 5.7:1, WCAG AA for small text), still apart from the secondary `#a6a6ba`.
+The orbit view and the map gain an "Add an item" action (child of the centre / of the body).
+
 ## Consequences
 
 - One visual identity across the DyingStar admin, the one the team knows.

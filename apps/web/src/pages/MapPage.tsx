@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { CompassIcon, ExpandIcon, NetworkIcon } from 'lucide-react';
+import { CompassIcon, ExpandIcon, NetworkIcon, PlusIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { ErrorCode, type BodyMapResponse, type MapPoint } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
@@ -11,6 +11,7 @@ import { Inspector } from '@/components/organisms/Inspector';
 import { OrbitLayout } from '@/components/templates/OrbitLayout';
 import { Button } from '@/components/ui/button';
 import { useBodyMap } from '@/hooks/useBodyMap';
+import { useItemActions } from '@/stores/itemActions';
 import { useItem } from '@/hooks/queries';
 import { ApiError } from '@/lib/api';
 import {
@@ -84,6 +85,7 @@ function BodyMap({
 }: MapPageProps & { map: BodyMapResponse; updatedAt: number; fresh: boolean }) {
   const { t } = useTranslation();
   const { mapHidden, setMapHidden, mapNamed, setMapNamed } = usePreferences();
+  const actions = useItemActions();
   const named = useMemo(
     () => new Set(Object.keys(mapNamed).filter((type) => mapNamed[type])),
     [mapNamed],
@@ -243,6 +245,11 @@ function BodyMap({
               <CompassIcon />
               {t('objectPage.explorer')}
             </Button>
+            {/* A new item on the body; next to the selected one, use its inspector's "+". */}
+            <Button size="sm" onClick={() => actions.create({ parentId: map.body.object_uuid })}>
+              <PlusIcon />
+              {t('explorer.addItem')}
+            </Button>
           </div>
           <div className="absolute bottom-3.5 left-4 z-[1000] flex max-h-[60%] w-60 flex-col gap-3 overflow-y-auto rounded-lg border bg-background px-3 py-2.5">
             <MapLegend
@@ -281,7 +288,6 @@ function BodyMap({
                 ))}
               </section>
             )}
-            <p className="text-2xs text-fg-3">{t('map.assumption')}</p>
           </div>
         </>
       }
