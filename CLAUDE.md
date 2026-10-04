@@ -69,7 +69,7 @@ Check shapes against live data rather than guessing (**GET only**, never POST / 
 - **Object type definitions**: `*_def.json` in
   [`DyingStar-game/horizonserver` › `ds_genericprops/props`](https://github.com/DyingStar-game/horizonserver/tree/develop/ds_genericprops/props)
   (`object_type` = file name without `_def`).
-- **Project dev wiki — the main documentation**: <https://developer.dyingstar-game.com/docs/>
+- **Project dev wiki — the main documentation**: <https://developer.dyingstar-game.com/>
   (public, read with WebFetch or `curl`). What it says is the project's reference (game design,
   worldbuilding, systems): **consult it without hesitating** before guessing a game rule, a
   value or a name, and say when the data disagrees with it. For instance every celestial body
