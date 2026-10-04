@@ -26,7 +26,8 @@
   --ds-line-2: #3a3a4e;
   --ds-fg: #e8e8f0;
   --ds-fg-2: #a6a6ba;
-  --ds-fg-3: #6b6b80;
+  /* Lighter than the first panel's #6b6b80: 4.8 to 5.7:1 on every background (ADR 0020). */
+  --ds-fg-3: #8a8aa0;
   --ds-acc: rgb(255, 186, 8);
   --ds-acc-bg: rgba(255, 186, 8, 0.08);
   --ds-flash: rgba(255, 186, 8, 0.22);
