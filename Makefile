@@ -97,6 +97,11 @@ check: ## Format, then lint, typecheck, test and check formatting (run before ev
 	@$(PNPM) format:check
 	@echo "$(GREEN)✅ All checks passed$(RESET)"
 
+.PHONY: definitions-update
+definitions-update: ## Update the bundled type definitions (fallback.json) from GitHub
+	@echo "$(CYAN)📥 Updating type definitions from GitHub...$(RESET)"
+	@$(PNPM) --filter @dyingstar-admin/bff definitions:update
+
 .PHONY: image
 image: ## Build the production image (docker/Dockerfile.prod), tag with IMAGE=...
 	@echo "$(CYAN)🐳 Building production image $(IMAGE)...$(RESET)"

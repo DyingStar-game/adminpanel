@@ -45,8 +45,9 @@ types (`simple_building`, `vehicle_lift*`) and new properties (`charge_j`, `velo
 repository (one GitHub API call, part of `make check`) and fails when its definitions differ from
 the snapshot, listing the types added or removed, then the content that changed; it is skipped,
 not failed, when GitHub cannot be reached. Once a change has been looked at (profiles,
-schematics, map…), `make pnpm ARGS="--filter @dyingstar-admin/bff definitions:update"` rewrites
-the snapshot from GitHub, with the source commit, and the test passes again.
+schematics, map…), `make definitions-update` rewrites the snapshot from GitHub, with the source
+commit, and the test passes again. The admin keeps reading GitHub at run time (this ADR is
+otherwise unchanged); the steps to follow are in `CLAUDE.md` (Data sources).
 
 ## Consequences
 

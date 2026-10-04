@@ -7,8 +7,7 @@ import fallback from './fallback.json';
 /**
  * Alerts when the type definitions on GitHub (`*_def.json`, ADR 0006) no longer match the
  * snapshot bundled with the admin: a type added, removed or changed upstream must be looked at
- * (profiles, schematics, map…), then the snapshot updated with
- * `make pnpm ARGS="--filter @dyingstar-admin/bff definitions:update"`.
+ * (profiles, schematics, map…), then the snapshot updated with `make definitions-update`.
  * Reads the real repository (one GitHub API call); skipped when GitHub cannot be reached.
  */
 describe('type definitions on GitHub', () => {

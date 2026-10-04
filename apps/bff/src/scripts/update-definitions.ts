@@ -5,7 +5,7 @@ import { createDefinitionsService } from '../services/definitions';
 /**
  * Updates the bundled snapshot of type definitions (`definitions/fallback.json`) from GitHub,
  * once a change reported by `definitions/github-sync.test.ts` has been looked at.
- * Run: `make pnpm ARGS="--filter @dyingstar-admin/bff definitions:update"`.
+ * Run: `make definitions-update`.
  */
 const repo = process.env.DEFINITIONS_REPO ?? 'DyingStar-game/horizonserver';
 const path = process.env.DEFINITIONS_PATH ?? 'ds_genericprops/props';
