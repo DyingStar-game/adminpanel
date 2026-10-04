@@ -106,10 +106,6 @@ Nothing here is agreed yet; the admin works without any of it today.
     references and checks existence item by item today (or by a full scan beyond 50).
 14. **Bulk writes**, e.g. `POST /items/bulk` with a per-item result: an import of N items is N
     calls today (ADR 0004); one call would be faster and could be atomic if wanted.
-15. **State fields marked in the type definitions** (game side, `*_def.json`), e.g. a
-    `runtime: ["speed", "suspension", …]` list: the fields of the moment, which a copy must not
-    carry. Duplicating a vehicle with its compressed suspension sank it into the ground; the
-    admin keeps such lists by hand in its type profiles today (ADR 0017).
 
 ## Consequences
 

@@ -1,12 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  duplicateOmit,
-  matchesPath,
-  orderChildTypes,
-  profileFor,
-  relationFor,
-  tableColumnsFor,
-} from '.';
+import { matchesPath, orderChildTypes, profileFor, relationFor, tableColumnsFor } from '.';
 
 describe('type profiles', () => {
   it('loads the first profiles and falls back to none', () => {
@@ -34,14 +27,5 @@ describe('type profiles', () => {
   it('declares the planet/moon and implicit star rules', () => {
     expect(profileFor('planet')?.moonWhenParentIs).toBe('planet');
     expect(profileFor('star')?.implicitChildren).toEqual({ objectType: 'planet', parentId: '' });
-  });
-
-  it('lists the state left out of duplicates, only for types that declare it', () => {
-    const omit = duplicateOmit();
-    expect(omit.vehicle).toEqual(expect.arrayContaining(['suspension', 'speed', 'odometer_km']));
-    // What makes the vehicle is kept.
-    expect(omit.vehicle).not.toEqual(expect.arrayContaining(['doors']));
-    expect(omit.vehicle).not.toContain('mass');
-    expect(omit).not.toHaveProperty('spawnbuilding');
   });
 });

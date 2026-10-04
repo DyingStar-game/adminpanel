@@ -93,9 +93,8 @@ Views adapt to the data through declarative files, validated with Zod at load ti
 - **Type profile — per `object_type`** ([ADR 0008](./docs/adr/0008-combined-navigation-type-aware-views.md)),
   `apps/web/src/lib/profiles/<type>.ts`, registered in `lib/profiles/index.ts`: table columns,
   headline facts, labelled relations, renderers (`namedMap`, `inlineList`, `angle`,
-  `orbitalSamples`), children order, spawn distance / height, fields left out of duplicates
-  (`duplicateOmit`: the state of the moment), map flags (`map.body`, `map.hidden`). Fields:
-  `lib/profiles/schema.ts`.
+  `orbitalSamples`), children order, spawn distance / height, map flags (`map.body`,
+  `map.hidden`). Fields: `lib/profiles/schema.ts`.
 - **Scene schematic — per model `scenename`** ([ADR 0016](./docs/adr/0016-scene-schematics.md)),
   a top-view drawing of one model bound to live data (the truck today). To add one:
   1. Look at real items of that model first (`GET /items?scenename=…`) to get the paths.

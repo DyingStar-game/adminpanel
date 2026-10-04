@@ -38,11 +38,6 @@ export const TypeProfileSchema = z.object({
   spawnDistance: z.number().positive().optional(),
   /** Height added above the reference when spawning or duplicating this type, in metres. */
   spawnHeight: z.number().nonnegative().optional(),
-  /**
-   * Fields left out when the type is duplicated (ADR 0017): its state of the moment, which the
-   * game sets again as for a new item (a copied suspension sank duplicated vehicles).
-   */
-  duplicateOmit: z.array(z.string()).default([]),
   /** Planetary map (ADR 0018): `body` gives the type a map, `hidden` hides it there by default. */
   map: z
     .object({ body: z.boolean().default(false), hidden: z.boolean().default(false) })

@@ -20,14 +20,6 @@ const PROFILES: Map<string, TypeProfile> = new Map(
 export const mapHiddenTypes = (): string[] =>
   [...PROFILES.values()].filter((p) => p.map?.hidden).map((p) => p.type);
 
-/** Fields left out of duplicates, per type (`duplicateOmit` of the profiles, ADR 0017). */
-export const duplicateOmit = (): Record<string, string[]> =>
-  Object.fromEntries(
-    [...PROFILES.values()]
-      .filter((p) => p.duplicateOmit.length > 0)
-      .map((p) => [p.type, p.duplicateOmit]),
-  );
-
 /** Profile of a type, or null: such types use the generic renderer only. */
 export const profileFor = (objectType: string | undefined): TypeProfile | null =>
   (objectType && PROFILES.get(objectType)) || null;

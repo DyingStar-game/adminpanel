@@ -262,7 +262,6 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
         parentId: request.parent_id,
         position: request.position,
         rotation: request.rotation,
-        omit: request.omit,
       });
       const created: Item[] = [];
       try {

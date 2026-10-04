@@ -20,19 +20,6 @@ export const vehicle: z.input<typeof TypeProfileSchema> = {
   spawnDistance: 8,
   // Spawned at ground level, a duplicated vehicle got stuck in the ground.
   spawnHeight: 1,
-  // State of the moment: a copied one (compressed suspension, speed…) sank the duplicate into
-  // the ground; "spawn next to it", which writes none of it, did not.
-  duplicateOmit: [
-    'suspension',
-    'speed',
-    'steering',
-    'engine',
-    'handbrake',
-    'horn',
-    'horn_special',
-    'limiter_on',
-    'odometer_km',
-  ],
   renderers: {
     doors: 'namedMap',
     seats: 'namedMap',

@@ -19,7 +19,6 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useChildrenCounts, useItem } from '@/hooks/queries';
 import { useDuplicateItem } from '@/hooks/mutations';
-import { duplicateOmit } from '@/lib/profiles';
 import { useGoToItem } from '@/hooks/useGoToItem';
 import { usePlayers } from '@/hooks/usePlayers';
 import { useWriteTarget } from '@/hooks/useWriteTarget';
@@ -131,7 +130,6 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
         position: position.value as Vec3,
         rotation: rotation.value as Vec3,
         children: withChildren,
-        omit: duplicateOmit(),
       });
       toast.success(t('duplicate.done', { count: created.length }));
       const root = created[0];

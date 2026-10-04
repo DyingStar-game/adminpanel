@@ -39,19 +39,6 @@ no authentication ([ADR 0002](./0002-no-admin-authentication.md)): it does not k
   elsewhere it is the parent's +Y and only the yaw is kept. Rotations are Godot Euler angles,
   order YXZ (checked against the live vehicles resting on SandBox).
 
-### Update (2026-10-04): the state of the moment is not copied
-
-A duplicated truck appeared upright, then sank into the ground, while "spawn next to it", with
-the same placement, did not. Spawning writes only the parent, scene, position and rotation; the
-duplicate copied the vehicle's state of the moment too (compressed `suspension`, `speed`,
-`steering`…). Each type profile now lists such fields (`duplicateOmit`), sent with the request
-(`omit`, per `object_type`) and left out of every copy, children included; the game sets them
-again as for a new item. The truck leaves out `suspension`, `speed`, `steering`, `engine`,
-`handbrake`, `horn`, `horn_special`, `limiter_on` and `odometer_km`, and keeps its scene,
-doors, headlights, limiter speed, masses and components. A type without a list is copied
-whole. The type definitions do not tell state from configuration (their channels are network
-sync zones): marking it there is requested from the game team (ADR 0021).
-
 ## Consequences
 
 - One request from the browser; the copy is created in a few `POST /items`, each pushed live to
