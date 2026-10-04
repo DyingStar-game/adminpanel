@@ -41,13 +41,16 @@ export interface BodyFrame {
 
 /**
  * Map of a celestial body (ADR 0018) from its direct children and the items placed through one
- * of them (players in their building). Positions are relative to the body centre.
+ * of them (players in their building). Positions are relative to the body centre. `parentPool`
+ * holds the children an item may be placed through even when they are not drawn (players stay
+ * on the map with their buildings hidden); `children` by default.
  */
 export function buildBodyMap(
   body: Item,
   children: Item[],
   placed: Item[],
   frame?: BodyFrame,
+  parentPool: Item[] = children,
 ): Omit<BodyMapResponse, 'counts' | 'omitted'> & { frame: BodyFrame | null } {
   const located: { item: Item; via: string | null; world: V }[] = [];
   const parents = new Map<string, { world: V; item: Item }>();
@@ -55,7 +58,10 @@ export function buildBodyMap(
     const world = positionOf(child);
     if (!world) continue;
     located.push({ item: child, via: null, world });
-    parents.set(child.object_uuid, { world, item: child });
+  }
+  for (const child of parentPool) {
+    const world = positionOf(child);
+    if (world) parents.set(child.object_uuid, { world, item: child });
   }
   for (const item of placed) {
     const parent = parents.get(item.object_data.parent_id ?? '');
@@ -70,9 +76,9 @@ export function buildBodyMap(
     located.push({ item, via: parent.item.object_uuid, world });
   }
 
+  // Ground level from every child of the body, drawn or not (all hidden, it would be 0).
   const referenceRadius =
-    frame?.referenceRadius ??
-    median(located.filter((l) => l.via === null).map((l) => Math.hypot(...l.world)));
+    frame?.referenceRadius ?? median([...parents.values()].map((p) => Math.hypot(...p.world)));
   const entries = located.flatMap((l) => {
     const distance = Math.hypot(...l.world);
     const direction = normalize(l.world);

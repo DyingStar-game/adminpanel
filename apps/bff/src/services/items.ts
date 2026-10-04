@@ -368,7 +368,8 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
             (item) => placedTypes.includes(type) || item.object_uuid === include,
           ),
         );
-        const { frame, ...map } = buildBodyMap(body, own, around, frames.get(uuid));
+        // Every child may place a player, its building drawn or not.
+        const { frame, ...map } = buildBodyMap(body, own, around, frames.get(uuid), children);
         if (frame && !frames.has(uuid)) frames.set(uuid, frame);
         // Items placed through a parent (players) are counted where they are placed; hidden,
         // their parents are still known, so they are counted the same way.

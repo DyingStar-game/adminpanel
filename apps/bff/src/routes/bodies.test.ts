@@ -86,6 +86,16 @@ describe('GET /api/bodies/:uuid/map', () => {
     );
   });
 
+  it('keeps players on the map with their buildings hidden', async () => {
+    const body = await read(
+      await buildApp().request(
+        `/api/bodies/${ids.planet}/map?hide=spawnbuilding,vehicle,miningrock`,
+      ),
+    );
+    expect(body.points.map((p: { object_uuid: string }) => p.object_uuid)).toEqual([ids.player]);
+    expect(body.points[0]).toMatchObject({ via: ids.spawnbuilding });
+  });
+
   it('keeps every point in place whatever the shown types', async () => {
     const { request } = buildApp();
     const vehicleAt = async (query: string) => {
