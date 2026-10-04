@@ -235,7 +235,7 @@ function BodyMap({
     });
   };
   // The selected item can be moved where the map is right-clicked: standing on the body, or
-  // placed in an item that does (a player in its building, which keeps it as parent).
+  // placed in an item that does (a player in its building, then taken out onto the body).
   const via = selectedItem ? byUuid.get(selectedItem.object_uuid)?.via : undefined;
   const parentItem = useItem(via ?? undefined).data ?? null;
   const parentFrame = parentItem ? frameOf(parentItem) : null;
@@ -254,6 +254,7 @@ function BodyMap({
     actions.edit(movable.object_uuid, {
       preset: moveOnBody(
         movable,
+        map.body.object_uuid,
         direction,
         ground + spawnHeightFor(movable.object_type),
         via ? (parentFrame ?? undefined) : undefined,

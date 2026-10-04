@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { basisFromEuler, directionOf, dot, toParentFrame } from '@dyingstar-admin/schemas';
+import { basisFromEuler, directionOf, dot } from '@dyingstar-admin/schemas';
 import {
   SPAWN_DISTANCE,
   SPAWN_HEIGHT,
@@ -135,7 +135,7 @@ describe('spawnHeightFor', () => {
     };
 
     const to = directionOf(20.5, 135.1);
-    const moved = moveOnBody(item, to, 6_361_700);
+    const moved = moveOnBody(item, 'body', to, 6_361_700);
     const [, up, back] = basisFromEuler(moved.rotation);
     up.forEach((value, i) => expect(value).toBeCloseTo(to[i] ?? 0, 3));
     expect(Math.hypot(moved.position.x, moved.position.y, moved.position.z)).toBeCloseTo(
@@ -146,13 +146,12 @@ describe('spawnHeightFor', () => {
     expect(dot(back, startBack)).toBeGreaterThan(0.99);
 
     // Moved onto itself: the same rotation.
-    const still = moveOnBody(item, from, 6_361_600);
+    const still = moveOnBody(item, 'body', from, 6_361_600);
     expect(still.rotation).toEqual(start.rotation);
   });
 
-  it('moves a player in its building: same parent, placement given in the building frame', () => {
-    const buildingAt = directionOf(19.2, 132.6);
-    const building = placeOnBody('body', buildingAt, 6_361_600);
+  it('takes a player out of its building onto the body, upright at the clicked place', () => {
+    const building = placeOnBody('body', directionOf(19.2, 132.6), 6_361_600);
     const player = {
       object_type: 'player',
       object_uuid: 'p',
@@ -163,22 +162,14 @@ describe('spawnHeightFor', () => {
       },
     };
     const to = directionOf(19.21, 132.61);
-    const moved = moveOnBody(player, to, 6_361_601, building);
+    const moved = moveOnBody(player, 'body', to, 6_361_601, building);
 
-    expect(moved.parentId).toBe('building');
-    // Back in the body frame: at the clicked place, at the given distance, upright.
-    const world = toParentFrame(
-      [moved.position.x, moved.position.y, moved.position.z],
-      [building.position.x, building.position.y, building.position.z],
-      building.rotation,
-    );
-    expect(Math.hypot(...world)).toBeCloseTo(6_361_601, 0);
-    const dir = world.map((v) => v / Math.hypot(...world));
-    dir.forEach((value, i) => expect(value).toBeCloseTo(to[i] ?? 0, 6));
-    const [, buildingUp] = basisFromEuler(building.rotation);
-    const [, localUp] = basisFromEuler(moved.rotation);
-    // Its up, expressed in the building, stays the building's up (about: the ground turns a bit).
-    expect(localUp[1]).toBeGreaterThan(0.999);
-    expect(dot(buildingUp, buildingAt)).toBeCloseTo(1, 6);
+    // A child of the body now, placed in its frame.
+    expect(moved.parentId).toBe('body');
+    const { x, y, z } = moved.position;
+    expect(Math.hypot(x, y, z)).toBeCloseTo(6_361_601, 0);
+    // Upright, within the rounding of the angles (0.001 rad).
+    const [, up] = basisFromEuler(moved.rotation);
+    up.forEach((value, i) => expect(value).toBeCloseTo(to[i] ?? 0, 2));
   });
 });

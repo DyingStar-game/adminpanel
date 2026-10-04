@@ -76,7 +76,12 @@ function EditForm({
     defaultValues: {
       properties: rowsFromData(
         move
-          ? { ...base.object_data, position: move.preset.position, rotation: move.preset.rotation }
+          ? {
+              ...base.object_data,
+              parent_id: move.preset.parentId,
+              position: move.preset.position,
+              rotation: move.preset.rotation,
+            }
           : base.object_data,
       ),
     },

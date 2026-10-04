@@ -169,10 +169,11 @@ With an item selected (standing directly on the body), the background menu also 
 … here": its editor opens with the new position (ground taken from the closest other item, plus
 its type's spawn height) and its rotation turned with the ground (the rotation taking its old
 vertical onto the new one: upright, same heading, `moveOnBody`); saved like any edit.
-A player, placed in its spawn building, can be moved too: it keeps the building as parent and
-its new placement is given in the building's frame (computed in the body frame, then brought
-back). The game does not report player positions to persistence yet: such a move may not show
-in game until that is fixed.
+A player, placed in its spawn building, can be moved too: at the maintainer's request it is
+taken out of the building onto the body (`parent_id` becomes the body), placed in the body's
+frame like any item standing on it; the building only tells where and how it stands now. The
+game does not report player positions to persistence yet: such a move may not show in game
+until that is fixed.
 
 ## Consequences
 
