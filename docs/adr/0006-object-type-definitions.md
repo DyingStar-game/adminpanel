@@ -37,6 +37,17 @@ Check on live data (2026-10-01): the 12 `object_type` values in use all have a d
 - Definitions are read by the BFF from GitHub (`develop`), cached in memory, with a bundled
   fallback snapshot so the panel works offline.
 
+### Update (2026-10-04): an alert when GitHub's definitions change
+
+The bundled snapshot (`apps/bff/src/definitions/fallback.json`) had drifted unnoticed: four
+types (`simple_building`, `vehicle_lift*`) and new properties (`charge_j`, `velocity_local`,
+`terrain_settled`) were missing. A test, `definitions/github-sync.test.ts`, now reads the real
+repository (one GitHub API call, part of `make check`) and fails when its definitions differ from
+the snapshot, listing the types added or removed, then the content that changed; it is skipped,
+not failed, when GitHub cannot be reached. Once a change has been looked at (profiles,
+schematics, map…), `make pnpm ARGS="--filter @dyingstar-admin/bff definitions:update"` rewrites
+the snapshot from GitHub, with the source commit, and the test passes again.
+
 ## Consequences
 
 - Branch (`develop`) should be configurable per environment to match the deployed Horizon.

@@ -68,7 +68,9 @@ Check shapes against live data rather than guessing (**GET only**, never POST / 
   (copy in `docs/design/persistence/uploads/`). It has no history: only the current state.
 - **Object type definitions**: `*_def.json` in
   [`DyingStar-game/horizonserver` › `ds_genericprops/props`](https://github.com/DyingStar-game/horizonserver/tree/develop/ds_genericprops/props)
-  (`object_type` = file name without `_def`).
+  (`object_type` = file name without `_def`). `definitions/github-sync.test.ts` fails when they
+  differ from the bundled snapshot: look at the change (profiles, schematics, map…), then run
+  `make pnpm ARGS="--filter @dyingstar-admin/bff definitions:update"` (ADR 0006).
 - **Project dev wiki — the main documentation**: <https://developer.dyingstar-game.com/>
   (public, read with WebFetch or `curl`). What it says is the project's reference (game design,
   worldbuilding, systems): **consult it without hesitating** before guessing a game rule, a

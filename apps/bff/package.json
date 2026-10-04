@@ -10,7 +10,8 @@
     "dev": "tsx watch --env-file-if-exists=../../.env.local src/index.ts",
     "build": "esbuild src/index.ts --bundle --platform=node --target=node24 --format=esm --outfile=dist/index.mjs",
     "start": "node --env-file-if-exists=../../.env.local dist/index.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "definitions:update": "tsx src/scripts/update-definitions.ts"
   },
   "dependencies": {
     "@dyingstar-admin/schemas": "workspace:*",

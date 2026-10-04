@@ -1,31 +1,31 @@
 {
-  "source": "DyingStar-game/horizonserver ds_genericprops/props @ develop 74e5c86",
+  "source": "DyingStar-game/horizonserver ds_genericprops/props @ develop 91aea99",
   "definitions": [
     {
       "type": "box",
       "channels": [
         {
           "zone": 0,
-          "distance": 150.0,
-          "frequency": 30.0,
+          "distance": 150,
+          "frequency": 30,
           "properties": ["position", "rotation", "opened", "parent_id"]
         },
         {
           "zone": 1,
-          "distance": 151.0,
-          "frequency": 15.0,
+          "distance": 151,
+          "frequency": 15,
           "properties": ["led_state"]
         },
         {
           "zone": 3,
-          "distance": 152.0,
-          "frequency": 2.0,
+          "distance": 152,
+          "frequency": 2,
           "properties": ["qrcode", "symbol", "parcel_number", "weight"]
         },
         {
           "zone": 6,
-          "distance": 153.0,
-          "frequency": 3.0,
+          "distance": 153,
+          "frequency": 3,
           "properties": ["scenename"]
         }
       ]
@@ -35,14 +35,14 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 10000.0,
-          "frequency": 5.0,
+          "distance": 10000,
+          "frequency": 5,
           "properties": ["position", "rotation", "parent_id", "apartments"]
         },
         {
           "zone": 6,
-          "distance": 10001.0,
-          "frequency": 3.0,
+          "distance": 10001,
+          "frequency": 3,
           "properties": ["scenename"]
         }
       ]
@@ -52,8 +52,8 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 400.0,
-          "frequency": 30.0,
+          "distance": 400,
+          "frequency": 30,
           "properties": [
             "position",
             "rotation",
@@ -67,9 +67,15 @@
         },
         {
           "zone": 6,
-          "distance": 403.0,
-          "frequency": 1.0,
-          "properties": ["scenename", "max_distance_to_reception", "pnj_zones", "is_pnj_workplace"]
+          "distance": 403,
+          "frequency": 1,
+          "properties": [
+            "scenename",
+            "max_distance_to_reception",
+            "pnj_zones",
+            "is_pnj_workplace",
+            "terrain_settled"
+          ]
         }
       ]
     },
@@ -78,14 +84,14 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 200000.0,
-          "frequency": 30.0,
+          "distance": 200000,
+          "frequency": 30,
           "properties": ["position", "rotation", "parent_id"]
         },
         {
           "zone": 6,
-          "distance": 200001.0,
-          "frequency": 3.0,
+          "distance": 200001,
+          "frequency": 3,
           "properties": ["scenename"]
         }
       ]
@@ -95,14 +101,14 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 150.0,
-          "frequency": 30.0,
+          "distance": 150,
+          "frequency": 30,
           "properties": ["position", "rotation", "scenename", "parent_id"]
         },
         {
           "zone": 6,
-          "distance": 150.0,
-          "frequency": 3.0,
+          "distance": 150,
+          "frequency": 3,
           "properties": ["scenename", "content"]
         }
       ]
@@ -112,15 +118,15 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 300.0,
-          "frequency": 30.0,
+          "distance": 300,
+          "frequency": 30,
           "properties": ["position", "rotation", "scenename", "parent_id"]
         },
         {
           "zone": 6,
-          "distance": 301.0,
-          "frequency": 5.0,
-          "properties": ["scenename", "data"]
+          "distance": 301,
+          "frequency": 5,
+          "properties": ["scenename", "data", "terrain_settled"]
         }
       ]
     },
@@ -129,24 +135,24 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 200.0,
-          "frequency": 30.0,
+          "distance": 200,
+          "frequency": 30,
           "lod": [
             {
-              "distance": 100.0,
-              "frequency": 30.0
+              "distance": 100,
+              "frequency": 30
             },
             {
-              "distance": 200.0,
-              "frequency": 10.0
+              "distance": 200,
+              "frequency": 10
             }
           ],
           "properties": ["position", "rotation", "parent_id", "can_be_breakable", "inert_density"]
         },
         {
           "zone": 6,
-          "distance": 203.0,
-          "frequency": 3.0,
+          "distance": 203,
+          "frequency": 3,
           "properties": [
             "scenename",
             "fractures",
@@ -167,8 +173,8 @@
       "channels": [
         {
           "zone": 6,
-          "distance": 1203.0,
-          "frequency": 1.0,
+          "distance": 1203,
+          "frequency": 1,
           "properties": [
             "position",
             "rotation",
@@ -194,14 +200,14 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 2000000000.0,
-          "frequency": 1.0,
+          "distance": 2000000000,
+          "frequency": 1,
           "properties": ["name", "positions", "rotations", "from_timestamp", "parent_id", "state"]
         },
         {
           "zone": 6,
-          "distance": 2000000001.0,
-          "frequency": 1.0,
+          "distance": 2000000001,
+          "frequency": 1,
           "properties": ["scenename"]
         }
       ]
@@ -211,20 +217,20 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 200.0,
-          "frequency": 30.0,
+          "distance": 200,
+          "frequency": 30,
           "lod": [
             {
-              "distance": 30.0,
-              "frequency": 15.0
+              "distance": 30,
+              "frequency": 15
             },
             {
-              "distance": 100.0,
-              "frequency": 5.0
+              "distance": 100,
+              "frequency": 5
             },
             {
-              "distance": 200.0,
-              "frequency": 2.0
+              "distance": 200,
+              "frequency": 2
             }
           ],
           "properties": [
@@ -258,14 +264,14 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 150.0,
-          "frequency": 30.0,
+          "distance": 10000,
+          "frequency": 30,
           "properties": ["position", "rotation", "parent_id"]
         },
         {
           "zone": 6,
-          "distance": 10000.0,
-          "frequency": 1.0,
+          "distance": 10000,
+          "frequency": 1,
           "properties": [
             "is_spawned",
             "spawn_requested",
@@ -284,15 +290,32 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 150.0,
-          "frequency": 30.0,
+          "distance": 150,
+          "frequency": 30,
           "properties": ["position", "rotation", "shelf_slots_occupied", "parent_id"]
         },
         {
           "zone": 6,
-          "distance": 153.0,
-          "frequency": 3.0,
+          "distance": 153,
+          "frequency": 3,
           "properties": ["scenename"]
+        }
+      ]
+    },
+    {
+      "type": "simple_building",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 300,
+          "frequency": 30,
+          "properties": ["position", "rotation", "parent_id"]
+        },
+        {
+          "zone": 6,
+          "distance": 301,
+          "frequency": 5,
+          "properties": ["scenename", "terrain_settled"]
         }
       ]
     },
@@ -301,8 +324,8 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 10000.0,
-          "frequency": 5.0,
+          "distance": 10000,
+          "frequency": 5,
           "properties": [
             "position",
             "rotation",
@@ -322,9 +345,9 @@
         },
         {
           "zone": 6,
-          "distance": 10001.0,
-          "frequency": 3.0,
-          "properties": ["scenename", "name"]
+          "distance": 10001,
+          "frequency": 3,
+          "properties": ["scenename", "name", "terrain_settled"]
         }
       ]
     },
@@ -333,14 +356,14 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 400000000000.0,
-          "frequency": 1.0,
+          "distance": 400000000000,
+          "frequency": 1,
           "properties": ["name", "positions", "rotations", "from_timestamp", "parent_id"]
         },
         {
           "zone": 6,
-          "distance": 400000000001.0,
-          "frequency": 1.0,
+          "distance": 400000000001,
+          "frequency": 1,
           "properties": ["scenename"]
         }
       ]
@@ -350,14 +373,14 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 200000.0,
-          "frequency": 30.0,
+          "distance": 200000,
+          "frequency": 30,
           "properties": ["position", "rotation", "parent_id"]
         },
         {
           "zone": 6,
-          "distance": 200001.0,
-          "frequency": 3.0,
+          "distance": 200001,
+          "frequency": 3,
           "properties": ["scenename"]
         }
       ]
@@ -367,32 +390,15 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 10000.0,
-          "frequency": 5.0,
+          "distance": 10000,
+          "frequency": 5,
           "properties": ["position", "rotation", "parent_id"]
         },
         {
           "zone": 6,
-          "distance": 10001.0,
-          "frequency": 3.0,
+          "distance": 10001,
+          "frequency": 3,
           "properties": ["scenename"]
-        }
-      ]
-    },
-    {
-      "type": "vehicle_component",
-      "channels": [
-        {
-          "zone": 0,
-          "distance": 150.0,
-          "frequency": 30.0,
-          "properties": ["position", "rotation", "scenename", "parent_id", "slot_id", "weight"]
-        },
-        {
-          "zone": 6,
-          "distance": 150.0,
-          "frequency": 3.0,
-          "properties": ["scenename", "slot_id"]
         }
       ]
     },
@@ -401,16 +407,16 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 200.0,
-          "frequency": 30.0,
+          "distance": 200,
+          "frequency": 30,
           "lod": [
             {
-              "distance": 100.0,
-              "frequency": 30.0
+              "distance": 100,
+              "frequency": 30
             },
             {
-              "distance": 200.0,
-              "frequency": 10.0
+              "distance": 200,
+              "frequency": 10
             }
           ],
           "properties": [
@@ -419,6 +425,7 @@
             "pilot_uuid",
             "steering",
             "speed",
+            "velocity_local",
             "handbrake",
             "headlights",
             "engine",
@@ -431,15 +438,136 @@
         },
         {
           "zone": 1,
-          "distance": 100.0,
-          "frequency": 1.0,
+          "distance": 100,
+          "frequency": 1,
           "properties": ["horn", "horn_special", "mass", "cargo_mass", "suspension", "odometer_km"]
         },
         {
           "zone": 6,
-          "distance": 200.0,
-          "frequency": 1.0,
+          "distance": 200,
+          "frequency": 1,
           "properties": ["scenename", "parent_id"]
+        }
+      ]
+    },
+    {
+      "type": "vehicle_component",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 150,
+          "frequency": 30,
+          "properties": [
+            "position",
+            "rotation",
+            "scenename",
+            "parent_id",
+            "slot_id",
+            "weight",
+            "charge_j"
+          ]
+        },
+        {
+          "zone": 6,
+          "distance": 150,
+          "frequency": 3,
+          "properties": ["scenename", "slot_id"]
+        }
+      ]
+    },
+    {
+      "type": "vehicle_lift",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 400,
+          "frequency": 30,
+          "lod": [
+            {
+              "distance": 200,
+              "frequency": 30
+            },
+            {
+              "distance": 300,
+              "frequency": 10
+            }
+          ],
+          "properties": [
+            "position",
+            "rotation",
+            "parent_id",
+            "platform_progress_ratio",
+            "is_moving",
+            "target_ratio"
+          ]
+        },
+        {
+          "zone": 6,
+          "distance": 403,
+          "frequency": 1,
+          "properties": [
+            "scenename",
+            "is_platformsystem_spawned",
+            "max_speed",
+            "acceleration",
+            "guide_z_offset",
+            "descent_depth",
+            "name"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "vehicle_lift_platform",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 400,
+          "frequency": 30,
+          "lod": [
+            {
+              "distance": 200,
+              "frequency": 30
+            },
+            {
+              "distance": 300,
+              "frequency": 10
+            }
+          ],
+          "properties": ["position", "rotation", "parent_id", "weight_on_platform"]
+        },
+        {
+          "zone": 6,
+          "distance": 403,
+          "frequency": 1,
+          "properties": ["scenename"]
+        }
+      ]
+    },
+    {
+      "type": "vehicle_lift_platformsystem",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 400,
+          "frequency": 30,
+          "lod": [
+            {
+              "distance": 200,
+              "frequency": 30
+            },
+            {
+              "distance": 300,
+              "frequency": 10
+            }
+          ],
+          "properties": ["position", "rotation", "parent_id"]
+        },
+        {
+          "zone": 6,
+          "distance": 403,
+          "frequency": 1,
+          "properties": ["scenename", "is_platform_spawned"]
         }
       ]
     }
