@@ -52,6 +52,28 @@ describe('planDuplicate', () => {
     expect(fr?.object_uuid).toBe('00000000-0000-4000-8000-000000000003');
   });
 
+  it('leaves the state of the moment out, per type, and keeps what makes the item', () => {
+    const [vehicle, component] = planDuplicate(
+      pick(ids.vehicle, ids.wheelFr),
+      {
+        parentId: ids.planet,
+        omit: { vehicle: ['suspension', 'speed', 'engine'], vehicle_component: ['charge_j'] },
+      },
+      sequence(),
+    );
+
+    expect(vehicle?.object_data).not.toHaveProperty('suspension');
+    expect(vehicle?.object_data).not.toHaveProperty('speed');
+    expect(vehicle?.object_data).not.toHaveProperty('engine');
+    expect(vehicle?.object_data).toMatchObject({
+      scenename: 'scenes/_universe/vehicles/ground/trucks/truck.tscn',
+      doors: { front_l_door: true },
+      mass: 1450,
+    });
+    expect(component?.object_data).not.toHaveProperty('charge_j');
+    expect(component?.object_data).toMatchObject({ slot_id: 'slot_fr' });
+  });
+
   it('empties references to children that are not copied', () => {
     const [vehicle] = planDuplicate(pick(ids.vehicle), { parentId: ids.planet }, sequence());
 

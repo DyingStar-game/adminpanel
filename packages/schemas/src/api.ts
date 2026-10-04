@@ -92,6 +92,11 @@ export const DuplicateRequestSchema = z.object({
   rotation: Vec3Schema.optional(),
   /** Copy the children too, recursively (references remapped). */
   children: z.boolean().default(true),
+  /**
+   * Fields left out of the copies, per `object_type`: the state of the moment (speed,
+   * suspension…), which the game sets again as for a new item (ADR 0017).
+   */
+  omit: z.record(z.string(), z.array(z.string())).default({}),
 });
 export type DuplicateRequest = z.input<typeof DuplicateRequestSchema>;
 

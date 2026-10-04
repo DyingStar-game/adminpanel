@@ -4,11 +4,14 @@ export interface DuplicateTarget {
   parentId: string;
   position?: Vec3 | undefined;
   rotation?: Vec3 | undefined;
+  /** Fields left out of the copies, per `object_type` (state of the moment). */
+  omit?: Record<string, string[]> | undefined;
 }
 
 /**
  * Copies of an item and its descendants (ADR 0017), the root first. Each item gets a new UUID;
- * references to items of the set are remapped, references to anything else are emptied.
+ * references to items of the set are remapped, references to anything else are emptied, and
+ * the fields `omit` lists for its type (state of the moment) are left out.
  * `items` must start with the root, parents before their children.
  */
 export function planDuplicate(
@@ -32,7 +35,10 @@ export function planDuplicate(
   };
 
   return items.map((item, index) => {
-    const data = remap(item.object_data) as ObjectData;
+    const omitted = new Set(target.omit?.[item.object_type] ?? []);
+    const data = Object.fromEntries(
+      Object.entries(remap(item.object_data) as ObjectData).filter(([key]) => !omitted.has(key)),
+    ) as ObjectData;
     if (index === 0) {
       data.parent_id = target.parentId;
       if (target.position) data.position = target.position;
