@@ -12,6 +12,28 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+  build: {
+    rolldownOptions: {
+      output: {
+        // Libraries every page loads, in their own chunks: none passes the 500 kB warning, and
+        // they stay cached across releases of the app code. Map and orbit libraries are left to
+        // their route chunks (loaded on demand).
+        codeSplitting: {
+          groups: [
+            { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler)[\\/]/ },
+            {
+              // The table library only serves the explorer: left to its route.
+              name: 'tanstack',
+              test: /node_modules[\\/]@tanstack[\\/](?!react-table|table-core)/,
+            },
+            { name: 'radix', test: /node_modules[\\/](@radix-ui|radix-ui)[\\/]/ },
+            { name: 'i18n', test: /node_modules[\\/](i18next|react-i18next)[\\/]/ },
+            { name: 'zod', test: /node_modules[\\/]zod[\\/]/ },
+          ],
+        },
+      },
+    },
+  },
   server: {
     host: true,
     port: 5173,
