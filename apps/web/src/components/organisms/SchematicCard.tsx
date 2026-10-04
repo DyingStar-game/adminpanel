@@ -1,11 +1,12 @@
 import { useId, type ReactNode } from 'react';
+import { BookOpenIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { ObjectData } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
 import type { RefTarget } from '@/components/molecules/UuidLink';
 import { cn } from '@/lib/cn';
 import { typeColor } from '@/lib/objectTypes';
-import { bodyFacts, moonsOf } from '@/lib/bodies';
+import { bodyFactList, bodyFacts, factsOfModel, systemOf, wikiUrl } from '@/lib/bodies';
 import { sceneModel, valueAt, type Schematic } from '@/lib/schematics';
 import {
   autonomy,
@@ -23,6 +24,8 @@ interface SchematicCardProps {
   data: ObjectData;
   resolveRef: (uuid: string) => RefTarget;
   onNavigate: (uuid: string) => void;
+  /** Items of the celestial bodies by scene model, to open a body drawn around another. */
+  bodies?: ReadonlyMap<string, string> | undefined;
 }
 
 /** Pixels per grid unit of a schematic. */
@@ -33,15 +36,36 @@ const number = (value: unknown) => (typeof value === 'number' ? value : null);
 const reference = (value: unknown) => (typeof value === 'string' && value !== '' ? value : null);
 
 /** Generic renderer of a declarative scene schematic (ADR 0016), bound to live data. */
-export function SchematicCard({ schematic, data, resolveRef, onNavigate }: SchematicCardProps) {
+export function SchematicCard({
+  schematic,
+  data,
+  resolveRef,
+  onNavigate,
+  bodies = new Map(),
+}: SchematicCardProps) {
   const { t, i18n } = useTranslation();
   const label = (key: string) =>
     t(`schematic.labels.${key}` as 'schematic.labels.cab', { defaultValue: key });
   const format = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 });
   const [width, height] = schematic.size;
+  const celestial = schematic.shapes.some((shape) => shape.kind === 'celestial');
+  const body = celestial ? bodyFacts(data.scenename) : null;
 
   return (
     <div className="flex flex-col gap-3">
+      {body && (
+        // The body's page on the project wiki, like on the map.
+        <a
+          href={wikiUrl(body)}
+          target="_blank"
+          rel="noreferrer"
+          title={t('body.wikiHint')}
+          className="inline-flex items-center gap-1 self-end text-xs text-link hover:underline"
+        >
+          <BookOpenIcon size={13} />
+          {t('body.wiki')}
+        </a>
+      )}
       <Readouts
         schematic={schematic}
         data={data}
@@ -53,7 +77,11 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
         role="img"
         aria-label={label(schematic.title)}
         viewBox={`${-U} ${-U / 2} ${(width + 2) * U} ${(height + 1) * U}`}
-        className="mx-auto max-h-110 w-full max-w-80 font-mono"
+        className={cn(
+          'mx-auto w-full font-mono',
+          // Celestial bodies are drawn with their system: the card's whole width.
+          celestial ? 'max-h-150 max-w-200' : 'max-h-110 max-w-80',
+        )}
       >
         {schematic.shapes.map((shape) => {
           const value = shape.value ? number(valueAt(data, shape.value.path)) : null;
@@ -65,6 +93,8 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
                 size={shape.size}
                 scenename={data.scenename}
                 format={format}
+                bodies={bodies}
+                onNavigate={onNavigate}
               />
             );
           }
@@ -467,93 +497,147 @@ function Slot({
 }
 
 /**
- * A planet, moon or star from its wiki facts: the disc with its designation and name, radius and
- * gravity under it, an arrow for its rotation with the day length, and its moons on their orbits
- * (innermost first, sized to their radius against the planet's).
+ * A body in its system, from the wiki facts: the star with its planets, a planet with its moons,
+ * a moon in its planet's system (itself highlighted). The centre shows its designation and name,
+ * radius and gravity (temperature for the star) and, with a known day, an arrow for its
+ * rotation. Bodies around sit on their orbits, innermost first, sized to their radius against
+ * the largest; each one with an item opens it.
  */
 function CelestialDiagram({
   at,
   size,
   scenename,
   format,
+  bodies,
+  onNavigate,
 }: {
   at: [number, number];
   size: [number, number];
   scenename: unknown;
   format: Intl.NumberFormat;
+  bodies: ReadonlyMap<string, string>;
+  onNavigate: (uuid: string) => void;
 }) {
   const { t } = useTranslation();
-  const facts = bodyFacts(scenename);
-  const moons = moonsOf(scenename);
+  const system = systemOf(scenename);
+  const centre = system ? factsOfModel(system.centre) : null;
   const cx = (at[0] + size[0] / 2) * U;
   const cy = (at[1] + size[1] / 2) * U;
-  if (!facts) {
+  if (!system || !centre) {
     return (
       <text x={cx} y={cy} textAnchor="middle" fontSize={11} fill="var(--ds-fg-3)">
         {t('schematic.noFacts')}
       </text>
     );
   }
-  const isStar = facts.temperatureK !== undefined;
+  const around = system.around.flatMap((model) => {
+    const facts = factsOfModel(model);
+    return facts ? [{ model, facts }] : [];
+  });
+  const isStar = centre.temperatureK !== undefined;
   const color = isStar ? '#f59e0b' : typeColor('planet');
-  const outer = (Math.min(size[0], size[1]) / 2) * U - 6;
-  const r0 = moons.length > 0 ? 2.2 * U : 2.8 * U;
-  const step = moons.length > 1 ? (outer - r0 - 0.9 * U) / (moons.length - 1) : 0;
+  const outer = (Math.min(size[0], size[1]) / 2) * U - 8;
+  const r0 = around.length > 0 ? 2.4 * U : 3.2 * U;
+  const first = r0 + 1.1 * U;
+  const step = around.length > 1 ? (outer - first) / (around.length - 1) : 0;
+  const largest = Math.max(...around.map((a) => a.facts.radiusKm), 1);
   const km = (value: number) => `${format.format(value)} km`;
+  const open = (model: string) => {
+    const uuid = bodies.get(model);
+    return uuid && model !== system.current ? () => onNavigate(uuid) : undefined;
+  };
   const under = [
-    `R ${km(facts.radiusKm)}`,
-    facts.gravity !== undefined ? `g ${format.format(facts.gravity)} m/s²` : null,
-    facts.temperatureK !== undefined ? `${format.format(facts.temperatureK)} K` : null,
+    `R ${km(centre.radiusKm)}`,
+    centre.gravity !== undefined ? `g ${format.format(centre.gravity)} m/s²` : null,
+    centre.temperatureK !== undefined ? `${format.format(centre.temperatureK)} K` : null,
   ]
     .filter(Boolean)
     .join(' · ');
-  // Rotation arrow: an arc above the disc, ending in a head, with the day length.
+  const self = factsOfModel(system.current);
   const arc = r0 + 7;
   const [a1, a2] = [(-150 * Math.PI) / 180, (-30 * Math.PI) / 180];
   const end = [cx + arc * Math.cos(a2), cy + arc * Math.sin(a2)] as const;
+  const centreOpen = open(system.centre);
+
   return (
-    <g aria-label={facts.designation}>
-      <title>{[facts.designation, facts.name].filter(Boolean).join(' · ')}</title>
-      {moons.map((moon, i) => {
-        const orbit = r0 + 0.9 * U + i * step;
-        const angle = ((-20 + i * (300 / Math.max(moons.length, 1))) * Math.PI) / 180;
+    <g aria-label={centre.designation}>
+      {around.map(({ model, facts }, i) => {
+        const orbit = first + i * step;
+        const angle = ((-20 + i * (330 / Math.max(around.length, 1))) * Math.PI) / 180;
         const mx = cx + orbit * Math.cos(angle);
         const my = cy + orbit * Math.sin(angle);
-        const mr = Math.max(3, Math.min(0.55 * U, (r0 * moon.radiusKm) / facts.radiusKm));
+        const mr = 3 + (0.6 * U - 3) * Math.sqrt(facts.radiusKm / largest);
         const right = Math.cos(angle) >= 0;
+        const current = model === system.current;
+        const onClick = open(model);
+        const name = facts.name ?? facts.designation.replace(/^.*\./, '');
         return (
-          <g key={moon.designation}>
-            <title>
-              {[
-                moon.name ?? moon.designation,
-                km(moon.radiusKm),
-                moon.orbitDays !== undefined ? `${format.format(moon.orbitDays)} d` : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </title>
+          <g key={model}>
             <circle
               cx={cx}
               cy={cy}
               r={orbit}
               fill="none"
-              stroke="var(--ds-line-2)"
+              stroke={current ? 'var(--ds-acc)' : 'var(--ds-line-2)'}
               strokeDasharray="2 4"
             />
-            <circle cx={mx} cy={my} r={mr} fill="var(--ds-fg-3)" stroke="var(--ds-bg)" />
-            <text
-              x={mx + (right ? mr + 4 : -mr - 4)}
-              y={my + 3}
-              textAnchor={right ? 'start' : 'end'}
-              fontSize={10}
-              fill="var(--ds-fg-2)"
+            <g
+              role={onClick ? 'link' : undefined}
+              aria-label={onClick ? name : undefined}
+              tabIndex={onClick ? 0 : undefined}
+              onClick={onClick}
+              onKeyDown={(event) => event.key === 'Enter' && onClick?.()}
+              className={
+                onClick ? 'cursor-pointer [&:hover_circle]:stroke-[var(--ds-acc)]' : undefined
+              }
             >
-              {moon.name ?? moon.designation.replace(/^.*\./, '')}
-            </text>
+              <title>
+                {[
+                  facts.name ? `${facts.name} · ${facts.designation}` : facts.designation,
+                  km(facts.radiusKm),
+                  facts.orbitDays !== undefined ? `${format.format(facts.orbitDays)} d` : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </title>
+              {current && (
+                // The body on screen pulses, like a selection on the orbit view.
+                <circle
+                  aria-hidden
+                  cx={mx}
+                  cy={my}
+                  r={mr}
+                  fill="var(--ds-acc)"
+                  fillOpacity={0.35}
+                  className="origin-center motion-safe:animate-ping"
+                  style={{ transformBox: 'fill-box' }}
+                />
+              )}
+              <circle
+                cx={mx}
+                cy={my}
+                r={mr}
+                fill={
+                  current ? `color-mix(in oklab, ${color} 45%, var(--ds-bg))` : 'var(--ds-fg-3)'
+                }
+                stroke={current ? 'var(--ds-acc)' : 'var(--ds-bg)'}
+                strokeWidth={current ? 2 : 1}
+              />
+              <text
+                x={mx + (right ? mr + 5 : -mr - 5)}
+                y={my + 4}
+                textAnchor={right ? 'start' : 'end'}
+                fontSize={11}
+                fontWeight={current ? 600 : 400}
+                fill={current ? 'var(--ds-fg)' : 'var(--ds-fg-2)'}
+              >
+                {name}
+              </text>
+            </g>
           </g>
         );
       })}
-      {facts.dayHours !== undefined && (
+      {centre.dayHours !== undefined && (
         <g>
           <path
             d={`M ${cx + arc * Math.cos(a1)} ${cy + arc * Math.sin(a1)} A ${arc} ${arc} 0 0 1 ${end[0]} ${end[1]}`}
@@ -567,37 +651,68 @@ function CelestialDiagram({
             stroke="var(--ds-fg-3)"
             strokeWidth={1.2}
           />
-          <text x={cx} y={cy - arc - 6} textAnchor="middle" fontSize={10} fill="var(--ds-fg-2)">
-            {t('schematic.day', { hours: format.format(facts.dayHours) })}
+          <text x={cx} y={cy - arc - 6} textAnchor="middle" fontSize={11} fill="var(--ds-fg-2)">
+            {t('schematic.day', { hours: format.format(centre.dayHours) })}
           </text>
         </g>
       )}
-      <circle
-        cx={cx}
-        cy={cy}
-        r={r0}
-        fill={`color-mix(in oklab, ${color} ${isStar ? 55 : 30}%, var(--ds-bg))`}
-        stroke={color}
-        strokeWidth={1.5}
-      />
-      <text
-        x={cx}
-        y={cy - 2}
-        textAnchor="middle"
-        fontSize={12}
-        fontWeight={600}
-        fill="var(--ds-fg)"
+      <g
+        role={centreOpen ? 'link' : undefined}
+        aria-label={centreOpen ? (centre.name ?? centre.designation) : undefined}
+        tabIndex={centreOpen ? 0 : undefined}
+        onClick={centreOpen}
+        onKeyDown={(event) => event.key === 'Enter' && centreOpen?.()}
+        className={centreOpen ? 'cursor-pointer' : undefined}
       >
-        {facts.name ?? facts.designation}
-      </text>
-      {facts.name && (
-        <text x={cx} y={cy + 12} textAnchor="middle" fontSize={10} fill="var(--ds-fg-2)">
-          {facts.designation}
+        <title>{[centre.designation, centre.name].filter(Boolean).join(' · ')}</title>
+        <circle
+          cx={cx}
+          cy={cy}
+          r={r0}
+          fill={`color-mix(in oklab, ${color} ${isStar ? 55 : 30}%, var(--ds-bg))`}
+          stroke={system.centre === system.current ? 'var(--ds-acc)' : color}
+          strokeWidth={system.centre === system.current ? 2 : 1.5}
+        />
+        <text
+          x={cx}
+          y={cy - 2}
+          textAnchor="middle"
+          fontSize={13}
+          fontWeight={600}
+          fill="var(--ds-fg)"
+        >
+          {centre.name ?? centre.designation}
         </text>
-      )}
-      <text x={cx} y={cy + r0 + 16} textAnchor="middle" fontSize={10} fill="var(--ds-fg-2)">
+        {centre.name && (
+          <text x={cx} y={cy + 13} textAnchor="middle" fontSize={11} fill="var(--ds-fg-2)">
+            {centre.designation}
+          </text>
+        )}
+      </g>
+      <text x={cx} y={cy + r0 + 17} textAnchor="middle" fontSize={11} fill="var(--ds-fg-2)">
         {under}
       </text>
+      {self && (
+        // The body on screen, whatever is drawn at the centre: a moon's own size, gravity and
+        // revolution around its planet; a planet's day and year.
+        <text
+          x={cx}
+          y={(at[1] + size[1]) * U - 2}
+          textAnchor="middle"
+          fontSize={12}
+          fill="var(--ds-fg)"
+        >
+          <tspan fontWeight={600} fill="var(--ds-acc)">
+            {self.name ? `${self.name} · ${self.designation}` : self.designation}
+          </tspan>
+          {`  ${bodyFactList(self)
+            .map(
+              (fact) =>
+                `${t(`body.${fact.key}`)} ${format.format(fact.value)} ${fact.unit === 'd' ? t('body.days') : fact.unit}`,
+            )
+            .join(' · ')}`}
+        </text>
+      )}
     </g>
   );
 }

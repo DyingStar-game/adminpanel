@@ -279,11 +279,12 @@ export const fr: Translations = {
     keys_other: '{{count}} clés',
   },
   body: {
+    days: 'j',
     name: 'Astre',
     radius: 'Rayon',
     gravity: 'Gravité',
     day: 'Jour sidéral',
-    orbit: 'Période orbitale',
+    orbit: 'Révolution',
     temperature: 'Température',
     wiki: 'Wiki',
     wikiHint: 'Données du wiki du projet (worldbuilding)',

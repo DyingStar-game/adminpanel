@@ -213,13 +213,29 @@ export function bodyFactList(
   );
 }
 
-/** Moons of a planet (scene `tarsis_3` → `tarsis_3_1`, `tarsis_3_2`…), innermost first. */
-export function moonsOf(scenename: unknown): BodyFacts[] {
+/** Facts of a body by its model (`tarsis_3`, `star`), or null. */
+export const factsOfModel = (model: string): BodyFacts | null => BODIES[model] ?? null;
+
+const byOrbit = (a: string, b: string) => (BODIES[a]?.orbitDays ?? 0) - (BODIES[b]?.orbitDays ?? 0);
+
+/**
+ * The system a body is drawn in, as scene models: the star with its planets, a planet with its
+ * moons, a moon in its planet's system (with its sibling moons). `current` is the body itself.
+ */
+export function systemOf(
+  scenename: unknown,
+): { centre: string; around: string[]; current: string } | null {
   const model = sceneModel(scenename);
-  if (!model) return [];
-  const pattern = new RegExp(`^${model}_\\d+$`);
-  return Object.entries(BODIES)
-    .filter(([key]) => pattern.test(key))
-    .map(([, facts]) => facts)
-    .sort((a, b) => (a.orbitDays ?? 0) - (b.orbitDays ?? 0));
+  if (!model || !BODIES[model]) return null;
+  const keys = Object.keys(BODIES);
+  if (model === 'star') {
+    return {
+      centre: 'star',
+      around: keys.filter((k) => /^tarsis_\d+$/.test(k)).sort(byOrbit),
+      current: model,
+    };
+  }
+  const planet = /^(tarsis_\d+)(?:_\d+)?$/.exec(model)?.[1] ?? model;
+  const moons = keys.filter((k) => new RegExp(`^${planet}_\\d+$`).test(k)).sort(byOrbit);
+  return { centre: planet, around: moons, current: model };
 }

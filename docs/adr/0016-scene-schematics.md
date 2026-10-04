@@ -96,7 +96,10 @@ Planets, moons (`scenes/systems/tarsis/tarsis_*.tscn`) and the star get a schema
 new shape kind, `celestial`, drawn from the body's facts on the project wiki (`lib/bodies.ts`,
 ADR 0018 update): the disc with its designation and name, radius and gravity (temperature for
 the star), an arrow with its day length, and its moons on their orbits, innermost first, sized
-to their radius against the planet's.
+to their radius against the planet's. The drawing takes the page's whole width; every body
+drawn around another opens its page (the star shows its planets, a moon its planet's system
+with itself highlighted and pulsing), and a line gives the facts of the body on screen (a
+moon's own radius, gravity and revolution). The wiki page is linked above the drawing.
 
 ## Consequences
 

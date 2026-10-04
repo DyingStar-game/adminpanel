@@ -9,8 +9,8 @@ export const celestial: z.input<typeof SchematicSchema> = {
   id: 'celestial',
   scenename: 'scenes/systems/tarsis/tarsis_*.tscn',
   title: 'celestial',
-  size: [14, 12],
-  shapes: [{ kind: 'celestial', at: [0, 0], size: [14, 12], label: 'celestial' }],
+  size: [24, 18],
+  shapes: [{ kind: 'celestial', at: [0, 0], size: [24, 18], label: 'celestial' }],
 };
 
 /** The system's star, drawn the same way. */
@@ -18,6 +18,6 @@ export const star: z.input<typeof SchematicSchema> = {
   ...celestial,
   id: 'star',
   scenename: 'scenes/_universe/environment/space/star.tscn',
-  size: [14, 9],
-  shapes: [{ kind: 'celestial', at: [0, 0], size: [14, 9], label: 'celestial' }],
+  size: [24, 20],
+  shapes: [{ kind: 'celestial', at: [0, 0], size: [24, 20], label: 'celestial' }],
 };

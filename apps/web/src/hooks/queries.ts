@@ -98,14 +98,14 @@ export function useItemsPage(
   filter: ListFilter,
   page: number,
   pageSize: number,
-  { live = false }: LiveOption = {},
+  { live = false, enabled = true }: LiveOption & { enabled?: boolean } = {},
 ) {
   const serverId = useServerId();
   const refetchInterval = useLiveInterval('list', live);
   return useQuery({
     queryKey: queryKeys.list(serverId, filter, page, pageSize),
     queryFn: () => apiGet(listPath(filter, page, pageSize), PaginatedItemsSchema, { serverId }),
-    enabled: !!serverId,
+    enabled: !!serverId && enabled,
     placeholderData: keepPreviousData,
     refetchInterval,
   });

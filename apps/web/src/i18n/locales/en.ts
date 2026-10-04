@@ -276,11 +276,12 @@ export const en = {
     keys_other: '{{count}} keys',
   },
   body: {
+    days: 'd',
     name: 'Body',
     radius: 'Radius',
     gravity: 'Gravity',
     day: 'Sidereal day',
-    orbit: 'Orbital period',
+    orbit: 'Revolution',
     temperature: 'Temperature',
     wiki: 'Wiki',
     wikiHint: 'Facts from the project wiki (worldbuilding)',

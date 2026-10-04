@@ -26,6 +26,7 @@ import { ObjectPageLayout } from '@/components/templates/ObjectPageLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useAncestors, useDefinitions, useItem } from '@/hooks/queries';
+import { useBodyIndex } from '@/hooks/useBodyIndex';
 import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { hasMap, mapBodyOf } from '@/lib/bodyMap';
@@ -93,6 +94,8 @@ function ObjectDetails({
   const actions = useItemActions();
   const schematic = schematicFor(item.object_data.scenename);
   const body = bodyFacts(item.object_data.scenename);
+  // Bodies drawn around this one (its moons, planets, siblings) open their own page.
+  const bodies = useBodyIndex(body !== null);
   const numbers = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 2 });
   const energy =
     schematic && hasEnergy(schematic)
@@ -122,6 +125,7 @@ function ObjectDetails({
         raw: t('objectPage.raw'),
         schematic: t('schematic.title'),
       }}
+      schematicWide={schematic?.shapes.some((shape) => shape.kind === 'celestial')}
       schematic={
         schematic && (
           <SchematicCard
@@ -129,6 +133,7 @@ function ObjectDetails({
             data={item.object_data}
             resolveRef={resolveRef}
             onNavigate={onNavigate}
+            bodies={bodies}
           />
         )
       }
@@ -256,7 +261,7 @@ function ObjectDetails({
                   ...bodyFactList(body).map((fact) => ({
                     key: fact.key,
                     label: t(`body.${fact.key}`),
-                    value: `${numbers.format(fact.value)} ${fact.unit}`,
+                    value: `${numbers.format(fact.value)} ${fact.unit === 'd' ? t('body.days') : fact.unit}`,
                   })),
                 ]
               : []

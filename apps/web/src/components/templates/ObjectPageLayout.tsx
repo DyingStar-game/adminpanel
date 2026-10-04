@@ -9,6 +9,8 @@ interface ObjectPageLayoutProps {
   raw: ReactNode;
   /** Model schematic (ADR 0016), shown above the relations when the model has one. */
   schematic?: ReactNode;
+  /** The schematic takes the page's whole width (a celestial body with its system). */
+  schematicWide?: boolean;
   labels: {
     relations: string;
     children: string;
@@ -25,9 +27,14 @@ export function ObjectPageLayout(props: ObjectPageLayoutProps) {
       <div className="flex flex-col gap-5 p-6">
         {props.header}
         {props.headline}
+        {props.schematic && props.schematicWide && (
+          <Card title={props.labels.schematic} padded>
+            {props.schematic}
+          </Card>
+        )}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
           <div className="flex min-w-0 flex-col gap-5">
-            {props.schematic && (
+            {props.schematic && !props.schematicWide && (
               <Card title={props.labels.schematic} padded>
                 {props.schematic}
               </Card>
