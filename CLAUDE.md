@@ -69,6 +69,10 @@ Check shapes against live data rather than guessing (**GET only**, never POST / 
 - **Object type definitions**: `*_def.json` in
   [`DyingStar-game/horizonserver` › `ds_genericprops/props`](https://github.com/DyingStar-game/horizonserver/tree/develop/ds_genericprops/props)
   (`object_type` = file name without `_def`).
+- **Celestial bodies**: the project wiki documents each one (radius, gravity, day, moons), e.g.
+  [Tarsis III = SandBox](https://developer.dyingstar-game.com/docs/project/GDD/worldbuilding/5_01_geographie/system_tarsis/tarsis_III/).
+  The admin keeps these facts in `apps/web/src/lib/bodies.ts`, matched on the body's scene
+  (`tarsis_3.tscn` → `tarsis_III/`, `tarsis_3_1.tscn` → its first moon); persistence has none.
 - **Through the BFF** (dev servers running): `curl -H "X-Server-Id: universe-testing" localhost:3000/api/items?page=1&page_size=5`
   — also GET only.
 

@@ -1,4 +1,5 @@
 import {
+  BookOpenIcon,
   CirclePlusIcon,
   CompassIcon,
   CopyIcon,
@@ -29,6 +30,7 @@ import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { hasMap, mapBodyOf } from '@/lib/bodyMap';
 import { itemLabel } from '@/lib/itemLabel';
+import { bodyFactList, bodyFacts, wikiUrl } from '@/lib/bodies';
 import { schematicFor, schematicKeys } from '@/lib/schematics';
 import { hasEnergy, installedEnergy, lookup } from '@/lib/schematics/components';
 import { SPAWN_DISTANCE, SPAWN_HEIGHT, spawnNextTo } from '@/lib/spawn';
@@ -78,7 +80,7 @@ function ObjectDetails({
   onOpenMap,
   updatedAt,
 }: Omit<ObjectPageProps, 'uuid'> & { item: Item; updatedAt: number }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const definitions = useDefinitions();
   // undefined while loading, null when the type has no definition.
   const definition = definitions.data
@@ -90,6 +92,8 @@ function ObjectDetails({
   const changed = useChangedKeys(item.object_data, item.object_uuid);
   const actions = useItemActions();
   const schematic = schematicFor(item.object_data.scenename);
+  const body = bodyFacts(item.object_data.scenename);
+  const numbers = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 2 });
   const energy =
     schematic && hasEnergy(schematic)
       ? installedEnergy(schematic, item.object_data, lookup(resolveRef))
@@ -183,6 +187,14 @@ function ObjectDetails({
                 {t('editor.spawnNext')}
               </Button>
             )}
+            {body && (
+              <Button variant="outline" size="sm" asChild>
+                <a href={wikiUrl(body)} target="_blank" rel="noreferrer" title={t('body.wikiHint')}>
+                  <BookOpenIcon />
+                  {t('body.wiki')}
+                </a>
+              </Button>
+            )}
             {/* Icon-only actions: the name stays in the accessible label and the tooltip. */}
             <Button
               variant="outline"
@@ -229,6 +241,26 @@ function ObjectDetails({
           changed={changed}
           hidden={schematic ? schematicKeys(schematic) : undefined}
           energy={energy}
+          extra={
+            body
+              ? [
+                  ...(body.name
+                    ? [
+                        {
+                          key: 'wikiName',
+                          label: t('body.name'),
+                          value: `${body.name} · ${body.designation}`,
+                        },
+                      ]
+                    : [{ key: 'wikiName', label: t('body.name'), value: body.designation }]),
+                  ...bodyFactList(body).map((fact) => ({
+                    key: fact.key,
+                    label: t(`body.${fact.key}`),
+                    value: `${numbers.format(fact.value)} ${fact.unit}`,
+                  })),
+                ]
+              : []
+          }
         />
       }
       relations={

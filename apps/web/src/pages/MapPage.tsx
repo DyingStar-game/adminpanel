@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  BookOpenIcon,
   CompassIcon,
   CopyIcon,
   ExpandIcon,
@@ -49,6 +50,7 @@ import {
   type MovementTracker,
 } from '@/lib/bodyMap';
 import type { MapSearch as MapSearchState } from '@/lib/mapSearch';
+import { bodyFactList, bodyFacts, wikiUrl } from '@/lib/bodies';
 import { itemLabel } from '@/lib/itemLabel';
 import { typeColor } from '@/lib/objectTypes';
 import { moveOnBody, placeOnBody, spawnHeightFor, type ParentFrame } from '@/lib/spawn';
@@ -105,11 +107,14 @@ function BodyMap({
   updatedAt,
   fresh,
 }: MapPageProps & { map: BodyMapResponse; updatedAt: number; fresh: boolean }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { mapHidden, setMapHidden, mapNamed, setMapNamed } = usePreferences();
   const actions = useItemActions();
   // Shared with the inspector's query of the same item.
   const selectedItem = useItem(search.selected).data ?? null;
+  // The body's own item (its scene), for its facts from the project wiki.
+  const body = bodyFacts(useItem(map.body.object_uuid).data?.object_data.scenename);
+  const numbers = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 2 });
   const named = useMemo(
     () => new Set(Object.keys(mapNamed).filter((type) => mapNamed[type])),
     [mapNamed],
@@ -408,6 +413,30 @@ function BodyMap({
               <MonoText tone="subtle" className="text-2xs">
                 {t('map.summary', { shown: visible.length, total: totalCount })}
               </MonoText>
+              {body && (
+                // The body's facts from the project wiki, and its page there.
+                <div className="flex items-center gap-1.5 text-2xs text-fg-2">
+                  <MonoText className="text-2xs">
+                    {bodyFactList(body)
+                      .filter((fact) => fact.key !== 'orbit')
+                      .map(
+                        (fact) =>
+                          `${t(`body.${fact.key}`)} ${numbers.format(fact.value)} ${fact.unit}`,
+                      )
+                      .join(' · ')}
+                  </MonoText>
+                  <a
+                    href={wikiUrl(body)}
+                    target="_blank"
+                    rel="noreferrer"
+                    title={t('body.wikiHint')}
+                    className="ml-auto inline-flex items-center gap-1 text-link hover:underline"
+                  >
+                    <BookOpenIcon size={12} />
+                    {t('body.wiki')}
+                  </a>
+                </div>
+              )}
             </div>
             <MapSearch
               labels={{ field: t('map.search'), empty: t('map.noMatch') }}

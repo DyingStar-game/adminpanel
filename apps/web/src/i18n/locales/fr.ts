@@ -275,6 +275,16 @@ export const fr: Translations = {
     keys_one: '{{count}} clé',
     keys_other: '{{count}} clés',
   },
+  body: {
+    name: 'Astre',
+    radius: 'Rayon',
+    gravity: 'Gravité',
+    day: 'Jour sidéral',
+    orbit: 'Période orbitale',
+    temperature: 'Température',
+    wiki: 'Wiki',
+    wikiHint: 'Données du wiki du projet (worldbuilding)',
+  },
   map: {
     menu: 'Actions à cet endroit',
     moveHere: 'Déplacer {{label}} ici',

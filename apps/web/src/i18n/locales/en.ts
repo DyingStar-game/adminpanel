@@ -272,6 +272,16 @@ export const en = {
     keys_one: '{{count}} key',
     keys_other: '{{count}} keys',
   },
+  body: {
+    name: 'Body',
+    radius: 'Radius',
+    gravity: 'Gravity',
+    day: 'Sidereal day',
+    orbit: 'Orbital period',
+    temperature: 'Temperature',
+    wiki: 'Wiki',
+    wikiHint: 'Facts from the project wiki (worldbuilding)',
+  },
   map: {
     menu: 'Actions at this place',
     moveHere: 'Move {{label}} here',

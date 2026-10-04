@@ -175,6 +175,15 @@ frame like any item standing on it; the building only tells where and how it sta
 game does not report player positions to persistence yet: such a move may not show in game
 until that is fixed.
 
+### Update (2026-10-04): body facts from the project wiki
+
+The project wiki documents every body of the Tarsis system (radius, gravity, sidereal day,
+orbital period, moons). The admin keeps those facts in `lib/bodies.ts`, matched on the body's
+scene, and shows them on the body's page (key facts and a link to its wiki page) and in the map
+header. The map's altitudes keep the ground level measured on the items (median ≈ 6,360 km for
+SandBox) as reference: the wiki's radius (6,356 km) would show trucks standing on the ground
+about 4 km up.
+
 ## Consequences
 
 - A body's content becomes visible at a glance; vehicles, buildings and, later, moving players
