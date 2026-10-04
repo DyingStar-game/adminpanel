@@ -63,6 +63,10 @@ export function SchematicCard({
       {body && (
         // The body's facts in chips, like the truck's readouts, and its wiki page.
         <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs">
+            <span className="font-semibold text-link">{body.name ?? body.designation}</span>
+            {body.name && <MonoText tone="subtle">{body.designation}</MonoText>}
+          </span>
           {orbited && (
             // The star a planet orbits (persistence links them only implicitly, ADR 0008).
             <button
@@ -75,10 +79,6 @@ export function SchematicCard({
               <span className="font-semibold">{orbited.facts.designation}</span>
             </button>
           )}
-          <span className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs">
-            <span className="font-semibold text-link">{body.name ?? body.designation}</span>
-            {body.name && <MonoText tone="subtle">{body.designation}</MonoText>}
-          </span>
           {bodyFactList(body).map((fact) => (
             <span
               key={fact.key}
