@@ -278,6 +278,8 @@ export const fr: Translations = {
     keys_other: '{{count}} clés',
   },
   body: {
+    soi: "Sphère d'influence",
+    soiHint: "Rayon où la gravité de l'astre l'emporte sur celle de l'étoile (persistance : soi)",
     days: 'j',
     name: 'Astre',
     radius: 'Rayon',

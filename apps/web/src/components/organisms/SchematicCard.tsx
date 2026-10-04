@@ -71,6 +71,16 @@ export function SchematicCard({
               </MonoText>
             </span>
           ))}
+          {typeof data.soi === 'number' && (
+            // Persistence's own value: where the body's gravity prevails over the star's.
+            <span
+              className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background px-2 text-xs"
+              title={t('body.soiHint')}
+            >
+              {t('body.soi')}
+              <MonoText className="font-semibold">{format.format(data.soi / 1000)} km</MonoText>
+            </span>
+          )}
           <a
             href={wikiUrl(body)}
             target="_blank"
