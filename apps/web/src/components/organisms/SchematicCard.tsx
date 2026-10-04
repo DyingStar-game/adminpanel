@@ -5,6 +5,7 @@ import { MonoText } from '@/components/atoms/MonoText';
 import type { RefTarget } from '@/components/molecules/UuidLink';
 import { cn } from '@/lib/cn';
 import { typeColor } from '@/lib/objectTypes';
+import { bodyFacts, moonsOf } from '@/lib/bodies';
 import { sceneModel, valueAt, type Schematic } from '@/lib/schematics';
 import {
   autonomy,
@@ -56,6 +57,17 @@ export function SchematicCard({ schematic, data, resolveRef, onNavigate }: Schem
       >
         {schematic.shapes.map((shape) => {
           const value = shape.value ? number(valueAt(data, shape.value.path)) : null;
+          if (shape.kind === 'celestial') {
+            return (
+              <CelestialDiagram
+                key={shape.label}
+                at={shape.at}
+                size={shape.size}
+                scenename={data.scenename}
+                format={format}
+              />
+            );
+          }
           if (shape.kind === 'battery') {
             const model = componentModel(data.scenename);
             return (
@@ -450,6 +462,142 @@ function Slot({
     >
       <title>{title}</title>
       {children}
+    </g>
+  );
+}
+
+/**
+ * A planet, moon or star from its wiki facts: the disc with its designation and name, radius and
+ * gravity under it, an arrow for its rotation with the day length, and its moons on their orbits
+ * (innermost first, sized to their radius against the planet's).
+ */
+function CelestialDiagram({
+  at,
+  size,
+  scenename,
+  format,
+}: {
+  at: [number, number];
+  size: [number, number];
+  scenename: unknown;
+  format: Intl.NumberFormat;
+}) {
+  const { t } = useTranslation();
+  const facts = bodyFacts(scenename);
+  const moons = moonsOf(scenename);
+  const cx = (at[0] + size[0] / 2) * U;
+  const cy = (at[1] + size[1] / 2) * U;
+  if (!facts) {
+    return (
+      <text x={cx} y={cy} textAnchor="middle" fontSize={11} fill="var(--ds-fg-3)">
+        {t('schematic.noFacts')}
+      </text>
+    );
+  }
+  const isStar = facts.temperatureK !== undefined;
+  const color = isStar ? '#f59e0b' : typeColor('planet');
+  const outer = (Math.min(size[0], size[1]) / 2) * U - 6;
+  const r0 = moons.length > 0 ? 2.2 * U : 2.8 * U;
+  const step = moons.length > 1 ? (outer - r0 - 0.9 * U) / (moons.length - 1) : 0;
+  const km = (value: number) => `${format.format(value)} km`;
+  const under = [
+    `R ${km(facts.radiusKm)}`,
+    facts.gravity !== undefined ? `g ${format.format(facts.gravity)} m/s²` : null,
+    facts.temperatureK !== undefined ? `${format.format(facts.temperatureK)} K` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  // Rotation arrow: an arc above the disc, ending in a head, with the day length.
+  const arc = r0 + 7;
+  const [a1, a2] = [(-150 * Math.PI) / 180, (-30 * Math.PI) / 180];
+  const end = [cx + arc * Math.cos(a2), cy + arc * Math.sin(a2)] as const;
+  return (
+    <g aria-label={facts.designation}>
+      <title>{[facts.designation, facts.name].filter(Boolean).join(' · ')}</title>
+      {moons.map((moon, i) => {
+        const orbit = r0 + 0.9 * U + i * step;
+        const angle = ((-20 + i * (300 / Math.max(moons.length, 1))) * Math.PI) / 180;
+        const mx = cx + orbit * Math.cos(angle);
+        const my = cy + orbit * Math.sin(angle);
+        const mr = Math.max(3, Math.min(0.55 * U, (r0 * moon.radiusKm) / facts.radiusKm));
+        const right = Math.cos(angle) >= 0;
+        return (
+          <g key={moon.designation}>
+            <title>
+              {[
+                moon.name ?? moon.designation,
+                km(moon.radiusKm),
+                moon.orbitDays !== undefined ? `${format.format(moon.orbitDays)} d` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </title>
+            <circle
+              cx={cx}
+              cy={cy}
+              r={orbit}
+              fill="none"
+              stroke="var(--ds-line-2)"
+              strokeDasharray="2 4"
+            />
+            <circle cx={mx} cy={my} r={mr} fill="var(--ds-fg-3)" stroke="var(--ds-bg)" />
+            <text
+              x={mx + (right ? mr + 4 : -mr - 4)}
+              y={my + 3}
+              textAnchor={right ? 'start' : 'end'}
+              fontSize={10}
+              fill="var(--ds-fg-2)"
+            >
+              {moon.name ?? moon.designation.replace(/^.*\./, '')}
+            </text>
+          </g>
+        );
+      })}
+      {facts.dayHours !== undefined && (
+        <g>
+          <path
+            d={`M ${cx + arc * Math.cos(a1)} ${cy + arc * Math.sin(a1)} A ${arc} ${arc} 0 0 1 ${end[0]} ${end[1]}`}
+            fill="none"
+            stroke="var(--ds-fg-3)"
+            strokeWidth={1.2}
+          />
+          <path
+            d={`M ${end[0]} ${end[1]} l -7 -2 m 7 2 l -2 -7`}
+            fill="none"
+            stroke="var(--ds-fg-3)"
+            strokeWidth={1.2}
+          />
+          <text x={cx} y={cy - arc - 6} textAnchor="middle" fontSize={10} fill="var(--ds-fg-2)">
+            {t('schematic.day', { hours: format.format(facts.dayHours) })}
+          </text>
+        </g>
+      )}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r0}
+        fill={`color-mix(in oklab, ${color} ${isStar ? 55 : 30}%, var(--ds-bg))`}
+        stroke={color}
+        strokeWidth={1.5}
+      />
+      <text
+        x={cx}
+        y={cy - 2}
+        textAnchor="middle"
+        fontSize={12}
+        fontWeight={600}
+        fill="var(--ds-fg)"
+      >
+        {facts.name ?? facts.designation}
+      </text>
+      {facts.name && (
+        <text x={cx} y={cy + 12} textAnchor="middle" fontSize={10} fill="var(--ds-fg-2)">
+          {facts.designation}
+        </text>
+      )}
+      <text x={cx} y={cy + r0 + 16} textAnchor="middle" fontSize={10} fill="var(--ds-fg-2)">
+        {under}
+      </text>
     </g>
   );
 }

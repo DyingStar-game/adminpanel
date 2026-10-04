@@ -23,7 +23,11 @@ export const SchematicSchema = z.object({
        * `battery`: a cell drawn as a progress bar filled to `value` (a charge in joules) against
        * the capacity of the item's own tier (`battery_t1` → 180 MJ).
        */
-      kind: z.enum(['body', 'cargo', 'battery']),
+      /**
+       * `celestial`: a planet, moon or star drawn from its wiki facts (`lib/bodies.ts`, matched
+       * on the item's scene): disc, rotation and day, radius and gravity, moons on their orbits.
+       */
+      kind: z.enum(['body', 'cargo', 'battery', 'celestial']),
       at: Point,
       size: Point,
       label: z.string(),

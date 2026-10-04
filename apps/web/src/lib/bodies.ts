@@ -212,3 +212,14 @@ export function bodyFactList(
     (f): f is { key: BodyFactKey; value: number; unit: string } => f.value !== undefined,
   );
 }
+
+/** Moons of a planet (scene `tarsis_3` → `tarsis_3_1`, `tarsis_3_2`…), innermost first. */
+export function moonsOf(scenename: unknown): BodyFacts[] {
+  const model = sceneModel(scenename);
+  if (!model) return [];
+  const pattern = new RegExp(`^${model}_\\d+$`);
+  return Object.entries(BODIES)
+    .filter(([key]) => pattern.test(key))
+    .map(([, facts]) => facts)
+    .sort((a, b) => (a.orbitDays ?? 0) - (b.orbitDays ?? 0));
+}

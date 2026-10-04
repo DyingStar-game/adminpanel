@@ -90,6 +90,14 @@ The truck's headlights are drawn on the front edge of the cab (`lights`, bound t
 the values the schematic already shows (a fact made only of keys read by the schematic is left
 out); the energy left (kWh over the capacity, with a charge bar) joins the key facts.
 
+### Update (2026-10-04): celestial bodies
+
+Planets, moons (`scenes/systems/tarsis/tarsis_*.tscn`) and the star get a schematic through a
+new shape kind, `celestial`, drawn from the body's facts on the project wiki (`lib/bodies.ts`,
+ADR 0018 update): the disc with its designation and name, radius and gravity (temperature for
+the star), an arrow with its day length, and its moons on their orbits, innermost first, sized
+to their radius against the planet's.
+
 ## Consequences
 
 - Adding a model = adding one data file and one line in the index.

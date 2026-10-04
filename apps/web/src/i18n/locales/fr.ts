@@ -185,6 +185,8 @@ export const fr: Translations = {
   },
   schematic: {
     title: 'Schéma',
+    day: '↻ jour de {{hours}} h',
+    noFacts: 'Aucune donnée sur cet astre dans le wiki',
     hatch: 'Trappe {{bay}}',
     kinds: { engine: 'Moteur', battery: 'Batterie' },
     noBattery: 'aucune batterie',
@@ -198,6 +200,7 @@ export const fr: Translations = {
     on: 'oui',
     off: 'non',
     labels: {
+      celestial: 'Astre',
       leftHeadlight: 'Phare gauche',
       rightHeadlight: 'Phare droit',
       truck: 'Camion',

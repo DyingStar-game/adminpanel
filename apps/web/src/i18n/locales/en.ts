@@ -182,6 +182,8 @@ export const en = {
   },
   schematic: {
     title: 'Schematic',
+    day: '↻ {{hours}} h day',
+    noFacts: 'No facts on this body in the wiki',
     hatch: 'Hatch {{bay}}',
     kinds: { engine: 'Engine', battery: 'Battery' },
     noBattery: 'no battery',
@@ -195,6 +197,7 @@ export const en = {
     on: 'on',
     off: 'off',
     labels: {
+      celestial: 'Body',
       leftHeadlight: 'Left headlight',
       rightHeadlight: 'Right headlight',
       truck: 'Truck',
