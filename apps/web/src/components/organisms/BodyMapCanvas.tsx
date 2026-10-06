@@ -304,18 +304,20 @@ function MetricGrid({ caption }: { caption: (step: string, major: string) => str
   const [grid, setGrid] = useState(measure);
   useMapEvents({ moveend: () => setGrid(measure()), zoomend: () => setGrid(measure()) });
 
-  // Neutral grey (white at low opacity): the palette's lines lean towards blue.
+  // Neutral grey (white at low opacity): the palette's lines lean towards blue. The colour is
+  // given to Leaflet itself, not through a CSS class: without it Leaflet draws its default blue
+  // whenever the class does not apply (e.g. while the dev server reloads the styles).
   return (
     <>
       <Polyline
         positions={grid.minor}
         interactive={false}
-        pathOptions={{ weight: 1, className: 'stroke-white/10' }}
+        pathOptions={{ weight: 1, color: '#ffffff', opacity: 0.1 }}
       />
       <Polyline
         positions={grid.major}
         interactive={false}
-        pathOptions={{ weight: 1.5, className: 'stroke-white/22' }}
+        pathOptions={{ weight: 1.5, color: '#ffffff', opacity: 0.22 }}
       />
       <div className="pointer-events-none absolute right-2.5 bottom-7 z-[1000] rounded border bg-background/90 px-1.5 py-0.5 font-mono text-2xs text-fg-2">
         {caption(formatDistance(grid.step), formatDistance(grid.step * GRID_MAJOR_EVERY))}
