@@ -9,6 +9,7 @@ import {
   PencilIcon,
   PlusIcon,
   Trash2Icon,
+  ZapIcon,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -28,11 +29,13 @@ import { ContextMenu } from '@/components/molecules/ContextMenu';
 import { ItemSearch } from '@/components/molecules/ItemSearch';
 import { BodyMapCanvas, type MapFocus } from '@/components/organisms/BodyMapCanvas';
 import { Inspector } from '@/components/organisms/Inspector';
+import { TeleportDialog } from '@/components/organisms/TeleportDialog';
 import { OrbitLayout } from '@/components/templates/OrbitLayout';
 import { Button } from '@/components/ui/button';
 import { useBodyMap } from '@/hooks/useBodyMap';
 import { useItemActions } from '@/stores/itemActions';
 import { useItem } from '@/hooks/queries';
+import { useGoToItem } from '@/hooks/useGoToItem';
 import { ApiError } from '@/lib/api';
 import {
   formatAltitude,
@@ -46,6 +49,7 @@ import {
   markerShape,
   pointLabel,
   searchPoints,
+  teleportCandidates,
   trackMovement,
   type Movement,
   type MovementTracker,
@@ -247,21 +251,47 @@ function BodyMap({
       : !!via && parentFrame !== null && selectedItem.object_data.parent_id === via)
       ? selectedItem
       : null;
-  /** Opens the selected item's editor with its placement moved where the map was clicked. */
-  const moveHere = (at: MapLatLng) => {
-    setMenu(null);
-    if (!movable) return;
-    const { direction, ground, label } = placeAt(at, movable.object_uuid);
-    actions.edit(movable.object_uuid, {
+  /**
+   * Opens an item's editor with its placement moved where the map was clicked; `frame` is its
+   * building's for a player placed in one (taken out onto the body).
+   */
+  const moveTo = (item: Item, frame: ParentFrame | null, at: MapLatLng) => {
+    const { direction, ground, label } = placeAt(at, item.object_uuid);
+    actions.edit(item.object_uuid, {
       preset: moveOnBody(
-        movable,
+        item,
         map.body.object_uuid,
         direction,
-        ground + spawnHeightFor(movable.object_type),
-        via ? (parentFrame ?? undefined) : undefined,
+        ground + spawnHeightFor(item.object_type),
+        frame ?? undefined,
       ),
       label,
     });
+  };
+  /** Moves the selected item where the map was clicked. */
+  const moveHere = (at: MapLatLng) => {
+    setMenu(null);
+    if (movable) moveTo(movable, via ? parentFrame : null, at);
+  };
+  // "Teleport here…": the place first, then the item (a player or a vehicle of the body),
+  // moved exactly like "Move … here" once it and its building (for a player) are read.
+  const [teleportAt, setTeleportAt] = useState<MapLatLng | null>(null);
+  const goToItem = useGoToItem();
+  const teleportOptions = useMemo(
+    () => teleportCandidates(map.points, byUuid),
+    [map.points, byUuid],
+  );
+  const teleport = async (uuid: string) => {
+    const at = teleportAt;
+    setTeleportAt(null);
+    if (!at) return;
+    const point = byUuid.get(uuid);
+    const item = await goToItem(uuid);
+    const building = point?.via ? await goToItem(point.via) : null;
+    const frame = building ? frameOf(building) : null;
+    if (!item || (point?.via && !frame)) return;
+    select(uuid);
+    moveTo(item, frame, at);
   };
   const focusOn = (uuid: string) => {
     select(uuid);
@@ -327,6 +357,14 @@ function BodyMap({
       }
       overlays={
         <>
+          {teleportAt && (
+            <TeleportDialog
+              place={placeAt(teleportAt).label}
+              options={teleportOptions}
+              onPick={(uuid) => void teleport(uuid)}
+              onCancel={() => setTeleportAt(null)}
+            />
+          )}
           {menu && (
             <ContextMenu
               label={
@@ -348,6 +386,15 @@ function BodyMap({
                         icon: <PlusIcon size={14} />,
                         label: t('map.addHere'),
                         onSelect: () => addHere(menu.at),
+                      },
+                      {
+                        key: 'teleport',
+                        icon: <ZapIcon size={14} />,
+                        label: t('map.teleport.action'),
+                        onSelect: () => {
+                          setMenu(null);
+                          setTeleportAt(menu.at);
+                        },
                       },
                       ...(movable
                         ? [

@@ -18,6 +18,7 @@ import {
   movementHeading,
   pointLabel,
   searchPoints,
+  teleportCandidates,
   trackMovement,
   typeMixGradient,
 } from './bodyMap';
@@ -35,6 +36,21 @@ const point = (uuid: string, type: string, name: string | null = null): MapPoint
 });
 
 describe('body map helpers', () => {
+  it('offers the players (with their building) and the vehicles to teleport, by name', () => {
+    const building = point('b', 'spawnbuilding', 'Spawn A');
+    const players = [{ ...point('p2', 'player', 'zed'), via: 'b' }, point('p1', 'player', 'arno')];
+    const truck = point('v', 'vehicle');
+    const points = [building, ...players, truck, point('r', 'miningrock')];
+    const byUuid = new Map(points.map((p) => [p.object_uuid, p]));
+    expect(teleportCandidates(points, byUuid)).toEqual({
+      player: [
+        { uuid: 'p1', label: 'arno', objectType: 'player' },
+        { uuid: 'p2', label: 'zed', objectType: 'player', hint: 'Spawn A' },
+      ],
+      vehicle: [{ uuid: 'v', label: 'vehicle v', objectType: 'vehicle' }],
+    });
+  });
+
   it('gives a map to celestial bodies only', () => {
     expect(hasMap('planet')).toBe(true);
     expect(hasMap('vehicle')).toBe(false);

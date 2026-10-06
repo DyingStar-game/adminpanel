@@ -175,6 +175,17 @@ frame like any item standing on it; the building only tells where and how it sta
 game does not report player positions to persistence yet: such a move may not show in game
 until that is fixed.
 
+### Update (2026-10-06): teleport here
+
+The other way round, at the maintainer's request: the background menu always offers "Teleport
+here…", the place first, then the item. A dialog lists the body's players (their spawn
+building as a hint) and vehicles, in two searchable tabs; the pick becomes the selection and
+its editor opens at that place exactly like "Move … here" (same ground, upright, a player taken
+out of its building). Nothing is written until the editor is saved. Like any move, it goes
+through persistence, with the same limits: a player may not move in game while the game does
+not load player positions from persistence (the dialog says so). A real
+teleport of a connected player would need a command on the game side.
+
 ### Update (2026-10-04): body facts from the project wiki
 
 The project wiki documents every body of the Tarsis system (radius, gravity, sidereal day,

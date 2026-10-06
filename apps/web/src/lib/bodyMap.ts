@@ -48,6 +48,34 @@ const STRUCTURE_TYPES = new Set([
   'station',
 ]);
 
+/** Kinds of item that can be teleported from the map ("Teleport here…"). */
+export const TELEPORTABLE_TYPES = ['player', 'vehicle'] as const;
+export type TeleportableType = (typeof TELEPORTABLE_TYPES)[number];
+
+/**
+ * Items of the map that can be teleported, by kind, by name: players (with their building as a
+ * hint) and vehicles of the body.
+ */
+export function teleportCandidates(
+  points: MapPoint[],
+  byUuid: ReadonlyMap<string, MapPoint>,
+): Record<TeleportableType, { uuid: string; label: string; objectType: string; hint?: string }[]> {
+  const of = (type: TeleportableType) =>
+    points
+      .filter((point) => point.object_type === type)
+      .map((point) => {
+        const building = point.via ? byUuid.get(point.via) : undefined;
+        return {
+          uuid: point.object_uuid,
+          label: pointLabel(point),
+          objectType: type,
+          ...(building ? { hint: pointLabel(building) } : {}),
+        };
+      })
+      .sort((a, b) => a.label.localeCompare(b.label));
+  return { player: of('player'), vehicle: of('vehicle') };
+}
+
 /** Marker shape of a type on the map. */
 export const markerShape = (objectType: string): 'square' | 'round' =>
   STRUCTURE_TYPES.has(objectType) ? 'square' : 'round';
