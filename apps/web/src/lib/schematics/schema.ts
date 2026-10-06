@@ -33,6 +33,11 @@ export const SchematicSchema = z.object({
       label: z.string(),
       /** Value drawn inside the shape (e.g. `cargo_mass` on the bed). */
       value: z.object({ path: Path, unit: z.string().optional() }).optional(),
+      /**
+       * `cargo`: lists the item's children that fill no bay (e.g. a mining rock laid in the
+       * bed), each with its weight; their position is not drawn.
+       */
+      contents: z.boolean().default(false),
     }),
   ),
   /** Seats: reference to the player sitting there, or `""` when empty. */

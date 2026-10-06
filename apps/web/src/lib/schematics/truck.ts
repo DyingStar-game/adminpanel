@@ -19,6 +19,7 @@ export const truck: z.input<typeof SchematicSchema> = {
       size: [8, 10],
       label: 'bed',
       value: { path: 'cargo_mass', unit: 'kg' },
+      contents: true,
     },
   ],
   seats: [

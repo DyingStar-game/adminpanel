@@ -200,6 +200,13 @@ export const fr: Translations = {
     closed: 'fermée',
     unknown: 'inconnu (non utilisé)',
     empty: 'vide',
+    contents_one: '{{count}} objet transporté',
+    contents_other: '{{count}} objets transportés',
+    moreContents_one: '+ {{count}} autre sorte',
+    moreContents_other: '+ {{count}} autres sortes',
+    ore: 'Minerai',
+    minerals: { gold: 'Or' },
+    contentsOf: 'Transporté : {{name}}',
     on: 'oui',
     off: 'non',
     labels: {

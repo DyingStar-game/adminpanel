@@ -197,6 +197,13 @@ export const en = {
     closed: 'closed',
     unknown: 'unknown (not in use)',
     empty: 'empty',
+    contents_one: '{{count}} item carried',
+    contents_other: '{{count}} items carried',
+    moreContents_one: '+ {{count}} other kind',
+    moreContents_other: '+ {{count}} other kinds',
+    ore: 'Ore',
+    minerals: { gold: 'Gold' },
+    contentsOf: 'Carried: {{name}}',
     on: 'on',
     off: 'off',
     labels: {

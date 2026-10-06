@@ -105,6 +105,21 @@ are chips above the drawing, which keeps only names (no day arrow, no figures ar
 the body on screen pulses, at the centre too; a moon's wiki link opens its section of its
 planet's page (anchor).
 
+### Update (2026-10-06): what a truck carries
+
+A `cargo` shape can list the item's contents (`contents: true`): its children that fill none of
+the bays, e.g. a mined rock laid in the bed (`parent_id` = the truck, position local to it; the
+truck itself only reports `cargo_mass`). They are read live with the item (one list query on its
+`parent_id`) and drawn beside the schematic in a grid (three rows along the bed, columns
+added to the right), joined to the shape by a callout line and a bracket. Mined rocks and other
+items are grouped by type (all the rocks in one ore box, whatever their `mineral_id`) in one box with the count
+and total weight, its name below; a box of one item opens it, a box of several lists its items under
+the drawing (rocks by mineral, with their count and weight, heaviest first; each line opens its item), without moving the drawing. Engines and batteries laid loose in the bed (`slot_id: ""`, no bay
+referencing them) are never grouped: each is drawn like an installed one (kind and tier, a
+battery's charge gauge and percentage), its weight inside, and opens its page. Positions inside
+the shape are not drawn (asked by the maintainer: no need to be precise). Boxes and crates will show what they hold the same way, on their own schematic, once
+filled ones exist to learn the paths from (`crate_container.content` is empty everywhere today).
+
 ## Consequences
 
 - Adding a model = adding one data file and one line in the index.

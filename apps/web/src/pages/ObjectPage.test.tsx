@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ids } from '@dyingstar-admin/testing';
+import { createDataset, ids, loadedRock } from '@dyingstar-admin/testing';
 import { renderWithProviders } from '@/test/render';
 import { useInProcessBff } from '@/test/bff';
 import { useItemActions } from '@/stores/itemActions';
@@ -57,7 +57,7 @@ describe('ObjectPage', () => {
   });
 
   it('draws the truck schematic bound to the data', async () => {
-    useInProcessBff();
+    useInProcessBff([...createDataset(), structuredClone(loadedRock)]);
     const { onNavigate } = renderPage(ids.vehicle);
 
     const schematic = await screen.findByRole('region', { name: 'Schematic' });
@@ -87,6 +87,9 @@ describe('ObjectPage', () => {
     expect(await within(schematic).findByLabelText('RL · missing item')).toBeInTheDocument();
     expect(within(schematic).getByLabelText('RR · empty')).toBeInTheDocument();
     expect(within(schematic).getByText('28.7 km/h')).toBeInTheDocument();
+    // The rock laid in the bed (a child filling no bay), in the ore box beside the truck.
+    expect(await within(schematic).findByLabelText('1 item carried')).toBeInTheDocument();
+    expect(within(schematic).getByRole('link', { name: '1 × Ore · 114 kg' })).toBeInTheDocument();
     // front_l_door is open: its leaf swings out; front_r_door is closed.
     expect(within(schematic).getByLabelText('Left door · open')).toHaveAttribute(
       'data-state',
@@ -108,6 +111,31 @@ describe('ObjectPage', () => {
 
     await userEvent.click(driver);
     expect(onNavigate).toHaveBeenCalledWith(ids.player);
+  });
+
+  it('lists the rocks carried by mineral under the truck, each opening its rock', async () => {
+    const second = structuredClone(loadedRock);
+    second.object_uuid = '22222222-adda-4847-8600-a403d201cea5';
+    second.object_data.weight = 162.1;
+    useInProcessBff([...createDataset(), structuredClone(loadedRock), second]);
+    const { onNavigate } = renderPage(ids.vehicle);
+
+    const schematic = await screen.findByRole('region', { name: 'Schematic' });
+    await userEvent.click(await within(schematic).findByRole('link', { name: '2 × Ore · 276 kg' }));
+    const list = within(schematic).getByRole('region', { name: 'Carried: Ore' });
+    // Rocks by mineral: one gold section, heaviest first, with their host rock.
+    const gold = within(list).getByRole('group', { name: 'Gold' });
+    expect(gold).toHaveTextContent('Gold2 · 276 kg');
+    const rows = within(gold).getAllByRole('button');
+    expect(rows.map((row) => row.textContent)).toEqual([
+      'miningrock 22222222corundum_sapphire162 kg',
+      'miningrock 12749ffccorundum_sapphire114 kg',
+    ]);
+    await userEvent.click(rows[1] as HTMLElement);
+    expect(onNavigate).toHaveBeenCalledWith(ids.loadedRock);
+
+    await userEvent.click(within(list).getByRole('button', { name: 'Close' }));
+    expect(within(schematic).queryByRole('region', { name: 'Carried: Ore' })).toBeNull();
   });
 
   it('shows no schematic for a model without one', async () => {

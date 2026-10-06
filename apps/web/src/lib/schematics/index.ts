@@ -40,6 +40,10 @@ export function schematicKeys(schematic: Schematic): Set<string> {
   return new Set(paths.filter((path) => !path.includes('.')));
 }
 
+/** Whether a schematic lists the item's contents (a `cargo` shape with `contents`). */
+export const hasContents = (schematic: Schematic) =>
+  schematic.shapes.some((shape) => shape.contents);
+
 /** Reads a dotted path in `object_data` (`seats.seat_driver`). */
 export function valueAt(data: Record<string, unknown>, path: string): unknown {
   return path.split('.').reduce<unknown>((value, key) => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createDataset } from '@dyingstar-admin/testing';
+import { createDataset, ids, loadedRock } from '@dyingstar-admin/testing';
 import { SCHEMATICS, sceneModel, schematicFor, valueAt } from '.';
+import { contentsOf } from './contents';
 
 const dataset = createDataset();
 
@@ -31,6 +32,41 @@ describe('schematics', () => {
       ];
       for (const path of paths) expect(valueAt(sample.object_data, path), path).not.toBeUndefined();
     }
+  });
+
+  it('groups the rocks, keeps loose components apart, leaves out those in bays', () => {
+    const truck = dataset.find((i) => i.object_uuid === ids.vehicle);
+    const schematic = schematicFor(truck?.object_data.scenename);
+    if (!truck || !schematic) throw new Error('no truck fixture');
+    const rock = (uuid: string, mineral: string, weight: number) => ({
+      ...loadedRock,
+      object_uuid: uuid,
+      object_data: { ...loadedRock.object_data, mineral_id: mineral, weight },
+    });
+    const engine = dataset.find((i) => i.object_uuid === ids.wheelFl);
+    const battery = dataset.find((i) => i.object_uuid === ids.wheelFr);
+    if (!engine || !battery) throw new Error('no component fixtures');
+    // A loose battery: a child of the truck that no bay references.
+    const loose = {
+      ...battery,
+      object_uuid: 'loose',
+      object_data: { ...battery.object_data, slot_id: '', weight: 25 },
+    };
+    const groups = contentsOf(schematic, truck.object_data, [
+      engine,
+      loose,
+      { ...loose, object_uuid: 'loose2' },
+      rock('a', 'gold', 100),
+      rock('b', 'iron', 300),
+      rock('c', 'gold', 50),
+    ]);
+    // Every rock in one group, whatever its mineral; loose components one by one, after them.
+    expect(groups.map((g) => [g.key, g.items.length, g.weight])).toEqual([
+      ['miningrock', 3, 450],
+      ['loose', 1, 25],
+      ['loose2', 1, 25],
+    ]);
+    expect(groups[1]?.component).toEqual({ kind: 'battery', tier: 1 });
   });
 
   it('reads nested paths and model names', () => {

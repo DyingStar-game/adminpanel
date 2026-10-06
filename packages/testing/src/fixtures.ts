@@ -20,6 +20,8 @@ export const ids = {
   orphanComponent: '6a6a6a6a-1111-2222-3333-444444444444',
   missingParent: 'bb389397-c700-4000-8000-000000000099',
   rock: '35ac67f7-c1cf-20c0-1424-af07889a5c77',
+  /** A rock laid in the truck's bed (child of the vehicle). */
+  loadedRock: '12749ffc-adda-4847-8600-a403d201cea5',
 } as const;
 
 const star: Item = {
@@ -195,6 +197,23 @@ const rock: Item = {
     fractures: [{ fractured: false, keep_side: 1, seq: 0 }],
     position: { x: 4449536.77, y: 2674848.18, z: -3676497.56 },
     rotation: { x: 0.52, y: 1.39, z: 0.74 },
+  },
+};
+
+/**
+ * A mined rock carried by the truck: its parent is the vehicle, its position local to it. Kept
+ * out of `createDataset` (it would change the vehicle's children everywhere): add it when needed.
+ */
+export const loadedRock: Item = {
+  object_type: 'miningrock',
+  object_uuid: ids.loadedRock,
+  object_data: {
+    ...rock.object_data,
+    uuid: ids.loadedRock,
+    parent_id: ids.vehicle,
+    weight: 114.3,
+    position: { x: 0.255, y: 0.355, z: 1.055 },
+    rotation: { x: 0, y: 1.21, z: 0 },
   },
 };
 

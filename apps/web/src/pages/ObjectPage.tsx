@@ -25,14 +25,15 @@ import { SchematicCard } from '@/components/organisms/SchematicCard';
 import { ObjectPageLayout } from '@/components/templates/ObjectPageLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useAncestors, useDefinitions, useItem } from '@/hooks/queries';
+import { useAncestors, useDefinitions, useItem, useItemsPage } from '@/hooks/queries';
 import { useBodyIndex } from '@/hooks/useBodyIndex';
 import { useChangedKeys } from '@/hooks/useChanges';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { hasMap, mapBodyOf } from '@/lib/bodyMap';
 import { itemLabel } from '@/lib/itemLabel';
 import { bodyFacts, wikiUrl } from '@/lib/bodies';
-import { schematicFor, schematicKeys } from '@/lib/schematics';
+import { hasContents, schematicFor, schematicKeys } from '@/lib/schematics';
+import { contentsOf } from '@/lib/schematics/contents';
 import { hasEnergy, installedEnergy, lookup } from '@/lib/schematics/components';
 import { SPAWN_DISTANCE, SPAWN_HEIGHT, spawnNextTo } from '@/lib/spawn';
 import { useItemActions } from '@/stores/itemActions';
@@ -46,6 +47,9 @@ interface ObjectPageProps {
   /** Opens the map of a celestial body, optionally with an item selected on it (ADR 0018). */
   onOpenMap: (body: string, selected?: string) => void;
 }
+
+/** Children read for an item's contents (a truck bed holds a few). */
+const CONTENTS_PAGE_SIZE = 50;
 
 /** Full detail of one entity (mock-up 1c, ADR 0008). */
 export function ObjectPage({
@@ -93,6 +97,15 @@ function ObjectDetails({
   const changed = useChangedKeys(item.object_data, item.object_uuid);
   const actions = useItemActions();
   const schematic = schematicFor(item.object_data.scenename);
+  // What the item carries: its children, read live like the item (a rock laid in a truck bed).
+  const children = useItemsPage({ parentId: item.object_uuid }, 1, CONTENTS_PAGE_SIZE, {
+    live: true,
+    enabled: !!schematic && hasContents(schematic),
+  });
+  const contents =
+    schematic && children.data
+      ? contentsOf(schematic, item.object_data, children.data.items)
+      : undefined;
   const body = bodyFacts(item.object_data.scenename);
   // Bodies drawn around this one (its moons, planets, siblings) open their own page.
   const bodies = useBodyIndex(body !== null);
@@ -133,6 +146,8 @@ function ObjectDetails({
             resolveRef={resolveRef}
             onNavigate={onNavigate}
             bodies={bodies}
+            contents={contents}
+            onShowContents={() => onOpenOrbit(item.object_uuid)}
           />
         )
       }
