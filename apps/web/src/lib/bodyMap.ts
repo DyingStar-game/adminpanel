@@ -43,6 +43,8 @@ const STRUCTURE_TYPES = new Set([
   'simple_building',
   'city',
   'storagewarehouse',
+  'storage_area',
+  'crate_container',
   'station',
 ]);
 

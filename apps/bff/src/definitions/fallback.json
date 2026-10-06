@@ -1,5 +1,5 @@
 {
-  "source": "DyingStar-game/horizonserver ds_genericprops/props @ develop 91aea99",
+  "source": "DyingStar-game/horizonserver ds_genericprops/props @ develop b1d4f6a",
   "definitions": [
     {
       "type": "box",
@@ -386,6 +386,23 @@
       ]
     },
     {
+      "type": "storage_area",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 300,
+          "frequency": 30,
+          "properties": ["position", "rotation", "parent_id"]
+        },
+        {
+          "zone": 6,
+          "distance": 301,
+          "frequency": 5,
+          "properties": ["scenename", "terrain_settled", "size"]
+        }
+      ]
+    },
+    {
       "type": "storagewarehouse",
       "channels": [
         {
@@ -426,6 +443,7 @@
             "steering",
             "speed",
             "velocity_local",
+            "wheel_kmh",
             "handbrake",
             "headlights",
             "engine",

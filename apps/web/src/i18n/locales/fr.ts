@@ -214,6 +214,7 @@ export const fr: Translations = {
       leftDoor: 'Porte gauche',
       rightDoor: 'Porte droite',
       speed: 'Vitesse',
+      wheels: 'Roues',
       engine: 'Moteur',
       handbrake: 'Frein à main',
       headlights: 'Phares',

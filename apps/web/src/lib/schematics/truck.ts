@@ -64,6 +64,8 @@ export const truck: z.input<typeof SchematicSchema> = {
   ],
   readouts: [
     { kind: 'gauge', path: 'speed', label: 'speed', unit: 'km/h', max: 'limiter_kmh' },
+    // Driven wheels' speed: differs from `speed` when they spin or lock.
+    { kind: 'value', path: 'wheel_kmh', label: 'wheels', unit: 'km/h' },
     { kind: 'toggle', path: 'engine', label: 'engine' },
     { kind: 'toggle', path: 'handbrake', label: 'handbrake' },
     { kind: 'toggle', path: 'headlights', label: 'headlights' },

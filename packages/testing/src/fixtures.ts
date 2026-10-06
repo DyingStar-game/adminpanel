@@ -137,6 +137,7 @@ const vehicle: Item = {
       hatch_rr: false,
     },
     speed: 28.7,
+    wheel_kmh: 29.4,
     engine: true,
     handbrake: false,
     headlights: true,

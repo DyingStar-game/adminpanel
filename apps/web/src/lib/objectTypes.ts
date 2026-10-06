@@ -14,6 +14,7 @@ const TYPE_COLORS: Record<string, string> = {
   poi_village: '#c026d3',
   cargo_depot: '#f97316',
   storagewarehouse: '#a16207',
+  storage_area: '#0d9488',
   mining_depot: '#ca8a04',
   miningzone: '#eab308',
   miningrock: '#78716c',

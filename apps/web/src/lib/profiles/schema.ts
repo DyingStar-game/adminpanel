@@ -8,6 +8,8 @@ export const RendererSchema = z.enum([
   'inlineList',
   /** Angle in radians, also shown in degrees. */
   'angle',
+  /** Footprint `{ x, y }` (or `{ x, y, z }`) in metres, shown `x × y m`. */
+  'size',
   /** `positions[]` paired with `rotations[]`: table of orbital samples. */
   'orbitalSamples',
 ]);

@@ -211,6 +211,7 @@ export const en = {
       leftDoor: 'Left door',
       rightDoor: 'Right door',
       speed: 'Speed',
+      wheels: 'Wheels',
       engine: 'Engine',
       handbrake: 'Handbrake',
       headlights: 'Headlights',

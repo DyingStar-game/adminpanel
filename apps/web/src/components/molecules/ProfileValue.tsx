@@ -63,6 +63,14 @@ export function ProfileValue({ renderer, data, compact = false, ...props }: Prof
     );
   }
 
+  if (renderer === 'size' && value && typeof value === 'object' && !Array.isArray(value)) {
+    const sides = ['x', 'y', 'z'].map((axis) => (value as Record<string, unknown>)[axis]);
+    const known = sides.filter((side): side is number => typeof side === 'number');
+    if (known.length >= 2) {
+      return <MonoText title="x × y (× z)">{known.map(fixed).join(' × ')} m</MonoText>;
+    }
+  }
+
   if (renderer === 'orbitalSamples' && Array.isArray(value)) {
     const rotations = Array.isArray(data.rotations) ? data.rotations : [];
     return (
