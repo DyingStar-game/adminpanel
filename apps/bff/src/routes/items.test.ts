@@ -423,6 +423,70 @@ describe('POST /api/items/:uuid/duplicate', () => {
   });
 });
 
+describe('POST /api/items/check', () => {
+  const NEW = '11111111-1111-4111-8111-111111111111';
+  const codes = (body: { findings: { code: string }[] }) => body.findings.map((f) => f.code);
+
+  it('checks a new item against its type, parent and references, without writing', async () => {
+    const { request, persistence } = buildApp();
+    const res = await request(
+      '/api/items/check',
+      json({
+        mode: 'create',
+        item: {
+          object_type: 'vehicle',
+          object_uuid: NEW,
+          object_data: {
+            parent_id: ids.missingParent,
+            position: { x: 0, y: 0, z: 0 },
+            components: { slot_fl: ids.wheelFl, slot_fr: ids.player },
+          },
+        },
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    const body = await read(res);
+    expect(codes(body)).toEqual(
+      expect.arrayContaining(['parentNotFound', 'refTaken', 'refWrongType']),
+    );
+    for (const method of ['POST', 'PUT', 'DELETE']) {
+      expect([...persistence.calls.keys()].some((key) => key.startsWith(method))).toBe(false);
+    }
+  });
+
+  it('checks only the changed keys of an edit, and refuses a descendant as parent', async () => {
+    const vehicle = createDataset().find((i) => i.object_uuid === ids.vehicle);
+    if (!vehicle) throw new Error('fixture vehicle missing');
+    const res = await buildApp().request(
+      '/api/items/check',
+      json({
+        mode: 'edit',
+        changed: ['parent_id'],
+        item: { ...vehicle, object_data: { ...vehicle.object_data, parent_id: ids.wheelFl } },
+      }),
+    );
+
+    // The fixture's dangling component (slot_rl) is not the edit's doing: not reported.
+    expect(codes(await read(res))).toEqual(['parentTypeUnusual', 'parentDescendant']);
+  });
+
+  it('refuses a parent alias, reserved to the import', async () => {
+    const res = await buildApp().request(
+      '/api/items/check',
+      json({
+        mode: 'create',
+        item: {
+          object_type: 'vehicle',
+          object_uuid: NEW,
+          object_data: { parent_id: '_planet_SandBox' },
+        },
+      }),
+    );
+    expect(codes(await read(res))).toContain('parentInvalid');
+  });
+});
+
 describe('POST /api/items/import/check', () => {
   const NEW = '11111111-1111-4111-8111-111111111111';
 

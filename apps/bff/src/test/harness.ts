@@ -28,7 +28,9 @@ export const githubDefinitionsHandlers = [
     ),
   ),
   http.get('https://raw.test/:file', ({ params }) =>
-    HttpResponse.json(def(['position', 'rotation', 'parent_id', `${String(params.file)}_prop`])),
+    HttpResponse.json(
+      def(['position', 'rotation', 'parent_id', 'scenename', `${String(params.file)}_prop`]),
+    ),
   ),
 ];
 

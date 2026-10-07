@@ -157,6 +157,13 @@ export const fr: Translations = {
       uuid: 'UUID invalide.',
       exists: 'Un objet utilise déjà cet UUID.',
     },
+    checking: 'Vérification…',
+    checkErrors: 'La vérification a trouvé des erreurs : corrigez-les avant d’enregistrer.',
+    checkWarnings:
+      'La vérification a trouvé des avertissements : corrigez-les, ou enregistrez quand même.',
+    checkFailed: 'La vérification est indisponible : validez à nouveau pour enregistrer sans elle.',
+    saveAnyway: 'Enregistrer quand même',
+    createAnyway: 'Créer quand même',
     saved: 'Enregistré',
     created: 'Objet créé',
     failed: "L'écriture a échoué.",
@@ -467,6 +474,14 @@ export const fr: Translations = {
       sceneUnknown: 'Scène jamais utilisée sur le serveur.',
       sceneOtherType: 'Scène utilisée par d’autres types : {{types}}.',
       positionMissing: 'Pas de position, alors que les objets existants de ce type en ont une.',
+      parentDescendant: 'Le nouveau parent est l’un des descendants de cet objet.',
+      refRepeated: 'Déjà utilisé en {{path}} dans cet objet.',
+      refTaken: 'Déjà tenu par {{uuid}} : il ne peut être qu’à un seul endroit.',
+      refOtherParent: '{{uuid}} appartient à un autre parent ({{parent}}).',
+      refOtherKey: 'Son {{key}} vaut « {{actual}} », pas « {{expected}} ».',
+      refNotBack: 'Son {{key}} ne renvoie pas vers cet objet.',
+      uuidNotReference:
+        '{{uuid}} ne désigne aucun objet, et aucune référence connue n’est vérifiée ici.',
     },
   },
   confirm: {

@@ -25,8 +25,12 @@ export const ImportCodeSchema = z.enum([
   'aliasAmbiguous',
   'duplicateSpawn',
   'duplicateSpawnInImport',
+  'parentDescendant',
+  'refRepeated',
+  'refTaken',
   // Information.
   'aliasResolved',
+  'uuidNotReference',
   // Warnings (coherence with the server's data).
   'typeMismatch',
   'undeclaredKey',
@@ -39,6 +43,9 @@ export const ImportCodeSchema = z.enum([
   'sceneOtherType',
   'positionMissing',
   'possibleDuplicate',
+  'refOtherParent',
+  'refOtherKey',
+  'refNotBack',
 ]);
 export type ImportCode = z.infer<typeof ImportCodeSchema>;
 
@@ -79,6 +86,24 @@ export const ImportCheckResponseSchema = z.object({
   items: z.array(z.unknown()),
 });
 export type ImportCheckResponse = z.infer<typeof ImportCheckResponseSchema>;
+
+/**
+ * `POST /api/items/check` (ADR 0022): the import's checks for one item of a create or edit form,
+ * read-only. `changed`: top-level keys the edit changed, the only ones checked for undeclared
+ * keys, value kinds and UUIDs outside known references.
+ */
+export const ItemCheckRequestSchema = z.object({
+  item: z.object({
+    object_type: z.string(),
+    object_uuid: z.string(),
+    object_data: z.record(z.string(), z.unknown()),
+  }),
+  mode: z.enum(['create', 'edit']),
+  changed: z.array(z.string()).optional(),
+});
+export type ItemCheckRequest = z.infer<typeof ItemCheckRequestSchema>;
+export const ItemCheckResponseSchema = z.object({ findings: z.array(ImportFindingSchema) });
+export type ItemCheckResponse = z.infer<typeof ItemCheckResponseSchema>;
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   !!value && typeof value === 'object' && !Array.isArray(value);

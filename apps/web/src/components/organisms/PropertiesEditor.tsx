@@ -8,8 +8,9 @@ import {
   type Control,
   type FieldErrors,
 } from 'react-hook-form';
-import type { ObjectDefinition } from '@dyingstar-admin/schemas';
+import type { ImportFinding, ObjectDefinition } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
+import { FindingView } from '@/components/molecules/FindingView';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { PropertyInput } from '@/components/molecules/PropertyInput';
 import { SceneCombobox, type SceneOption } from '@/components/molecules/SceneCombobox';
@@ -31,6 +32,8 @@ interface PropertiesEditorProps {
   objectType?: string | undefined;
   /** A known scene was picked for `scenename`. */
   onScenePick?: (option: SceneOption) => void;
+  /** Findings of the last coherence check, by property row (ADR 0022). */
+  findings?: ReadonlyMap<string, ImportFinding[]>;
 }
 
 /**
@@ -45,6 +48,7 @@ export function PropertiesEditor({
   sceneOptions = [],
   objectType,
   onScenePick,
+  findings,
 }: PropertiesEditorProps) {
   const { t } = useTranslation();
   const { fields, append, remove, update } = useFieldArray({ control, name: 'properties' });
@@ -155,6 +159,18 @@ export function PropertiesEditor({
               <span role="alert" className="text-2xs text-destructive">
                 {t(`editor.errors.${message}` as 'editor.errors.json')}
               </span>
+            )}
+            {findings?.get(field.key) && (
+              <ul className="flex flex-col gap-0.5">
+                {findings.get(field.key)?.map((finding, i) => (
+                  <FindingView
+                    key={i}
+                    finding={finding}
+                    // The row names the key already: only a nested path is worth showing.
+                    showPath={finding.path !== `object_data.${field.key}`}
+                  />
+                ))}
+              </ul>
             )}
           </div>
         );

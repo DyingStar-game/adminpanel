@@ -29,6 +29,9 @@ const stored = (bff: ReturnType<typeof useInProcessBff>, uuid: string) => {
   return item;
 };
 
+// Creating checks the item first (ADR 0022): one more round trip through the in-process BFF.
+const WRITE_WAIT = { timeout: 4000 };
+
 describe('ItemActionsHost', () => {
   it('edits an item and only sends what changed', async () => {
     const bff = useInProcessBff();
@@ -51,6 +54,29 @@ describe('ItemActionsHost', () => {
       // Not reverted: the user did not touch the position.
       position: { x: 9, y: 9, z: 9 },
     });
+  });
+
+  it('refuses to save an edit the check finds an error in (ADR 0022)', async () => {
+    const bff = useInProcessBff();
+    renderHost();
+    act(() => useItemActions.getState().edit(ids.vehicle));
+
+    // Under its own component: a parent cycle.
+    const parent = await screen.findByRole('textbox', { name: 'parent_id' });
+    await userEvent.clear(parent);
+    await userEvent.type(parent, ids.wheelFl);
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(
+      await screen.findByText(
+        'The new parent is one of this item’s own descendants.',
+        {},
+        WRITE_WAIT,
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/found errors/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Save' }));
+    expect(stored(bff, ids.vehicle).object_data.parent_id).toBe(ids.planet);
   });
 
   it('asks before overwriting a value the game changed meanwhile', async () => {
@@ -94,7 +120,7 @@ describe('ItemActionsHost', () => {
 
     await userEvent.click(await screen.findByRole('button', { name: 'Create' }));
 
-    await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
+    await vi.waitFor(() => expect(onCreated).toHaveBeenCalled(), WRITE_WAIT);
     const created = onCreated.mock.calls[0]?.[0];
     expect(stored(bff, created.object_uuid)).toMatchObject({
       object_type: 'vehicle',
@@ -128,7 +154,14 @@ describe('ItemActionsHost', () => {
     await userEvent.click(await screen.findByRole('option', { name: /truck\.tscn/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Create' }));
 
-    await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
+    // Vehicles of the dataset all stand on a planet: a warning, created anyway (ADR 0022).
+    expect(
+      await screen.findByText(/Unusual parent for this type: a spawnbuilding/, {}, WRITE_WAIT),
+    ).toBeInTheDocument();
+    expect(onCreated).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByRole('button', { name: 'Create anyway' }));
+
+    await vi.waitFor(() => expect(onCreated).toHaveBeenCalled(), WRITE_WAIT);
     const expected = spawnNextTo(player, 12, 1) as SpawnPreset;
     expect(stored(bff, onCreated.mock.calls[0]?.[0].object_uuid).object_data).toMatchObject({
       parent_id: ids.spawnbuilding,
@@ -147,7 +180,7 @@ describe('ItemActionsHost', () => {
     await userEvent.click(await screen.findByRole('option', { name: /truck\.tscn/ }));
     await userEvent.click(screen.getByRole('button', { name: 'Create' }));
 
-    await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
+    await vi.waitFor(() => expect(onCreated).toHaveBeenCalled(), WRITE_WAIT);
     expect(stored(bff, onCreated.mock.calls[0]?.[0].object_uuid).object_type).toBe('vehicle');
   });
 
@@ -161,7 +194,9 @@ describe('ItemActionsHost', () => {
     await userEvent.type(uuid, ids.vehicle);
     await userEvent.click(screen.getByRole('button', { name: 'Create' }));
 
-    expect(await screen.findByText('An item already uses this UUID.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('An item already uses this UUID.', {}, WRITE_WAIT),
+    ).toBeInTheDocument();
   });
 
   it('deletes after warning about orphans and the game not being notified', async () => {
@@ -193,7 +228,7 @@ describe('ItemActionsHost', () => {
 
     await userEvent.click(within(dialog).getByRole('button', { name: 'Duplicate' }));
 
-    await vi.waitFor(() => expect(onCreated).toHaveBeenCalled());
+    await vi.waitFor(() => expect(onCreated).toHaveBeenCalled(), WRITE_WAIT);
     expect(bff.persistence.items.size).toBe(before + 3);
     const root = stored(bff, onCreated.mock.calls[0]?.[0].object_uuid);
     expect(root.object_data).toMatchObject({ parent_id: ids.spawnbuilding });

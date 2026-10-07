@@ -5,6 +5,7 @@ import {
   DuplicateRequestSchema,
   ExistsRequestSchema,
   ImportCheckRequestSchema,
+  ItemCheckRequestSchema,
   createListItemsQuerySchema,
   UpdateItemRequestSchema,
   ItemsSearchSchema,
@@ -26,6 +27,9 @@ export const itemsRoutes = new Hono<ServerContext>()
   .get('/scenes', async (c) => c.json({ scenes: await c.var.items.scenes() }))
   .post('/import/check', validate('json', ImportCheckRequestSchema), async (c) =>
     c.json(await c.var.items.importCheck(c.req.valid('json').items)),
+  )
+  .post('/check', validate('json', ItemCheckRequestSchema), async (c) =>
+    c.json(await c.var.items.check(c.req.valid('json'))),
   )
   .post('/exists', validate('json', ExistsRequestSchema), async (c) =>
     c.json({ existing: await c.var.items.exists(c.req.valid('json').uuids) }),

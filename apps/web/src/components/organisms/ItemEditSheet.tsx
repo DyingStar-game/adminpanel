@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { dequal } from 'dequal';
 import { toast } from 'sonner';
@@ -18,13 +18,16 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useDefinitions, useItem } from '@/hooks/queries';
 import { useUpdateItem } from '@/hooks/mutations';
+import { useItemCheck } from '@/hooks/useItemCheck';
 import { useSceneOptions } from '@/hooks/useScenes';
 import { useWriteTarget } from '@/hooks/useWriteTarget';
 import { ApiError } from '@/lib/api';
+import { splitFindings } from '@/lib/findings';
 import { itemLabel } from '@/lib/itemLabel';
 import { dataFromRows, editDiff, rowsFromData } from '@/lib/propertyForm';
 import { EditFormSchema, type PropertiesFormValues } from '@/lib/propertyFormSchema';
 import type { MoveContext } from '@/stores/itemActions';
+import { CheckNotice } from './CheckNotice';
 import { PropertiesEditor } from './PropertiesEditor';
 
 interface ItemEditSheetProps {
@@ -87,6 +90,20 @@ function EditForm({
     },
   });
 
+  // Coherence check before saving (ADR 0022); the item as it stands, to offer "save anyway".
+  const check = useItemCheck();
+  const rows = useWatch({ control: form.control, name: 'properties' });
+  const current = useMemo(() => {
+    const data = dataFromRows(rows);
+    return data
+      ? { object_type: base.object_type, object_uuid: base.object_uuid, object_data: data }
+      : null;
+  }, [rows, base]);
+  const { byKey, general } = splitFindings(
+    check.findings,
+    rows.map((row) => row.key),
+  );
+
   /** Keys the game saved since the editor opened. */
   const gameChanged = useMemo(() => {
     const keys = new Set([...Object.keys(base.object_data), ...Object.keys(latest.object_data)]);
@@ -118,7 +135,7 @@ function EditForm({
     }
   };
 
-  const submit = form.handleSubmit(({ properties }) => {
+  const submit = form.handleSubmit(async ({ properties }) => {
     const edited = dataFromRows(properties);
     if (!edited) return;
     const edit = editDiff(base.object_data, edited);
@@ -126,6 +143,12 @@ function EditForm({
       toast(t('editor.noChange'));
       return;
     }
+    const verdict = await check.run({
+      item: { object_type: base.object_type, object_uuid: base.object_uuid, object_data: edited },
+      mode: 'edit',
+      changed: [...Object.keys(edit.changes), ...edit.removed],
+    });
+    if (verdict !== 'save') return;
     if (isProduction) setPending(edit);
     else void save(edit);
   });
@@ -162,9 +185,11 @@ function EditForm({
             gameChanged={gameChanged}
             sceneOptions={sceneOptions}
             objectType={base.object_type}
+            findings={byKey}
           />
         </div>
       </ScrollArea>
+      <CheckNotice findings={check.findings} general={general} failed={check.failed} />
       <SheetFooter className="flex-row justify-end border-t">
         <MonoText tone="subtle" className="mr-auto self-center text-2xs">
           PUT /items/{'{uuid}'}
@@ -172,8 +197,12 @@ function EditForm({
         <Button type="button" variant="outline" onClick={onDone}>
           {t('confirm.cancel')}
         </Button>
-        <Button type="submit" disabled={update.isPending}>
-          {t('editor.save')}
+        <Button type="submit" disabled={update.isPending || check.checking}>
+          {check.checking
+            ? t('editor.checking')
+            : check.confirming(current)
+              ? t('editor.saveAnyway')
+              : t('editor.save')}
         </Button>
       </SheetFooter>
 

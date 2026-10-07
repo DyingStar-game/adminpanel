@@ -16,6 +16,13 @@ describe('type profiles', () => {
     expect(relationFor(profileFor('vehicle'), 'components.slot_fl')?.target).toBe(
       'vehicle_component',
     );
+    // `[]` matches an array element, as paths of array values are written (ADR 0022).
+    expect(matchesPath('apartments[].player_uuid', 'apartments[3].player_uuid')).toBe(true);
+    expect(matchesPath('apartments[].player_uuid', 'apartments.x.player_uuid')).toBe(false);
+    expect(matchesPath('seats.*', 'seats[0]')).toBe(false);
+    expect(relationFor(profileFor('spawnbuilding'), 'apartments[0].player_uuid')?.label).toBe(
+      'tenant',
+    );
   });
 
   it('orders preferred child types first', () => {

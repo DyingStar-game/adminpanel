@@ -2,7 +2,9 @@ import { LRUCache } from 'lru-cache';
 import pLimit from 'p-limit';
 import {
   checkImportFormat,
+  isParentAlias,
   resolveParentAliases,
+  UuidSchema,
   EditConflictDetailsSchema,
   ErrorCode,
   MAP_PLACED_THROUGH_PARENT,
@@ -12,7 +14,10 @@ import {
   type CreateItem,
   type DuplicateRequest,
   type ImportCheckResponse,
+  type ImportFinding,
   type Item,
+  type ItemCheckRequest,
+  type ItemCheckResponse,
   type ListItemsQuery,
   type PaginatedItems,
   type SceneUsage,
@@ -22,7 +27,7 @@ import { ApiError, notFound } from '../lib/errors';
 import type { DefinitionsService } from './definitions';
 import { buildBodyMap, type BodyFrame } from './bodyMap';
 import { planDuplicate } from './duplicate';
-import { buildImportContext, checkImportCoherence } from './importCheck';
+import { buildImportContext, checkImportCoherence, scenesFrom, uuidsIn } from './importCheck';
 import { mergeEdit, type EditRequest } from './merge';
 
 /** Depth guard when walking `parent_id` up (ADR 0005). */
@@ -32,6 +37,11 @@ const EXISTS_DIRECT_LOOKUP_MAX = 50;
 const SCAN_PAGE_SIZE = 10_000;
 /** Lifetime of the known scenes list (one full scan per refresh). */
 const SCENES_TTL_MS = 5 * 60 * 1000;
+/**
+ * Lifetime of a type's items and their parents, read by the single-item check (ADR 0022): one
+ * filtered scan per type, kept a few minutes and dropped on every write.
+ */
+const TYPE_SAMPLE_TTL_MS = 5 * 60 * 1000;
 /**
  * Lifetime of counts (children per type, totals per type): each is a full scan on persistence
  * (1 to 10 s) and the game saves about every 60 s, so they are kept a minute and served stale
@@ -164,6 +174,43 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
       return [...counts.values()].sort((a, b) => b.count - a.count);
     },
   });
+
+  // Items of a type and their parents, for the single-item check (ADR 0022).
+  const typeSamples = new LRUCache<string, { value: Item[] }, () => Promise<Item[]>>({
+    max: 50,
+    ttl: TYPE_SAMPLE_TTL_MS,
+    fetchMethod: async (_key, _stale, { context }) => ({ value: await context() }),
+  });
+
+  async function loadTypeSample(objectType: string): Promise<Item[]> {
+    const items = await listAll({ object_type: objectType });
+    const own = new Set(items.map((item) => item.object_uuid));
+    const parentIds = [
+      ...new Set(items.map((item) => item.object_data.parent_id ?? '').filter(Boolean)),
+    ].filter((uuid) => !own.has(uuid));
+    const parents = await Promise.all(parentIds.map((uuid) => limit(() => get(uuid))));
+    return [...items, ...parents.filter((p): p is Item => p !== null)];
+  }
+
+  async function typeSample(objectType: string): Promise<Item[]> {
+    if (readCacheTtlMs === 0) return loadTypeSample(objectType);
+    const boxed = await typeSamples.fetch(objectType, {
+      context: () => loadTypeSample(objectType),
+    });
+    return boxed?.value ?? [];
+  }
+
+  /** Whether `uuid` is among the ancestors of `parentId` (or is it), walking up. */
+  async function isAncestorOf(uuid: string, parentId: string): Promise<boolean> {
+    const seen = new Set<string>();
+    let current: string | undefined = parentId;
+    while (current && !seen.has(current) && seen.size < MAX_ANCESTOR_DEPTH) {
+      if (current === uuid) return true;
+      seen.add(current);
+      current = (await get(current))?.object_data.parent_id ?? undefined;
+    }
+    return false;
+  }
 
   /** Children count, overall and per known object type. */
   function countChildren(uuid: string): Promise<ChildrenCountsResponse> {
@@ -314,6 +361,7 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
         reads.clear();
         countCache.clear();
         snapshots.clear();
+        typeSamples.clear();
       }
       return created;
     },
@@ -424,6 +472,67 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
       return { rows, items: aliases.items };
     },
 
+    /**
+     * Checks one item of a create or edit form without writing anything (ADR 0022): the
+     * import's checks, fed with the item's type, its parent and the items it references
+     * instead of a full scan.
+     */
+    async check({ item, mode, changed }: ItemCheckRequest): Promise<ItemCheckResponse> {
+      const [{ definitions: defs }, usage, sample] = await Promise.all([
+        definitions.list(),
+        scenes.fetch('scenes').then((value) => value ?? []),
+        item.object_type ? typeSample(item.object_type) : Promise.resolve([]),
+      ]);
+      const data = item.object_data;
+      const known = new Set(sample.map((i) => i.object_uuid));
+      // The parent and every UUID the item holds: references, and UUIDs outside them.
+      const wanted = new Set(
+        Object.entries(data)
+          .filter(([key]) => key !== 'uuid')
+          .flatMap(([key, value]) => uuidsIn(value, key).map((ref) => ref.uuid))
+          .filter((uuid) => uuid !== item.object_uuid && !known.has(uuid)),
+      );
+      const others = await Promise.all([...wanted].map((uuid) => limit(() => get(uuid))));
+      const context = buildImportContext(
+        [...sample, ...others.filter((o): o is Item => o !== null)],
+        defs,
+      );
+      // Partial items: scenes come from the known scenes of the whole server.
+      context.scenes = scenesFrom(usage);
+
+      const types = defs.map((d) => d.type);
+      const [row] = checkImportCoherence(
+        [item],
+        checkImportFormat([item], types),
+        context,
+        mode === 'edit' ? { changed } : {},
+      );
+      // An edit only reports what it changes: an old dangling reference is not its doing.
+      const touched = (f: ImportFinding) => {
+        const key = f.path?.match(/^object_data\.([^.[]+)/)?.[1];
+        return mode !== 'edit' || !changed || !key || changed.includes(key);
+      };
+      const findings: ImportFinding[] = (row?.findings ?? []).filter(touched);
+      const parent = data.parent_id;
+      // Aliases (`_planet_SandBox`) belong to the import: a form gives the parent's UUID.
+      if (isParentAlias(parent)) {
+        findings.push({ code: 'parentInvalid', severity: 'error', path: 'object_data.parent_id' });
+      } else if (
+        mode === 'edit' &&
+        typeof parent === 'string' &&
+        parent !== item.object_uuid &&
+        UuidSchema.safeParse(parent).success &&
+        (await isAncestorOf(item.object_uuid, parent))
+      ) {
+        findings.push({
+          code: 'parentDescendant',
+          severity: 'error',
+          path: 'object_data.parent_id',
+        });
+      }
+      return { findings };
+    },
+
     /** `scenename` values in use, with their type and count, most used first. */
     async scenes(): Promise<SceneUsage[]> {
       return (await scenes.fetch('scenes')) ?? [];
@@ -452,6 +561,7 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
       reads.clear();
       countCache.clear();
       snapshots.clear();
+      typeSamples.clear();
       return created;
     },
 
@@ -474,6 +584,7 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
       reads.clear();
       countCache.clear();
       snapshots.clear();
+      typeSamples.clear();
       return updated;
     },
 
@@ -482,6 +593,7 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
       reads.clear();
       countCache.clear();
       snapshots.clear();
+      typeSamples.clear();
     },
   };
 }

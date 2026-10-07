@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
-import { CircleXIcon, InfoIcon, TextSearchIcon, TriangleAlertIcon } from 'lucide-react';
+import { TextSearchIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { ImportFinding, ImportRow } from '@dyingstar-admin/schemas';
+import type { ImportRow } from '@dyingstar-admin/schemas';
 import { CopyButton } from '@/components/atoms/CopyButton';
 import { MonoText } from '@/components/atoms/MonoText';
 import { TypeDot } from '@/components/atoms/TypeDot';
+import { FindingView } from '@/components/molecules/FindingView';
 import { Pagination } from '@/components/molecules/Pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -214,38 +215,6 @@ function ImportRowView({
       {outcome?.state === 'failed' && (
         <p className="ml-12 text-xs text-destructive">{outcome.message}</p>
       )}
-    </li>
-  );
-}
-
-function FindingView({ finding }: { finding: ImportFinding }) {
-  const { t } = useTranslation();
-  const Icon = { error: CircleXIcon, warning: TriangleAlertIcon, info: InfoIcon }[finding.severity];
-  return (
-    <li className="flex items-start gap-1.5 text-xs">
-      <Icon
-        aria-label={t(`import.severity.${finding.severity}`)}
-        className={cn(
-          'mt-0.5 size-3.5 shrink-0',
-          {
-            error: 'text-destructive',
-            warning: 'text-amber-600 dark:text-amber-400',
-            info: 'text-link',
-          }[finding.severity],
-        )}
-      />
-      <span>
-        {t(`import.codes.${finding.code}`, {
-          ...finding.params,
-          // A missing parent where every existing item has one has its own message.
-          ...(finding.params?.parentType === '' ? { context: 'root' } : {}),
-        })}
-        {finding.path && (
-          <MonoText tone="subtle" className="ml-1.5 text-2xs">
-            {finding.path}
-          </MonoText>
-        )}
-      </span>
     </li>
   );
 }

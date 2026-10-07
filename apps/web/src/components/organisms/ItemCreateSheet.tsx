@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Controller, useForm, useWatch, type Control, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RefreshCwIcon } from 'lucide-react';
@@ -17,9 +17,11 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useDefinitions } from '@/hooks/queries';
 import { useCreateItem } from '@/hooks/mutations';
+import { useItemCheck } from '@/hooks/useItemCheck';
 import { useSceneOptions } from '@/hooks/useScenes';
 import { useWriteTarget } from '@/hooks/useWriteTarget';
 import { ApiError } from '@/lib/api';
+import { splitFindings } from '@/lib/findings';
 import { dataFromRows, toRaw } from '@/lib/propertyForm';
 import {
   offsetValid,
@@ -31,6 +33,7 @@ import {
 } from '@/lib/spawn';
 import { PropertiesSchema, type PropertiesFormValues } from '@/lib/propertyFormSchema';
 import type { PlaceContext, SpawnContext } from '@/stores/itemActions';
+import { CheckNotice } from './CheckNotice';
 import { PropertiesEditor } from './PropertiesEditor';
 
 interface ItemCreateSheetProps {
@@ -84,6 +87,19 @@ export function ItemCreateSheet({
     },
   });
   const selectedType = useWatch({ control: form.control, name: 'objectType' });
+  const watchedUuid = useWatch({ control: form.control, name: 'uuid' });
+  const rows = useWatch({ control: form.control, name: 'properties' });
+
+  // Coherence check before creating (ADR 0022); the item as it stands, to offer "create anyway".
+  const check = useItemCheck();
+  const current = useMemo(() => {
+    const data = dataFromRows(rows);
+    return data ? { object_type: selectedType, object_uuid: watchedUuid, object_data: data } : null;
+  }, [rows, selectedType, watchedUuid]);
+  const { byKey, general } = splitFindings(
+    check.findings,
+    rows.map((row) => row.key),
+  );
 
   // Spawn next to an entity: offsets default to the chosen type's ones (8 m / 1 m for a vehicle).
   const [rawOffsets, setRawOffsets] = useState<Partial<Record<OffsetKey, string>>>({});
@@ -134,10 +150,11 @@ export function ItemCreateSheet({
     }
   };
 
-  const submit = form.handleSubmit(({ objectType: type, uuid, properties }) => {
+  const submit = form.handleSubmit(async ({ objectType: type, uuid, properties }) => {
     const data = dataFromRows(properties);
     if (!data) return;
     const item: Item = { object_type: type, object_uuid: uuid, object_data: data };
+    if ((await check.run({ item, mode: 'create' })) !== 'save') return;
     if (isProduction) setPending(item);
     else void send(item);
   });
@@ -235,6 +252,7 @@ export function ItemCreateSheet({
               definition={selectedType ? definition : null}
               sceneOptions={sceneOptions}
               objectType={selectedType || undefined}
+              findings={byKey}
               // Picking a known scene fills the type when none is chosen yet.
               onScenePick={(option) => {
                 if (!form.getValues('objectType') && option.objectType) {
@@ -245,6 +263,7 @@ export function ItemCreateSheet({
           </div>
         </div>
       </ScrollArea>
+      <CheckNotice findings={check.findings} general={general} failed={check.failed} />
       <SheetFooter className="flex-row justify-end border-t">
         <MonoText tone="subtle" className="mr-auto self-center text-2xs">
           POST /items
@@ -252,8 +271,12 @@ export function ItemCreateSheet({
         <Button type="button" variant="outline" onClick={onCancel}>
           {t('confirm.cancel')}
         </Button>
-        <Button type="submit" disabled={create.isPending}>
-          {t('editor.create')}
+        <Button type="submit" disabled={create.isPending || check.checking}>
+          {check.checking
+            ? t('editor.checking')
+            : check.confirming(current)
+              ? t('editor.createAnyway')
+              : t('editor.create')}
         </Button>
       </SheetFooter>
       <WriteConfirm

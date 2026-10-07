@@ -2,6 +2,7 @@ import { matchesPath } from '@dyingstar-admin/schemas';
 import { miningrock } from './miningrock';
 import { planet } from './planet';
 import { player } from './player';
+import { spawnbuilding } from './spawnbuilding';
 import { TypeProfileSchema, type TypeProfile } from './schema';
 import { star } from './star';
 import { storage_area } from './storage_area';
@@ -11,7 +12,7 @@ export type { Renderer, TypeProfile } from './schema';
 
 /** Validated profiles; a typo in a profile file fails at load time (and in tests). */
 const PROFILES: Map<string, TypeProfile> = new Map(
-  [vehicle, player, planet, star, miningrock, storage_area].map((raw) => {
+  [vehicle, player, planet, star, miningrock, storage_area, spawnbuilding].map((raw) => {
     const profile = TypeProfileSchema.parse(raw);
     return [profile.type, profile];
   }),

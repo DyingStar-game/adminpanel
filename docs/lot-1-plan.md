@@ -23,6 +23,10 @@ when a step needs a new decision, it is written as a new ADR before coding.
 - Orbit view: several clusters open at once; copy buttons on UUIDs, positions and rotations.
 - Look of the first DyingStar panel ([ADR 0020](./adr/0020-visual-identity-first-panel.md)):
   dark palette with gold accent, Poppins / JetBrains Mono, sidebar, page titles with their action.
+- Coherence checks on the create and edit forms, for every type
+  ([ADR 0022](./adr/0022-item-form-coherence-checks.md)): the import's checks on one item with
+  targeted reads, plus two-way and exclusive references (a vehicle's components, a building's
+  tenants), shared with the import.
 
 ### Open questions
 

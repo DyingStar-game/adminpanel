@@ -1,5 +1,8 @@
 import {
   KNOWN_RELATIONS,
+  lastKey,
+  matchesPath,
+  UuidSchema,
   valuesAt,
   type ImportFinding,
   type ImportRow,
@@ -47,6 +50,52 @@ export interface ImportContext {
   scenes: Map<string, Set<string>>;
   /** Items by type and name, to spot an object imported twice. */
   named: Map<string, Item[]>;
+  /** Every item known, for what a reference's target says back (ADR 0022). */
+  items: Map<string, Item>;
+  /** Holders of the targets of exclusive references: `type|path` → target UUID → holders. */
+  holders: Map<string, Map<string, string[]>>;
+}
+
+/** Options of a check: `changed` restricts key-level checks to the keys an edit changed. */
+export interface CoherenceOptions {
+  changed?: readonly string[] | undefined;
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  !!value && typeof value === 'object' && !Array.isArray(value);
+
+const holdersKey = (type: string, path: string) => `${type}|${path}`;
+
+/** Adds the targets an item holds through its exclusive references to `holders`. */
+function addHolder(
+  holders: Map<string, Map<string, string[]>>,
+  type: string,
+  uuid: string,
+  data: Record<string, unknown>,
+) {
+  for (const relation of KNOWN_RELATIONS[type] ?? []) {
+    if (!relation.exclusive) continue;
+    const key = holdersKey(type, relation.path);
+    const byTarget = holders.get(key) ?? new Map<string, string[]>();
+    for (const { value } of valuesAt(data, relation.path)) {
+      if (typeof value !== 'string' || !value) continue;
+      const list = byTarget.get(value) ?? [];
+      if (!list.includes(uuid)) byTarget.set(value, [...list, uuid]);
+    }
+    holders.set(key, byTarget);
+  }
+}
+
+/** UUIDs held by a value, with their path: `apartments[0].player_uuid`. */
+export function uuidsIn(value: unknown, path: string): { path: string; uuid: string }[] {
+  if (typeof value === 'string') {
+    return UuidSchema.safeParse(value).success ? [{ path, uuid: value }] : [];
+  }
+  if (Array.isArray(value)) return value.flatMap((v, i) => uuidsIn(v, `${path}[${i}]`));
+  if (isRecord(value)) {
+    return Object.entries(value).flatMap(([k, v]) => uuidsIn(v, `${path}.${k}`));
+  }
+  return [];
 }
 
 /** Two positions closer than this, in metres on each axis, are the same place. */
@@ -74,8 +123,14 @@ const IDENTITY_KEYS = new Set(['uuid', 'type']);
 /** Share of existing items with a `position` above which a missing one is reported. */
 const POSITION_USUAL = 0.9;
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === 'object' && !Array.isArray(value);
+/** Scene → types using it, from the known scenes (cached, ADR 0022). */
+export const scenesFrom = (usage: { scenename: string; object_type: string }[]) => {
+  const scenes = new Map<string, Set<string>>();
+  for (const { scenename, object_type } of usage) {
+    scenes.set(scenename, (scenes.get(scenename) ?? new Set()).add(object_type));
+  }
+  return scenes;
+};
 
 /** Builds the check context from every item on the server and the type definitions. */
 export function buildImportContext(all: Item[], definitions: ObjectDefinition[]): ImportContext {
@@ -123,8 +178,22 @@ export function buildImportContext(all: Item[], definitions: ObjectDefinition[])
     const key = namedKey(item.object_type, name);
     named.set(key, [...(named.get(key) ?? []), item]);
   }
-  return { declared, existing, stats, scenes, named };
+  const items = new Map(all.map((item) => [item.object_uuid, item]));
+  const holders = new Map<string, Map<string, string[]>>();
+  for (const item of all) addHolder(holders, item.object_type, item.object_uuid, item.object_data);
+  return { declared, existing, stats, scenes, named, items, holders };
 }
+
+const finding =
+  (severity: ImportFinding['severity']) =>
+  (code: ImportFinding['code'], path: string, params?: ImportFinding['params']): ImportFinding => ({
+    code,
+    severity,
+    path,
+    ...(params ? { params } : {}),
+  });
+const errorAt = finding('error');
+const info = finding('info');
 
 const warning = (
   code: ImportFinding['code'],
@@ -141,7 +210,9 @@ export function checkImportCoherence(
   items: unknown[],
   rows: ImportRow[],
   context: ImportContext,
+  { changed }: CoherenceOptions = {},
 ): ImportRow[] {
+  const isChanged = (key: string) => !changed || changed.includes(key);
   // Types of the items of the input itself, for parents and references inside it.
   const inputTypes = new Map(
     rows.flatMap((row) =>
@@ -149,6 +220,27 @@ export function checkImportCoherence(
     ),
   );
   const typeOf = (uuid: string) => context.existing.get(uuid) ?? inputTypes.get(uuid);
+  // Data of the items of the input: what they will say once sent, before the server's.
+  const inputData = new Map<string, Record<string, unknown>>();
+  for (const row of rows) {
+    const raw = items[row.index];
+    if (row.status === 'invalid' || !row.object_uuid || !isRecord(raw)) continue;
+    if (isRecord(raw.object_data)) inputData.set(row.object_uuid, raw.object_data);
+  }
+  const dataOf = (uuid: string) => inputData.get(uuid) ?? context.items.get(uuid)?.object_data;
+  // Exclusive targets held by the input's items; an item of the input replaces its stored version.
+  const inputHolders = new Map<string, Map<string, string[]>>();
+  for (const row of rows) {
+    const data = row.object_uuid ? inputData.get(row.object_uuid) : undefined;
+    if (data && row.object_uuid && row.object_type) {
+      addHolder(inputHolders, row.object_type, row.object_uuid, data);
+    }
+  }
+  const holdersOf = (type: string, path: string, target: string) => {
+    const key = holdersKey(type, path);
+    const stored = (context.holders.get(key)?.get(target) ?? []).filter((u) => !inputData.has(u));
+    return [...stored, ...(inputHolders.get(key)?.get(target) ?? [])];
+  };
 
   // Items of the input already met, by type and name: the same object twice in one import.
   const seenInInput = new Map<string, { index: number; data: Record<string, unknown> }[]>();
@@ -163,6 +255,7 @@ export function checkImportCoherence(
 
     const declared = context.declared.get(type);
     for (const [key, value] of Object.entries(data)) {
+      if (!isChanged(key)) continue;
       const path = `object_data.${key}`;
       if (declared && !declared.has(key) && !IDENTITY_KEYS.has(key)) {
         findings.push(warning('undeclaredKey', path));
@@ -200,19 +293,62 @@ export function checkImportCoherence(
       findings.push(warning('parentTypeUnusual', 'object_data.parent_id', { parentType: '' }));
     }
 
-    for (const relation of KNOWN_RELATIONS[type] ?? []) {
+    const relations = KNOWN_RELATIONS[type] ?? [];
+    for (const relation of relations) {
+      // Within the item, an exclusive target's first place.
+      const held = new Map<string, string>();
       for (const { path, value } of valuesAt(data, relation.path)) {
+        // An empty string is a free place (slot, seat, apartment).
         if (typeof value !== 'string' || !value) continue;
+        const at = `object_data.${path}`;
+        if (relation.exclusive) {
+          const first = held.get(value);
+          if (first) findings.push(errorAt('refRepeated', at, { path: first }));
+          else held.set(value, path);
+          const holder = holdersOf(type, relation.path, value).find((u) => u !== row.object_uuid);
+          if (holder) findings.push(errorAt('refTaken', at, { uuid: holder }));
+        }
         const target = typeOf(value);
-        if (!target) findings.push(warning('refNotFound', `object_data.${path}`, { uuid: value }));
-        else if (target !== relation.target) {
+        if (!target) {
+          findings.push(warning('refNotFound', at, { uuid: value }));
+          continue;
+        }
+        if (target !== relation.target) {
+          findings.push(warning('refWrongType', at, { expected: relation.target, actual: target }));
+          continue;
+        }
+        const back = relation.inverse;
+        const targetData = back ? dataOf(value) : undefined;
+        if (!back || !targetData) continue;
+        if (back.parent && (targetData.parent_id ?? '') !== row.object_uuid) {
           findings.push(
-            warning('refWrongType', `object_data.${path}`, {
-              expected: relation.target,
-              actual: target,
+            warning('refOtherParent', at, {
+              uuid: value,
+              parent: String(targetData.parent_id ?? ''),
             }),
           );
         }
+        if (back.key && targetData[back.key] !== lastKey(path)) {
+          findings.push(
+            warning('refOtherKey', at, {
+              key: back.key,
+              expected: lastKey(path),
+              actual: String(targetData[back.key] ?? ''),
+            }),
+          );
+        }
+        if (back.ref && targetData[back.ref] !== row.object_uuid) {
+          findings.push(warning('refNotBack', at, { uuid: value, key: back.ref }));
+        }
+      }
+    }
+
+    // A UUID outside the known references designating no item: nothing checks it (ADR 0022).
+    for (const [key, value] of Object.entries(data)) {
+      if (key === 'parent_id' || IDENTITY_KEYS.has(key) || !isChanged(key)) continue;
+      for (const { path, uuid } of uuidsIn(value, key)) {
+        if (relations.some((r) => matchesPath(r.path, path)) || typeOf(uuid)) continue;
+        findings.push(info('uuidNotReference', `object_data.${path}`, { uuid }));
       }
     }
 
