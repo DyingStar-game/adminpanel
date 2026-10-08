@@ -37,12 +37,16 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
   });
 
   it("mirrors social's moderation roles (ADR 0024)", () => {
-    expect(permissionsOf(['moderator'])).toEqual([Permission.socialModerate]);
+    expect(permissionsOf(['moderator'])).toEqual([
+      Permission.socialModerate,
+      Permission.economieDashboard,
+    ]);
     expect(permissionsOf(['admin'])).toEqual([
       Permission.socialModerate,
       Permission.socialSanctionSevere,
       Permission.socialReputation,
       Permission.socialReportsAdmin,
+      Permission.economieDashboard,
     ]);
     expect(permissionsOf(['supervisor'])).toEqual([
       Permission.socialModerate,
@@ -50,6 +54,7 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
       Permission.socialReputation,
       Permission.socialReportsAdmin,
       Permission.socialReportsSupervisor,
+      Permission.economieDashboard,
     ]);
   });
 
@@ -71,5 +76,11 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     for (const role of ['moderator', 'admin', 'supervisor']) {
       expect(permissionsOf([role])).not.toContain(Permission.socialCorporationWrite);
     }
+  });
+
+  it("opens economie's wallets with its capability roles only (ADR 0023 › Economie)", () => {
+    expect(permissionsOf(['economie:wallet:read'])).toEqual([Permission.economieWalletRead]);
+    expect(permissionsOf(['economie:politics:read'])).toEqual([Permission.economiePoliticsRead]);
+    expect(permissionsOf(['admin'])).not.toContain(Permission.economieWalletRead);
   });
 });

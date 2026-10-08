@@ -2,6 +2,7 @@ import {
   BookOpenIcon,
   BoxesIcon,
   Building2Icon,
+  CoinsIcon,
   LayoutDashboardIcon,
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
@@ -28,6 +29,7 @@ export type NavId =
   | 'players'
   | 'moderation'
   | 'organisations'
+  | 'economy'
   | 'settings';
 
 interface SidebarProps {
@@ -70,6 +72,7 @@ const SECTIONS: {
       { id: 'players', icon: UsersIcon },
       { id: 'moderation', icon: ShieldAlertIcon },
       { id: 'organisations', icon: Building2Icon },
+      { id: 'economy', icon: CoinsIcon },
     ],
   },
   { title: 'configuration', items: [{ id: 'settings', icon: SettingsIcon, soon: true }] },
@@ -92,6 +95,7 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
     if (id === 'players' || id === 'moderation' || id === 'organisations') {
       return services.includes('social') && can('social.moderate');
     }
+    if (id === 'economy') return services.includes('economie') && can('economie.dashboard');
     return true;
   };
   const collapsed = usePreferences((s) => s.sidebarCollapsed);

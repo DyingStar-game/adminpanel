@@ -1,8 +1,7 @@
 import type { z } from 'zod';
-import { ErrorCode, Permission } from '@dyingstar-admin/schemas';
+import { Permission } from '@dyingstar-admin/schemas';
 import {
   zAdjustReputationResponse,
-  zError,
   zEscalateReportResponse,
   zGetCommunityStatsResponse,
   zInternalCreateCorporationResponse,
@@ -44,7 +43,7 @@ import {
 } from '@dyingstar-admin/contracts/social';
 import type { ServiceTokenSource } from '../auth/serviceToken';
 import type { Session } from '../auth/auth';
-import { ApiError } from '../lib/errors';
+import { createUpstream, type Query } from './upstream';
 
 export interface SocialClientOptions {
   /** `social`'s base URL, without `/api` (e.g. `http://service-social:3000`). */
@@ -57,110 +56,34 @@ export interface SocialClientOptions {
   serviceToken?: ServiceTokenSource | undefined;
 }
 
-type Query = Record<string, string | number | boolean | null | undefined>;
-
-/**
- * Turns a refusal of `social` into an `ApiError`, keeping its message. A 403 is its own role
- * check (ADR 0024): shown as such. A 401 means it did not accept a token the panel holds as valid
- * (misconfiguration), reported as an upstream error.
- */
-async function upstreamError(res: Response): Promise<ApiError> {
-  const body = zError.safeParse(await res.json().catch(() => null));
-  const message = body.success ? body.data.message : `Social answered ${res.status}`;
-  if (res.status === 400) return new ApiError(400, ErrorCode.upstreamRejected, message);
-  if (res.status === 403) return new ApiError(403, ErrorCode.forbidden, message);
-  if (res.status === 404) return new ApiError(404, ErrorCode.notFound, message);
-  if (res.status === 409) return new ApiError(409, ErrorCode.editConflict, message);
-  if (res.status === 401) {
-    return new ApiError(502, ErrorCode.upstreamRejected, `Social refused the session: ${message}`);
-  }
-  return new ApiError(502, ErrorCode.upstreamError, message);
-}
-
 /**
  * HTTP client for `social` (contract pinned in `@dyingstar-admin/contracts/social`): its
  * moderation API (`/api/admin/*`) and the player routes the panel reads (profiles). Every call
  * carries the signed-in user's token: `social` checks their role and records them as the actor.
  */
 export function createSocialClient({ baseUrl, timeoutMs, serviceToken }: SocialClientOptions) {
-  const root = `${baseUrl.replace(/\/$/, '')}/api`;
-
-  /** One call to `social`: the user's token, a JSON body when given, the answer validated. */
-  async function call<T extends z.ZodType>(
-    method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
-    token: string | undefined,
-    path: string,
-    schema: T,
-    { query = {}, body }: { query?: Query; body?: unknown } = {},
-  ): Promise<z.infer<T>> {
-    const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(query)) {
-      if (value !== undefined && value !== null) params.set(key, String(value));
-    }
-    let res: Response;
-    try {
-      res = await fetch(`${root}${path}${params.size ? `?${params}` : ''}`, {
-        method,
-        headers: {
-          Accept: 'application/json',
-          ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-        signal: AbortSignal.timeout(timeoutMs),
-      });
-    } catch (error) {
-      if (error instanceof Error && error.name === 'TimeoutError') {
-        throw new ApiError(
-          504,
-          ErrorCode.upstreamTimeout,
-          `Social did not answer in ${timeoutMs} ms`,
-        );
-      }
-      throw new ApiError(502, ErrorCode.upstreamUnreachable, 'Social is unreachable');
-    }
-    if (!res.ok) throw await upstreamError(res);
-    const payload = res.status === 204 ? undefined : await res.json().catch(() => null);
-    const parsed = schema.safeParse(payload);
-    if (!parsed.success) {
-      throw new ApiError(502, ErrorCode.upstreamError, 'Social returned an unexpected payload');
-    }
-    return parsed.data;
-  }
+  const {
+    call,
+    get,
+    internal: internalCall,
+    hasServiceToken,
+  } = createUpstream({
+    name: 'Social',
+    baseUrl,
+    timeoutMs,
+    serviceToken,
+  });
 
   const corporation = (id: string) => `/corporations/${encodeURIComponent(id)}`;
   const politics = (id: string) => `/politics/${encodeURIComponent(id)}`;
 
-  /** One call to the internal API, with a `svc-admin` token instead of the user's. */
-  async function internal<T extends z.ZodType>(
+  /** One write to the internal API, as `svc-admin`. */
+  const internal = <T extends z.ZodType>(
     method: 'POST' | 'PATCH' | 'DELETE',
     path: string,
     schema: T,
     body?: unknown,
-  ): Promise<z.infer<T>> {
-    if (!serviceToken) {
-      throw new ApiError(404, ErrorCode.notFound, 'Organisation management is not configured');
-    }
-    let token: string;
-    try {
-      token = await serviceToken();
-    } catch (error) {
-      console.error('svc-admin token:', error);
-      throw new ApiError(
-        502,
-        ErrorCode.upstreamUnreachable,
-        'Keycloak refused the svc-admin token',
-      );
-    }
-    return call(method, token, `/internal${path}`, schema, body === undefined ? {} : { body });
-  }
-
-  const get = <T extends z.ZodType>(
-    token: string | undefined,
-    path: string,
-    schema: T,
-    query: Query = {},
-  ) => call('GET', token, path, schema, { query });
+  ) => internalCall(method, path, schema, body === undefined ? {} : { body });
 
   return {
     stats: (token?: string) => get(token, '/admin/stats', zGetCommunityStatsResponse),
@@ -305,7 +228,7 @@ export function createSocialClient({ baseUrl, timeoutMs, serviceToken }: SocialC
         playerId,
       }),
     /** Whether organisation management is configured (`svc-admin`'s secret). */
-    manages: serviceToken !== undefined,
+    manages: hasServiceToken,
   };
 }
 

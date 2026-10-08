@@ -27,3 +27,35 @@ export function parseQuery<T extends z.ZodType>(c: Context, schema: T): z.infer<
   }
   return result.data;
 }
+
+/**
+ * Query strings carry text: whole numbers become numbers before the contract's schemas
+ * (`limit`, `offset`, `id`), which expect integers.
+ */
+export const fromQuery = <T extends z.ZodType>(schema: T) =>
+  z.preprocess(
+    (raw) =>
+      Object.fromEntries(
+        Object.entries(raw as Record<string, string>).map(([key, value]) => [
+          key,
+          /^\d+$/.test(value) ? Number(value) : value,
+        ]),
+      ),
+    schema,
+  );
+
+/**
+ * JSON-safe copy of a payload parsed with a generated contract: its `int64` fields are `BigInt`
+ * (`z.coerce.bigint()`), which JSON cannot write. Numbers when safe, else strings (the SPA reads
+ * both back with the same schema).
+ */
+export const jsonSafe = <T>(data: T): unknown =>
+  JSON.parse(
+    JSON.stringify(data, (_key, value: unknown) =>
+      typeof value === 'bigint'
+        ? value <= BigInt(Number.MAX_SAFE_INTEGER) && value >= BigInt(Number.MIN_SAFE_INTEGER)
+          ? Number(value)
+          : value.toString()
+        : value,
+    ),
+  );

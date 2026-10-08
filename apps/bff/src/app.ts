@@ -13,11 +13,13 @@ import {
   type Auth,
   type SessionContext,
 } from './auth/auth';
+import type { EconomieClient } from './clients/economie';
 import type { SocialClient } from './clients/social';
 import { createPersistenceClient } from './clients/persistence';
 import { ApiError } from './lib/errors';
 import { withPersistence } from './middleware/persistence';
 import { bodiesRoutes } from './routes/bodies';
+import { economieRoutes } from './routes/economie';
 import { itemsRoutes } from './routes/items';
 import { socialRoutes } from './routes/social';
 import type { DefinitionsService } from './services/definitions';
@@ -50,6 +52,8 @@ export interface AppOptions {
   persistenceUrl?: string | undefined;
   /** `social` of this environment (ADR 0024); unset, its routes answer 404 and the SPA hides it. */
   social?: SocialClient | undefined;
+  /** `economie` of this environment (ADR 0024); unset, its routes answer 404 and the SPA hides it. */
+  economie?: EconomieClient | undefined;
   definitions: DefinitionsService;
   persistenceTimeoutMs?: number;
   readCacheTtlMs?: number;
@@ -64,6 +68,7 @@ export function createApp({
   gameServerName = 'Game server',
   persistenceUrl,
   social,
+  economie,
   definitions,
   persistenceTimeoutMs = 5000,
   readCacheTtlMs = 500,
@@ -104,6 +109,9 @@ export function createApp({
           ...(social ? ['social'] : []),
           // Organisation management, through `svc-admin` (ADR 0023 › Social — management).
           ...(social?.manages ? ['social-management'] : []),
+          ...(economie ? ['economie'] : []),
+          // Wallets, through `svc-admin` (ADR 0023 › Economie).
+          ...(economie?.readsWallets ? ['economie-wallets'] : []),
         ],
       }),
     )
@@ -127,6 +135,7 @@ export function createApp({
     api.use('/social/*', requirePermission('social.moderate'));
     api.route('/social', socialRoutes(social));
   }
+  if (economie) api.route('/economie', economieRoutes(economie));
   app.route('/api', api);
   // Registered after the API routes and before the SPA fallback, so unknown API paths never
   // return index.html.

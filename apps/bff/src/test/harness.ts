@@ -3,13 +3,16 @@ import { setupServer } from 'msw/node';
 import {
   createDataset,
   createPersistenceMock,
+  createEconomieMock,
   createSocialMock,
+  ECONOMIE_URL,
   PERSISTENCE_URL,
   SOCIAL_URL,
   type SocialDataset,
 } from '@dyingstar-admin/testing';
 import type { Item } from '@dyingstar-admin/schemas';
 import { createApp, type AppOptions } from '../app';
+import { createEconomieClient } from '../clients/economie';
 import { createSocialClient } from '../clients/social';
 import { createDefinitionsService } from '../services/definitions';
 
@@ -48,7 +51,13 @@ export function buildApp(
 ) {
   const persistence = createPersistenceMock(options.dataset ?? createDataset());
   const social = createSocialMock(options.socialData);
-  mswServer.use(...persistence.handlers, ...social.handlers, ...githubDefinitionsHandlers);
+  const economie = createEconomieMock();
+  mswServer.use(
+    ...persistence.handlers,
+    ...social.handlers,
+    ...economie.handlers,
+    ...githubDefinitionsHandlers,
+  );
   const app = createApp({
     auth: false,
     gameServerName: 'Universe Testing',
@@ -66,6 +75,11 @@ export function buildApp(
       timeoutMs: 1000,
       serviceToken: () => Promise.resolve('svc-admin-token'),
     }),
+    economie: createEconomieClient({
+      baseUrl: ECONOMIE_URL,
+      timeoutMs: 1000,
+      serviceToken: () => Promise.resolve('svc-admin-token'),
+    }),
     ...options,
   });
 
@@ -75,5 +89,5 @@ export function buildApp(
       headers: { 'Content-Type': 'application/json', ...init.headers },
     });
 
-  return { app, persistence, social, request };
+  return { app, persistence, social, economie, request };
 }

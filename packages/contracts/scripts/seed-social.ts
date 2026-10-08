@@ -1,5 +1,5 @@
 /**
- * Fills the back team's minikube `social` with test players (`make seed-social`, after
+ * Fills the back team's minikube `social` (and `economie`) with test data (`make seed-social`, after
  * `make up K8S=1`). Their databases are recreated with the stack, so it is safe to run again:
  * what already exists (profile, friendship, organisation, report, sanction) is kept and reported
  * as skipped.
@@ -363,6 +363,105 @@ for (const [staff, target, sanction] of SANCTIONS) {
     zIssueSanctionBody.parse(sanction),
   );
   expect(`${target} ${sanction.type} by ${staff}`, res.status, res.data, [201]);
+}
+
+// ── economie (ADR 0024 step O): wallets as svc-admin, its internal API being for services only.
+const ECONOMIE_URL = process.env.ECONOMIE_URL;
+const SVC_ADMIN_SECRET = process.env.SVC_ADMIN_CLIENT_SECRET;
+const SVC_ADMIN_ID = process.env.SVC_ADMIN_CLIENT_ID ?? 'svc-admin';
+
+/** Starting balances (deposits) and a salary each, idempotent through their `externalId`. */
+const STARTING_CREDITS: Record<string, number> = {
+  'player-kira': 4_000,
+  'player-orin': 2_500,
+  'player-mara': 3_200,
+  'player-silas': 1_800,
+  'player-juno': 6_000,
+  'player-tess': 900,
+  'player-dax': 150,
+  'player-pell': 40,
+};
+const TREASURIES: Record<string, number> = { 'Vance Freight': 25_000, 'Okafor Trading': 12_000 };
+
+async function serviceToken(): Promise<string> {
+  const res = await fetch(`${REALM_URL}/protocol/openid-connect/token`, {
+    method: 'POST',
+    body: new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: SVC_ADMIN_ID,
+      client_secret: SVC_ADMIN_SECRET ?? '',
+    }),
+  });
+  if (!res.ok)
+    throw new Error(`Keycloak refused ${SVC_ADMIN_ID} (${res.status} ${await res.text()})`);
+  return ((await res.json()) as { access_token: string }).access_token;
+}
+
+if (ECONOMIE_URL && SVC_ADMIN_SECRET) {
+  console.log('Economie');
+  const bearer = await serviceToken();
+  const economie = async (method: string, path: string, body?: unknown) => {
+    const res = await fetch(`${ECONOMIE_URL}/api/internal${path}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${bearer}`,
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const text = await res.text();
+    let data: unknown = text || null;
+    try {
+      data = text ? (JSON.parse(text) as unknown) : null;
+    } catch {
+      // Kept as text, shown by `expect`.
+    }
+    return { status: res.status, data };
+  };
+  /** Opens the holder's account, then credits it once (replays answer 409). */
+  const fund = async (holder: string, id: string, amount: number, type: string, key: string) => {
+    const opened = await economie('PUT', `/${holder}/${id}/wallet`);
+    expect(`${key} account`, opened.status, opened.data, [200, 201]);
+    const credited = await economie('POST', `/${holder}/${id}/wallet/credit`, {
+      amount,
+      type,
+      externalId: `seed-${key}`,
+      reference: 'make seed-social',
+    });
+    expect(`${key} +${amount} (${type})`, credited.status, credited.data, [200, 201], [409]);
+  };
+
+  for (const [username, amount] of Object.entries(STARTING_CREDITS)) {
+    await fund('players', id(username), amount, 'deposit', `${username}-start`);
+  }
+  await fund('players', id('player-orin'), 450, 'salary', 'player-orin-salary');
+  await fund('players', id('player-mara'), 300, 'mission_reward', 'player-mara-mission');
+  for (const [name, amount] of Object.entries(TREASURIES)) {
+    const corporationId = corporations.get(name);
+    if (corporationId)
+      await fund('corporations', corporationId, amount, 'deposit', `${name}-start`);
+  }
+  // A commune that taxes, a country that may issue money (economie's own settings).
+  const commune = politics.get('New Haven');
+  const country = politics.get('Free Colonies');
+  if (commune) {
+    await fund('politics', commune, 1_500, 'deposit', 'New Haven-start');
+    const set = await economie('PUT', `/politics/${commune}/settings`, {
+      corporateTaxBps: 500,
+      incomeTaxBps: 200,
+    });
+    expect('New Haven taxes', set.status, set.data, [200]);
+  }
+  if (country) {
+    await fund('politics', country, 50_000, 'deposit', 'Free Colonies-start');
+    const set = await economie('PUT', `/politics/${country}/settings`, {
+      allowMinting: true,
+      mintCeiling: 100_000,
+    });
+    expect('Free Colonies minting', set.status, set.data, [200]);
+  }
+} else {
+  console.log('Economie: skipped (ECONOMIE_URL or SVC_ADMIN_CLIENT_SECRET unset: make up K8S=1)');
 }
 
 console.log(`Done: ${ids.size} players in ${SOCIAL_URL}`);

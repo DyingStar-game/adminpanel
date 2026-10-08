@@ -233,10 +233,31 @@ with the back team: the panel's use of
 `svc-admin` and how its pre-production secret is handed over; `social` records the CEO or the
 head as the actor, not the person (an "actual author" field, or the panel's own log).
 
-#### Economie, inventory, mission, market — later lots (sent as `svc-admin`)
+#### Economie (decided 2026-10-08, same rule as `social`)
+
+`economie`'s README has the same sections as `social`'s: its **Admin** API takes the person's
+token with a moderation role (`moderator` < `admin` < `supervisor`, checked by `economie`); its
+**Interne** API takes service accounts only (`svc-admin` is allowed, audience `economie-api`),
+opened in the panel by **the capability role of the README held by the person** on
+`dyingstar-admin`. Player, corporation and political routes are for players and members: not
+used.
+
+| Action (route of `economie`) | The person needs | Sent as |
+|---|---|---|
+| Dashboard: money supply, volume, taxes, richest, daily series (`GET /api/admin/stats`) | `moderator` (realm) | their token |
+| A player's or NPC's wallet and ledger (`GET /api/internal/players|npcs/:id/wallet…`) | `economie:wallet:read` | `svc-admin` |
+| A corporation's treasury and ledger (`GET /api/internal/corporations/:id/wallet…`) | `economie:wallet:read` | `svc-admin` |
+| A political entity's treasury, ledger and settings (`GET /api/internal/politics/:id/…`) | `economie:politics:read` | `svc-admin` |
+| Later: corporation settings, political settings and assessment | `economie:corporation:manage`, `economie:politics:manage` | `svc-admin` |
+| Later: credit, debit, mint | `economie:wallet:credit`, `economie:wallet:debit`, `economie:money:issue` | `svc-admin` |
+
+`GET /api/admin/players` (wallets by pseudonym) goes through `social` from `economie`; the panel
+searches players in `social` itself and reads the wallet from the player sheet.
+
+#### Inventory, mission, market — later lots (sent as `svc-admin`)
 
 One table per service, written when the service is integrated, from its OpenAPI and its
-capability roles (`economie:*`, `inventory:*`, `mission:*`, `market:*`). Until then: ❓.
+capability roles (`inventory:*`, `mission:*`, `market:*`). Until then: ❓.
 
 ¹ Not created in the back team's realms yet (added in our local realms only).
 

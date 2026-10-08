@@ -1,5 +1,4 @@
 import { Hono } from 'hono';
-import { z } from 'zod';
 import {
   zAdjustReputationBody,
   zEscalateReportPath,
@@ -38,23 +37,7 @@ import {
   type ReportAction,
 } from '@dyingstar-admin/schemas';
 import type { SocialClient } from '../clients/social';
-import { validate } from '../lib/validate';
-
-/**
- * Query strings carry text: whole numbers become numbers before the contract's schemas
- * (`limit`, `offset`, `id`), which expect integers.
- */
-const fromQuery = <T extends z.ZodType>(schema: T) =>
-  z.preprocess(
-    (raw) =>
-      Object.fromEntries(
-        Object.entries(raw as Record<string, string>).map(([key, value]) => [
-          key,
-          /^\d+$/.test(value) ? Number(value) : value,
-        ]),
-      ),
-    schema,
-  );
+import { fromQuery, validate } from '../lib/validate';
 
 /**
  * `social`, reading (ADR 0024 step 1): curated routes over `/api/admin/*` and the profile

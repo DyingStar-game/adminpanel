@@ -24,7 +24,7 @@ starting a session on lot 2.**
 | L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | **Done** | see below |
 | M. Decide the final roles × actions matrix with the back team (ADR 0023) | Waiting for the back team | — |
 | N. Organisation management (`/api/internal/*` through `svc-admin`; rights decided, ADR 0023) | **Done** on minikube; pre-production waits for `svc-admin` (question 11) | — |
-| O. Next services (`economie`, `inventory`, `mission`, `market`), one by one with the ADR 0024 pattern | Later | — |
+| O. Next services, one by one with the ADR 0024 pattern: `economie` first (1. reading, 2. settings, 3. money movements), then `inventory`, `mission`, `market` | **O.1 done** (to try live); O.2 next | — |
 
 Order agreed with the maintainer on 2026-10-08: I (acting on players) before K (organisations),
 since the player sheet is where moderators look first.
@@ -151,6 +151,27 @@ it from minikube), for people holding the capability roles of its README on `dyi
   only then, and only to the capability role of the organisation's kind.
 - Not built: NPC memberships (add / remove an NPC), to come with an NPC picker; `social`
   records the CEO or head as the actor, not the person (question 11).
+
+### O.1 Economie, reading — done, to try live on minikube
+
+ADR 0023 › Economie: its Admin API with the person's token (`moderator`+), its Interne API as
+`svc-admin` for the capability role of its README held by the person.
+
+- Contract pinned (`packages/contracts/src/economie`); the services' shared client
+  (`clients/upstream.ts`: timeouts, errors, `svc-admin`) under `social`'s and `economie`'s.
+- BFF: `GET /api/economie/stats` (`economie.dashboard`), `/wallets/:holder/:id` and
+  `/transactions` (`economie:wallet:read`; political treasuries `economie:politics:read`),
+  `/politics/:id/settings`. `ECONOMIE_URL`; `GET /api/panel` lists `economie` and
+  `economie-wallets`. The contract's `int64` ids are sent back JSON-safe (`jsonSafe`).
+- SPA: "Economy" in the sidebar (money supply, volume, taxes, richest players, NPCs and
+  corporations named through `social`, day by day, over 7 / 30 / 90 days); a wallet on the
+  player sheet, a treasury on the corporation and political pages, with the political tax rates
+  and minting policy.
+- `make seed-social` funds the test players, two treasuries and two political entities, and
+  sets New Haven's taxes and Free Colonies' minting (as `svc-admin`, replays skipped).
+- Not used: `GET /api/admin/players` (wallets by pseudonym): `economie` resolves names through
+  `social`, and minikube's `economie` has no `SOCIAL_SERVICE_CLIENT_SECRET` (to tell the back
+  team). Amounts are shown as `economie` keeps them (integer units).
 
 ### L. Panel settings instead of `SERVERS` — done
 

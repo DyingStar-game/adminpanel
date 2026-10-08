@@ -124,7 +124,7 @@ contracts-update: ## Pin the game services' OpenAPI from GitHub and regenerate t
 	@$(PNPM) --filter @dyingstar-admin/contracts contracts:update
 
 .PHONY: seed-social
-seed-social: ## Fill minikube's social with test players, friends, reports, sanctions (after `make up K8S=1`; safe to rerun)
+seed-social: ## Fill minikube's social (players, organisations, reports, sanctions) and economie (wallets) (after `make up K8S=1`; safe to rerun)
 	@echo "$(CYAN)🌱 Seeding minikube's social...$(RESET)"
 	@$(PNPM) --filter @dyingstar-admin/contracts social:seed
 

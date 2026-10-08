@@ -21,6 +21,12 @@ export const Permission = {
   socialCorporationWrite: 'social.corporationWrite',
   /** Managing political entities, likewise. */
   socialPoliticsWrite: 'social.politicsWrite',
+  /** `economie`'s dashboard (its Admin API, ADR 0023 › Economie). */
+  economieDashboard: 'economie.dashboard',
+  /** Wallets of players, NPCs and corporations (its Interne API, as `svc-admin`). */
+  economieWalletRead: 'economie.walletRead',
+  /** Political treasuries and their settings, likewise. */
+  economiePoliticsRead: 'economie.politicsRead',
 } as const;
 export type Permission = (typeof Permission)[keyof typeof Permission];
 
@@ -49,6 +55,11 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
   // on `dyingstar-admin`; the panel then calls as `svc-admin` (ADR 0023 › Social — management).
   [Permission.socialCorporationWrite]: ['social:corporation:write'],
   [Permission.socialPoliticsWrite]: ['social:politics:write'],
+  // `economie`, same rule (ADR 0023 › Economie): its Admin API checks the moderation roles; its
+  // Interne API is opened by the capability roles of its README held by the person.
+  [Permission.economieDashboard]: ['moderator', 'admin', 'supervisor'],
+  [Permission.economieWalletRead]: ['economie:wallet:read'],
+  [Permission.economiePoliticsRead]: ['economie:politics:read'],
 };
 
 /** Permission needed to change the status of, or escalate, a report at each escalation level. */

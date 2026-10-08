@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Pinned OpenAPI contracts of the game services and their generated Zod schemas (ADR 0024).",
   "exports": {
-    "./social": "./src/social/index.ts"
+    "./social": "./src/social/index.ts",
+    "./economie": "./src/economie/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

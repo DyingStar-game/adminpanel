@@ -27,6 +27,7 @@ const EnvSchema = z.object({
     .optional()
     .or(z.literal('').transform(() => undefined)),
   SOCIAL_URL: optionalString,
+  ECONOMIE_URL: optionalString,
   /**
    * Service account of the panel for `social`'s internal API (ADR 0023 › Social — management).
    * Without its secret, organisation management is off; reading and moderation keep working.

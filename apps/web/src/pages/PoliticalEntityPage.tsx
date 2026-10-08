@@ -10,7 +10,9 @@ import { OrganisationMembersTable } from '@/components/organisms/OrganisationMem
 import { OrganisationRolesTable } from '@/components/organisms/OrganisationRolesTable';
 import { PoliticalEntitiesTable } from '@/components/organisms/PoliticalEntitiesTable';
 import { PoliticalEntityDialog } from '@/components/organisms/PoliticalEntityDialog';
+import { TaxSettings } from '@/components/organisms/TaxSettings';
 import { TransferOrganisationDialog } from '@/components/organisms/TransferOrganisationDialog';
+import { WalletCard } from '@/components/organisms/WalletCard';
 import { ServicePageLayout } from '@/components/templates/ServicePageLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -57,6 +59,8 @@ export function PoliticalEntityPage({
   const { services } = usePanel();
   // Management through `svc-admin`, for the capability role of social's README (step N).
   const manages = services.includes('social-management') && can('social.politicsWrite');
+  // Its treasury and taxes in `economie`, for its capability role (ADR 0023 › Economie).
+  const treasury = services.includes('economie-wallets') && can('economie.politicsRead');
   const [dialog, setDialog] = useState<'edit' | 'transfer' | 'disband' | null>(null);
   const entity = usePoliticalEntity(entityId);
   const members = usePoliticalMembers(entityId, search.members);
@@ -142,6 +146,12 @@ export function PoliticalEntityPage({
           },
         ]}
       />
+      {treasury && (
+        <>
+          <TaxSettings entityId={e.id} />
+          <WalletCard holder="politics" id={e.id} title={t('economy.treasury')} />
+        </>
+      )}
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">{t('organisations.offices')}</h2>
         <OrganisationRolesTable

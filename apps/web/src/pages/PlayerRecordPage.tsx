@@ -17,10 +17,12 @@ import { ReputationDialog } from '@/components/organisms/ReputationDialog';
 import { ReputationHistoryTable } from '@/components/organisms/ReputationHistoryTable';
 import { SanctionDialog } from '@/components/organisms/SanctionDialog';
 import { SanctionsTable } from '@/components/organisms/SanctionsTable';
+import { WalletCard } from '@/components/organisms/WalletCard';
 import { ServicePageLayout } from '@/components/templates/ServicePageLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCan } from '@/hooks/useCan';
+import { usePanel } from '@/hooks/usePanel';
 import { usePlayerProfile, usePlayerRecord } from '@/hooks/useModeration';
 import { ApiError } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
@@ -58,6 +60,9 @@ export function PlayerRecordPage({
   // Public profile (presence, organisations): the sheet stays readable without it.
   const profile = usePlayerProfile(playerId).data;
   const can = useCan();
+  const { services } = usePanel();
+  // The wallet in `economie`, for its capability role (ADR 0023 › Economie).
+  const wallets = services.includes('economie-wallets') && can('economie.walletRead');
   const [dialog, setDialog] = useState<Dialog | null>(null);
 
   const back = (
@@ -151,6 +156,13 @@ export function PlayerRecordPage({
           onOpenPoliticalEntity={onOpenPoliticalEntity}
         />
       </div>
+      {wallets && (
+        <WalletCard
+          holder={player.entityType === 'npc' ? 'npcs' : 'players'}
+          id={player.playerId}
+          title={t('economy.wallet')}
+        />
+      )}
       {actionable && (
         <PersistencePlayerLink
           playerId={player.playerId}

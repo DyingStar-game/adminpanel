@@ -9,12 +9,15 @@ import {
 import {
   createDataset,
   createPersistenceMock,
+  createEconomieMock,
   createSocialMock,
+  ECONOMIE_URL,
   PERSISTENCE_URL,
   SOCIAL_URL,
   type SocialDataset,
 } from '@dyingstar-admin/testing';
 import { createApp } from './app';
+import { createEconomieClient } from './clients/economie';
 import { createSocialClient } from './clients/social';
 import fallback from './definitions/fallback.json';
 import type { DefinitionsService } from './services/definitions';
@@ -40,6 +43,7 @@ export function createInProcessBff({
 }: { dataset?: Item[]; socialData?: SocialDataset } = {}) {
   const persistence = createPersistenceMock(dataset);
   const social = createSocialMock(socialData);
+  const economie = createEconomieMock();
   const app = createApp({
     auth: false,
     gameServerName: 'Universe Testing',
@@ -52,6 +56,11 @@ export function createInProcessBff({
       timeoutMs: 1000,
       serviceToken: () => Promise.resolve('svc-admin-token'),
     }),
+    economie: createEconomieClient({
+      baseUrl: ECONOMIE_URL,
+      timeoutMs: 1000,
+      serviceToken: () => Promise.resolve('svc-admin-token'),
+    }),
   });
   const forward = async ({ request }: { request: Request }) => {
     const res = await app.fetch(request);
@@ -61,9 +70,11 @@ export function createInProcessBff({
   return {
     persistence,
     social,
+    economie,
     handlers: [
       ...persistence.handlers,
       ...social.handlers,
+      ...economie.handlers,
       http.all('*/api/*', forward),
       http.get('*/health', forward),
     ],

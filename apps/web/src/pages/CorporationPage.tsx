@@ -14,6 +14,7 @@ import { OrganisationMembersTable } from '@/components/organisms/OrganisationMem
 import { OrganisationRolesTable } from '@/components/organisms/OrganisationRolesTable';
 import { RemoveMemberDialog } from '@/components/organisms/RemoveMemberDialog';
 import { TransferOrganisationDialog } from '@/components/organisms/TransferOrganisationDialog';
+import { WalletCard } from '@/components/organisms/WalletCard';
 import { ServicePageLayout } from '@/components/templates/ServicePageLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -71,6 +72,8 @@ export function CorporationPage({
   const { services } = usePanel();
   // Management through `svc-admin`, for the capability role of social's README (step N).
   const manages = services.includes('social-management') && can('social.corporationWrite');
+  // The treasury in `economie`, for its capability role (ADR 0023 › Economie).
+  const treasury = services.includes('economie-wallets') && can('economie.walletRead');
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const corporation = useCorporation(corporationId);
   const members = useCorporationMembers(corporationId, search.members);
@@ -171,6 +174,7 @@ export function CorporationPage({
           </Chip>
         </p>
       )}
+      {treasury && <WalletCard holder="corporations" id={c.id} title={t('economy.treasury')} />}
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">{t('organisations.ranks')}</h2>
         <OrganisationRolesTable roles={ranks} label={t('organisations.ranks')} />

@@ -62,12 +62,19 @@ function RootLayout() {
         ? 'players'
         : location.pathname.startsWith('/organisations')
           ? 'organisations'
-          : 'explorer';
+          : location.pathname.startsWith('/economy')
+            ? 'economy'
+            : 'explorer';
   // Pages of a service the account may not open say so instead of failing call by call.
   const social =
     activeNav === 'moderation' || activeNav === 'players' || activeNav === 'organisations';
-  const allowed = social ? can('social.moderate') : can('persistence.read');
-  const deniedKey = social ? 'moderation.forbidden' : 'session.noReadRight';
+  const economy = activeNav === 'economy';
+  const allowed = economy
+    ? can('economie.dashboard')
+    : social
+      ? can('social.moderate')
+      : can('persistence.read');
+  const deniedKey = social || economy ? 'moderation.forbidden' : 'session.noReadRight';
 
   /** Level on screen: the item being viewed, or the listed explorer level. */
   const levelOnScreen = () => {
@@ -168,7 +175,9 @@ function RootLayout() {
                           to: '/organisations',
                           search: { tab: 'corporations', q: '', page: 1 },
                         })
-                      : void navigate({ to: '/explorer', search: ROOTS })
+                      : id === 'economy'
+                        ? void navigate({ to: '/economy', search: { days: 30 } })
+                        : void navigate({ to: '/explorer', search: ROOTS })
             }
             onHome={() => void navigate({ to: '/' })}
             version={APP_VERSION}

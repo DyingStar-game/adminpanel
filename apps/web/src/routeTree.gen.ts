@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ExplorerRouteImport } from './routes/explorer'
 import { Route as ImportRouteImport } from './routes/import'
+import { Route as EconomyIndexRouteImport } from './routes/economy.index'
 import { Route as ItemsUuidRouteImport } from './routes/items.$uuid'
 import { Route as MapUuidRouteImport } from './routes/map.$uuid'
 import { Route as ModerationIndexRouteImport } from './routes/moderation.index'
@@ -35,6 +36,11 @@ const ExplorerRoute = ExplorerRouteImport.update({
 const ImportRoute = ImportRouteImport.update({
   id: '/import',
   path: '/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EconomyIndexRoute = EconomyIndexRouteImport.update({
+  id: '/economy/',
+  path: '/economy/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ItemsUuidRoute = ItemsUuidRouteImport.update({
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/map/$uuid': typeof MapUuidRoute
   '/orbit/$uuid': typeof OrbitUuidRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
+  '/economy/': typeof EconomyIndexRoute
   '/moderation/': typeof ModerationIndexRoute
   '/organisations/': typeof OrganisationsIndexRoute
   '/players/': typeof PlayersIndexRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/map/$uuid': typeof MapUuidRoute
   '/orbit/$uuid': typeof OrbitUuidRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
+  '/economy': typeof EconomyIndexRoute
   '/moderation': typeof ModerationIndexRoute
   '/organisations': typeof OrganisationsIndexRoute
   '/players': typeof PlayersIndexRoute
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/map/$uuid': typeof MapUuidRoute
   '/orbit/$uuid': typeof OrbitUuidRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
+  '/economy/': typeof EconomyIndexRoute
   '/moderation/': typeof ModerationIndexRoute
   '/organisations/': typeof OrganisationsIndexRoute
   '/players/': typeof PlayersIndexRoute
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/map/$uuid'
     | '/orbit/$uuid'
     | '/players/$playerId'
+    | '/economy/'
     | '/moderation/'
     | '/organisations/'
     | '/players/'
@@ -152,6 +162,7 @@ export interface FileRouteTypes {
     | '/map/$uuid'
     | '/orbit/$uuid'
     | '/players/$playerId'
+    | '/economy'
     | '/moderation'
     | '/organisations'
     | '/players'
@@ -166,6 +177,7 @@ export interface FileRouteTypes {
     | '/map/$uuid'
     | '/orbit/$uuid'
     | '/players/$playerId'
+    | '/economy/'
     | '/moderation/'
     | '/organisations/'
     | '/players/'
@@ -181,6 +193,7 @@ export interface RootRouteChildren {
   MapUuidRoute: typeof MapUuidRoute
   OrbitUuidRoute: typeof OrbitUuidRoute
   PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
+  EconomyIndexRoute: typeof EconomyIndexRoute
   ModerationIndexRoute: typeof ModerationIndexRoute
   OrganisationsIndexRoute: typeof OrganisationsIndexRoute
   PlayersIndexRoute: typeof PlayersIndexRoute
@@ -209,6 +222,13 @@ declare module '@tanstack/react-router' {
       path: '/import'
       fullPath: '/import'
       preLoaderRoute: typeof ImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/economy/': {
+      id: '/economy/'
+      path: '/economy'
+      fullPath: '/economy/'
+      preLoaderRoute: typeof EconomyIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/items/$uuid': {
@@ -285,6 +305,7 @@ const rootRouteChildren: RootRouteChildren = {
   MapUuidRoute: MapUuidRoute,
   OrbitUuidRoute: OrbitUuidRoute,
   PlayersPlayerIdRoute: PlayersPlayerIdRoute,
+  EconomyIndexRoute: EconomyIndexRoute,
   ModerationIndexRoute: ModerationIndexRoute,
   OrganisationsIndexRoute: OrganisationsIndexRoute,
   PlayersIndexRoute: PlayersIndexRoute,

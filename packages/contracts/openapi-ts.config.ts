@@ -7,4 +7,9 @@ export default defineConfig([
     output: { path: './src/social/generated', postProcess: ['prettier'] },
     plugins: ['@hey-api/typescript', 'zod'],
   },
+  {
+    input: './src/economie/openapi.yaml',
+    output: { path: './src/economie/generated', postProcess: ['prettier'] },
+    plugins: ['@hey-api/typescript', 'zod'],
+  },
 ]);
