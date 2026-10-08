@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { ModerationLogEntry } from '@dyingstar-admin/contracts/social';
 import { Chip } from '@/components/atoms/Chip';
 import { MonoText } from '@/components/atoms/MonoText';
 import { DataTable } from '@/components/molecules/DataTable';
 import { Pagination } from '@/components/molecules/Pagination';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
-import { useModerationLog, useSocialStats } from '@/hooks/useModeration';
-import { formatDateTime, shortId } from '@/lib/format';
+import { useModerationLog, usePlayerNames, useSocialStats } from '@/hooks/useModeration';
+import { shortId } from '@/lib/format';
 import { MODERATION_PAGE_SIZE } from '@/lib/moderationSearch';
+import { ModerationLogTable } from './ModerationLogTable';
 import { moderationErrorKey } from './moderationLabels';
 
 function Tile({ label, value, hint }: { label: string; value: number; hint?: string }) {
@@ -22,11 +22,19 @@ function Tile({ label, value, hint }: { label: string; value: number; hint?: str
 }
 
 /** Community figures and the moderation log (ADR 0024, reading). */
-export function ModerationOverview({ onOpenPlayer }: { onOpenPlayer: (id: string) => void }) {
-  const { t, i18n } = useTranslation();
+export function ModerationOverview({
+  onOpenPlayer,
+  onOpenReport,
+}: {
+  onOpenPlayer: (id: string) => void;
+  onOpenReport: (id: number) => void;
+}) {
+  const { t } = useTranslation();
   const stats = useSocialStats();
   const [page, setPage] = useState(1);
   const log = useModerationLog(page);
+  // Most reported players come by id only.
+  const names = usePlayerNames(stats.data?.mostReported.map((r) => r.playerId) ?? []);
 
   if (stats.isError) return <ServiceNotice message={t(moderationErrorKey(stats.error))} />;
   const data = stats.data;
@@ -34,7 +42,7 @@ export function ModerationOverview({ onOpenPlayer }: { onOpenPlayer: (id: string
   const player = (id: string | null) =>
     id ? (
       <Chip variant="link" title={id} onClick={() => onOpenPlayer(id)}>
-        <MonoText>{shortId(id)}</MonoText>
+        {names.get(id) ?? <MonoText>{shortId(id)}</MonoText>}
       </Chip>
     ) : (
       <span className="text-fg-3">{t('moderation.system')}</span>
@@ -110,37 +118,11 @@ export function ModerationOverview({ onOpenPlayer }: { onOpenPlayer: (id: string
         </div>
       )}
       <section className="flex flex-col gap-2">
-        <h2 className="text-sm font-semibold">{t('moderation.log')}</h2>
-        <DataTable<ModerationLogEntry>
-          label={t('moderation.log')}
-          rows={log.data?.items ?? []}
-          rowKey={(row) => row.id}
-          empty={t('moderation.none')}
-          columns={[
-            {
-              key: 'date',
-              header: t('moderation.columns.date'),
-              cell: (r) => formatDateTime(r.createdAt, i18n.language),
-              className: 'whitespace-nowrap',
-            },
-            { key: 'actor', header: t('moderation.columns.actor'), cell: (r) => player(r.actorId) },
-            {
-              key: 'action',
-              header: t('moderation.columns.action'),
-              cell: (r) => <MonoText>{r.action}</MonoText>,
-            },
-            {
-              key: 'target',
-              header: t('moderation.columns.target'),
-              cell: (r) => (r.targetPlayerId ? player(r.targetPlayerId) : '—'),
-            },
-            {
-              key: 'details',
-              header: t('moderation.columns.details'),
-              cell: (r) =>
-                r.details ? <MonoText tone="muted">{JSON.stringify(r.details)}</MonoText> : '—',
-            },
-          ]}
+        <h2 className="text-sm font-semibold">{t('moderation.log.title')}</h2>
+        <ModerationLogTable
+          entries={log.data?.items ?? []}
+          onOpenPlayer={onOpenPlayer}
+          onOpenReport={onOpenReport}
         />
         {log.data && (
           <Pagination

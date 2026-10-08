@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
 import {
   zGetCommunityStatsResponse,
   zGetModerationLogResponse,
@@ -103,10 +103,28 @@ export const useSocialPlayers = (
     placeholderData: keepPreviousData,
   });
 
+const profileQuery = (playerId: string) => ({
+  queryKey: ['social', 'profile', playerId],
+  queryFn: () =>
+    apiGet(`/api/social/players/${encodeURIComponent(playerId)}/profile`, zGetProfileResponse),
+});
+
 /** A player's public profile: presence, corporations, political entities. */
-export const usePlayerProfile = (playerId: string) =>
-  useQuery({
-    queryKey: ['social', 'profile', playerId],
-    queryFn: () =>
-      apiGet(`/api/social/players/${encodeURIComponent(playerId)}/profile`, zGetProfileResponse),
+export const usePlayerProfile = (playerId: string) => useQuery(profileQuery(playerId));
+
+/**
+ * Display names of players known by id only (the moderation log, stats): one profile each,
+ * shared with the sheets' cache. Unknown or not loaded yet: absent from the map.
+ */
+export function usePlayerNames(playerIds: (string | null | undefined)[]) {
+  const ids = [...new Set(playerIds.filter((id): id is string => !!id))];
+  const results = useQueries({
+    queries: ids.map((id) => ({ ...profileQuery(id), staleTime: 5 * 60_000, retry: false })),
   });
+  const names = new Map<string, string>();
+  results.forEach((result, i) => {
+    const id = ids[i];
+    if (id && result.data) names.set(id, result.data.displayName);
+  });
+  return names;
+}

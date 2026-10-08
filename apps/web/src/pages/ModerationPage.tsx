@@ -37,7 +37,12 @@ export function ModerationPage({ search, onSearchChange, onOpenPlayer }: Moderat
           <TabsTrigger value="sanctions">{t('moderation.tabs.sanctions')}</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="pt-4">
-          <ModerationOverview onOpenPlayer={onOpenPlayer} />
+          <ModerationOverview
+            onOpenPlayer={onOpenPlayer}
+            onOpenReport={(report) =>
+              onSearchChange({ ...search, tab: 'reports', report, page: 1 })
+            }
+          />
         </TabsContent>
         <TabsContent value="reports" className="pt-4">
           <ReportsPanel

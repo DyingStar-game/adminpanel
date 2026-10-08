@@ -18,7 +18,7 @@ starting a session on lot 2.**
 | F. Social reading: moderation overview, reports, sanctions, player sheet | **Done** | `ae3dce8` |
 | G. Players: search, fuller sheet (sanction banner, presence, identity, RP, organisations) | **Done** | `b1e7166` |
 | H. Player sheet → persistence item and map (same id everywhere) | **Done** | `cd404bc` |
-| I. Acting on players: sanction (warn, mute; suspend, ban for `admin`+), lift, reputation | **Done** | see git log |
+| I. Acting on players: sanction (warn, mute; suspend, ban for `admin`+), lift, reputation | **Done** | `c1c3a05` |
 | J. **Report actions**: status with a note, escalate | **Next** | — |
 | K. Organisations, reading: corporations, political entities | To do | — |
 | L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | To do | — |

@@ -29,8 +29,26 @@ describe('ModerationPage (ADR 0024)', () => {
 
     expect(await screen.findByText('Active sanctions')).toBeInTheDocument();
     const log = screen.getByRole('table', { name: 'Moderation log' });
-    expect(await within(log).findByText('report_dismissed')).toBeInTheDocument();
-    expect(within(log).getByText('sanction_issued')).toBeInTheDocument();
+    expect(await within(log).findByText('Report dismissed')).toBeInTheDocument();
+    expect(within(log).getByText('Sanction given')).toBeInTheDocument();
+    expect(within(log).getByText('Warning')).toBeInTheDocument();
+    expect(within(log).getByText('« Griefing at the spawn »')).toBeInTheDocument();
+    expect(within(log).getByText('Retaliation report.')).toBeInTheDocument();
+  });
+
+  it('names the players of the log and opens the report concerned', async () => {
+    useInProcessBff();
+    const { onSearchChange } = renderPage();
+
+    const log = await screen.findByRole('table', { name: 'Moderation log' });
+    // Actor and target by name, once their profiles are read.
+    expect(await within(log).findAllByRole('button', { name: 'dev-moderator' })).toHaveLength(2);
+    expect(within(log).getByRole('button', { name: 'griefer42' })).toBeInTheDocument();
+
+    await userEvent.click(within(log).getByRole('button', { name: 'Report #3' }));
+    expect(onSearchChange).toHaveBeenCalledWith(
+      expect.objectContaining({ tab: 'reports', report: 3 }),
+    );
   });
 
   it('opens a player sheet from the lowest reputation list', async () => {

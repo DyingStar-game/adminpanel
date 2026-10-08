@@ -171,7 +171,7 @@ export function createSocialDataset(): SocialDataset {
         actorId: moderator,
         action: 'sanction_issued',
         targetPlayerId: griefer,
-        details: { type: 'warning' },
+        details: { sanctionId: 1, type: 'warning', reason: 'Griefing at the spawn' },
         createdAt: at(35),
       },
       {
@@ -179,7 +179,7 @@ export function createSocialDataset(): SocialDataset {
         actorId: moderator,
         action: 'report_dismissed',
         targetPlayerId: reporter,
-        details: { reportId: 3 },
+        details: { reportId: 3, note: 'Retaliation report.' },
         createdAt: at(50),
       },
     ],
@@ -357,7 +357,7 @@ export function createSocialMock(
         actorId: actor,
         action: 'sanction_issued',
         targetPlayerId: id,
-        details: { type: body.type },
+        details: { sanctionId: sanction.id, type: body.type, reason: body.reason },
         createdAt: now(),
       });
       return HttpResponse.json(sanction, { status: 201 });
