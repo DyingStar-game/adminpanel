@@ -151,7 +151,29 @@ async function social(username: string, method: string, path: string, body?: unk
     body: body === undefined ? undefined : JSON.stringify(body),
   });
   const text = await res.text();
-  return { status: res.status, data: text ? (JSON.parse(text) as unknown) : null };
+  // A proxy's error page (Traefik's 502 while social starts) is text, not JSON.
+  let data: unknown = text || null;
+  try {
+    data = text ? (JSON.parse(text) as unknown) : null;
+  } catch {
+    // Kept as text, shown by `expect`.
+  }
+  return { status: res.status, data };
+}
+
+/** Waits for social to answer: after a restart it applies its migrations before listening. */
+async function waitForSocial(timeoutMs = 120_000) {
+  const until = Date.now() + timeoutMs;
+  for (;;) {
+    const status = await fetch(`${SOCIAL_URL}/api/health`).then(
+      (res) => res.status,
+      () => 0,
+    );
+    if (status === 200) return;
+    if (Date.now() > until) throw new Error(`social is not answering (last status ${status})`);
+    console.log(`  … social not ready yet (${status || 'unreachable'}), waiting`);
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+  }
 }
 
 function expect(what: string, status: number, data: unknown, ok: number[], skip: number[] = []) {
@@ -164,6 +186,8 @@ const ids = new Map<string, string>();
 
 /** The moderation accounts of `k8s-partial-import.json` (password = user name). */
 const STAFF = ['dev-moderator', 'dev-admin', 'ynotna'];
+
+await waitForSocial();
 
 console.log('Staff');
 // `social` creates a profile on an account's first `GET /api/me` only. Without it, the panel
