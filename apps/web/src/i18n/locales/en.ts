@@ -518,6 +518,7 @@ export const en = {
       },
     },
     none: 'Nothing yet.',
+    oneOff: 'One-off',
     system: 'System',
     automatic: 'automatic',
     openPlayer: 'Open the player sheet',
@@ -580,6 +581,8 @@ export const en = {
         none: 'No end',
       },
       sanctionTitle: 'Sanction {{name}}',
+      warningHint:
+        'A warning is kept in the player’s record and has no duration: there is nothing to lift.',
       sanctionHint:
         'Warnings and mutes are open to moderators; suspensions and bans need the admin role.',
       sanctionConfirm:

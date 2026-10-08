@@ -53,7 +53,7 @@ export function SanctionDialog({ playerId, playerName, onClose }: SanctionDialog
         playerId,
         type,
         reason: reason.trim(),
-        durationHours: duration === 'none' ? null : Number(duration),
+        durationHours: type === 'warning' || duration === 'none' ? null : Number(duration),
       });
       toast.success(
         t('moderation.actions.sanctioned', {
@@ -80,7 +80,7 @@ export function SanctionDialog({ playerId, playerName, onClose }: SanctionDialog
             {t('moderation.actions.sanctionConfirm', {
               type: t(`moderation.sanctionType.${type}`),
               name: playerName,
-              duration: durationLabel(duration),
+              duration: type === 'warning' ? t('moderation.oneOff') : durationLabel(duration),
               reason: reason.trim(),
             })}
           </p>
@@ -100,17 +100,22 @@ export function SanctionDialog({ playerId, playerName, onClose }: SanctionDialog
                   className="w-40"
                 />
               </div>
-              <div className="flex flex-col gap-1.5">
-                <Label>{t('moderation.actions.duration')}</Label>
-                <OptionSelect<Duration>
-                  label={t('moderation.actions.duration')}
-                  value={duration}
-                  options={DURATIONS.map((d) => ({ value: d, label: durationLabel(d) }))}
-                  onChange={setDuration}
-                  className="w-40"
-                />
-              </div>
+              {type !== 'warning' && (
+                <div className="flex flex-col gap-1.5">
+                  <Label>{t('moderation.actions.duration')}</Label>
+                  <OptionSelect<Duration>
+                    label={t('moderation.actions.duration')}
+                    value={duration}
+                    options={DURATIONS.map((d) => ({ value: d, label: durationLabel(d) }))}
+                    onChange={setDuration}
+                    className="w-40"
+                  />
+                </div>
+              )}
             </div>
+            {type === 'warning' && (
+              <p className="text-xs text-fg-3">{t('moderation.actions.warningHint')}</p>
+            )}
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="sanction-reason">{t('moderation.columns.reason')}</Label>
               <Textarea

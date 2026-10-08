@@ -79,7 +79,8 @@ export function SanctionsTable({
         {
           key: 'expires',
           header: t('moderation.columns.expires'),
-          cell: (s) => date(s.expiresAt),
+          // `social` ends a warning at once: a record, not a restriction.
+          cell: (s) => (s.type === 'warning' ? t('moderation.oneOff') : date(s.expiresAt)),
           className: 'whitespace-nowrap',
         },
         {
@@ -92,7 +93,7 @@ export function SanctionsTable({
           ? [
               {
                 key: 'lift',
-                header: '',
+                header: t('moderation.actions.lift'),
                 cell: (s: Sanction) =>
                   inForce.has(s.id) && (
                     <Button variant="outline" size="xs" onClick={() => onLift(s)}>

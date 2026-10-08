@@ -147,7 +147,7 @@ export function createSocialDataset(): SocialDataset {
         reason: 'Griefing at the spawn',
         automatic: false,
         issuedBy: moderator,
-        expiresAt: null,
+        expiresAt: at(35),
         revokedAt: null,
         revokedBy: null,
         createdAt: at(35),
@@ -246,7 +246,9 @@ export function createSocialMock(
   const handlers = [
     http.get(`${api}/stats`, ({ request }) => {
       seen(request);
-      const active = data.sanctions.filter((s) => !s.revokedAt);
+      const active = data.sanctions.filter(
+        (s) => !s.revokedAt && (!s.expiresAt || Date.parse(s.expiresAt) > Date.now()),
+      );
       const reports: Record<string, number> = {};
       for (const r of data.reports) reports[r.status] = (reports[r.status] ?? 0) + 1;
       return HttpResponse.json({
@@ -344,9 +346,13 @@ export function createSocialMock(
         reason: body.reason,
         automatic: false,
         issuedBy: actor,
-        expiresAt: body.durationHours
-          ? new Date(Date.now() + body.durationHours * 3_600_000).toISOString()
-          : null,
+        // As `social` does: a warning is a record, never in force (it expires at once).
+        expiresAt:
+          body.type === 'warning'
+            ? now()
+            : body.durationHours
+              ? new Date(Date.now() + body.durationHours * 3_600_000).toISOString()
+              : null,
         revokedAt: null,
         revokedBy: null,
         createdAt: now(),
@@ -408,7 +414,9 @@ export function createSocialMock(
       const playerId = url.searchParams.get('playerId');
       const active = (url.searchParams.get('active') ?? 'true') === 'true';
       const items = data.sanctions.filter(
-        (s) => (!playerId || s.playerId === playerId) && (active ? !s.revokedAt : true),
+        (s) =>
+          (!playerId || s.playerId === playerId) &&
+          (active ? !s.revokedAt && (!s.expiresAt || Date.parse(s.expiresAt) > Date.now()) : true),
       );
       return HttpResponse.json(page(newestFirst(items), url));
     }),

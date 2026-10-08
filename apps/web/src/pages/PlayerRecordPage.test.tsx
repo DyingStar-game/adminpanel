@@ -34,7 +34,8 @@ describe('PlayerRecordPage (ADR 0024)', () => {
 
     const banner = await screen.findByRole('status');
     expect(banner).toHaveTextContent(/Mute until .* Reputation below -25/);
-    expect(banner).toHaveTextContent(/Warning permanent — Griefing at the spawn/);
+    // A warning is a record, never in force (social ends it at once).
+    expect(banner).not.toHaveTextContent('Warning');
     expect(await screen.findByText('Online')).toBeInTheDocument();
     expect(screen.getByText('Free miners')).toBeInTheDocument();
     expect(screen.getByText('Grif')).toBeInTheDocument();
@@ -112,20 +113,61 @@ describe('PlayerRecordPage (ADR 0024)', () => {
       await userEvent.type(within(dialog).getByLabelText('Reason'), 'Spam in chat');
       await userEvent.click(within(dialog).getByRole('button', { name: 'Continue' }));
       expect(within(dialog).getByRole('alert')).toHaveTextContent(
-        'Warning for ddurieux, No end: “Spam in chat”',
+        'Warning for ddurieux, One-off: “Spam in chat”',
       );
       expect(bff.social.writes).toHaveLength(0);
       await userEvent.click(within(dialog).getByRole('button', { name: 'Confirm' }));
 
-      expect(await screen.findByRole('status')).toHaveTextContent(
-        'Warning permanent — Spam in chat',
-      );
+      // Kept in the record, nothing in force: no banner, nothing to lift.
+      const sanctions = await screen.findByRole('table', { name: 'Sanctions' });
+      expect(await within(sanctions).findByText('Spam in chat')).toBeInTheDocument();
+      expect(within(sanctions).getByText('One-off')).toBeInTheDocument();
+      expect(within(sanctions).queryByRole('button', { name: 'Lift' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
       expect(bff.social.writes).toEqual([
         {
           call: `POST /players/${socialIds.reporter}/sanctions`,
           body: { type: 'warning', reason: 'Spam in chat', durationHours: null },
         },
       ]);
+    });
+
+    it('mutes a player for a duration: in force at once, and liftable', async () => {
+      const bff = useInProcessBff();
+      renderAs(['social.moderate']);
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Sanction' }));
+      const dialog = screen.getByRole('dialog');
+      const [typeSelect] = within(dialog).getAllByRole('combobox');
+      if (!typeSelect) throw new Error('no type select');
+      await userEvent.click(typeSelect);
+      await userEvent.click(screen.getByRole('option', { name: 'Mute' }));
+      const [, durationSelect] = within(dialog).getAllByRole('combobox');
+      if (!durationSelect) throw new Error('no duration select');
+      await userEvent.click(durationSelect);
+      await userEvent.click(screen.getByRole('option', { name: '24 hours' }));
+      await userEvent.type(within(dialog).getByLabelText('Reason'), 'Insults');
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Continue' }));
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Confirm' }));
+
+      expect(await screen.findByRole('status')).toHaveTextContent(/Mute until .* — Insults/);
+      expect(bff.social.writes[0]?.body).toEqual({
+        type: 'mute',
+        reason: 'Insults',
+        durationHours: 24,
+      });
+      const sanctions = screen.getByRole('table', { name: 'Sanctions' });
+      expect(within(sanctions).getByRole('button', { name: 'Lift' })).toBeInTheDocument();
+    });
+
+    it('asks no duration for a warning', async () => {
+      useInProcessBff();
+      renderAs(['social.moderate']);
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Sanction' }));
+      const dialog = screen.getByRole('dialog');
+      expect(within(dialog).getAllByRole('combobox')).toHaveLength(1);
+      expect(within(dialog).getByText(/has no duration/)).toBeInTheDocument();
     });
 
     it('offers suspensions, bans and reputation to admins only', async () => {

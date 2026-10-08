@@ -18,7 +18,8 @@ describe('social moderation routes (ADR 0024)', () => {
 
     expect(await (await request('/api/social/stats')).json()).toMatchObject({
       players: { total: 3 },
-      sanctions: { active: 2 },
+      // The warning ended at once (a record): only the mute is in force.
+      sanctions: { active: 1 },
     });
     expect(await (await request('/api/social/log?limit=1')).json()).toMatchObject({
       total: 2,
@@ -38,7 +39,7 @@ describe('social moderation routes (ADR 0024)', () => {
     });
     expect(
       await (await request(`/api/social/sanctions?playerId=${socialIds.griefer}`)).json(),
-    ).toMatchObject({ total: 2 });
+    ).toMatchObject({ total: 1, items: [{ type: 'mute' }] });
   });
 
   it("reads a player's public profile: presence and memberships", async () => {

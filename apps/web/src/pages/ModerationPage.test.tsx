@@ -81,14 +81,24 @@ describe('ModerationPage (ADR 0024)', () => {
     expect(within(report).getByText('Blew up my truck at the spawn.')).toBeInTheDocument();
   });
 
-  it('lists active sanctions', async () => {
+  it('lists sanctions in force, and every sanction on demand', async () => {
     useInProcessBff();
     renderPage({ tab: 'sanctions' });
 
     const table = await screen.findByRole('table', { name: 'Sanctions' });
-    expect(await within(table).findByText('Warning')).toBeInTheDocument();
-    expect(within(table).getByText('Mute')).toBeInTheDocument();
+    expect(await within(table).findByText('Mute')).toBeInTheDocument();
     expect(within(table).getByText('(automatic)')).toBeInTheDocument();
+    // The warning is a record: listed with the ended ones.
+    expect(within(table).queryByText('Warning')).not.toBeInTheDocument();
+  });
+
+  it('lists the warnings with the ended sanctions', async () => {
+    useInProcessBff();
+    renderPage({ tab: 'sanctions', ended: true });
+
+    const table = await screen.findByRole('table', { name: 'Sanctions' });
+    expect(await within(table).findByText('Warning')).toBeInTheDocument();
+    expect(within(table).getByText('One-off')).toBeInTheDocument();
   });
 
   it("says so when social refuses the account's role", async () => {

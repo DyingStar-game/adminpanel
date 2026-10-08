@@ -55,7 +55,10 @@ Done on 2026-10-08 and tried for real on minikube's `social` (warning issued the
   reputation" dialog (`admin`+); NPCs get no action (`social` excludes them).
 - Real behaviour differs from `social`'s OpenAPI: lifting an already lifted sanction answers
   **404**, not the documented 409 (mock follows the real service). Log actions are
-  `sanction_issued`, `sanction_revoked`, `report_<status>`, `report_escalated`.
+  `sanction_issued`, `sanction_revoked`, `report_<status>`, `report_escalated`,
+  `auto_escalated`.
+- A **warning is a record, never in force**: `social` sets its `expiresAt` to its creation, so
+  it has no duration, no banner and nothing to lift ("One-off" / "Ponctuel" in the tables).
 
 ### J. Report actions
 

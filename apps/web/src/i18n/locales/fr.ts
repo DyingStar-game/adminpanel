@@ -526,6 +526,7 @@ export const fr: Translations = {
       },
     },
     none: 'Rien pour l’instant.',
+    oneOff: 'Ponctuel',
     system: 'Système',
     automatic: 'automatique',
     openPlayer: 'Ouvrir la fiche du joueur',
@@ -588,6 +589,8 @@ export const fr: Translations = {
         none: 'Sans fin',
       },
       sanctionTitle: 'Sanctionner {{name}}',
+      warningHint:
+        'Un avertissement est gardé dans le dossier du joueur et n’a pas de durée : il n’y a rien à lever.',
       sanctionHint:
         'Avertissements et mutes sont ouverts aux modérateurs ; suspensions et bans demandent le rôle admin.',
       sanctionConfirm:
