@@ -594,8 +594,8 @@ export const fr: Translations = {
         federation: 'Fédération',
       },
       world: {
-        title: 'Dans le monde du jeu',
-        open: 'Ouvrir son item',
+        title: 'En jeu',
+        open: 'Voir dans la persistance',
         missing: 'Aucun item player avec cet identifiant dans la persistance.',
         hint: 'Positions telles que sauvegardées par le jeu, environ toutes les 60 s.',
       },

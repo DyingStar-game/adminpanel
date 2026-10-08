@@ -586,8 +586,8 @@ export const en = {
         federation: 'Federation',
       },
       world: {
-        title: 'In the game world',
-        open: 'Open their item',
+        title: 'In game',
+        open: 'View in persistence',
         missing: 'No player item with this id in persistence.',
         hint: 'Positions are those saved by the game, about every 60 s.',
       },

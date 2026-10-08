@@ -52,8 +52,10 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 
 ## Where we are
 
-Lot 1 (persistence items): status, work delivered beyond the plan and open questions are kept at
-the top of [`docs/lot-1-plan.md`](./docs/lot-1-plan.md) — read it first, then the ADR index.
+**Lot 2 (sign-in, game services — `social` first) is in progress: read
+[`docs/lot-2-plan.md`](./docs/lot-2-plan.md) first** (status, next steps, local setup, open
+questions), then the ADR index. Lot 1 (persistence items) is done:
+[`docs/lot-1-plan.md`](./docs/lot-1-plan.md).
 `ONBOARDING.md` and `ARCHITECTURE.md` still describe the previous panel (step 10).
 
 ## Sign-in (Keycloak, ADR 0023)

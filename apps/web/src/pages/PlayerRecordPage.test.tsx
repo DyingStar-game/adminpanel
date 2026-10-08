@@ -73,7 +73,7 @@ describe('PlayerRecordPage (ADR 0024)', () => {
     useInProcessBff();
     const { onOpenItem, onOpenMap } = renderPage(socialIds.reporter);
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Open their item' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'View in persistence' }));
     expect(onOpenItem).toHaveBeenCalledWith(socialIds.reporter);
     await userEvent.click(await screen.findByRole('button', { name: 'Show on map' }));
     expect(onOpenMap).toHaveBeenCalledWith(ids.planet, socialIds.reporter);

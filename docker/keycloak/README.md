@@ -22,6 +22,7 @@ The password is the user name.
 | `dev-editor` | `persistence:read`, `persistence:write` | opens |
 | `dev-moderator` | `moderator` (realm) | "access denied" until the `social` moderation is built |
 | `dev-admin` | `admin` (realm), `persistence:*` | opens |
+| `ynotna` | `admin` (realm), `persistence:*` | opens; its id `19dd218f-9cbd-484f-9a3b-cff5285eaa93` is the maintainer's `player` in pre-production persistence, so its sheet links to a real item |
 
 What each role allows is the interim matrix of `packages/schemas/src/permissions.ts` (ADR 0023,
 undecided cells allowed while the panel is in test): `persistence:read` browses and runs the
@@ -41,7 +42,8 @@ moderation roles open nothing of it.
 - its client roles `persistence:read`, `persistence:write`, `persistence:delete` (draft names);
 - the realm roles `admin` and `supervisor`, checked by `social` but missing from the back
   team's realms;
-- the users `dev-reader`, `dev-editor`, `dev-moderator`, `dev-admin`.
+- the users `dev-reader`, `dev-editor`, `dev-moderator`, `dev-admin`, and `ynotna` with a fixed
+  id (a real pre-production player).
 
 The `svc-*` clients keep no secret (the back team's operator sets them): Keycloak generates
 one at each start, and their service account roles are not assigned.

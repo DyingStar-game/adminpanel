@@ -149,6 +149,27 @@
         "dyingstar-admin": ["persistence:read", "persistence:write", "persistence:delete"]
       },
       "groups": ["/staff"]
+    },
+    {
+      "id": "19dd218f-9cbd-484f-9a3b-cff5285eaa93",
+      "username": "ynotna",
+      "email": "ynotna@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Ynot",
+      "lastName": "Na",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ynotna",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player", "admin"],
+      "clientRoles": {
+        "dyingstar-admin": ["persistence:read", "persistence:write", "persistence:delete"]
+      },
+      "groups": ["/staff"]
     }
   ]
 }
