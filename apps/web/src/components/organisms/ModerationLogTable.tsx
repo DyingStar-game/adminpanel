@@ -6,6 +6,7 @@ import { DataTable } from '@/components/molecules/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { usePlayerNames } from '@/hooks/useModeration';
 import { formatDateTime, shortId } from '@/lib/format';
+import { eventTone } from '@/lib/socialActivity';
 
 interface ModerationLogTableProps {
   entries: ModerationLogEntry[];
@@ -25,17 +26,6 @@ const KNOWN = [
 ] as const;
 type KnownAction = (typeof KNOWN)[number];
 const isKnown = (action: string): action is KnownAction => KNOWN.includes(action as KnownAction);
-
-/** Colour of an action's badge, by family: sanction given, lifted, report handled, escalation. */
-const ACTION_TONE: Record<KnownAction, string> = {
-  sanction_issued: 'border-amber-500/50 bg-amber-500/10 text-amber-500',
-  sanction_revoked: 'border-success/40 bg-success/10 text-success',
-  report_reviewing: 'border-link/40 bg-link-bg text-link',
-  report_resolved: 'border-success/40 bg-success/10 text-success',
-  report_dismissed: 'border-border text-fg-2',
-  report_escalated: 'border-destructive/40 bg-destructive/10 text-destructive',
-  auto_escalated: 'border-destructive/40 bg-destructive/10 text-destructive',
-};
 
 const text = (details: Record<string, unknown> | null, key: string) =>
   typeof details?.[key] === 'string' && details[key] ? (details[key] as string) : null;
@@ -69,7 +59,7 @@ export function ModerationLogTable({
     return (
       <span className="flex flex-wrap items-center gap-1.5">
         {isKnown(entry.action) ? (
-          <Badge variant="outline" className={ACTION_TONE[entry.action]}>
+          <Badge variant="outline" className={eventTone(entry.action)}>
             {t(`moderation.log.actions.${entry.action}`)}
           </Badge>
         ) : (

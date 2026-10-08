@@ -17,7 +17,10 @@ describe('ActivityTable', () => {
     );
     const table = screen.getByRole('table', { name: 'Activity' });
 
-    expect(within(table).getByText('Sanction received').closest('tr')).toHaveTextContent('Mute');
+    // The sanction's type sits next to the event, as in the moderation log.
+    expect(within(table).getByText('Sanction received').closest('td')).toHaveTextContent(
+      'Sanction receivedMute',
+    );
     expect(within(table).getByText('rank Pilot')).toBeInTheDocument();
     await userEvent.click(await within(table).findByRole('button', { name: 'ddurieux' }));
     expect(onOpenPlayer).toHaveBeenCalledWith(socialIds.reporter);

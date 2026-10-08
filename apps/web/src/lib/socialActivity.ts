@@ -55,7 +55,33 @@ const FAMILY_OF = new Map<string, ActivityFamily>(
 /** Family of a known activity type, or null for a type the game recorded itself. */
 export const activityFamily = (type: string): ActivityFamily | null => FAMILY_OF.get(type) ?? null;
 
-/** Badge colour per family. */
+const TONES = {
+  neutral: 'border-border text-fg-2',
+  sanction: 'border-amber-500/50 bg-amber-500/10 text-amber-500',
+  lifted: 'border-success/40 bg-success/10 text-success',
+  review: 'border-link/40 bg-link-bg text-link',
+  escalated: 'border-destructive/40 bg-destructive/10 text-destructive',
+};
+
+/**
+ * Badge colour of an event, the same in the player's activity and in the moderation log (both
+ * use `social`'s event names): a sanction given or received is amber, lifted green; a report
+ * under review blue, resolved green, dismissed neutral, escalated red.
+ */
+const EVENT_TONE: Record<string, string> = {
+  sanction_issued: TONES.sanction,
+  sanction_received: TONES.sanction,
+  sanction_revoked: TONES.lifted,
+  report_filed: TONES.review,
+  report_reviewing: TONES.review,
+  report_resolved: TONES.lifted,
+  report_dismissed: TONES.neutral,
+  report_escalated: TONES.escalated,
+  auto_escalated: TONES.escalated,
+  reputation_rehabilitated: TONES.lifted,
+};
+
+/** Badge colour per family, for the events without a colour of their own. */
 export const FAMILY_TONE: Record<ActivityFamily, string> = {
   profile: 'border-border text-fg-2',
   sanction: 'border-amber-500/50 bg-amber-500/10 text-amber-500',
@@ -66,3 +92,9 @@ export const FAMILY_TONE: Record<ActivityFamily, string> = {
   group: 'border-sky-400/40 bg-sky-400/10 text-sky-300',
   politics: 'border-emerald-400/40 bg-emerald-400/10 text-emerald-300',
 };
+
+/** Colour of an event's badge: its own, else its family's, else neutral. */
+export function eventTone(type: string): string {
+  const family = activityFamily(type);
+  return EVENT_TONE[type] ?? (family ? FAMILY_TONE[family] : TONES.neutral);
+}

@@ -6,7 +6,7 @@ import { DataTable } from '@/components/molecules/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { usePlayerNames } from '@/hooks/useModeration';
 import { formatDateTime, shortId } from '@/lib/format';
-import { activityFamily, FAMILY_TONE } from '@/lib/socialActivity';
+import { activityFamily, eventTone } from '@/lib/socialActivity';
 
 interface ActivityTableProps {
   entries: ActivityEntry[];
@@ -48,16 +48,27 @@ export function ActivityTable({ entries, onOpenPlayer, onOpenReport }: ActivityT
     </Chip>
   );
 
+  /** The event as a badge, and a sanction's type next to it, as in the moderation log. */
   const event = (entry: ActivityEntry) => {
     const family = activityFamily(entry.type);
-    return family ? (
-      <Badge variant="outline" className={FAMILY_TONE[family]}>
-        {t(`moderation.activity.types.${entry.type}` as never)}
-      </Badge>
-    ) : (
-      <Badge variant="outline" title={t('moderation.activity.fromGame')}>
-        <MonoText>{entry.type}</MonoText>
-      </Badge>
+    const type = entry.type.startsWith('sanction_') ? asText(entry.details?.type) : null;
+    return (
+      <span className="flex flex-wrap items-center gap-1.5">
+        {family ? (
+          <Badge variant="outline" className={eventTone(entry.type)}>
+            {t(`moderation.activity.types.${entry.type}` as never)}
+          </Badge>
+        ) : (
+          <Badge variant="outline" title={t('moderation.activity.fromGame')}>
+            <MonoText>{entry.type}</MonoText>
+          </Badge>
+        )}
+        {type && (
+          <Badge variant={type === 'ban' || type === 'suspension' ? 'destructive' : 'outline'}>
+            {t(`moderation.sanctionType.${type}` as never, { defaultValue: type })}
+          </Badge>
+        )}
+      </span>
     );
   };
 
@@ -76,14 +87,6 @@ export function ActivityTable({ entries, onOpenPlayer, onOpenReport }: ActivityT
     const rest = Object.entries(d).filter(([key]) => !SHOWN.has(key));
     const isSanction = entry.type.startsWith('sanction_');
     const parts = [
-      isSanction && type && (
-        <Badge
-          key="type"
-          variant={type === 'ban' || type === 'suspension' ? 'destructive' : 'outline'}
-        >
-          {t(`moderation.sanctionType.${type}` as never, { defaultValue: type })}
-        </Badge>
-      ),
       !isSanction && type && (
         <span key="kind">
           {t(`moderation.player.political.${type}` as never, { defaultValue: type })}

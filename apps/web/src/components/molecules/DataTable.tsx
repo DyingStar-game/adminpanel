@@ -79,7 +79,7 @@ export function DataTable<T extends object>({
                 <th
                   key={header.id}
                   scope="col"
-                  className={cn('px-3 py-2 font-normal', classOf(header.column.id))}
+                  className={cn('px-3 py-2 align-middle font-normal', classOf(header.column.id))}
                 >
                   <table.FlexRender header={header} />
                 </th>
@@ -107,7 +107,10 @@ export function DataTable<T extends object>({
                 )}
               >
                 {row.getAllCells().map((cell) => (
-                  <td key={cell.id} className={cn('px-3 py-2 align-top', classOf(cell.column.id))}>
+                  <td
+                    key={cell.id}
+                    className={cn('px-3 py-2 align-middle', classOf(cell.column.id))}
+                  >
                     <table.FlexRender cell={cell} />
                   </td>
                 ))}
