@@ -24,6 +24,7 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 | Install dependencies | `make install` |
 | Any pnpm command | `make pnpm <cmd>` — flags go through `ARGS`, e.g. `make pnpm add zod ARGS="--filter @dyingstar-admin/web"` |
 | Dev servers (Vite :5173 + BFF :3000) | `make pnpm dev` |
+| Test players, reports, sanctions in minikube's `social` (after each reset) | `make seed-social` (`make up K8S=1`, Keycloak import done); `make reset-social` empties `social` first |
 | Checks before committing | `make check` (format, lint, typecheck, test, format check); commit only when it passes |
 | Testers profile (build + serve on :3000) | `make start` / `make stop` |
 | Production image | `make image` |

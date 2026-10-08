@@ -271,6 +271,150 @@
         "dyingstar-admin": ["persistence:read", "persistence:write", "persistence:delete"]
       },
       "groups": ["/staff"]
+    },
+    {
+      "id": "4aa97da7-6ae4-44ef-9727-b0c993c268ea",
+      "username": "player-kira",
+      "email": "player-kira@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Kira",
+      "lastName": "Vance",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-kira",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "b91c2854-3ae4-45b8-b465-9d8cbe89c12a",
+      "username": "player-orin",
+      "email": "player-orin@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Orin",
+      "lastName": "Takeda",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-orin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "c947996d-702d-480a-a08e-5f2bd48a888d",
+      "username": "player-mara",
+      "email": "player-mara@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Mara",
+      "lastName": "Ostrowski",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-mara",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "cc5b9471-e0be-443c-ae22-2df9f6e9c158",
+      "username": "player-silas",
+      "email": "player-silas@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Silas",
+      "lastName": "Ferro",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-silas",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "8ac4ffca-7b3d-49ac-960b-1a705846b73f",
+      "username": "player-juno",
+      "email": "player-juno@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Juno",
+      "lastName": "Okafor",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-juno",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "83a418bc-e342-4bd7-b097-4918c68da3a2",
+      "username": "player-tess",
+      "email": "player-tess@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Tess",
+      "lastName": "Lindqvist",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-tess",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "618dcf6e-7ced-4d6b-aa90-ae8e4e8561ec",
+      "username": "player-dax",
+      "email": "player-dax@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dax",
+      "lastName": "Moreau",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-dax",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "e5e9ed80-d100-42b4-bb7c-9dc2864df269",
+      "username": "player-pell",
+      "email": "player-pell@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Pell",
+      "lastName": "Huxley",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-pell",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
     }
   ],
   "clientScopes": [

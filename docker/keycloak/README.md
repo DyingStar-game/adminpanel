@@ -23,6 +23,7 @@ The password is the user name.
 | `dev-moderator` | `moderator` (realm) | "access denied" until the `social` moderation is built |
 | `dev-admin` | `admin` (realm), `persistence:*` | opens |
 | `ynotna` | `admin` (realm), `persistence:*` | opens; its id `19dd218f-9cbd-484f-9a3b-cff5285eaa93` is the maintainer's `player` in pre-production persistence, so its sheet links to a real item |
+| `player-kira`, `-orin`, `-mara`, `-silas`, `-juno`, `-tess`, `-dax`, `-pell` | `player` | "access denied"; test players for `social`, fixed ids (see below) |
 
 What each role allows is the interim matrix of `packages/schemas/src/permissions.ts` (ADR 0023,
 undecided cells allowed while the panel is in test): `persistence:read` browses and runs the
@@ -43,7 +44,8 @@ moderation roles open nothing of it.
 - the realm roles `admin` and `supervisor`, checked by `social` but missing from the back
   team's realms;
 - the users `dev-reader`, `dev-editor`, `dev-moderator`, `dev-admin`, and `ynotna` with a fixed
-  id (a real pre-production player).
+  id (a real pre-production player);
+- the test players `player-*`, with fixed ids so their links survive the stack's resets.
 
 The `svc-*` clients keep no secret (the back team's operator sets them): Keycloak generates
 one at each start, and their service account roles are not assigned.
@@ -63,6 +65,19 @@ Regenerate it whenever `dyingstar-realm.json` changes.
 Then `make up K8S=1` (their stack running, `minikube tunnel` on) recreates the dev container on
 minikube's network and points the BFF at `http://auth.dyingstar.local/realms/dyingstar`
 (`docker/docker-compose.k8s.yml`); `make up` goes back to the local Keycloak.
+
+## Test players in minikube's `social`
+
+The back team's stack recreates `social`'s database with everything else. Once the partial import
+above is done (it holds the `player-*` users), `make seed-social` (container started with
+`make up K8S=1`) signs each player in through the realm's public `dyingstar-dev` client, which
+registers them in `social` (the staff accounts `dev-moderator`, `dev-admin`, `ynotna` too: without a profile, `social` refuses their reputation changes), then fills it: profiles, friendships (one request left pending),
+open reports against `player-dax` and `player-pell` (and one back), a warning and a mute on
+`player-dax` by `dev-moderator`, a 72 h suspension on `player-pell` by `dev-admin`. Run it again
+after every reset; on a filled database it skips what exists. `make reset-social` goes back to
+the start: it empties `social`'s database (`docker/minikube/social-reset.sql`, the SQL of
+`social`'s own `reset-db.mjs`), restarts the service, which recreates its tables, then seeds. The data lives in
+`packages/contracts/scripts/seed-social.ts`.
 
 ## Workaround: services rejecting every token in minikube (`401 Invalid token`)
 

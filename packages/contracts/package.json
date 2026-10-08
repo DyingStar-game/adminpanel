@@ -10,7 +10,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "generate": "openapi-ts",
-    "contracts:update": "tsx scripts/update.ts && openapi-ts"
+    "contracts:update": "tsx scripts/update.ts && openapi-ts",
+    "social:seed": "tsx scripts/seed-social.ts"
   },
   "dependencies": {
     "zod": "^4.6.5"
