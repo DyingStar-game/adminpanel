@@ -33,6 +33,7 @@ import { TeleportDialog } from '@/components/organisms/TeleportDialog';
 import { OrbitLayout } from '@/components/templates/OrbitLayout';
 import { Button } from '@/components/ui/button';
 import { useBodyMap } from '@/hooks/useBodyMap';
+import { useCan } from '@/hooks/useCan';
 import { useItemActions } from '@/stores/itemActions';
 import { useItem } from '@/hooks/queries';
 import { useGoToItem } from '@/hooks/useGoToItem';
@@ -115,6 +116,8 @@ function BodyMap({
   const { t, i18n } = useTranslation();
   const { mapHidden, setMapHidden, mapNamed, setMapNamed } = usePreferences();
   const actions = useItemActions();
+  const can = useCan();
+  const canWrite = can('persistence.write');
   const [mapQuery, setMapQuery] = useState('');
   // Shared with the inspector's query of the same item.
   const selectedItem = useItem(search.selected).data ?? null;
@@ -340,7 +343,7 @@ function BodyMap({
               closeMenu();
               if (search.selected) deselect();
             }}
-            onContextMenu={(at, { x, y }) => setMenu({ kind: 'place', at, x, y })}
+            onContextMenu={(at, { x, y }) => canWrite && setMenu({ kind: 'place', at, x, y })}
             onPointMenu={(uuid, { x, y }) => {
               // The item becomes the selection too: the inspector shows what the menu acts on.
               select(uuid);
@@ -381,6 +384,7 @@ function BodyMap({
               items={
                 menu.kind === 'place'
                   ? [
+                      // Every place action writes: the menu is not opened without the right.
                       {
                         key: 'add',
                         icon: <PlusIcon size={14} />,
@@ -414,26 +418,34 @@ function BodyMap({
                         label: t('inspector.open'),
                         onSelect: () => onOpenPage(menu.uuid),
                       },
-                      {
-                        key: 'edit',
-                        icon: <PencilIcon size={14} />,
-                        label: t('editor.edit'),
-                        onSelect: () => actions.edit(menu.uuid),
-                      },
-                      {
-                        key: 'duplicate',
-                        icon: <CopyIcon size={14} />,
-                        label: t('duplicate.action'),
-                        onSelect: () => actions.duplicate(menu.uuid),
-                      },
+                      ...(canWrite
+                        ? [
+                            {
+                              key: 'edit',
+                              icon: <PencilIcon size={14} />,
+                              label: t('editor.edit'),
+                              onSelect: () => actions.edit(menu.uuid),
+                            },
+                            {
+                              key: 'duplicate',
+                              icon: <CopyIcon size={14} />,
+                              label: t('duplicate.action'),
+                              onSelect: () => actions.duplicate(menu.uuid),
+                            },
+                          ]
+                        : []),
                       // Still confirmed: deleting applies live in the game.
-                      {
-                        key: 'delete',
-                        icon: <Trash2Icon size={14} />,
-                        label: t('editor.delete'),
-                        onSelect: () => actions.remove(menu.uuid),
-                        destructive: true,
-                      },
+                      ...(can('persistence.delete')
+                        ? [
+                            {
+                              key: 'delete',
+                              icon: <Trash2Icon size={14} />,
+                              label: t('editor.delete'),
+                              onSelect: () => actions.remove(menu.uuid),
+                              destructive: true,
+                            },
+                          ]
+                        : []),
                     ]
               }
             />
@@ -508,10 +520,12 @@ function BodyMap({
               {t('objectPage.explorer')}
             </Button>
             {/* A new item on the body; next to the selected one, use its inspector's "+". */}
-            <Button size="sm" onClick={() => actions.create({ parentId: map.body.object_uuid })}>
-              <PlusIcon />
-              {t('explorer.addItem')}
-            </Button>
+            {canWrite && (
+              <Button size="sm" onClick={() => actions.create({ parentId: map.body.object_uuid })}>
+                <PlusIcon />
+                {t('explorer.addItem')}
+              </Button>
+            )}
           </div>
           <div className="absolute bottom-3.5 left-4 z-[1000] flex max-h-[60%] w-60 flex-col gap-3 overflow-y-auto rounded-lg border bg-background px-3 py-2.5">
             <MapLegend

@@ -31,6 +31,7 @@ export function createStaticDefinitions(
 export function createInProcessBff({ dataset = createDataset() }: { dataset?: Item[] } = {}) {
   const persistence = createPersistenceMock(dataset);
   const app = createApp({
+    auth: false,
     servers: [
       {
         id: TEST_SERVER_ID,

@@ -1,0 +1,777 @@
+{
+  "realm": "dyingstar",
+  "displayName": "DyingStar (admin panel, local)",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": false,
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 315360000,
+  "ssoSessionMaxLifespan": 315360000,
+  "roles": {
+    "realm": [
+      {
+        "name": "player",
+        "description": "Joueur de DyingStar"
+      },
+      {
+        "name": "moderator",
+        "description": "Modération du chat"
+      },
+      {
+        "name": "social:profile:read"
+      },
+      {
+        "name": "social:profile:write"
+      },
+      {
+        "name": "social:player:write"
+      },
+      {
+        "name": "social:corporation:read"
+      },
+      {
+        "name": "social:corporation:write"
+      },
+      {
+        "name": "social:group:read"
+      },
+      {
+        "name": "social:politics:read"
+      },
+      {
+        "name": "social:politics:write"
+      },
+      {
+        "name": "social:sanctions:read"
+      },
+      {
+        "name": "social:reputation:write"
+      },
+      {
+        "name": "social:authorize"
+      },
+      {
+        "name": "economie:wallet:read"
+      },
+      {
+        "name": "economie:wallet:ensure"
+      },
+      {
+        "name": "economie:wallet:credit"
+      },
+      {
+        "name": "economie:wallet:debit"
+      },
+      {
+        "name": "economie:corporation:read"
+      },
+      {
+        "name": "economie:corporation:manage"
+      },
+      {
+        "name": "economie:politics:read"
+      },
+      {
+        "name": "economie:politics:manage"
+      },
+      {
+        "name": "economie:money:issue"
+      },
+      {
+        "name": "inventory:read"
+      },
+      {
+        "name": "inventory:credit"
+      },
+      {
+        "name": "inventory:transfer"
+      },
+      {
+        "name": "inventory:hold"
+      },
+      {
+        "name": "inventory:corporation:manage"
+      },
+      {
+        "name": "inventory:poi:manage"
+      },
+      {
+        "name": "mission:read"
+      },
+      {
+        "name": "mission:write"
+      },
+      {
+        "name": "mission:progress"
+      },
+      {
+        "name": "mission:complete"
+      },
+      {
+        "name": "market:read"
+      },
+      {
+        "name": "market:manage"
+      },
+      {
+        "name": "market:settle"
+      },
+      {
+        "name": "admin",
+        "description": "Moderation (social): above moderator. Not in the back team's realms yet"
+      },
+      {
+        "name": "supervisor",
+        "description": "Moderation (social): above admin. Not in the back team's realms yet"
+      }
+    ],
+    "client": {
+      "dyingstar-admin": [
+        {
+          "name": "persistence:read",
+          "description": "Draft (ADR 0023): browse persistence"
+        },
+        {
+          "name": "persistence:write",
+          "description": "Draft (ADR 0023): create, edit, duplicate, teleport"
+        },
+        {
+          "name": "persistence:delete",
+          "description": "Draft (ADR 0023): delete items"
+        }
+      ]
+    }
+  },
+  "groups": [
+    {
+      "name": "players"
+    },
+    {
+      "name": "staff"
+    }
+  ],
+  "users": [
+    {
+      "username": "devplayer",
+      "email": "devplayer@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Player",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "devplayer",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "username": "dev-reader",
+      "email": "dev-reader@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Reader",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "dev-reader",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "clientRoles": {
+        "dyingstar-admin": ["persistence:read"]
+      },
+      "groups": ["/staff"]
+    },
+    {
+      "username": "dev-editor",
+      "email": "dev-editor@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Editor",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "dev-editor",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "clientRoles": {
+        "dyingstar-admin": ["persistence:read", "persistence:write"]
+      },
+      "groups": ["/staff"]
+    },
+    {
+      "username": "dev-moderator",
+      "email": "dev-moderator@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Moderator",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "dev-moderator",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player", "moderator"],
+      "clientRoles": {},
+      "groups": ["/staff"]
+    },
+    {
+      "username": "dev-admin",
+      "email": "dev-admin@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "dev-admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player", "admin"],
+      "clientRoles": {
+        "dyingstar-admin": ["persistence:read", "persistence:write", "persistence:delete"]
+      },
+      "groups": ["/staff"]
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "openid",
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "config": {
+            "access.token.claim": "true",
+            "id.token.claim": "true",
+            "introspection.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "preferred_username",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-property-mapper",
+          "config": {
+            "user.attribute": "username",
+            "claim.name": "preferred_username",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "profile",
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "full name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-full-name-mapper",
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "given name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "firstName",
+            "claim.name": "given_name",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "family name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "lastName",
+            "claim.name": "family_name",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "email",
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "email",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "email",
+            "claim.name": "email",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "email verified",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "emailVerified",
+            "claim.name": "email_verified",
+            "jsonType.label": "boolean",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "roles",
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "realm roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "realm_access.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "web-origins",
+      "protocol": "openid-connect",
+      "protocolMappers": [
+        {
+          "name": "allowed web origins",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-allowed-origins-mapper",
+          "config": {
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "offline_access",
+      "protocol": "openid-connect"
+    }
+  ],
+  "defaultDefaultClientScopes": ["openid", "profile", "email", "roles", "web-origins"],
+  "defaultOptionalClientScopes": ["offline_access"],
+  "clients": [
+    {
+      "clientId": "dyingstar-game",
+      "name": "DyingStar client de jeu (Godot / navigateur)",
+      "description": "Client public, flow standard + PKCE.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "http://localhost",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://localhost:*",
+        "http://127.0.0.1:*",
+        "http://horizon.dyingstar.local/*",
+        "http://argocd.dyingstar.local/*",
+        "dyingstar://auth/callback"
+      ],
+      "webOrigins": ["*"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:*##dyingstar://auth/callback"
+      },
+      "defaultClientScopes": ["openid", "profile", "email", "roles", "web-origins"],
+      "optionalClientScopes": ["offline_access"]
+    },
+    {
+      "clientId": "dyingstar-service",
+      "name": "DyingStar services (godotserver, horizon, chatauth)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "secret": "dyingstar-service",
+      "attributes": {
+        "client_credentials.use_refresh_token": "true"
+      }
+    },
+    {
+      "clientId": "dyingstar-dev",
+      "name": "DyingStar dev CLI tokens (DEV ONLY)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "attributes": {
+        "access.token.lifespan": "31536000"
+      },
+      "defaultClientScopes": ["openid", "profile", "email", "roles", "web-origins"],
+      "optionalClientScopes": ["offline_access"]
+    },
+    {
+      "clientId": "svc-game",
+      "name": "DyingStar game server (client_credentials)",
+      "description": "Serveur de jeu -> economie-api + social-api + mission-api.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "economie-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "economie-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "social-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "social-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "mission-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "mission-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "market-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "market-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "inventory-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "inventory-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "svc-market",
+      "name": "DyingStar market (client_credentials)",
+      "description": "Marché -> economie-api + inventory-api + social-api.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "economie-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "economie-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "inventory-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "inventory-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "social-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "social-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "svc-inventory",
+      "name": "DyingStar inventory (client_credentials)",
+      "description": "Inventaire -> economie-api + social-api.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "economie-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "economie-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "social-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "social-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "svc-economie",
+      "name": "DyingStar economie (client_credentials)",
+      "description": "Economie -> social-api.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "social-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "social-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "svc-mission",
+      "name": "DyingStar mission (client_credentials)",
+      "description": "Service mission -> economie-api + social-api + inventory-api.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "economie-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "economie-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "social-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "social-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "inventory-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "inventory-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "svc-admin",
+      "name": "DyingStar admin console (client_credentials)",
+      "description": "Console d'admin -> economie-api + social-api + mission-api, toutes capacités.",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "economie-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "economie-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "social-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "social-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "mission-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "mission-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "market-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "market-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        },
+        {
+          "name": "inventory-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.custom.audience": "inventory-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "dyingstar-admin",
+      "name": "DyingStar admin panel (local development only)",
+      "description": "Confidential client of the panel BFF: authorization code + PKCE (ADR 0023).",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "dyingstar-admin-local",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "http://localhost:5173",
+      "redirectUris": [
+        "http://localhost:5173/auth/callback",
+        "http://localhost:3000/auth/callback"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/##http://localhost:3000/"
+      },
+      "protocolMappers": [
+        {
+          "name": "panel client roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "config": {
+            "usermodel.clientRoleMapping.clientId": "dyingstar-admin",
+            "claim.name": "resource_access.${client_id}.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ],
+      "defaultClientScopes": ["openid", "profile", "email", "roles", "web-origins"],
+      "optionalClientScopes": ["offline_access"]
+    }
+  ]
+}

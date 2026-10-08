@@ -19,7 +19,9 @@
     "@hono/zod-validator": "^0.9.1",
     "dequal": "^2.0.3",
     "hono": "^4.13.12",
+    "jose": "^6.2.12",
     "lru-cache": "^11.5.3",
+    "openid-client": "^6.8.8",
     "p-limit": "^7.3.3",
     "zod": "^4.6.5"
   },

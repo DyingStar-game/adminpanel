@@ -1,0 +1,154 @@
+{
+  "realm": "dyingstar",
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "description": "Moderation (social): above moderator. Not in the back team's realms yet"
+      },
+      {
+        "name": "supervisor",
+        "description": "Moderation (social): above admin. Not in the back team's realms yet"
+      }
+    ],
+    "client": {
+      "dyingstar-admin": [
+        {
+          "name": "persistence:read",
+          "description": "Draft (ADR 0023): browse persistence"
+        },
+        {
+          "name": "persistence:write",
+          "description": "Draft (ADR 0023): create, edit, duplicate, teleport"
+        },
+        {
+          "name": "persistence:delete",
+          "description": "Draft (ADR 0023): delete items"
+        }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "dyingstar-admin",
+      "name": "DyingStar admin panel (local development only)",
+      "description": "Confidential client of the panel BFF: authorization code + PKCE (ADR 0023).",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "dyingstar-admin-local",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "http://localhost:5173",
+      "redirectUris": [
+        "http://localhost:5173/auth/callback",
+        "http://localhost:3000/auth/callback"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/##http://localhost:3000/"
+      },
+      "protocolMappers": [
+        {
+          "name": "panel client roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "config": {
+            "usermodel.clientRoleMapping.clientId": "dyingstar-admin",
+            "claim.name": "resource_access.${client_id}.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ],
+      "defaultClientScopes": ["openid", "profile", "email", "roles", "web-origins"],
+      "optionalClientScopes": ["offline_access"]
+    }
+  ],
+  "users": [
+    {
+      "username": "dev-reader",
+      "email": "dev-reader@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Reader",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "dev-reader",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "clientRoles": {
+        "dyingstar-admin": ["persistence:read"]
+      },
+      "groups": ["/staff"]
+    },
+    {
+      "username": "dev-editor",
+      "email": "dev-editor@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Editor",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "dev-editor",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "clientRoles": {
+        "dyingstar-admin": ["persistence:read", "persistence:write"]
+      },
+      "groups": ["/staff"]
+    },
+    {
+      "username": "dev-moderator",
+      "email": "dev-moderator@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Moderator",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "dev-moderator",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player", "moderator"],
+      "clientRoles": {},
+      "groups": ["/staff"]
+    },
+    {
+      "username": "dev-admin",
+      "email": "dev-admin@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "dev-admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player", "admin"],
+      "clientRoles": {
+        "dyingstar-admin": ["persistence:read", "persistence:write", "persistence:delete"]
+      },
+      "groups": ["/staff"]
+    }
+  ]
+}

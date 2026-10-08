@@ -19,7 +19,8 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 
 | Need | Command |
 |------|---------|
-| Start the dev container | `make up` (then `make down` to stop) |
+| Start the dev container | `make up` (then `make down` to stop), with the local Keycloak on :8080 |
+| Same, signed in to the back team's minikube Keycloak | `make up K8S=1` (their stack running, see `docker/keycloak/README.md`) |
 | Install dependencies | `make install` |
 | Any pnpm command | `make pnpm <cmd>` — flags go through `ARGS`, e.g. `make pnpm add zod ARGS="--filter @dyingstar-admin/web"` |
 | Dev servers (Vite :5173 + BFF :3000) | `make pnpm dev` |
@@ -54,6 +55,14 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 Lot 1 (persistence items): status, work delivered beyond the plan and open questions are kept at
 the top of [`docs/lot-1-plan.md`](./docs/lot-1-plan.md) — read it first, then the ADR index.
 `ONBOARDING.md` and `ARCHITECTURE.md` still describe the previous panel (step 10).
+
+## Sign-in (Keycloak, ADR 0023)
+
+Every page and `/api/*` route needs a session; the BFF is the OIDC client. Locally the panel signs
+in to **our compose Keycloak** (default) or to **the back team's minikube Keycloak**
+(`make up K8S=1`); shared Keycloaks never redirect to localhost. Test users: `docker/keycloak/README.md`.
+**Our compose Keycloak is temporary**: ADR 0023 › Local development lists the three conditions
+to remove it — raise them whenever auth, local dev or the services integration changes.
 
 ## Data sources — look at the real data first
 

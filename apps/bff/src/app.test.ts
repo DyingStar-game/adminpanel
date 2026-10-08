@@ -24,6 +24,7 @@ describe('BFF app', () => {
 
     const body = await res.json();
     expect(body).toEqual({
+      environment: 'testing',
       servers: [{ id: 'universe-testing', name: 'Universe Testing', environment: 'testing' }],
     });
     expect(JSON.stringify(body)).not.toContain('persistence');

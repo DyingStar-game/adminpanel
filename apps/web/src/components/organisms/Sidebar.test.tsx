@@ -1,19 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { http, HttpResponse } from 'msw';
-import { server } from '@/test/server';
+import { PermissionsContext } from '@/hooks/useCan';
 import { renderWithProviders } from '@/test/render';
 import { usePreferences } from '@/stores/preferences';
 import { Sidebar } from './Sidebar';
 
-const servers = [
-  { id: 'universe-testing', name: 'Universe Testing', environment: 'testing' },
-  { id: 'universe', name: 'Universe', environment: 'production' },
-];
-
 const renderSidebar = () => {
-  server.use(http.get('*/api/servers', () => HttpResponse.json({ servers })));
   const onNavigate = vi.fn();
   const onHome = vi.fn();
   renderWithProviders(
@@ -23,13 +16,6 @@ const renderSidebar = () => {
 };
 
 describe('Sidebar', () => {
-  it('selects the first configured server by default', async () => {
-    renderSidebar();
-
-    expect(await screen.findByText('Universe Testing')).toBeInTheDocument();
-    expect(usePreferences.getState().serverId).toBe('universe-testing');
-  });
-
   it('collapses to its icons and expands again, remembered', async () => {
     renderSidebar();
 
@@ -64,5 +50,19 @@ describe('Sidebar', () => {
     await userEvent.click(within(nav).getByRole('button', { name: 'Persistence — Import JSON' }));
     expect(onNavigate).toHaveBeenCalledWith('import');
     expect(within(nav).getByRole('button', { name: /Bans/ })).toBeDisabled();
+  });
+
+  it('hides the import from an account that may not write', () => {
+    renderWithProviders(
+      <PermissionsContext.Provider value={['persistence.read']}>
+        <Sidebar active="explorer" onNavigate={vi.fn()} onHome={vi.fn()} version="0.1.0" />
+      </PermissionsContext.Provider>,
+    );
+    const nav = screen.getByRole('complementary', { name: 'Navigation' });
+
+    expect(within(nav).getByRole('button', { name: 'Persistence — Items' })).toBeInTheDocument();
+    expect(
+      within(nav).queryByRole('button', { name: 'Persistence — Import JSON' }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -16,6 +16,7 @@ import { Inspector } from '@/components/organisms/Inspector';
 import { OrbitGraph } from '@/components/organisms/OrbitGraph';
 import { OrbitLayout } from '@/components/templates/OrbitLayout';
 import { Button } from '@/components/ui/button';
+import { useCan } from '@/hooks/useCan';
 import { useItemActions } from '@/stores/itemActions';
 import {
   useAncestors,
@@ -81,6 +82,7 @@ function Orbit({
   const { t } = useTranslation();
   const counts = useChildrenCounts(item.object_uuid, true, { live: true });
   const actions = useItemActions();
+  const can = useCan();
   const ancestors = useAncestors(item.object_uuid);
   const { refs, parentTarget, parentId, resolveRef } = useItemRefs(item);
   // Open clusters still present among the children, in the order they were opened.
@@ -235,10 +237,12 @@ function Orbit({
               {t('objectPage.explorer')}
             </Button>
             {/* A new child of the centre: it appears in its type's cluster once saved. */}
-            <Button size="sm" onClick={() => actions.create({ parentId: item.object_uuid })}>
-              <PlusIcon />
-              {t('explorer.addItem')}
-            </Button>
+            {can('persistence.write') && (
+              <Button size="sm" onClick={() => actions.create({ parentId: item.object_uuid })}>
+                <PlusIcon />
+                {t('explorer.addItem')}
+              </Button>
+            )}
           </div>
           {openTypes.length > 0 && (
             <div className="absolute bottom-3.5 left-4 flex flex-col gap-1.5 rounded-lg border bg-background px-3 py-2 text-xs">

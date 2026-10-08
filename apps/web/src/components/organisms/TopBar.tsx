@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ChevronRightIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { LiveToggle } from '@/components/molecules/LiveToggle';
@@ -15,17 +15,19 @@ interface TopBarProps {
   crumbs: string[];
   /** An item picked in the search, or a query submitted with no result (a full UUID). */
   onSearch: (query: string) => void;
+  /** The signed-in user's menu, at the far end (none when the BFF runs without sign-in). */
+  account?: ReactNode;
 }
 
 /**
- * Header of the first DyingStar panel: breadcrumb, then search, live refresh, language and the
- * active game server. Brand, server choice and navigation are in the sidebar; page actions
+ * Header of the first DyingStar panel: breadcrumb, then search, live refresh, language, the
+ * active game server and the signed-in user. Brand, server choice and navigation are in the sidebar; page actions
  * (Add an item) are in each page's title.
  */
-export function TopBar({ crumbs, onSearch }: TopBarProps) {
+export function TopBar({ crumbs, onSearch, account }: TopBarProps) {
   const { t } = useTranslation();
   const { live, setLive, locale, setLocale } = usePreferences();
-  const { selected } = useServers();
+  const { selected, environment } = useServers();
   // Search of the whole universe by a piece of name or UUID.
   const [query, setQuery] = useState('');
   const search = useItemSearch(query);
@@ -85,9 +87,23 @@ export function TopBar({ crumbs, onSearch }: TopBarProps) {
           aria-hidden
           className={cn('size-2 rounded-full', selected ? 'bg-success' : 'bg-amber-500')}
         />
+        {environment && (
+          <span
+            title={t('environment.hint')}
+            className={cn(
+              'rounded border px-1.5 py-0.5 text-2xs font-semibold tracking-wider uppercase',
+              environment === 'production'
+                ? 'border-destructive/50 text-destructive'
+                : 'border-amber-500/50 text-amber-500',
+            )}
+          >
+            {t(`environment.names.${environment}`, { defaultValue: environment })}
+          </span>
+        )}
         <span className="text-fg-3">{t('topBar.serverLabel')}</span>
         <span className="font-medium text-link">{selected?.name ?? '—'}</span>
       </div>
+      {account && <div className="border-l pl-3">{account}</div>}
     </header>
   );
 }

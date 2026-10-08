@@ -19,6 +19,14 @@ endif
 
 COMPOSE := $(EXECUTOR) -f docker/docker-compose.yml
 
+# `K8S=1`: sign in to the back team's minikube Keycloak instead of the local one, see
+# docker/docker-compose.k8s.yml. Their stack must be running (minikube + `minikube tunnel`).
+ifeq ($(K8S),1)
+export MINIKUBE_IP := $(shell minikube ip 2>/dev/null)
+export TRAEFIK_NODE_PORT := $(shell kubectl get svc traefik -n traefik -o jsonpath='{.spec.ports[?(@.port==80)].nodePort}' 2>/dev/null)
+COMPOSE += -f docker/docker-compose.k8s.yml
+endif
+
 DEV_SERVICE := dev
 APP_SERVICE := app
 IMAGE ?= dyingstar-admin:local
@@ -65,6 +73,11 @@ up: .env.local ## Start the dev container (no app running)
 	@echo "$(GREEN)✅ Development environment ready!$(RESET)"
 	@echo "$(YELLOW)Use 'make install' then 'make pnpm dev'$(RESET)"
 	@echo "$(YELLOW)Web (Vite): http://localhost:5173 · BFF: http://localhost:3000$(RESET)"
+ifeq ($(K8S),1)
+	@echo "$(YELLOW)Keycloak: http://auth.dyingstar.local (back team's minikube; test users: docker/keycloak/README.md)$(RESET)"
+else
+	@echo "$(YELLOW)Keycloak: http://localhost:8080 (test users: docker/keycloak/README.md)$(RESET)"
+endif
 
 .PHONY: down
 down: ## Stop development environment

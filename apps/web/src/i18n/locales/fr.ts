@@ -484,6 +484,30 @@ export const fr: Translations = {
         '{{uuid}} ne désigne aucun objet, et aucune référence connue n’est vérifiée ici.',
     },
   },
+  environment: {
+    hint: 'Environnement de ce panneau : un panneau par environnement, chacun avec sa connexion.',
+    names: { testing: 'Préprod', production: 'Production' },
+  },
+  session: {
+    title: 'Panneau d’administration',
+    signInLead: 'Connectez-vous avec votre compte DyingStar pour gérer les serveurs de jeu.',
+    signIn: 'Se connecter',
+    signInFailed: 'La connexion a échoué. Réessayez, ou demandez à un administrateur.',
+    signInExpired: 'La connexion a pris trop de temps. Réessayez.',
+    unavailable: 'L’admin est injoignable pour le moment. Réessayez dans un instant.',
+    retry: 'Réessayer',
+    deniedTitle: 'Accès refusé',
+    deniedLead:
+      'Vous êtes connecté en tant que {{username}}, mais ce compte n’a aucun rôle qui ouvre le panneau d’administration.',
+    deniedHint: 'Demandez à un administrateur de vous en attribuer un, puis reconnectez-vous.',
+    signOut: 'Se déconnecter',
+    account: 'Compte',
+    signedInAs: 'Connecté en tant que',
+    roles: 'Rôles',
+    noRoles: 'Aucun',
+    noWriteRight:
+      'Votre compte ne peut pas écrire dans la persistance : demandez le rôle persistence:write à un administrateur.',
+  },
   confirm: {
     cancel: 'Annuler',
   },

@@ -23,6 +23,25 @@ x-node-service: &node-service
       required: false
 
 services:
+  # Local Keycloak (ADR 0023): shared Keycloaks never redirect to localhost, so the panel signs in
+  # here in development. The realm is re-imported from the file at every start (no volume).
+  # The browser reaches it on localhost:8080, the BFF as `keycloak:8080`; the static hostname
+  # keeps one issuer for both, the back channel follows the name used (as in the back team's
+  # dev stack).
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.0
+    command: >
+      start-dev --import-realm --http-port=8080
+      --hostname=http://localhost:8080 --hostname-backchannel-dynamic=true
+    environment:
+      # Admin console http://localhost:8080/admin — local only.
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: devpass
+    volumes:
+      - ./keycloak/dyingstar-realm.json:/opt/keycloak/data/import/dyingstar-realm.json:ro
+    ports:
+      - '8080:8080'
+
   # Testers profile: install, build and serve the production bundle on :3000.
   app:
     <<: *node-service
@@ -33,6 +52,8 @@ services:
         pnpm build &&
         STATIC_DIR=../web/dist pnpm start
       "
+    depends_on:
+      - keycloak
     ports:
       - '3000:3000'
 
@@ -40,6 +61,8 @@ services:
   dev:
     <<: *node-service
     command: sh -c "mkdir -p /home/node/.local/bin && corepack enable --install-directory /home/node/.local/bin && tail -f /dev/null"
+    depends_on:
+      - keycloak
     ports:
       - '5173:5173'
       - '3000:3000'

@@ -36,6 +36,7 @@ import { hasContents, schematicFor, schematicKeys } from '@/lib/schematics';
 import { contentsOf } from '@/lib/schematics/contents';
 import { hasEnergy, installedEnergy, lookup } from '@/lib/schematics/components';
 import { SPAWN_DISTANCE, SPAWN_HEIGHT, spawnNextTo } from '@/lib/spawn';
+import { useCan } from '@/hooks/useCan';
 import { useItemActions } from '@/stores/itemActions';
 
 interface ObjectPageProps {
@@ -96,6 +97,7 @@ function ObjectDetails({
   const { refs, parentId, parentTarget, resolveRef, profile } = useItemRefs(item);
   const changed = useChangedKeys(item.object_data, item.object_uuid);
   const actions = useItemActions();
+  const can = useCan();
   const schematic = schematicFor(item.object_data.scenename);
   // What the item carries: its children, read live like the item (a rock laid in a truck bed).
   const children = useItemsPage({ parentId: item.object_uuid }, 1, CONTENTS_PAGE_SIZE, {
@@ -191,7 +193,7 @@ function ObjectDetails({
                 {t('map.showOn')}
               </Button>
             )}
-            {spawn && (
+            {spawn && can('persistence.write') && (
               <Button
                 variant="outline"
                 size="sm"
@@ -215,34 +217,40 @@ function ObjectDetails({
               </Button>
             )}
             {/* Icon-only actions: the name stays in the accessible label and the tooltip. */}
-            <Button
-              variant="outline"
-              size="icon-sm"
-              aria-label={t('duplicate.action')}
-              title={t('duplicate.action')}
-              onClick={() => actions.duplicate(item.object_uuid)}
-            >
-              <CopyIcon />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon-sm"
-              aria-label={t('editor.edit')}
-              title={t('editor.edit')}
-              onClick={() => actions.edit(item.object_uuid)}
-            >
-              <PencilIcon />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon-sm"
-              className="text-destructive"
-              aria-label={t('editor.delete')}
-              title={t('editor.delete')}
-              onClick={() => actions.remove(item.object_uuid)}
-            >
-              <Trash2Icon />
-            </Button>
+            {can('persistence.write') && (
+              <Button
+                variant="outline"
+                size="icon-sm"
+                aria-label={t('duplicate.action')}
+                title={t('duplicate.action')}
+                onClick={() => actions.duplicate(item.object_uuid)}
+              >
+                <CopyIcon />
+              </Button>
+            )}
+            {can('persistence.write') && (
+              <Button
+                variant="outline"
+                size="icon-sm"
+                aria-label={t('editor.edit')}
+                title={t('editor.edit')}
+                onClick={() => actions.edit(item.object_uuid)}
+              >
+                <PencilIcon />
+              </Button>
+            )}
+            {can('persistence.delete') && (
+              <Button
+                variant="outline"
+                size="icon-sm"
+                className="text-destructive"
+                aria-label={t('editor.delete')}
+                title={t('editor.delete')}
+                onClick={() => actions.remove(item.object_uuid)}
+              >
+                <Trash2Icon />
+              </Button>
+            )}
           </div>
           <MonoText tone="subtle" className="text-2xs break-all">
             {item.object_uuid}

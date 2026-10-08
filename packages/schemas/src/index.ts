@@ -4,5 +4,6 @@ export * from './definitions';
 export * from './geometry';
 export * from './health';
 export * from './import';
+export * from './permissions';
 export * from './persistence';
 export * from './relations';

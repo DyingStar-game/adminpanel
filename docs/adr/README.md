@@ -37,4 +37,4 @@ using lightweight ADRs ([Michael Nygard format](https://cognitect.com/blog/2011/
 | [0020](./0020-visual-identity-first-panel.md) | Visual identity: back to the first DyingStar panel's look | Accepted | 2026-10-02 |
 | [0021](./0021-persistence-query-needs-at-scale.md) | Persistence query needs for the admin at game scale | Proposed | 2026-10-04 |
 | [0022](./0022-item-form-coherence-checks.md) | Coherence checks on the create and edit forms, for every type | Accepted | 2026-10-07 |
-| [0023](./0023-keycloak-authentication.md) | Keycloak authentication and role-based access | Proposed | 2026-10-08 |
+| [0023](./0023-keycloak-authentication.md) | Keycloak authentication and role-based access | Accepted in part (sign-in, local dev) | 2026-10-08 |

@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAncestors, useChildrenCounts, useDefinitions, useItem } from '@/hooks/queries';
 import { useChangedKeys } from '@/hooks/useChanges';
+import { useCan } from '@/hooks/useCan';
 import { useItemRefs } from '@/hooks/useItemRefs';
 import { hasMap, mapBodyOf } from '@/lib/bodyMap';
 import { itemLabel } from '@/lib/itemLabel';
@@ -89,6 +90,7 @@ function ItemDetails({
   const { refs, parentId, parentTarget, resolveRef } = useItemRefs(item);
   const changed = useChangedKeys(data, item.object_uuid);
   const actions = useItemActions();
+  const can = useCan();
   const spawn = spawnNextTo(item, SPAWN_DISTANCE, SPAWN_HEIGHT);
 
   return (
@@ -141,7 +143,7 @@ function ItemDetails({
             <ExpandIcon />
             {t('inspector.open')}
           </Button>
-          {spawn && (
+          {spawn && can('persistence.write') && (
             <Button
               variant="outline"
               size="icon-xs"
@@ -157,25 +159,29 @@ function ItemDetails({
               <CirclePlusIcon />
             </Button>
           )}
-          <Button
-            variant="outline"
-            size="icon-xs"
-            aria-label={t('editor.edit')}
-            title={t('editor.edit')}
-            onClick={() => actions.edit(item.object_uuid)}
-          >
-            <PencilIcon />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-xs"
-            aria-label={t('editor.delete')}
-            title={t('editor.delete')}
-            className="text-destructive"
-            onClick={() => actions.remove(item.object_uuid)}
-          >
-            <Trash2Icon />
-          </Button>
+          {can('persistence.write') && (
+            <Button
+              variant="outline"
+              size="icon-xs"
+              aria-label={t('editor.edit')}
+              title={t('editor.edit')}
+              onClick={() => actions.edit(item.object_uuid)}
+            >
+              <PencilIcon />
+            </Button>
+          )}
+          {can('persistence.delete') && (
+            <Button
+              variant="outline"
+              size="icon-xs"
+              aria-label={t('editor.delete')}
+              title={t('editor.delete')}
+              className="text-destructive"
+              onClick={() => actions.remove(item.object_uuid)}
+            >
+              <Trash2Icon />
+            </Button>
+          )}
         </div>
         <h2 className="text-lg leading-tight font-semibold tracking-tight">{itemLabel(item)}</h2>
         <UpdatedAt at={updatedAt} />

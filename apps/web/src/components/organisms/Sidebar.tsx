@@ -13,8 +13,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { GithubMark } from '@/components/atoms/GithubMark';
-import { OptionSelect } from '@/components/molecules/OptionSelect';
-import { useServers } from '@/hooks/useServers';
+import { useCan } from '@/hooks/useCan';
 import { WIKI_HOME } from '@/lib/bodies';
 import { cn } from '@/lib/cn';
 import { usePreferences } from '@/stores/preferences';
@@ -66,12 +65,13 @@ const SECTIONS: {
 ];
 
 /**
- * Fixed left navigation of the first DyingStar panel: brand, game server, sections. It can be
- * reduced to its icons (remembered per viewer); the server stays in the top bar.
+ * Fixed left navigation of the first DyingStar panel: brand, sections. It can be reduced to its
+ * icons (remembered per viewer). There is nothing to choose about the server: one panel per
+ * environment, one game server per environment (ADR 0023), shown in the top bar.
  */
 export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
   const { t } = useTranslation();
-  const { servers, selected, select } = useServers();
+  const can = useCan();
   const collapsed = usePreferences((s) => s.sidebarCollapsed);
   const setCollapsed = usePreferences((s) => s.setSidebarCollapsed);
 
@@ -118,20 +118,6 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
         </button>
       </div>
 
-      <div className={cn('border-b px-4 py-4', collapsed && 'hidden')}>
-        <span className="mb-2 block text-3xs font-semibold tracking-[0.15em] text-fg-3 uppercase">
-          {t('nav.activeServer')}
-        </span>
-        <OptionSelect
-          label={t('topBar.server')}
-          value={selected?.id}
-          placeholder={t('topBar.noServer')}
-          options={servers.map((s) => ({ value: s.id, label: s.name }))}
-          onChange={select}
-          className="w-full"
-        />
-      </div>
-
       <nav className="flex-1 overflow-y-auto py-2">
         {SECTIONS.map((section) => (
           <div key={section.title} className={collapsed ? 'mb-2 border-b pb-2' : 'mb-4'}>
@@ -140,32 +126,35 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
                 {t(`nav.sections.${section.title}`)}
               </div>
             )}
-            {section.items.map(({ id, icon: Icon, soon }) => (
-              <button
-                key={id}
-                type="button"
-                disabled={soon}
-                aria-current={active === id ? 'page' : undefined}
-                title={collapsed ? t(`nav.items.${id}`) : undefined}
-                onClick={() => onNavigate(id)}
-                className={cn(
-                  'flex w-full items-center gap-3 border-l-2 py-2.5 text-left text-sm transition-all duration-150',
-                  collapsed ? 'justify-center px-0' : 'px-5',
-                  active === id
-                    ? 'border-link bg-link-bg text-link'
-                    : 'border-transparent text-fg-3 hover:bg-white/5 hover:text-foreground',
-                  soon && 'cursor-not-allowed opacity-50 hover:bg-transparent hover:text-fg-3',
-                )}
-              >
-                <Icon size={16} strokeWidth={1.5} />
-                <span className={collapsed ? 'sr-only' : 'flex-1'}>{t(`nav.items.${id}`)}</span>
-                {soon && !collapsed && (
-                  <span className="text-3xs tracking-wider text-fg-3 uppercase">
-                    {t('nav.soon')}
-                  </span>
-                )}
-              </button>
-            ))}
+            {section.items
+              // The import only writes.
+              .filter(({ id }) => id !== 'import' || can('persistence.write'))
+              .map(({ id, icon: Icon, soon }) => (
+                <button
+                  key={id}
+                  type="button"
+                  disabled={soon}
+                  aria-current={active === id ? 'page' : undefined}
+                  title={collapsed ? t(`nav.items.${id}`) : undefined}
+                  onClick={() => onNavigate(id)}
+                  className={cn(
+                    'flex w-full items-center gap-3 border-l-2 py-2.5 text-left text-sm transition-all duration-150',
+                    collapsed ? 'justify-center px-0' : 'px-5',
+                    active === id
+                      ? 'border-link bg-link-bg text-link'
+                      : 'border-transparent text-fg-3 hover:bg-white/5 hover:text-foreground',
+                    soon && 'cursor-not-allowed opacity-50 hover:bg-transparent hover:text-fg-3',
+                  )}
+                >
+                  <Icon size={16} strokeWidth={1.5} />
+                  <span className={collapsed ? 'sr-only' : 'flex-1'}>{t(`nav.items.${id}`)}</span>
+                  {soon && !collapsed && (
+                    <span className="text-3xs tracking-wider text-fg-3 uppercase">
+                      {t('nav.soon')}
+                    </span>
+                  )}
+                </button>
+              ))}
           </div>
         ))}
       </nav>

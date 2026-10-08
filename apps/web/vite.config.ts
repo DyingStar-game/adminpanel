@@ -41,8 +41,12 @@ export default defineConfig({
     // File events are unreliable through the Docker bind mount (missed edits served stale
     // modules): the dev container turns polling on with VITE_WATCH_POLLING.
     watch: process.env.VITE_WATCH_POLLING === 'true' ? { usePolling: true, interval: 300 } : {},
+    // `changeOrigin: false` keeps the browser's Host (localhost:5173): the BFF builds the sign-in
+    // callback from it and compares it with the Origin of writes (ADR 0023). Vite's string
+    // shorthand would rewrite it to the BFF's own port.
     proxy: {
-      '/api': BFF_URL,
+      '/api': { target: BFF_URL, changeOrigin: false },
+      '/auth': { target: BFF_URL, changeOrigin: false },
       '/health': BFF_URL,
     },
   },

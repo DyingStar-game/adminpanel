@@ -1,6 +1,8 @@
 # 0023. Keycloak authentication and role-based access
 
-- **Status:** Proposed
+- **Status:** Accepted in part (2026-10-08): the sign-in flow, local development, one panel per
+  environment, and an interim permission matrix. Calling the services and the final roles and
+  matrix stay Proposed.
 - **Date:** 2026-10-08
 - **Deciders:** maintainer, back team (Keycloak clients and roles)
 - **Scope:** Project-wide
@@ -17,28 +19,43 @@ change that:
   exposes its moderation dashboard (`/api/admin/*`) only to **players carrying a Keycloak
   role** and records each moderation action under the caller's identity.
 
-### What exists (services `develop`, checked 2026-10-08, GET only)
+### What exists (checked 2026-10-08, GET only)
 
-- Keycloak 26.6, realm `dyingstar`, defined in `services/keycloak/` (image
-  `harbor.dyingstar-game.space/dyingstar/keycloak:develop`, public). Login with a Keycloak
-  account or Discord; `en` / `fr`; brute-force protection; RS256.
-- **Pre-production** (our `universe-testing`): issuer
-  `https://auth-preprod.dyingstar-game.com/realms/dyingstar` answers; authorization code,
-  PKCE S256, refresh token and client credentials are enabled. **Production**
-  (`auth.dyingstar-game.com`) does not answer yet.
-- Clients: `dyingstar-launcher` (public, `dyingstar://auth/callback`) and the `svc-*` service
-  accounts. **No client for the admin.** Clients and roles are managed in the Keycloak UI, not in
-  the realm JSON.
-- Access token 24 h, SSO session 30 days.
-- **The realm is the players' realm: registration is open.** Anyone can sign in with Discord;
+Keycloak is run by the upstream Keycloak Operator 26.7 (dev-local on the stock 26.7.0 image,
+pre-production on the custom 26.6 image of `services/keycloak/`, which adds Discord). **The source of truth for the realm of
+each environment is the `kubernetes` repository**,
+[`keycloak-managed/dev/`](https://github.com/DyingStar-game/kubernetes/tree/main/keycloak-managed/dev)
+and [`keycloak-managed/preprod/`](https://github.com/DyingStar-game/kubernetes/tree/main/keycloak-managed/preprod)
+(`04-realm-import.yaml`, `06-service-clients.yaml`). `services/keycloak/` holds the custom image
+(Discord provider) and an older realm JSON that no longer describes the deployed realms.
+
+| | Dev-local (minikube) | Pre-production (our `universe-testing`) |
+|---|---|---|
+| Issuer | `http://auth.dyingstar.local/realms/dyingstar` | `https://auth-preprod.dyingstar-game.com/realms/dyingstar` (answers) |
+| Sign-in | Keycloak accounts; registration closed; test user `devplayer` | Keycloak accounts or Discord; **registration open** |
+| Access token / SSO session | 5 min / 10 years | 24 h / 30 days |
+| Realm roles of people | `player`, `moderator` | `player`, `moderator` |
+| Clients | `dyingstar-game` (public, PKCE), `dyingstar-service`, `dyingstar-dev`, `svc-*` | `dyingstar-launcher` (public, PKCE), `dyingstar-service`, `svc-*` |
+
+Production (`auth.dyingstar-game.com`) does not answer yet.
+
+- **`svc-admin` already exists** in dev and pre-production: a confidential client,
+  `client_credentials` only, "reserved to an admin console", granted **all 33 capability
+  roles** (`social:*`, `economie:*`, `inventory:*`, `mission:*`, `market:*`) and the audiences of
+  the five APIs. It opens the internal routes (`/api/internal/*`) of every service. It cannot
+  sign a person in, and calls made with it carry no user identity.
+- **No client lets a person sign in to the panel.**
+- **`social` checks the realm roles `moderator` < `admin` < `supervisor`**
+  (`realm_access.roles`, each implying the ones below), but **`admin` and `supervisor` exist in
+  neither realm**: only `moderator` can be granted today. `social` skips the audience check on
+  player tokens unless `OIDC_AUDIENCE` is set.
+- **The realm is the players' realm.** In pre-production anyone can sign up with Discord:
   being signed in proves nothing about admin rights.
-- Roles: `social` reads the realm roles `moderator` < `admin` < `supervisor`
-  (`realm_access.roles`; each implies the ones below). Services call each other with
-  `client_credentials` and client roles (`social:profile:read`, …). `social` skips the
-  audience check on player tokens unless `OIDC_AUDIENCE` is set.
 - Persistence has no authentication.
 
 ## Options considered
+
+How a person signs in:
 
 1. **Keep ADR 0002** — no login, network isolation. Ruled out: the panel is to be exposed, and
    `social`'s moderation API needs a user token.
@@ -46,20 +63,48 @@ change that:
    simple on the server, but access and refresh tokens live in JavaScript reach (XSS), and the
    SPA has to talk to Keycloak directly.
 3. **The BFF is a confidential OIDC client; the browser holds only a session cookie** — the
-   BFF runs the authorization code + PKCE flow, keeps the tokens server side, checks roles on
-   every route and forwards the user's access token to `social`. Consistent with
-   [ADR 0011](./0011-bff-hono.md) (the BFF holds everything internal).
+   BFF runs the authorization code + PKCE flow, keeps the tokens server side and checks roles on
+   every route. Consistent with [ADR 0011](./0011-bff-hono.md) (the BFF holds everything
+   internal).
+
+How the BFF calls the services:
+
+- **A. The user's token everywhere** — every action is attributed to the person by the
+  service, but `/api/internal/*` refuses player tokens, so corporation, political entity,
+  economy or mission management would be out of reach.
+- **B. `svc-admin` everywhere** — every route open, but `social`'s moderation log would record
+  a robot, and the person's moderation role would no longer be checked by `social`.
+- **C. Both, by route** — the user's token on the routes made for people (`/api/admin/*`),
+  `svc-admin` on the internal routes, the BFF checking the person's rights before using it.
 
 ## Decision
 
-We will implement option 3.
+We will implement option 3, calling the services as in C.
+
+### One panel per environment
+
+**Decided 2026-10-08 (maintainer):** one panel is deployed per environment, each on its own URL
+and signed in to that environment's Keycloak (pre-production → `auth-preprod…`, production →
+`auth…`). The environment is chosen by the URL, before signing in; a session never spans two
+environments, and a production secret only lives in the production deployment.
+
+- The BFF's `ENVIRONMENT` names the environment it serves; every entry of `SERVERS` belongs to it,
+  and the BFF refuses to start otherwise (`config/servers.ts`).
+- **One game server per environment** (maintainer, 2026-10-08: pre-production → one server,
+  production → one server). There is nothing to choose: the server selector is gone, the top
+  bar shows the environment and its server; production writes still ask for the extra
+  confirmation, now from the panel's environment.
+- Follow-up: `SERVERS` (a list) and the `X-Server-Id` header remain from the multi-server design;
+  they become the panel's own service URLs (`persistence`, then `social`…) with the services ADR.
+- Locally, `make up` or `make up K8S=1` chooses the Keycloak the same way.
 
 ### Flow
 
 1. Every page and every `/api/*` route needs a session. Without one, the SPA shows a sign-in
    page whose button sends the user to `GET /auth/login`; `/api/*` answers `401`.
 2. `/auth/login` redirects to Keycloak's login page (authorization code, PKCE S256, `state`,
-   `nonce`). The admin never sees a password.
+   `nonce`) through a new confidential client, `dyingstar-admin`. The panel never sees a
+   password.
 3. Keycloak redirects to `/auth/callback`; the BFF exchanges the code, validates the ID token
    and creates a session: an opaque id in an `HttpOnly`, `Secure`, `SameSite=Lax` cookie; the
    tokens stay in the BFF (in memory: a restart signs users out, and Keycloak's SSO session
@@ -72,97 +117,207 @@ We will implement option 3.
    button is not a security measure.
 7. The BFF refreshes the access token before it expires; `/auth/logout` ends the BFF session
    and Keycloak's (`end_session_endpoint`).
-8. Calls to `social` carry the user's access token, so moderation actions are attributed to the
-   real moderator. Persistence is called as today (no token) until it requires one.
 
 Mutating routes also check the `Origin` header against the panel's own origin (CSRF, on top of
 `SameSite=Lax`).
 
+### Calling the services
+
+- **`social` moderation (`/api/admin/*`)**: the user's access token, so `social` checks the
+  moderation role itself and records the real moderator.
+- **Internal routes of any service (`/api/internal/*`)**: a `svc-admin` token
+  (`client_credentials`, cached until it expires), **only after the BFF has checked the
+  person's permission** for that action. `svc-admin` holds every capability: the panel's
+  matrix is what restricts it, so the BFF records who did what (`preferred_username`, action,
+  target) since the service will not.
+- **Persistence**: no token, as today, until it requires one.
+- The `svc-admin` secret lives only in the BFF (Kubernetes Secret), never in the browser.
+
 ### Roles
 
-- **Moderation**: the realm roles `moderator`, `admin`, `supervisor`, as they are. `social`
-  already defines and enforces them; the panel only mirrors them.
-- **Admin-specific rights**: client roles on the admin's own Keycloak client, kept apart from
-  game roles. Names below are a proposal.
+- **Moderation**: the realm roles `moderator`, `admin`, `supervisor`, as `social` defines them.
+  The panel only mirrors them. `admin` and `supervisor` have to be created in the realms first.
+- **Admin-specific rights**: client roles on `dyingstar-admin`, kept apart from game roles.
+  Names below are a proposal.
 - Each environment has its own Keycloak, so "who may write on production" is decided by the
   role assignments in the production Keycloak, not in the panel.
 
-### Roles × actions matrix — draft, to be completed with the back team (not validated)
+### Interim permissions, while the panel is in test
 
-Proposed client roles on `dyingstar-admin`: `persistence:read`, `persistence:write`,
-`persistence:delete`. ✅ allowed · ❌ refused · ❓ to decide.
+**Decided 2026-10-08 (maintainer):** the persistence rows of the draft matrix below apply now,
+**with their undecided cells (🟡) allowed**, so testing is not blocked. They live in one shared
+place, `packages/schemas/src/permissions.ts` (roles → `persistence.read`, `.check`, `.write`,
+`.delete`), returned by `GET /api/me`:
 
-| Action (route) | no role | `persistence:read` | `persistence:write` | `persistence:delete` | `moderator` | `admin` | `supervisor` |
-|---|---|---|---|---|---|---|---|
-| Sign in to the panel | ❌ access denied | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **Persistence** | | | | | | | |
-| Browse items, object page, orbit view, map (`GET /api/items…`, `/bodies`, `/definitions`) | ❌ | ✅ | ✅ | ✅ | ❓ | ❓ | ❓ |
-| Run the import / form checks (`POST /items/check`, `/import/check`, `/exists`) | ❌ | ❓ | ✅ | ❓ | ❌ | ❌ | ❌ |
-| Create an item (`POST /api/items`) | ❌ | ❌ | ✅ | ❓ | ❌ | ❌ | ❌ |
-| Edit an item (`PUT /api/items/:uuid`) | ❌ | ❌ | ✅ | ❓ | ❌ | ❌ | ❌ |
-| Duplicate an item and its children (`POST /:uuid/duplicate`) | ❌ | ❌ | ✅ | ❓ | ❌ | ❌ | ❌ |
-| Teleport a player or vehicle from the map (`PUT`) | ❌ | ❌ | ✅ | ❓ | ❌ | ❌ | ❌ |
-| Bulk import (unit `POST`s) | ❌ | ❌ | ❓ | ❓ | ❌ | ❌ | ❌ |
-| Delete an item (`DELETE /api/items/:uuid`) | ❌ | ❌ | ❓ | ✅ | ❌ | ❌ | ❌ |
-| **Social — moderation (`/api/admin/*`, enforced by `social`)** | | | | | | | |
-| Community stats, moderation log (`GET /stats`, `/log`) | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Report queue, report detail, change status, escalate (`/reports…`) | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Player moderation sheet (`GET /players/:id`) | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Sanction: warning or mute (`POST /players/:id/sanctions`) | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Sanction: suspension or ban (same route) | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| Adjust reputation (`POST /players/:id/reputation`) | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| Sanctions list, lift a sanction (`GET /sanctions`, `DELETE /sanctions/:id`) | ❌ | ❌ | ❌ | ❌ | ✅ | ✅ | ✅ |
-| **Social — management (`/api/internal/*` only today)** | | | | | | | |
-| Create, edit, transfer, delete corporations and political entities; NPC memberships | ❌ | ❌ | ❌ | ❌ | ❓ | ❓ | ❓ |
+- the BFF checks the permission of every persistence route (`requirePersistencePermission`:
+  reads, the import and form checks, deletions, every other write) and answers 403 otherwise;
+- the SPA hides what the user may not do: create, edit, duplicate, delete, teleport and move on
+  the map, the import (menu entry and page);
+- in effect: `persistence:read` browses and runs the checks; `persistence:write` and
+  `persistence:delete` do everything on persistence; the moderation roles open nothing of it.
+  Until the `social` moderation is built, an account without a `persistence:*` role (a player,
+  a moderator) gets "access denied".
 
-The social rows follow `social/src/routes/admin.routes.ts` as merged; the panel must not grant
-more than `social` does. Whether `supervisor` has rights of its own (beyond `admin`) is not
-visible in the code yet.
+The final matrix replaces this one once decided with the back team.
+
+### Roles × actions matrix — draft, per service, to be completed with the back team (not validated)
+
+✅ allowed · ❌ refused · 🟡 undecided, **allowed for now** (interim, see above) · ❓ undecided, not
+built yet. Roles not listed in a table are refused (❌) everywhere in it.
+
+#### Access to the panel
+
+| | no role (e.g. `player`) | any role below |
+|---|---|---|
+| Sign in | ❌ "access denied" page | ✅ |
+
+#### Persistence — calls sent without a token
+
+Client roles on `dyingstar-admin` (proposed names). **Only these open persistence** (maintainer,
+2026-10-08): the moderation roles of `social` add nothing to it, so a moderator does on
+persistence what their `persistence:*` role allows, and nothing without one.
+
+| Action (route) | `persistence:read` | `persistence:write` | `persistence:delete` |
+| --- | --- | --- | --- |
+| Browse: items, object page, orbit view, map (`GET /api/items…`, `/bodies`, `/definitions`) | ✅ | ✅ | ✅ |
+| Run the import and form checks (`POST /items/check`, `/import/check`, `/exists`) | 🟡 | ✅ | 🟡 |
+| Create an item (`POST /api/items`) | ❌ | ✅ | 🟡 |
+| Edit an item, move it on the map (`PUT /api/items/:uuid`) | ❌ | ✅ | 🟡 |
+| Duplicate an item and its children (`POST /:uuid/duplicate`) | ❌ | ✅ | 🟡 |
+| Teleport a player or vehicle from the map (`PUT`) | ❌ | ✅ | 🟡 |
+| Bulk import (unit `POST`s) | ❌ | 🟡 | 🟡 |
+| Delete an item (`DELETE /api/items/:uuid`) | ❌ | 🟡 | ✅ |
+
+#### Social — moderation (`/api/admin/*`, user token, enforced by `social` itself)
+
+Realm roles, each implying the ones before it. The persistence roles open nothing here.
+
+| Action (route) | `moderator` | `admin` ¹ | `supervisor` ¹ |
+|---|---|---|---|
+| Community stats, moderation log (`GET /stats`, `/log`) | ✅ | ✅ | ✅ |
+| Report queue, report detail, change status, escalate (`/reports…`) | ✅ | ✅ | ✅ |
+| Player moderation sheet (`GET /players/:id`) | ✅ | ✅ | ✅ |
+| Sanction: warning or mute (`POST /players/:id/sanctions`) | ✅ | ✅ | ✅ |
+| Sanction: suspension or ban (same route) | ❌ | ✅ | ✅ |
+| Adjust reputation (`POST /players/:id/reputation`) | ❌ | ✅ | ✅ |
+| Sanctions list, lift a sanction (`GET /sanctions`, `DELETE /sanctions/:id`) | ✅ | ✅ | ✅ |
+
+These rows follow `social/src/routes/admin.routes.ts` as merged; the panel must not grant more
+than `social` does. Whether `supervisor` has rights of its own (beyond `admin`) is not visible in
+the code yet.
+
+#### Social — management (`/api/internal/*`, sent as `svc-admin`, checked by the panel only)
+
+Which roles open these is open: the moderation roles, or client roles of their own (e.g.
+`social:manage`) on `dyingstar-admin`.
+
+| Action | `moderator` | `admin` ¹ | `supervisor` ¹ | own client role? |
+|---|---|---|---|---|
+| Create, edit, transfer, delete corporations | ❓ | ❓ | ❓ | ❓ |
+| Create, edit, transfer, delete political entities | ❓ | ❓ | ❓ | ❓ |
+| NPC memberships (corporation, political entity) | ❓ | ❓ | ❓ | ❓ |
+
+#### Economie, inventory, mission, market — later lots (sent as `svc-admin`)
+
+One table per service, written when the service is integrated, from its OpenAPI and its
+capability roles (`economie:*`, `inventory:*`, `mission:*`, `market:*`). Until then: ❓.
+
+¹ Not created in the back team's realms yet (added in our local realms only).
 
 ### Local development
 
-The services repository is not needed locally:
+**The shared Keycloaks never accept a `localhost` redirect URI** (back team's decision,
+2026-10-08, for security): the pre-production `dyingstar-admin` only redirects to the panel's
+pre-production URL. A panel running on a developer's machine therefore always signs in against
+a **local Keycloak**.
 
-- `docker/docker-compose.yml` gains a `keycloak` service (`quay.io/keycloak/keycloak:26.6`,
-  same version as the services image, `start-dev --import-realm`), importing
-  `docker/keycloak/dyingstar-realm.json`: the services realm plus the `dyingstar-admin` client
-  (secret for dev only, redirects on `localhost:3000` and `localhost:5173`) and one test user
-  per role. No Discord locally.
-- Tests do not need Keycloak: the BFF's OIDC and JWT checks run against a JWKS generated by the
-  test harness.
-- For `social` later: its image `harbor.dyingstar-game.space/dyingstar/social` is public; run it
-  against the local Keycloak, or use pre-production.
+Two ways to sign in locally, side by side:
+
+- **Local mode, the default (`make up`, `make start`)**: a `keycloak` service in
+  `docker/docker-compose.yml` (`quay.io/keycloak/keycloak:26.7.0`, the operator's version,
+  `start-dev --import-realm`, on `localhost:8080`), importing
+  `docker/keycloak/dyingstar-realm.json`: **derived from the back team's
+  `keycloak-managed/dev/04-realm-import.yaml`** (roles, scopes, `svc-admin`), plus
+  `dyingstar-admin` (secret for dev only, redirects on `http://localhost:5173/auth/callback` and
+  `http://localhost:3000/auth/callback`, client-role mapper), the realm roles `admin` and
+  `supervisor`, and one test user per role. No Discord. The browser reaches it on
+  `localhost:8080`, the BFF as `keycloak:8080` (`OIDC_DISCOVERY_URL`).
+- **Minikube mode (`make up K8S=1`)**: the back team's full game stack on minikube + ArgoCD
+  (`kubernetes` repository, `scripts_linux/start-dev.sh`: Keycloak, persistence, every service,
+  Horizon, Godot; 10 to 25 minutes to start, `minikube tunnel`, `*.dyingstar.local` → `127.0.0.1`
+  in the hosts files of WSL **and** Windows). `docker/docker-compose.k8s.yml` puts the dev
+  container on minikube's Docker network and points the BFF at
+  `http://auth.dyingstar.local/realms/dyingstar` (back channel through Traefik's node port).
+  The panel's additions exist in their realm only through a manual partial import
+  (`docker/keycloak/k8s-partial-import.json`), lost when their Keycloak database is recreated.
+  This is the mode for working on the services, which only accept their own Keycloak's tokens.
+
+**Our compose Keycloak stays for now (maintainer's decision, 2026-10-08) and must be
+reconsidered** — it duplicates the back team's realm and drifts from it. Remove it only when all
+three hold:
+
+1. the panel's additions (client `dyingstar-admin`, its roles, `admin` / `supervisor`, test
+   users) are **merged in the back team's `kubernetes` repository** (realm import **and** the
+   role bootstrap job, since the import is create-only), so every install has them;
+2. the panel **manages services**, so working on it needs minikube anyway;
+3. **testers** have another way to run the panel than `make start` (the back team's stack, or a
+   deployed pre-production panel).
+
+Until then, keep `dyingstar-realm.json` in step with the back team's dev realm
+(`docker/keycloak/README.md`).
+
+Common to both modes:
+
+- The Vite dev server proxies `/api` and `/auth` to the BFF **without rewriting the Host**
+  (`changeOrigin: false`): the BFF builds the callback from it and checks the Origin of writes
+  against it; the testers profile (`make start`) serves everything on `localhost:3000`.
+- Signed in either way, the panel can still target the pre-production persistence
+  (`universe-testing`), which has no authentication.
+- Tests do not need Keycloak: the BFF's sign-in runs against a fake provider, and `openid-client`
+  against a Keycloak stand-in served by MSW.
 
 ### Configuration
 
-New BFF settings (`.env.sample`): `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`,
-`PUBLIC_URL` (to build the redirect URI), `SESSION_SECRET`. One Keycloak per panel deployment
-(see the open questions). Libraries: `openid-client` (OIDC flow) and `jose` (JWT, the library
-`social` uses); the choice against `@hono/oidc-auth` is made at implementation.
+BFF settings (`.env.sample`), required since there is no unauthenticated mode:
+`OIDC_ISSUER` (as the browser sees it), `OIDC_DISCOVERY_URL` (where the BFF reads it, when it
+reaches Keycloak by another name), `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET` (`dyingstar-admin`),
+`ENVIRONMENT` (the environment this panel serves), `PUBLIC_URL` (deployments; defaults to each request's origin),
+`SESSION_TTL_MS`. Sessions and pending sign-ins are kept in memory behind random ids, so no
+signing secret is needed. Later, with the service calls: `SERVICE_CLIENT_ID`,
+`SERVICE_CLIENT_SECRET` (`svc-admin`). One Keycloak per panel deployment, one panel per
+environment. What roles allow is code, not configuration: `permissions.ts`. Libraries: `openid-client` (OIDC flow) and `jose` (reading the access token's
+roles).
 
 ## Consequences
 
 - Every BFF route gains a permission; every visible action in the SPA reads `/api/me`. New
   strings (sign-in page, access denied, signed-in user, sign-out) in `en` and `fr`.
 - The activity of each user can be attributed (`preferred_username`) instead of a generic
-  `admin`.
-- Deployment: a public Ingress becomes acceptable; the client secret goes in a Kubernetes Secret.
-- Local development needs one more container; `make up` starts it.
+  `admin`; for `svc-admin` calls, the BFF's own record is the only one.
+- The BFF holds the realm's most privileged machine secret: a flaw in its permission checks
+  would expose every capability of every service. Those checks need tests per route.
+- Deployment: a public Ingress becomes acceptable; both client secrets go in Kubernetes Secrets.
+- Local development needs one more container; `make up` starts it. Its realm has to follow the
+  back team's dev realm when it changes.
 - The panel depends on Keycloak being up: no sign-in when it is down.
 
 ### Open questions (back team)
 
-1. Create the confidential client `dyingstar-admin` in pre-production: redirect URI on the
-   panel's pre-production URL, the client roles of the matrix, and who assigns them.
-2. The panel's public URL in pre-production (and later in production).
-3. The final matrix: names and split of the persistence roles; what moderators may see of
-   persistence; whether `supervisor` has its own rights.
-4. Corporation and political entity management exists only under `/api/internal/*`
-   (service accounts, the real author is lost): expose it under `/api/admin`, or give the panel
-   a service account `svc-admin`?
-5. If `social` sets `OIDC_AUDIENCE`, the admin client needs an audience mapper.
-6. Will persistence require a token? Then the BFF needs a service account.
-7. One panel deployment per environment with its own Keycloak, or one panel targeting several
-   environments (one issuer per entry of `SERVERS`)?
-8. Access token lifetime: 24 h is long for an admin tool; a shorter lifetime for the admin
-   client is possible in Keycloak.
+1. Create the confidential client `dyingstar-admin` (standard flow) in pre-production, with the
+   panel's pre-production URL as its only redirect URI (no `localhost`, decided 2026-10-08), the
+   client roles of the matrix, and say who assigns them. In the dev-local realm too, if the
+   panel is to run inside the back team's stack.
+2. Create the realm roles `admin` and `supervisor` that `social` checks, or say how `social`'s
+   roles are meant to be granted.
+3. Confirm `svc-admin` is meant for this panel, used as above (behind the panel's own
+   permission checks), and how its pre-production secret is handed over.
+4. The panel's public URL in pre-production (and later in production).
+5. The final matrix: names and split of the persistence roles; what moderators may see of
+   persistence; whether `supervisor` has its own rights; which rights open the internal routes.
+6. If `social` sets `OIDC_AUDIENCE`, `dyingstar-admin` needs an audience mapper for
+   `social-api`.
+7. Will persistence require a token? Then `svc-admin` would need a persistence audience.
+8. ~~One panel per environment, or one panel for several?~~ Decided 2026-10-08: one panel per
+   environment, each on its own URL (see "One panel per environment").
+9. Access token lifetime: 24 h in pre-production is long for an admin tool; Keycloak can set a
+   shorter lifetime on `dyingstar-admin` alone.

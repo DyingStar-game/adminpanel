@@ -10,7 +10,30 @@ export const PublicServerSchema = z.object({
 });
 export type PublicServer = z.infer<typeof PublicServerSchema>;
 
-export const ServersResponseSchema = z.object({ servers: z.array(PublicServerSchema) });
+/**
+ * `GET /api/servers` — the game servers of the panel's environment. One panel is deployed per
+ * environment, each with its own Keycloak (ADR 0023): every server shares that environment.
+ */
+export const ServersResponseSchema = z.object({
+  environment: z.string(),
+  servers: z.array(PublicServerSchema),
+});
+
+/**
+ * `GET /api/me` — the signed-in user, the roles of their session and what they allow
+ * (`permissions.ts`, ADR 0023). `user` is null only when the BFF runs without authentication
+ * (tests); `access` is false for a signed-in player holding no permission.
+ */
+export const MeResponseSchema = z.object({
+  user: z.object({ id: z.string(), username: z.string(), name: z.string().nullable() }).nullable(),
+  roles: z.array(z.string()),
+  permissions: z.array(z.string()),
+  access: z.boolean(),
+});
+export type MeResponse = z.infer<typeof MeResponseSchema>;
+
+/** `POST /auth/logout` — where the browser goes next (Keycloak's end of session). */
+export const LogoutResponseSchema = z.object({ redirect: z.string() });
 
 /** Header carrying the target game server on item routes. */
 export const SERVER_HEADER = 'X-Server-Id';

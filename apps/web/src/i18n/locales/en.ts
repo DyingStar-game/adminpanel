@@ -477,6 +477,30 @@ export const en = {
       uuidNotReference: '{{uuid}} designates no item, and no known reference is checked here.',
     },
   },
+  environment: {
+    hint: 'Environment of this admin panel: one panel per environment, each with its own sign-in.',
+    names: { testing: 'Pre-production', production: 'Production' },
+  },
+  session: {
+    title: 'Admin Panel',
+    signInLead: 'Sign in with your DyingStar account to manage the game servers.',
+    signIn: 'Sign in',
+    signInFailed: 'Sign-in failed. Try again, or ask an administrator.',
+    signInExpired: 'The sign-in took too long. Try again.',
+    unavailable: 'The admin is unreachable for now. Try again in a moment.',
+    retry: 'Try again',
+    deniedTitle: 'Access denied',
+    deniedLead:
+      'You are signed in as {{username}}, but this account holds no role that opens the admin panel.',
+    deniedHint: 'Ask an administrator to grant you one, then sign in again.',
+    signOut: 'Sign out',
+    account: 'Account',
+    signedInAs: 'Signed in as',
+    roles: 'Roles',
+    noRoles: 'None',
+    noWriteRight:
+      'Your account may not write to persistence: ask an administrator for the persistence:write role.',
+  },
   confirm: {
     cancel: 'Cancel',
   },

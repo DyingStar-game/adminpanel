@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import { ids } from '@dyingstar-admin/testing';
+import { PermissionsContext } from '@/hooks/useCan';
 import { renderWithProviders } from '@/test/render';
 import { useInProcessBff } from '@/test/bff';
 import { LIVE_INTERVALS } from '@/lib/live';
@@ -64,5 +65,29 @@ describe('Inspector live refresh', () => {
 
     expect(screen.queryByText('42')).not.toBeInTheDocument();
     expect(screen.getByText('28.7')).toBeInTheDocument();
+  });
+});
+
+describe('Inspector permissions (ADR 0023)', () => {
+  it('hides the write actions to an account that may only read', async () => {
+    useInProcessBff();
+    renderWithProviders(
+      <PermissionsContext.Provider value={['persistence.read', 'persistence.check']}>
+        <Inspector uuid={ids.vehicle} onNavigate={vi.fn()} onOpen={vi.fn()} />
+      </PermissionsContext.Provider>,
+    );
+    await screen.findByText('28.7');
+
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+  });
+
+  it('shows them with the write right', async () => {
+    useInProcessBff();
+    renderInspector();
+    await screen.findByText('28.7');
+
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   });
 });

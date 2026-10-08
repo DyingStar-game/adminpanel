@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useGoToItem } from '@/hooks/useGoToItem';
 import { searchForItem, type ExplorerSearch } from '@/lib/explorerSearch';
 import { groupNodeId, useExplorerTree } from '@/stores/explorerTree';
+import { useCan } from '@/hooks/useCan';
 import { useItemActions } from '@/stores/itemActions';
 
 interface ExplorerPageProps {
@@ -51,6 +52,7 @@ export function ExplorerPage({
 
   const select = (item: Item) => onSearchChange({ ...search, selected: item.object_uuid });
   const createItem = useItemActions((s) => s.create);
+  const can = useCan();
 
   return (
     <ExplorerLayout
@@ -59,17 +61,19 @@ export function ExplorerPage({
           title={t('explorer.pageTitle')}
           actions={
             // New items go into the listed level (roots when listing a whole type).
-            <Button
-              onClick={() =>
-                createItem({
-                  parentId: search.scope === 'level' ? search.parent : '',
-                  objectType: search.type,
-                })
-              }
-            >
-              <PlusIcon />
-              {t('explorer.addItem')}
-            </Button>
+            can('persistence.write') && (
+              <Button
+                onClick={() =>
+                  createItem({
+                    parentId: search.scope === 'level' ? search.parent : '',
+                    objectType: search.type,
+                  })
+                }
+              >
+                <PlusIcon />
+                {t('explorer.addItem')}
+              </Button>
+            )
           }
         />
       }

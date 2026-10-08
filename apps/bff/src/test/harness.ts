@@ -41,6 +41,7 @@ export function buildApp(
   const persistence = createPersistenceMock(options.dataset ?? createDataset());
   mswServer.use(...persistence.handlers, ...githubDefinitionsHandlers);
   const app = createApp({
+    auth: false,
     servers: [
       {
         id: SERVER_ID,

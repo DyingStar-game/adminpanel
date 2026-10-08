@@ -33,6 +33,10 @@ export const ErrorCode = {
   upstreamError: 'UPSTREAM_ERROR',
   upstreamTimeout: 'UPSTREAM_TIMEOUT',
   upstreamUnreachable: 'UPSTREAM_UNREACHABLE',
+  unauthenticated: 'UNAUTHENTICATED',
+  accessDenied: 'ACCESS_DENIED',
+  forbidden: 'FORBIDDEN',
+  forbiddenOrigin: 'FORBIDDEN_ORIGIN',
   internal: 'INTERNAL_ERROR',
 } as const;
 

@@ -20,5 +20,12 @@ export function useServers() {
     if (selected && selected.id !== serverId) setServerId(selected.id);
   }, [selected, serverId, setServerId]);
 
-  return { ...query, servers, selected, select: setServerId };
+  return {
+    ...query,
+    servers,
+    selected,
+    select: setServerId,
+    /** The panel's environment: one panel per environment (ADR 0023). */
+    environment: query.data?.environment ?? null,
+  };
 }

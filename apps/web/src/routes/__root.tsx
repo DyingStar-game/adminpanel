@@ -8,7 +8,9 @@ import { AppShell } from '@/components/templates/AppShell';
 import { Sidebar, type NavId } from '@/components/organisms/Sidebar';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { UserMenu } from '@/components/molecules/UserMenu';
 import { useGoToItem } from '@/hooks/useGoToItem';
+import { signOut, useSession } from '@/hooks/useSession';
 import { ExplorerSearchSchema, searchForItem } from '@/lib/explorerSearch';
 import { MapSearchSchema } from '@/lib/mapSearch';
 import { OrbitSearchSchema } from '@/lib/orbitSearch';
@@ -31,6 +33,7 @@ function RootLayout() {
   const goToItem = useGoToItem();
   const expand = useExplorerTree((s) => s.expand);
   const location = useRouterState({ select: (s) => s.location });
+  const { me } = useSession();
 
   // The API has no name search (ADR 0007): only full UUIDs can be opened.
   const search = async (query: string) => {
@@ -148,6 +151,23 @@ function RootLayout() {
           <TopBar
             crumbs={[t('nav.admin'), t(`nav.items.${activeNav}`)]}
             onSearch={(query) => void search(query)}
+            account={
+              me?.user && (
+                <UserMenu
+                  username={me.user.username}
+                  name={me.user.name}
+                  roles={me.roles}
+                  onSignOut={() => void signOut()}
+                  labels={{
+                    account: t('session.account'),
+                    signedInAs: t('session.signedInAs'),
+                    roles: t('session.roles'),
+                    noRoles: t('session.noRoles'),
+                    signOut: t('session.signOut'),
+                  }}
+                />
+              )
+            }
           />
         }
       >
