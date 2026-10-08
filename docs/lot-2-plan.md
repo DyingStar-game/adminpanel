@@ -29,8 +29,22 @@ starting a session on lot 2.**
 Order agreed with the maintainer on 2026-10-08: I (acting on players) before K (organisations),
 since the player sheet is where moderators look first.
 
-Committed with this plan: the labels "En jeu" / "Voir dans la persistance" on the
-player sheet, and the test user `ynotna` in `docker/keycloak/*.json` (see below).
+### End of session 2026-10-08 — where to resume
+
+- Everything is committed and pushed (last commit `d9fee50` on `feature/manage-persistence`).
+  After step I: readable moderation log (`e82086b`), warnings as one-off records (`f940e6c`),
+  readable player activity (`889d78a`), ADR conformity + `conventions.test.ts` (`dc2cc6f`),
+  table alignment and shared event colours (`d9fee50`).
+- **Next: step J** (report actions). Before coding, reread ADR 0010, 0013, 0014, 0020, 0024
+  (`CLAUDE.md` › "ADRs are binding"); follow the pattern of step I (BFF route validated with
+  the contract, mock behaving as the real service, RHF + Zod dialog with a confirmation, tests
+  next to every component).
+- Check `social`'s real behaviour on minikube before trusting its OpenAPI (it differed twice:
+  lifting twice answers 404, warnings expire at once). Read its code in
+  `DyingStar-game/services` › `social/src/services/reports.service.ts` for J.
+- Not to build without the maintainer's go: lifting from the moderation sanctions tab (asked
+  as a question only), deleting a sanction (`social` cannot; would need a back-team route).
+- Storybook: discussed, not wanted for now (ADR 0014 says "not for now").
 
 ## The steps to come
 
