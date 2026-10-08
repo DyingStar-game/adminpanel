@@ -1,20 +1,26 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeftIcon } from 'lucide-react';
 import { Chip } from '@/components/atoms/Chip';
 import { FactTiles } from '@/components/molecules/FactTiles';
 import { Pagination } from '@/components/molecules/Pagination';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
+import { DisbandOrganisationDialog } from '@/components/organisms/DisbandOrganisationDialog';
 import { OrganisationMembersTable } from '@/components/organisms/OrganisationMembersTable';
 import { OrganisationRolesTable } from '@/components/organisms/OrganisationRolesTable';
 import { PoliticalEntitiesTable } from '@/components/organisms/PoliticalEntitiesTable';
+import { PoliticalEntityDialog } from '@/components/organisms/PoliticalEntityDialog';
+import { TransferOrganisationDialog } from '@/components/organisms/TransferOrganisationDialog';
 import { ServicePageLayout } from '@/components/templates/ServicePageLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useCan } from '@/hooks/useCan';
 import {
   usePoliticalChildren,
   usePoliticalEntity,
   usePoliticalMembers,
 } from '@/hooks/useOrganisations';
+import { usePanel } from '@/hooks/usePanel';
 import { ApiError } from '@/lib/api';
 import { formatDateTime, shortId } from '@/lib/format';
 import { moderationErrorKey } from '@/lib/moderationErrors';
@@ -29,6 +35,8 @@ interface PoliticalEntityPageProps {
   onBack: () => void;
   onOpenPlayer: (id: string) => void;
   onOpenPoliticalEntity: (id: string) => void;
+  /** After disbanding it: back to the directory. */
+  onDisbanded: () => void;
 }
 
 /**
@@ -42,8 +50,14 @@ export function PoliticalEntityPage({
   onBack,
   onOpenPlayer,
   onOpenPoliticalEntity,
+  onDisbanded,
 }: PoliticalEntityPageProps) {
   const { t, i18n } = useTranslation();
+  const can = useCan();
+  const { services } = usePanel();
+  // Management through `svc-admin`, for the capability role of social's README (step N).
+  const manages = services.includes('social-management') && can('social.politicsWrite');
+  const [dialog, setDialog] = useState<'edit' | 'transfer' | 'disband' | null>(null);
   const entity = usePoliticalEntity(entityId);
   const members = usePoliticalMembers(entityId, search.members);
   const children = usePoliticalChildren(entityId, search.children);
@@ -71,11 +85,29 @@ export function PoliticalEntityPage({
   const e = entity.data;
   if (!e) return null;
   const head = e.members.find((m) => m.playerId === e.headId);
+  const rows = politicalMembers(members.data?.items ?? []);
 
   return (
     <ServicePageLayout
       title={e.name}
-      actions={back}
+      actions={
+        <div className="flex flex-wrap gap-2">
+          {manages && (
+            <>
+              <Button variant="outline" size="sm" onClick={() => setDialog('edit')}>
+                {t('organisations.manage.edit')}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setDialog('transfer')}>
+                {t('organisations.manage.transfer')}
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setDialog('disband')}>
+                {t('organisations.manage.disband')}
+              </Button>
+            </>
+          )}
+          {back}
+        </div>
+      }
       meta={
         <div className="flex flex-wrap items-center gap-2 text-sm text-fg-3">
           <Badge variant="outline">{t(`moderation.player.political.${e.type}`)}</Badge>
@@ -120,7 +152,7 @@ export function PoliticalEntityPage({
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">{t('organisations.members')}</h2>
         <OrganisationMembersTable
-          members={politicalMembers(members.data?.items ?? [])}
+          members={rows}
           roleHeader={t('organisations.columns.office')}
           onOpenPlayer={onOpenPlayer}
         />
@@ -149,6 +181,23 @@ export function PoliticalEntityPage({
           />
         )}
       </section>
+      {dialog === 'edit' && <PoliticalEntityDialog entity={e} onClose={() => setDialog(null)} />}
+      {dialog === 'transfer' && (
+        <TransferOrganisationDialog
+          kind="politics"
+          organisation={e}
+          candidates={rows.filter((m) => !m.head)}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog === 'disband' && (
+        <DisbandOrganisationDialog
+          kind="politics"
+          organisation={e}
+          onClose={() => setDialog(null)}
+          onDisbanded={onDisbanded}
+        />
+      )}
     </ServicePageLayout>
   );
 }

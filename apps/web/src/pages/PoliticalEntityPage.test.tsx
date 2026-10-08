@@ -12,6 +12,7 @@ const renderPage = (entityId: string) => {
     onBack: vi.fn(),
     onOpenPlayer: vi.fn(),
     onOpenPoliticalEntity: vi.fn(),
+    onDisbanded: vi.fn(),
   };
   renderWithProviders(
     <PoliticalEntityPage entityId={entityId} search={{ members: 1, children: 1 }} {...props} />,
@@ -43,5 +44,28 @@ describe('PoliticalEntityPage (ADR 0024 step 2)', () => {
     expect(await screen.findByText('Independent')).toBeInTheDocument();
     const children = await screen.findByRole('table', { name: 'Lower levels' });
     expect(await within(children).findByText('Port Gaea')).toBeInTheDocument();
+  });
+
+  it('transfers the head office to a member (step N)', async () => {
+    const bff = useInProcessBff();
+    renderPage(organisationIds.commune);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Transfer' }));
+    const dialog = screen.getByRole('dialog', { name: 'Transfer Port Gaea' });
+    await userEvent.click(within(dialog).getByRole('combobox'));
+    await userEvent.click(await screen.findByRole('option', { name: 'ddurieux' }));
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Continue' }));
+    expect(within(dialog).getByRole('alert')).toHaveTextContent(
+      'ddurieux becomes Head of Port Gaea.',
+    );
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Confirm' }));
+
+    await vi.waitFor(() =>
+      expect(bff.social.writes.map((w) => w.call)).toEqual([
+        `POST /internal/politics/${organisationIds.commune}/transfer`,
+      ]),
+    );
+    // The write went out as svc-admin, never with the user's session.
+    expect(bff.social.tokens).toContain('Bearer svc-admin-token');
   });
 });

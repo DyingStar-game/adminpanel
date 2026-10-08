@@ -24,6 +24,9 @@ COMPOSE := $(EXECUTOR) -f docker/docker-compose.yml
 ifeq ($(K8S),1)
 export MINIKUBE_IP := $(shell minikube ip 2>/dev/null)
 export TRAEFIK_NODE_PORT := $(shell kubectl get svc traefik -n traefik -o jsonpath='{.spec.ports[?(@.port==80)].nodePort}' 2>/dev/null)
+# The panel's service account for social's internal API (organisation management, ADR 0023):
+# read from the cluster at each `make up K8S=1`, never written to a file.
+export SVC_ADMIN_CLIENT_SECRET := $(shell kubectl get secret svc-admin-client-secret -n keycloak -o jsonpath='{.data.secret}' 2>/dev/null | base64 -d 2>/dev/null)
 COMPOSE += -f docker/docker-compose.k8s.yml
 endif
 

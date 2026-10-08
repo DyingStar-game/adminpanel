@@ -17,6 +17,8 @@ services:
       OIDC_DISCOVERY_URL: http://auth.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/realms/dyingstar
       # Their `social`, through Traefik (`/social` prefix stripped), for the moderation (ADR 0024).
       SOCIAL_URL: http://services.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/social
+      # svc-admin, for social's internal API (organisation management): read by the Makefile.
+      SVC_ADMIN_CLIENT_SECRET: ${SVC_ADMIN_CLIENT_SECRET:-}
 
 networks:
   minikube:

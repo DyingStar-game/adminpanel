@@ -85,11 +85,10 @@ function toTokens(response: TokenResponse, previous?: OidcTokens): OidcTokens {
 }
 
 /**
- * Keycloak through `openid-client`, as a confidential client (authorization code + PKCE). The
- * discovery document is read on first use and read again after a failure, so the BFF starts
- * even when Keycloak is not up yet.
+ * The `openid-client` configuration of a Keycloak client, read on first use and read again after
+ * a failure, so the BFF starts even when Keycloak is not up yet.
  */
-export function createOidcProvider(options: OidcProviderOptions): OidcProvider {
+export function oidcConfiguration(options: OidcProviderOptions) {
   let config: Promise<oidc.Configuration> | null = null;
 
   const load = async () => {
@@ -107,13 +106,18 @@ export function createOidcProvider(options: OidcProviderOptions): OidcProvider {
     return configuration;
   };
 
-  const configuration = () => {
+  return () => {
     config ??= load().catch((error: unknown) => {
       config = null;
       throw error;
     });
     return config;
   };
+}
+
+/** Keycloak through `openid-client`, as a confidential client (authorization code + PKCE). */
+export function createOidcProvider(options: OidcProviderOptions): OidcProvider {
+  const configuration = oidcConfiguration(options);
 
   return {
     async authorizationUrl({ redirectUri, state, nonce, codeChallenge }) {

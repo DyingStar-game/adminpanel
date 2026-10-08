@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DataTable } from '@/components/molecules/DataTable';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +10,8 @@ interface OrganisationMembersTableProps {
   /** Header of the role column: rank or office. */
   roleHeader: string;
   onOpenPlayer: (id: string) => void;
+  /** Management actions on a member (step N); no column without it. */
+  actions?: ((member: OrganisationMember) => ReactNode) | undefined;
 }
 
 /** An organisation's members, highest rank or office first, each opening their sheet. */
@@ -16,6 +19,7 @@ export function OrganisationMembersTable({
   members,
   roleHeader,
   onOpenPlayer,
+  actions,
 }: OrganisationMembersTableProps) {
   const { t, i18n } = useTranslation();
   return (
@@ -43,6 +47,16 @@ export function OrganisationMembersTable({
           cell: (m) => formatDateTime(m.joinedAt, i18n.language),
           className: 'whitespace-nowrap',
         },
+        ...(actions
+          ? [
+              {
+                key: 'actions',
+                header: t('moderation.columns.actions'),
+                cell: (m: OrganisationMember) => actions(m) ?? <span className="text-fg-3">—</span>,
+                className: 'text-right',
+              },
+            ]
+          : []),
       ]}
     />
   );

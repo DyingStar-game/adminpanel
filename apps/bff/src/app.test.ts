@@ -26,7 +26,7 @@ describe('BFF app', () => {
     expect(body).toEqual({
       environment: 'testing',
       gameServerName: 'Universe Testing',
-      services: ['persistence', 'social'],
+      services: ['persistence', 'social', 'social-management'],
     });
     expect(JSON.stringify(body)).not.toContain('http');
   });

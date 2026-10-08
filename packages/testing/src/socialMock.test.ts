@@ -15,6 +15,10 @@ import {
   zSearchProfilesResponse,
   zEscalateReportResponse,
   zGetCorporationResponse,
+  zInternalCreateCorporationResponse,
+  zInternalCreatePoliticalEntityResponse,
+  zInternalSetCorporationMemberRankResponse,
+  zInternalTransferCorporationCeoResponse,
   zGetMeResponse,
   zGetPoliticalEntityResponse,
   zListCorporationMembersResponse,
@@ -188,5 +192,75 @@ describe('social mock', () => {
       corporations: [{ id: mining, ticker: 'DCM' }],
       politics: [{ id: commune, type: 'commune' }],
     });
+  });
+
+  it('manages organisations through the internal API as social does', async () => {
+    const send = async (method: string, path: string, body?: unknown) => {
+      const res = await fetch(`${SOCIAL_URL}/api/internal${path}`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      });
+      return {
+        status: res.status,
+        body: res.status === 204 ? null : ((await res.json()) as unknown),
+      };
+    };
+    const { commune } = organisationIds;
+
+    const corp = await send('POST', '/corporations', {
+      ceoId: socialIds.reporter,
+      name: 'Test Freight',
+      ticker: 'tfr',
+    });
+    expect(zInternalCreateCorporationResponse.safeParse(corp.body).error).toBeUndefined();
+    const id = (corp.body as { id: string }).id;
+    // One corporation per player.
+    expect(
+      (
+        await send('POST', '/corporations', {
+          ceoId: socialIds.reporter,
+          name: 'Other',
+          ticker: 'OTH',
+        })
+      ).status,
+    ).toBe(409);
+    const ranks = mock.data.ranks.filter((r) => r.corporationId === id);
+    expect(ranks.map((r) => r.name)).toEqual(['CEO', 'Director', 'Member']);
+    mock.data.corporationMembers.push({
+      corporationId: id,
+      playerId: socialIds.moderator,
+      rankId: ranks[2]?.id ?? 0,
+      joinedAt: new Date().toISOString(),
+    });
+    const ranked = await send('PATCH', `/corporations/${id}/members/${socialIds.moderator}`, {
+      rankId: ranks[1]?.id,
+    });
+    expect(zInternalSetCorporationMemberRankResponse.safeParse(ranked.body).error).toBeUndefined();
+    const transferred = await send('POST', `/corporations/${id}/transfer`, {
+      playerId: socialIds.moderator,
+    });
+    expect(
+      zInternalTransferCorporationCeoResponse.safeParse(transferred.body).error,
+    ).toBeUndefined();
+    expect((await send('DELETE', `/corporations/${id}`)).status).toBe(204);
+
+    const entity = await send('POST', '/politics', {
+      headId: socialIds.reporter,
+      type: 'federation',
+      name: 'Test Federation',
+    });
+    expect(zInternalCreatePoliticalEntityResponse.safeParse(entity.body).error).toBeUndefined();
+    const entityId = (entity.body as { id: string }).id;
+    expect(mock.data.offices.filter((o) => o.entityId === entityId).map((o) => o.name)).toEqual([
+      'President',
+      'Representative',
+      'Citizen',
+    ]);
+    // Disbanding a level leaves its lower levels and corporations independent.
+    expect((await send('DELETE', `/politics/${commune}`)).status).toBe(204);
+    expect(
+      mock.data.corporations.find((c) => c.id === organisationIds.mining)?.politicalEntityId,
+    ).toBeNull();
   });
 });

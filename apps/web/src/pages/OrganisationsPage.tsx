@@ -1,15 +1,21 @@
 import { useEffect, useState } from 'react';
+import { PlusIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { PoliticalEntityType } from '@dyingstar-admin/contracts/social';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { Pagination } from '@/components/molecules/Pagination';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
+import { CorporationDialog } from '@/components/organisms/CorporationDialog';
 import { CorporationsTable } from '@/components/organisms/CorporationsTable';
 import { PoliticalEntitiesTable } from '@/components/organisms/PoliticalEntitiesTable';
+import { PoliticalEntityDialog } from '@/components/organisms/PoliticalEntityDialog';
 import { ServicePageLayout } from '@/components/templates/ServicePageLayout';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useCan } from '@/hooks/useCan';
 import { useCorporations, usePoliticalEntities } from '@/hooks/useOrganisations';
+import { usePanel } from '@/hooks/usePanel';
 import { moderationErrorKey } from '@/lib/moderationErrors';
 import { MODERATION_PAGE_SIZE } from '@/lib/moderationSearch';
 import type { OrganisationsSearch } from '@/lib/organisationsSearch';
@@ -39,6 +45,13 @@ export function OrganisationsPage({
   onOpenPoliticalEntity,
 }: OrganisationsPageProps) {
   const { t } = useTranslation();
+  const can = useCan();
+  const { services } = usePanel();
+  // Creating needs the capability role of the tab's kind (step N).
+  const canCreate =
+    services.includes('social-management') &&
+    can(search.tab === 'corporations' ? 'social.corporationWrite' : 'social.politicsWrite');
+  const [creating, setCreating] = useState(false);
   // Typed text, sent once the user pauses; the URL changing elsewhere shows its own.
   const [text, setText] = useState(search.q);
   const [shown, setShown] = useState(search.q);
@@ -73,6 +86,18 @@ export function OrganisationsPage({
     <ServicePageLayout
       title={t('organisations.title')}
       meta={<p className="text-sm text-fg-3">{t('organisations.lead')}</p>}
+      actions={
+        canCreate && (
+          <Button size="sm" variant="outline" onClick={() => setCreating(true)}>
+            <PlusIcon />
+            {t(
+              search.tab === 'corporations'
+                ? 'organisations.manage.createCorporation'
+                : 'organisations.manage.createPolitical',
+            )}
+          </Button>
+        )
+      }
     >
       <Tabs
         value={search.tab}
@@ -132,6 +157,15 @@ export function OrganisationsPage({
           </>
         )}
       </Tabs>
+      {creating &&
+        (search.tab === 'corporations' ? (
+          <CorporationDialog onClose={() => setCreating(false)} onCreated={onOpenCorporation} />
+        ) : (
+          <PoliticalEntityDialog
+            onClose={() => setCreating(false)}
+            onCreated={onOpenPoliticalEntity}
+          />
+        ))}
     </ServicePageLayout>
   );
 }

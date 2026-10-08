@@ -441,7 +441,7 @@ function Contents({
           );
         }
         const color = typeColor(group.objectType);
-        const name = groupName(group, t);
+        const name = groupName(group, t('schematic.ore'));
         const isSelected = group.key === selected;
         return (
           <ContentBox
@@ -506,9 +506,9 @@ function Contents({
 const massText = (kg: number, format: Intl.NumberFormat) =>
   kg >= 1000 ? `${format.format(kg / 1000)} t` : `${format.format(Math.round(kg))} kg`;
 
-/** Name of a content group: ore for mined rocks, else its type. */
-const groupName = (group: ContentGroup, t: ReturnType<typeof useTranslation>['t']) =>
-  group.objectType === 'miningrock' ? t('schematic.ore') : group.objectType;
+/** Name of a content group: ore (its label given) for mined rocks, else its type. */
+const groupName = (group: ContentGroup, ore: string) =>
+  group.objectType === 'miningrock' ? ore : group.objectType;
 
 /**
  * Items of a content group, listed under the drawing: rocks by mineral (each with its count and
@@ -526,7 +526,7 @@ function ContentDetail({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const name = groupName(group, t);
+  const name = groupName(group, t('schematic.ore'));
   const weightOf = (item: Item) =>
     typeof item.object_data.weight === 'number' ? item.object_data.weight : null;
   const sections = new Map<string, Item[]>();

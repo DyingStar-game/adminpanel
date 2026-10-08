@@ -212,6 +212,58 @@ function organisations() {
   };
 }
 
+/** Ranks `social` gives a new corporation (`createCorporation`), its CEO's first. */
+const DEFAULT_RANKS = [
+  { name: 'CEO', priority: 100, permissions: [] as string[], isCeo: true, isDefault: false },
+  {
+    name: 'Director',
+    priority: 50,
+    permissions: ['invite', 'recruit', 'manage_members'],
+    isCeo: false,
+    isDefault: false,
+  },
+  { name: 'Member', priority: 0, permissions: [], isCeo: false, isDefault: true },
+];
+
+/** Offices `social` gives a new political entity, by level (`defaultOfficesFor`), head first. */
+const DEFAULT_OFFICES: Record<PoliticalEntity['type'], [string, number, string[]][]> = {
+  commune: [
+    ['Mayor', 100, []],
+    ['Deputy', 50, ['manage_members']],
+    ['Councilor', 20, []],
+    ['Citizen', 0, []],
+  ],
+  agglomeration: [
+    ['President', 100, []],
+    ['Vice President', 50, ['manage_members']],
+    ['Delegate', 20, []],
+    ['Resident', 0, []],
+  ],
+  department: [
+    ['President', 100, []],
+    ['Vice President', 50, ['manage_members']],
+    ['Departmental Councilor', 20, []],
+    ['Resident', 0, []],
+  ],
+  region: [
+    ['President', 100, []],
+    ['Vice President', 50, ['manage_members']],
+    ['Regional Councilor', 20, []],
+    ['Resident', 0, []],
+  ],
+  country: [
+    ['Head of State', 100, []],
+    ['Minister', 50, ['manage_members']],
+    ['Deputy', 20, []],
+    ['Citizen', 0, []],
+  ],
+  federation: [
+    ['President', 100, []],
+    ['Representative', 50, ['manage_members']],
+    ['Citizen', 0, []],
+  ],
+};
+
 /** A small moderation picture: one griefer reported twice, warned, then muted. */
 export function createSocialDataset(): SocialDataset {
   const { moderator, griefer, reporter } = socialIds;
@@ -433,6 +485,9 @@ export function createSocialMock(
   const badRequest = (message: string) =>
     HttpResponse.json({ error: 'VALIDATION_ERROR', message, status: 400 }, { status: 400 });
   const api = `${baseUrl}/api/admin`;
+  const internal = `${baseUrl}/api/internal`;
+  const forbidden = (message: string) =>
+    HttpResponse.json({ error: 'FORBIDDEN', message, status: 403 }, { status: 403 });
   const players = `${baseUrl}/api/profiles`;
   const seen = (request: Request) => tokens.push(request.headers.get('Authorization'));
   const newestFirst = <T extends { createdAt: string }>(items: T[]) =>
@@ -619,6 +674,247 @@ export function createSocialMock(
       }
       const items = data.politics.filter((p) => p.parentId === params.id).map(politicalSummary);
       return HttpResponse.json(page(items, new URL(request.url)));
+    }),
+    // Organisation management, internal API (ADR 0024 step N): `social` acts as the current CEO
+    // or head, with its own rules (`internal.routes.ts`, `corporations.service.ts`,
+    // `politics.service.ts`). Service roles are not checked here.
+    http.post(`${internal}/corporations`, async ({ request }) => {
+      seen(request);
+      const body = (await request.json()) as Partial<Corporation> & {
+        ceoId: string;
+        name: string;
+        ticker: string;
+      };
+      writes.push({ call: 'POST /internal/corporations', body });
+      if (!data.players.some((p) => p.playerId === body.ceoId)) {
+        return notFound(`Profile ${body.ceoId} not found`);
+      }
+      const ticker = body.ticker.toUpperCase();
+      if (data.corporations.some((c) => c.name === body.name || c.ticker === ticker)) {
+        return conflict('Corporation name or ticker already taken');
+      }
+      if (data.corporationMembers.some((m) => m.playerId === body.ceoId)) {
+        return conflict('Already in a corporation');
+      }
+      const created: Corporation = {
+        id: crypto.randomUUID(),
+        name: body.name,
+        ticker,
+        logoUrl: body.logoUrl ?? null,
+        description: body.description ?? null,
+        recruitment: body.recruitment ?? 'apply',
+        parentId: null,
+        politicalEntityId: null,
+        ceoId: body.ceoId,
+        createdAt: now(),
+        updatedAt: now(),
+      };
+      data.corporations.push(created);
+      for (const rank of DEFAULT_RANKS) {
+        data.ranks.push({ id: nextId(data.ranks), corporationId: created.id, ...rank });
+      }
+      const ceoRank = data.ranks.find((r) => r.corporationId === created.id && r.isCeo);
+      data.corporationMembers.push({
+        corporationId: created.id,
+        playerId: body.ceoId,
+        rankId: ceoRank?.id ?? 0,
+        joinedAt: now(),
+      });
+      return HttpResponse.json(created, { status: 201 });
+    }),
+    http.patch(`${internal}/corporations/:id`, async ({ request, params }) => {
+      seen(request);
+      const body = (await request.json()) as Partial<Corporation>;
+      writes.push({ call: `PATCH /internal/corporations/${String(params.id)}`, body });
+      const found = data.corporations.find((c) => c.id === params.id);
+      if (!found) return notFound(`Corporation ${String(params.id)} not found`);
+      const ticker = body.ticker?.toUpperCase();
+      if (
+        data.corporations.some(
+          (c) => c.id !== found.id && (c.name === body.name || (ticker && c.ticker === ticker)),
+        )
+      ) {
+        return conflict('Corporation name or ticker already taken');
+      }
+      Object.assign(found, body, ticker ? { ticker } : {}, { updatedAt: now() });
+      return HttpResponse.json(found);
+    }),
+    http.delete(`${internal}/corporations/:id`, ({ request, params }) => {
+      seen(request);
+      writes.push({ call: `DELETE /internal/corporations/${String(params.id)}`, body: null });
+      if (!data.corporations.some((c) => c.id === params.id)) {
+        return notFound(`Corporation ${String(params.id)} not found`);
+      }
+      // As the database does: members and ranks go, subsidiaries become independent.
+      data.corporations = data.corporations.filter((c) => c.id !== params.id);
+      data.ranks = data.ranks.filter((r) => r.corporationId !== params.id);
+      data.corporationMembers = data.corporationMembers.filter(
+        (m) => m.corporationId !== params.id,
+      );
+      for (const c of data.corporations) if (c.parentId === params.id) c.parentId = null;
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.post(`${internal}/corporations/:id/transfer`, async ({ request, params }) => {
+      seen(request);
+      const { playerId } = (await request.json()) as { playerId: string };
+      writes.push({
+        call: `POST /internal/corporations/${String(params.id)}/transfer`,
+        body: { playerId },
+      });
+      const found = data.corporations.find((c) => c.id === params.id);
+      if (!found) return notFound(`Corporation ${String(params.id)} not found`);
+      if (playerId === found.ceoId) return badRequest('Already the CEO');
+      const next = data.corporationMembers.find(
+        (m) => m.corporationId === found.id && m.playerId === playerId,
+      );
+      const former = data.corporationMembers.find(
+        (m) => m.corporationId === found.id && m.playerId === found.ceoId,
+      );
+      if (!next) return notFound(`Player ${playerId} is not a member`);
+      const ranks = data.ranks
+        .filter((r) => r.corporationId === found.id)
+        .sort((a, b) => b.priority - a.priority);
+      const ceoRank = ranks.find((r) => r.isCeo);
+      // The former CEO takes the highest rank below.
+      const below = ranks.find((r) => !r.isCeo);
+      if (ceoRank) next.rankId = ceoRank.id;
+      if (former && below) former.rankId = below.id;
+      Object.assign(found, { ceoId: playerId, updatedAt: now() });
+      return HttpResponse.json(found);
+    }),
+    http.patch(`${internal}/corporations/:id/members/:playerId`, async ({ request, params }) => {
+      seen(request);
+      const { rankId } = (await request.json()) as { rankId: number };
+      const path = `${String(params.id)}/members/${String(params.playerId)}`;
+      writes.push({ call: `PATCH /internal/corporations/${path}`, body: { rankId } });
+      const found = data.corporations.find((c) => c.id === params.id);
+      if (!found) return notFound(`Corporation ${String(params.id)} not found`);
+      if (params.playerId === found.ceoId) return forbidden('The CEO rank changes by transfer');
+      const rank = data.ranks.find((r) => r.id === rankId && r.corporationId === found.id);
+      if (!rank) return notFound(`Rank ${rankId} not found`);
+      if (rank.isCeo) return forbidden('The CEO rank changes by transfer');
+      const member = data.corporationMembers.find(
+        (m) => m.corporationId === found.id && m.playerId === params.playerId,
+      );
+      if (!member) return notFound(`Player ${String(params.playerId)} is not a member`);
+      member.rankId = rank.id;
+      const view = corporationMembers(found.id).find((m) => m.playerId === params.playerId);
+      return HttpResponse.json(view);
+    }),
+    http.delete(`${internal}/corporations/:id/members/:playerId`, ({ request, params }) => {
+      seen(request);
+      const path = `${String(params.id)}/members/${String(params.playerId)}`;
+      writes.push({ call: `DELETE /internal/corporations/${path}`, body: null });
+      const found = data.corporations.find((c) => c.id === params.id);
+      if (!found) return notFound(`Corporation ${String(params.id)} not found`);
+      if (params.playerId === found.ceoId) return forbidden('The CEO must transfer first');
+      const before = data.corporationMembers.length;
+      data.corporationMembers = data.corporationMembers.filter(
+        (m) => !(m.corporationId === found.id && m.playerId === params.playerId),
+      );
+      if (data.corporationMembers.length === before) {
+        return notFound(`Player ${String(params.playerId)} is not a member`);
+      }
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.post(`${internal}/politics`, async ({ request }) => {
+      seen(request);
+      const body = (await request.json()) as Partial<PoliticalEntity> & {
+        headId: string;
+        type: PoliticalEntity['type'];
+        name: string;
+      };
+      writes.push({ call: 'POST /internal/politics', body });
+      if (!data.players.some((p) => p.playerId === body.headId)) {
+        return notFound(`Profile ${body.headId} not found`);
+      }
+      if (data.politics.some((p) => p.name === body.name)) return conflict('Name already taken');
+      const created: PoliticalEntity = {
+        id: crypto.randomUUID(),
+        type: body.type,
+        name: body.name,
+        description: body.description ?? null,
+        bannerUrl: body.bannerUrl ?? null,
+        parentId: null,
+        headId: body.headId,
+        createdAt: now(),
+        updatedAt: now(),
+      };
+      data.politics.push(created);
+      DEFAULT_OFFICES[body.type].forEach(([name, priority, permissions], i, all) => {
+        data.offices.push({
+          id: nextId(data.offices),
+          entityId: created.id,
+          name,
+          priority,
+          permissions,
+          isHead: i === 0,
+          isDefault: i === all.length - 1,
+        });
+      });
+      const head = data.offices.find((o) => o.entityId === created.id && o.isHead);
+      data.politicalMembers.push({
+        entityId: created.id,
+        playerId: body.headId,
+        officeId: head?.id ?? 0,
+        joinedAt: now(),
+      });
+      return HttpResponse.json(created, { status: 201 });
+    }),
+    http.patch(`${internal}/politics/:id`, async ({ request, params }) => {
+      seen(request);
+      const body = (await request.json()) as Partial<PoliticalEntity>;
+      writes.push({ call: `PATCH /internal/politics/${String(params.id)}`, body });
+      const found = data.politics.find((p) => p.id === params.id);
+      if (!found) return notFound(`Political entity ${String(params.id)} not found`);
+      if (data.politics.some((p) => p.id !== found.id && p.name === body.name)) {
+        return conflict('Name already taken');
+      }
+      Object.assign(found, body, { updatedAt: now() });
+      return HttpResponse.json(found);
+    }),
+    http.delete(`${internal}/politics/:id`, ({ request, params }) => {
+      seen(request);
+      writes.push({ call: `DELETE /internal/politics/${String(params.id)}`, body: null });
+      if (!data.politics.some((p) => p.id === params.id)) {
+        return notFound(`Political entity ${String(params.id)} not found`);
+      }
+      // As the database does: lower levels and attached corporations become independent.
+      data.politics = data.politics.filter((p) => p.id !== params.id);
+      data.offices = data.offices.filter((o) => o.entityId !== params.id);
+      data.politicalMembers = data.politicalMembers.filter((m) => m.entityId !== params.id);
+      for (const p of data.politics) if (p.parentId === params.id) p.parentId = null;
+      for (const c of data.corporations) {
+        if (c.politicalEntityId === params.id) c.politicalEntityId = null;
+      }
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.post(`${internal}/politics/:id/transfer`, async ({ request, params }) => {
+      seen(request);
+      const { playerId } = (await request.json()) as { playerId: string };
+      writes.push({
+        call: `POST /internal/politics/${String(params.id)}/transfer`,
+        body: { playerId },
+      });
+      const found = data.politics.find((p) => p.id === params.id);
+      if (!found) return notFound(`Political entity ${String(params.id)} not found`);
+      if (playerId === found.headId) return badRequest('Already the head');
+      const next = data.politicalMembers.find(
+        (m) => m.entityId === found.id && m.playerId === playerId,
+      );
+      const former = data.politicalMembers.find(
+        (m) => m.entityId === found.id && m.playerId === found.headId,
+      );
+      if (!next) return notFound(`Player ${playerId} is not a member`);
+      const offices = data.offices
+        .filter((o) => o.entityId === found.id)
+        .sort((a, b) => b.priority - a.priority);
+      const head = offices.find((o) => o.isHead);
+      const below = offices.find((o) => !o.isHead);
+      if (head) next.officeId = head.id;
+      if (former && below) former.officeId = below.id;
+      Object.assign(found, { headId: playerId, updatedAt: now() });
+      return HttpResponse.json(found);
     }),
     // Player route: the caller's own profile, created on the first call (`getMe`). The mock does
     // not read tokens: the caller is the fixtures' moderator, as for the writes.

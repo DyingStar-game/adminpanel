@@ -5,6 +5,16 @@ import {
   zError,
   zEscalateReportResponse,
   zGetCommunityStatsResponse,
+  zInternalCreateCorporationResponse,
+  zInternalCreatePoliticalEntityResponse,
+  zInternalDisbandCorporationResponse,
+  zInternalDisbandPoliticalEntityResponse,
+  zInternalRemoveCorporationMemberResponse,
+  zInternalSetCorporationMemberRankResponse,
+  zInternalTransferCorporationCeoResponse,
+  zInternalTransferPoliticalHeadResponse,
+  zInternalUpdateCorporationResponse,
+  zInternalUpdatePoliticalEntityResponse,
   zGetCorporationResponse,
   zGetMeResponse,
   zGetModerationLogResponse,
@@ -25,9 +35,14 @@ import {
   zSearchProfilesResponse,
   zUpdateReportStatusResponse,
   type AdjustReputationData,
+  type InternalCreateCorporationData,
+  type InternalCreatePoliticalEntityData,
+  type InternalUpdateCorporationData,
+  type InternalUpdatePoliticalEntityData,
   type IssueSanctionData,
   type UpdateReportStatusData,
 } from '@dyingstar-admin/contracts/social';
+import type { ServiceTokenSource } from '../auth/serviceToken';
 import type { Session } from '../auth/auth';
 import { ApiError } from '../lib/errors';
 
@@ -35,6 +50,11 @@ export interface SocialClientOptions {
   /** `social`'s base URL, without `/api` (e.g. `http://service-social:3000`). */
   baseUrl: string;
   timeoutMs: number;
+  /**
+   * Tokens of `svc-admin`, for the internal API (`/api/internal/*`), which takes service
+   * accounts only (ADR 0023 › Social — management). Unset, organisation management is off.
+   */
+  serviceToken?: ServiceTokenSource | undefined;
 }
 
 type Query = Record<string, string | number | boolean | null | undefined>;
@@ -62,7 +82,7 @@ async function upstreamError(res: Response): Promise<ApiError> {
  * moderation API (`/api/admin/*`) and the player routes the panel reads (profiles). Every call
  * carries the signed-in user's token: `social` checks their role and records them as the actor.
  */
-export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) {
+export function createSocialClient({ baseUrl, timeoutMs, serviceToken }: SocialClientOptions) {
   const root = `${baseUrl.replace(/\/$/, '')}/api`;
 
   /** One call to `social`: the user's token, a JSON body when given, the answer validated. */
@@ -100,11 +120,39 @@ export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) 
       throw new ApiError(502, ErrorCode.upstreamUnreachable, 'Social is unreachable');
     }
     if (!res.ok) throw await upstreamError(res);
-    const parsed = schema.safeParse(await res.json().catch(() => null));
+    const payload = res.status === 204 ? undefined : await res.json().catch(() => null);
+    const parsed = schema.safeParse(payload);
     if (!parsed.success) {
       throw new ApiError(502, ErrorCode.upstreamError, 'Social returned an unexpected payload');
     }
     return parsed.data;
+  }
+
+  const corporation = (id: string) => `/corporations/${encodeURIComponent(id)}`;
+  const politics = (id: string) => `/politics/${encodeURIComponent(id)}`;
+
+  /** One call to the internal API, with a `svc-admin` token instead of the user's. */
+  async function internal<T extends z.ZodType>(
+    method: 'POST' | 'PATCH' | 'DELETE',
+    path: string,
+    schema: T,
+    body?: unknown,
+  ): Promise<z.infer<T>> {
+    if (!serviceToken) {
+      throw new ApiError(404, ErrorCode.notFound, 'Organisation management is not configured');
+    }
+    let token: string;
+    try {
+      token = await serviceToken();
+    } catch (error) {
+      console.error('svc-admin token:', error);
+      throw new ApiError(
+        502,
+        ErrorCode.upstreamUnreachable,
+        'Keycloak refused the svc-admin token',
+      );
+    }
+    return call(method, token, `/internal${path}`, schema, body === undefined ? {} : { body });
   }
 
   const get = <T extends z.ZodType>(
@@ -218,6 +266,46 @@ export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) 
     /** Profiles by display name (a player route: `social` has no admin listing, ADR 0024). */
     profiles: (token: string | undefined, query: Query) =>
       get(token, '/profiles', zSearchProfilesResponse, query),
+
+    // Organisation management (ADR 0024 step N): the internal API, as `svc-admin`. `social`
+    // acts as the current CEO or head, with their rules; the panel checks who may ask.
+    createCorporation: (body: InternalCreateCorporationData['body']) =>
+      internal('POST', '/corporations', zInternalCreateCorporationResponse, body),
+    updateCorporation: (id: string, body: InternalUpdateCorporationData['body']) =>
+      internal('PATCH', corporation(id), zInternalUpdateCorporationResponse, body),
+    disbandCorporation: (id: string) =>
+      internal('DELETE', corporation(id), zInternalDisbandCorporationResponse),
+    /** Gives the CEO to a member; the former CEO takes the highest rank below. */
+    transferCorporation: (id: string, playerId: string) =>
+      internal('POST', `${corporation(id)}/transfer`, zInternalTransferCorporationCeoResponse, {
+        playerId,
+      }),
+    setMemberRank: (id: string, playerId: string, rankId: number) =>
+      internal(
+        'PATCH',
+        `${corporation(id)}/members/${encodeURIComponent(playerId)}`,
+        zInternalSetCorporationMemberRankResponse,
+        { rankId },
+      ),
+    removeMember: (id: string, playerId: string) =>
+      internal(
+        'DELETE',
+        `${corporation(id)}/members/${encodeURIComponent(playerId)}`,
+        zInternalRemoveCorporationMemberResponse,
+      ),
+    createPoliticalEntity: (body: InternalCreatePoliticalEntityData['body']) =>
+      internal('POST', '/politics', zInternalCreatePoliticalEntityResponse, body),
+    updatePoliticalEntity: (id: string, body: InternalUpdatePoliticalEntityData['body']) =>
+      internal('PATCH', politics(id), zInternalUpdatePoliticalEntityResponse, body),
+    disbandPoliticalEntity: (id: string) =>
+      internal('DELETE', politics(id), zInternalDisbandPoliticalEntityResponse),
+    /** Gives the head office to a member. */
+    transferPoliticalEntity: (id: string, playerId: string) =>
+      internal('POST', `${politics(id)}/transfer`, zInternalTransferPoliticalHeadResponse, {
+        playerId,
+      }),
+    /** Whether organisation management is configured (`svc-admin`'s secret). */
+    manages: serviceToken !== undefined,
   };
 }
 

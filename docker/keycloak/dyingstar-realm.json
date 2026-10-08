@@ -143,6 +143,14 @@
         {
           "name": "persistence:delete",
           "description": "Draft (ADR 0023): delete items"
+        },
+        {
+          "name": "social:corporation:write",
+          "description": "Manage corporations through social's internal API (ADR 0023)"
+        },
+        {
+          "name": "social:politics:write",
+          "description": "Manage political entities through social's internal API (ADR 0023)"
         }
       ]
     }
@@ -247,7 +255,13 @@
       ],
       "realmRoles": ["player", "admin"],
       "clientRoles": {
-        "dyingstar-admin": ["persistence:read", "persistence:write", "persistence:delete"]
+        "dyingstar-admin": [
+          "persistence:read",
+          "persistence:write",
+          "persistence:delete",
+          "social:corporation:write",
+          "social:politics:write"
+        ]
       },
       "groups": ["/staff"]
     },
@@ -268,7 +282,13 @@
       ],
       "realmRoles": ["player", "admin"],
       "clientRoles": {
-        "dyingstar-admin": ["persistence:read", "persistence:write", "persistence:delete"]
+        "dyingstar-admin": [
+          "persistence:read",
+          "persistence:write",
+          "persistence:delete",
+          "social:corporation:write",
+          "social:politics:write"
+        ]
       },
       "groups": ["/staff"]
     },

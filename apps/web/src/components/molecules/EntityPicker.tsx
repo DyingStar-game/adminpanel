@@ -23,23 +23,44 @@ interface EntityPickerProps {
   value: string | null;
   onChange: (uuid: string) => void;
   labels: { field: string; empty: string };
+  /** The caller searches itself (e.g. on the server): `options` are shown as given. */
+  onQueryChange?: ((query: string) => void) | undefined;
 }
 
 const MAX_OPTIONS = 50;
 
 /** Searchable list to pick one entity (e.g. the player to spawn next to). */
-export function EntityPicker({ options, value, onChange, labels }: EntityPickerProps) {
+export function EntityPicker({
+  options,
+  value,
+  onChange,
+  labels,
+  onQueryChange,
+}: EntityPickerProps) {
   const [query, setQuery] = useState('');
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return options
-      .filter((o) => !needle || o.label.toLowerCase().includes(needle) || o.uuid.startsWith(needle))
+      .filter(
+        (o) =>
+          onQueryChange ||
+          !needle ||
+          o.label.toLowerCase().includes(needle) ||
+          o.uuid.startsWith(needle),
+      )
       .slice(0, MAX_OPTIONS);
-  }, [options, query]);
+  }, [options, query, onQueryChange]);
 
   return (
     <Command label={labels.field} shouldFilter={false} className="rounded-lg border">
-      <CommandInput value={query} onValueChange={setQuery} placeholder={labels.field} />
+      <CommandInput
+        value={query}
+        onValueChange={(next) => {
+          setQuery(next);
+          onQueryChange?.(next);
+        }}
+        placeholder={labels.field}
+      />
       <CommandList className="max-h-48">
         <CommandEmpty>{labels.empty}</CommandEmpty>
         {visible.map((option) => (

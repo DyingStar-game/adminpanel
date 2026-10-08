@@ -21,8 +21,8 @@ The password is the user name.
 | `dev-reader` | `persistence:read` | opens, read only |
 | `dev-editor` | `persistence:read`, `persistence:write` | opens |
 | `dev-moderator` | `moderator` (realm) | "access denied" until the `social` moderation is built |
-| `dev-admin` | `admin` (realm), `persistence:*` | opens |
-| `ynotna` | `admin` (realm), `persistence:*` | opens; its id `19dd218f-9cbd-484f-9a3b-cff5285eaa93` is the maintainer's `player` in pre-production persistence, so its sheet links to a real item |
+| `dev-admin` | `admin` (realm), `persistence:*`, `social:corporation:write`, `social:politics:write` | opens; manages organisations |
+| `ynotna` | `admin` (realm), `persistence:*`, `social:*:write` | opens, manages organisations; its id `19dd218f-9cbd-484f-9a3b-cff5285eaa93` is the maintainer's `player` in pre-production persistence, so its sheet links to a real item |
 | `player-kira`, `-orin`, `-mara`, `-silas`, `-juno`, `-tess`, `-dax`, `-pell` | `player` | "access denied"; test players for `social`, fixed ids (see below) |
 
 What each role allows is the interim matrix of `packages/schemas/src/permissions.ts` (ADR 0023,
@@ -40,7 +40,9 @@ moderation roles open nothing of it.
   `dyingstar-admin-local`, redirect URIs `http://localhost:5173/auth/callback` and
   `http://localhost:3000/auth/callback`, a mapper putting its client roles in the access token
   (`resource_access.dyingstar-admin.roles`: the realm's `roles` scope only maps realm roles);
-- its client roles `persistence:read`, `persistence:write`, `persistence:delete` (draft names);
+- its client roles `persistence:read`, `persistence:write`, `persistence:delete` (draft names),
+  and `social:corporation:write`, `social:politics:write` (the capability roles of `social`'s
+  README, held by people to manage organisations, ADR 0023);
 - the realm roles `admin` and `supervisor`, checked by `social` but missing from the back
   team's realms;
 - the users `dev-reader`, `dev-editor`, `dev-moderator`, `dev-admin`, and `ynotna` with a fixed
@@ -65,6 +67,18 @@ Regenerate it whenever `dyingstar-realm.json` changes.
 Then `make up K8S=1` (their stack running, `minikube tunnel` on) recreates the dev container on
 minikube's network and points the BFF at `http://auth.dyingstar.local/realms/dyingstar`
 (`docker/docker-compose.k8s.yml`); `make up` goes back to the local Keycloak.
+
+**Partial import and existing users:** with "Skip", users already in the realm keep their roles.
+After a change of roles here (e.g. `social:*:write`), either recreate their Keycloak (reset) or
+give the roles by hand: Users › the user › Role mapping › Assign role › Filter by clients ›
+`dyingstar-admin`.
+
+### Organisation management on minikube
+
+`make up K8S=1` reads `svc-admin`'s secret from the cluster (`svc-admin-client-secret`, key
+`secret`) and hands it to the BFF (`SVC_ADMIN_CLIENT_SECRET`), never written to a file. The
+back team's `svc-admin` holds `social:corporation:write` and `social:politics:write`; people
+need the same roles on `dyingstar-admin` (above) and a moderation role to open the section.
 
 ## Test players in minikube's `social`
 

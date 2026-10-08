@@ -226,7 +226,10 @@ like the `persistence:*` roles.
 | Create, edit, transfer, delete a corporation; change or remove a member; NPC memberships (`/api/internal/corporations…`, `/players/:id/corporation`) | `social:corporation:write` |
 | Create, edit, transfer, delete a political entity; NPC memberships (`/api/internal/politics…`, `/players/:id/politics`) | `social:politics:write` |
 
-The moderation roles add nothing here. Still open with the back team: the panel's use of
+The moderation roles add nothing here, but the organisation pages sit in the moderation section,
+opened by `social.moderate`: managing takes a moderation role and the capability role. Without
+`svc-admin`'s secret (`SVC_ADMIN_CLIENT_SECRET`), organisations stay readable only. Still open
+with the back team: the panel's use of
 `svc-admin` and how its pre-production secret is handed over; `social` records the CEO or the
 head as the actor, not the person (an "actual author" field, or the panel's own log).
 

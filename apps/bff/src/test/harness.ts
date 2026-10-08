@@ -60,7 +60,12 @@ export function buildApp(
       ttlMs: 60_000,
     }),
     readCacheTtlMs: 0,
-    social: createSocialClient({ baseUrl: SOCIAL_URL, timeoutMs: 1000 }),
+    // `svc-admin` configured: organisation management on (ADR 0023 › Social — management).
+    social: createSocialClient({
+      baseUrl: SOCIAL_URL,
+      timeoutMs: 1000,
+      serviceToken: () => Promise.resolve('svc-admin-token'),
+    }),
     ...options,
   });
 

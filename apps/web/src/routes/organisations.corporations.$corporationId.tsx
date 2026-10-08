@@ -21,6 +21,9 @@ function CorporationRoute() {
           replace: true,
         })
       }
+      onDisbanded={() =>
+        void navigate({ to: '/organisations', search: { tab: 'corporations', q: '', page: 1 } })
+      }
       // Back where the page was opened from (a player sheet, another organisation…).
       onBack={() =>
         router.history.canGoBack()

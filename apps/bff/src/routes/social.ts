@@ -4,6 +4,13 @@ import {
   zAdjustReputationBody,
   zEscalateReportPath,
   zGetCorporationPath,
+  zInternalCreateCorporationBody,
+  zInternalCreatePoliticalEntityBody,
+  zInternalSetCorporationMemberRankBody,
+  zInternalSetCorporationMemberRankPath,
+  zInternalTransferCorporationCeoBody,
+  zInternalUpdateCorporationBody,
+  zInternalUpdatePoliticalEntityBody,
   zGetPoliticalEntityPath,
   zGetModerationLogQuery,
   zGetPlayerRecordPath,
@@ -168,6 +175,106 @@ export function socialRoutes(social: SocialClient) {
               token(c.var.session),
               c.req.valid('param').entityId,
               c.req.valid('query'),
+            ),
+          ),
+      )
+      // Organisation management (ADR 0024 step N): `svc-admin` on `social`'s internal API, for
+      // people holding the capability role of its README (ADR 0023 › Social — management).
+      .post(
+        '/corporations',
+        requirePermission('social.corporationWrite'),
+        validate('json', zInternalCreateCorporationBody),
+        async (c) => c.json(await social.createCorporation(c.req.valid('json')), 201),
+      )
+      .patch(
+        '/corporations/:corporationId',
+        requirePermission('social.corporationWrite'),
+        validate('param', zGetCorporationPath),
+        validate('json', zInternalUpdateCorporationBody),
+        async (c) =>
+          c.json(
+            await social.updateCorporation(c.req.valid('param').corporationId, c.req.valid('json')),
+          ),
+      )
+      .delete(
+        '/corporations/:corporationId',
+        requirePermission('social.corporationWrite'),
+        validate('param', zGetCorporationPath),
+        async (c) => {
+          await social.disbandCorporation(c.req.valid('param').corporationId);
+          return c.body(null, 204);
+        },
+      )
+      .post(
+        '/corporations/:corporationId/transfer',
+        requirePermission('social.corporationWrite'),
+        validate('param', zGetCorporationPath),
+        validate('json', zInternalTransferCorporationCeoBody),
+        async (c) =>
+          c.json(
+            await social.transferCorporation(
+              c.req.valid('param').corporationId,
+              c.req.valid('json').playerId,
+            ),
+          ),
+      )
+      .patch(
+        '/corporations/:corporationId/members/:playerId',
+        requirePermission('social.corporationWrite'),
+        validate('param', zInternalSetCorporationMemberRankPath),
+        validate('json', zInternalSetCorporationMemberRankBody),
+        async (c) => {
+          const { corporationId, playerId } = c.req.valid('param');
+          return c.json(
+            await social.setMemberRank(corporationId, playerId, c.req.valid('json').rankId),
+          );
+        },
+      )
+      .delete(
+        '/corporations/:corporationId/members/:playerId',
+        requirePermission('social.corporationWrite'),
+        validate('param', zInternalSetCorporationMemberRankPath),
+        async (c) => {
+          const { corporationId, playerId } = c.req.valid('param');
+          await social.removeMember(corporationId, playerId);
+          return c.body(null, 204);
+        },
+      )
+      .post(
+        '/politics',
+        requirePermission('social.politicsWrite'),
+        validate('json', zInternalCreatePoliticalEntityBody),
+        async (c) => c.json(await social.createPoliticalEntity(c.req.valid('json')), 201),
+      )
+      .patch(
+        '/politics/:entityId',
+        requirePermission('social.politicsWrite'),
+        validate('param', zGetPoliticalEntityPath),
+        validate('json', zInternalUpdatePoliticalEntityBody),
+        async (c) =>
+          c.json(
+            await social.updatePoliticalEntity(c.req.valid('param').entityId, c.req.valid('json')),
+          ),
+      )
+      .delete(
+        '/politics/:entityId',
+        requirePermission('social.politicsWrite'),
+        validate('param', zGetPoliticalEntityPath),
+        async (c) => {
+          await social.disbandPoliticalEntity(c.req.valid('param').entityId);
+          return c.body(null, 204);
+        },
+      )
+      .post(
+        '/politics/:entityId/transfer',
+        requirePermission('social.politicsWrite'),
+        validate('param', zGetPoliticalEntityPath),
+        validate('json', zInternalTransferCorporationCeoBody),
+        async (c) =>
+          c.json(
+            await social.transferPoliticalEntity(
+              c.req.valid('param').entityId,
+              c.req.valid('json').playerId,
             ),
           ),
       )

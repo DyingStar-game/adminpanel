@@ -17,6 +17,10 @@ export const Permission = {
   socialReportsAdmin: 'social.reportsAdmin',
   /** Acting on reports escalated to the `supervisor` level. */
   socialReportsSupervisor: 'social.reportsSupervisor',
+  /** Managing corporations through `social`'s internal API (ADR 0023 › Social — management). */
+  socialCorporationWrite: 'social.corporationWrite',
+  /** Managing political entities, likewise. */
+  socialPoliticsWrite: 'social.politicsWrite',
 } as const;
 export type Permission = (typeof Permission)[keyof typeof Permission];
 
@@ -41,6 +45,10 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
   // a report is handled at its escalation level (ADR 0024 › Update 2026-10-08).
   [Permission.socialReportsAdmin]: ['admin', 'supervisor'],
   [Permission.socialReportsSupervisor]: ['supervisor'],
+  // The capability roles of `social`'s README (› Interne), held by the person as client roles
+  // on `dyingstar-admin`; the panel then calls as `svc-admin` (ADR 0023 › Social — management).
+  [Permission.socialCorporationWrite]: ['social:corporation:write'],
+  [Permission.socialPoliticsWrite]: ['social:politics:write'],
 };
 
 /** Permission needed to change the status of, or escalate, a report at each escalation level. */

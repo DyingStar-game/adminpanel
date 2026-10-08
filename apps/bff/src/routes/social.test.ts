@@ -7,17 +7,25 @@ import {
   socialIds,
 } from '@dyingstar-admin/testing';
 import { fakeProvider, ORIGIN, setup, signIn, tokens } from '../test/auth';
+import { createSocialClient } from '../clients/social';
 import { buildApp, mswServer } from '../test/harness';
 
 describe('social moderation routes (ADR 0024)', () => {
   it('lists the services this panel manages', async () => {
     const res = await buildApp().request('/api/panel');
-    expect(await res.json()).toMatchObject({ services: ['persistence', 'social'] });
+    expect(await res.json()).toMatchObject({
+      services: ['persistence', 'social', 'social-management'],
+    });
+    // Without svc-admin's secret, organisations stay readable but not managed.
+    const reading = await buildApp({
+      social: createSocialClient({ baseUrl: SOCIAL_URL, timeoutMs: 1000 }),
+    }).request('/api/panel');
+    expect(await reading.json()).toMatchObject({ services: ['persistence', 'social'] });
 
     const without = await buildApp({ social: undefined }).request('/api/panel');
     expect(await without.json()).toMatchObject({ services: ['persistence'] });
     const alone = await buildApp({ persistenceUrl: undefined }).request('/api/panel');
-    expect(await alone.json()).toMatchObject({ services: ['social'] });
+    expect(await alone.json()).toMatchObject({ services: ['social', 'social-management'] });
   });
 
   it('reads stats, the log, reports, a player sheet and sanctions', async () => {
@@ -257,6 +265,102 @@ describe('social moderation routes (ADR 0024)', () => {
       const { request } = buildApp();
       const missing = '7c0a7e1e-0000-4000-8000-000000000000';
       expect((await request(`/api/social/politics/${missing}`)).status).toBe(404);
+    });
+  });
+
+  describe('organisation management (step N, as svc-admin)', () => {
+    const json = (body: unknown) => ({
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    it('creates a corporation, edits it, changes a rank, transfers it, then disbands it', async () => {
+      const { request, social } = buildApp();
+      const send = (path: string, method: string, body?: unknown) =>
+        request(`/api/social${path}`, { method, ...(body === undefined ? {} : json(body)) });
+
+      const created = await send('/corporations', 'POST', {
+        ceoId: socialIds.reporter,
+        name: 'Ddurieux Hauling',
+        ticker: 'dhl',
+      });
+      expect(created.status).toBe(201);
+      const { id } = (await created.json()) as { id: string };
+      expect(
+        await (await send(`/corporations/${id}`, 'PATCH', { recruitment: 'open' })).json(),
+      ).toMatchObject({ ticker: 'DHL', recruitment: 'open' });
+
+      // The CEO's rank changes by transfer only, and the CEO leaves only after one.
+      expect(
+        (await send(`/corporations/${id}/members/${socialIds.reporter}`, 'DELETE')).status,
+      ).toBe(403);
+      expect(
+        (await send(`/corporations/${id}/transfer`, 'POST', { playerId: socialIds.griefer }))
+          .status,
+      ).toBe(404);
+      expect((await send(`/corporations/${id}`, 'DELETE')).status).toBe(204);
+      expect(social.data.corporations.some((c) => c.id === id)).toBe(false);
+      // Every call went out with svc-admin's token, never the user's.
+      expect(social.tokens.slice(-5).every((t) => t === 'Bearer svc-admin-token')).toBe(true);
+    });
+
+    it('transfers a political entity to a member, the former head taking the office below', async () => {
+      const { request, social } = buildApp();
+      const { commune } = organisationIds;
+
+      const res = await request(`/api/social/politics/${commune}/transfer`, {
+        method: 'POST',
+        ...json({ playerId: socialIds.reporter }),
+      });
+      expect(await res.json()).toMatchObject({ headId: socialIds.reporter });
+      const offices = social.data.politicalMembers.filter((m) => m.entityId === commune);
+      expect(offices.find((m) => m.playerId === socialIds.griefer)?.officeId).toBe(4);
+    });
+
+    it('refuses invalid bodies before calling social', async () => {
+      const { request, social } = buildApp();
+
+      const noCeo = await request('/api/social/corporations', {
+        method: 'POST',
+        ...json({ name: 'No CEO', ticker: 'NOC' }),
+      });
+      expect(noCeo.status).toBe(400);
+      const badType = await request('/api/social/politics', {
+        method: 'POST',
+        ...json({ headId: socialIds.reporter, type: 'empire', name: 'Empire' }),
+      });
+      expect(badType.status).toBe(400);
+      expect(social.writes).toHaveLength(0);
+    });
+
+    it("opens it to social's capability roles only, not to moderators", async () => {
+      const as = async (clientRoles: string[], realmRoles: string[] = []) => {
+        const ctx = setup(
+          fakeProvider(() =>
+            tokens({ realmRoles, clientRoles: { 'dyingstar-admin': clientRoles } }),
+          ),
+        );
+        const { cookie } = await signIn(ctx);
+        const edit = await ctx.call(`/api/social/corporations/${organisationIds.mining}`, {
+          method: 'PATCH',
+          cookie,
+          headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ description: 'Edited' }),
+        });
+        return { status: edit.status, writes: ctx.social.writes.length };
+      };
+
+      // The moderation section opens with a moderation role; managing needs the capability too.
+      expect(await as([], ['admin'])).toEqual({ status: 403, writes: 0 });
+      expect(await as(['social:politics:write'], ['moderator'])).toEqual({
+        status: 403,
+        writes: 0,
+      });
+      expect(await as(['social:corporation:write'])).toEqual({ status: 403, writes: 0 });
+      expect(await as(['social:corporation:write'], ['moderator'])).toMatchObject({
+        status: 200,
+        writes: 1,
+      });
     });
   });
 

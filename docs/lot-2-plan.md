@@ -23,7 +23,7 @@ starting a session on lot 2.**
 | K. Organisations, reading: corporations, political entities | **Done** (to try live) | — |
 | L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | **Done** | see below |
 | M. Decide the final roles × actions matrix with the back team (ADR 0023) | Waiting for the back team | — |
-| N. Organisation management (`/api/internal/*` through `svc-admin`; rights decided, ADR 0023) | Waiting for `svc-admin` (question 11) | — |
+| N. Organisation management (`/api/internal/*` through `svc-admin`; rights decided, ADR 0023) | **Done** on minikube; pre-production waits for `svc-admin` (question 11) | — |
 | O. Next services (`economie`, `inventory`, `mission`, `market`), one by one with the ADR 0024 pattern | Later | — |
 
 Order agreed with the maintainer on 2026-10-08: I (acting on players) before K (organisations),
@@ -42,7 +42,10 @@ since the player sheet is where moderators look first.
 - **Step K** (organisations, reading) is done, without the activity (members only in `social`,
   question 10).
 - **Step L** (panel settings) is done: `.env.local` needs the migration of the README.
-  **Next: step M**, waiting for the back team (roles × actions matrix, questions below).
+- **Step N** (organisation management) is done on minikube: `make up K8S=1`, then give
+  `social:*:write` to your user on `dyingstar-admin` if the partial import skipped it.
+  **Next: step M** (the persistence cells of the matrix, the maintainer's call) and the back
+  team's answers (questions below).
 - Not built, for lack of data in `social`: "claimed by X" on a report (its log has no filter;
   `social` stores no claimer).
 - Check `social`'s real behaviour on minikube before trusting its OpenAPI (it differed twice:
@@ -131,6 +134,23 @@ is configured. Player routes called with the moderator's token, read only:
 - **Not built: the organisations' activity.** `social` keeps it for members only
   (`requireCorporationMember`, `requirePoliticalMember`, no moderator bypass): a moderator gets
   403. ADR 0024 lists it in step 2; question 10 below.
+
+### N. Organisation management — done, to try live on minikube
+
+Through `social`'s internal API as `svc-admin` (`SVC_ADMIN_CLIENT_SECRET`; `make up K8S=1` reads
+it from minikube), for people holding the capability roles of its README on `dyingstar-admin`
+(ADR 0023 › Social — management) and a moderation role:
+
+- Corporations: create (CEO picked among players and NPCs), edit, transfer the CEO to a member,
+  change a member's rank, remove a member, disband. Political entities: create (head picked),
+  edit, transfer the head office to a member, disband. Each through a form then a summary to
+  confirm (`TwoStepDialog`), or a confirmation for removals.
+- `social` acts as the current CEO or head, with its rules (CEO rank by transfer only, the CEO
+  leaves after a transfer, one corporation per player, names unique); the mock follows them.
+- `GET /api/panel` lists `social-management` when `svc-admin` is configured; the buttons show
+  only then, and only to the capability role of the organisation's kind.
+- Not built: NPC memberships (add / remove an NPC), to come with an NPC picker; `social`
+  records the CEO or head as the actor, not the person (question 11).
 
 ### L. Panel settings instead of `SERVERS` — done
 

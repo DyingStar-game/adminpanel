@@ -99,7 +99,12 @@ export function createApp({
         environment,
         gameServerName,
         // Game services this panel manages (ADR 0024): the SPA shows their modules.
-        services: [...(items ? ['persistence'] : []), ...(social ? ['social'] : [])],
+        services: [
+          ...(items ? ['persistence'] : []),
+          ...(social ? ['social'] : []),
+          // Organisation management, through `svc-admin` (ADR 0023 › Social — management).
+          ...(social?.manages ? ['social-management'] : []),
+        ],
       }),
     )
     .get('/definitions', async (c) => c.json(await definitions.list()))

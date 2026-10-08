@@ -2,24 +2,33 @@ import { describe, expect, it, vi } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { organisationIds, socialIds } from '@dyingstar-admin/testing';
+import { PermissionsContext } from '@/hooks/useCan';
 import { useInProcessBff } from '@/test/bff';
 import { renderWithProviders } from '@/test/render';
 import { CorporationPage } from './CorporationPage';
 
-const renderPage = (corporationId: string) => {
+const renderPage = (corporationId: string, permissions?: string[]) => {
   const props = {
     onSearchChange: vi.fn(),
     onBack: vi.fn(),
     onOpenPlayer: vi.fn(),
     onOpenCorporation: vi.fn(),
     onOpenPoliticalEntity: vi.fn(),
+    onDisbanded: vi.fn(),
   };
-  renderWithProviders(
+  const page = (
     <CorporationPage
       corporationId={corporationId}
       search={{ members: 1, children: 1 }}
       {...props}
-    />,
+    />
+  );
+  renderWithProviders(
+    permissions ? (
+      <PermissionsContext.Provider value={permissions}>{page}</PermissionsContext.Provider>
+    ) : (
+      page
+    ),
   );
   return props;
 };
@@ -60,5 +69,30 @@ describe('CorporationPage (ADR 0024 step 2)', () => {
     expect(
       await screen.findByText(/No organisation 7c0a7e1e-0000-4000-8000-000000000000/),
     ).toBeInTheDocument();
+  });
+
+  describe('managing it (step N, as svc-admin)', () => {
+    it('edits, transfers and disbands, with the capability role', async () => {
+      useInProcessBff();
+      const props = renderPage(organisationIds.mining);
+
+      await screen.findByRole('heading', { name: 'Deep Core Mining' });
+      expect(await screen.findByRole('button', { name: 'Edit' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Transfer' })).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: 'Disband' }));
+      await userEvent.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Disband' }),
+      );
+      await vi.waitFor(() => expect(props.onDisbanded).toHaveBeenCalled());
+    });
+
+    it('offers nothing to manage without the capability role', async () => {
+      useInProcessBff();
+      renderPage(organisationIds.mining, ['social.moderate']);
+
+      await screen.findByRole('heading', { name: 'Deep Core Mining' });
+      expect(screen.queryByRole('button', { name: 'Edit' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Disband' })).toBeNull();
+    });
   });
 });

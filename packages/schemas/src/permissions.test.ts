@@ -62,4 +62,14 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     expect(handles('admin')).toEqual(['moderator', 'admin']);
     expect(handles('supervisor')).toEqual(['moderator', 'admin', 'supervisor']);
   });
+
+  it("opens organisation management with social's capability roles only (ADR 0023)", () => {
+    expect(permissionsOf(['social:corporation:write'])).toEqual([
+      Permission.socialCorporationWrite,
+    ]);
+    expect(permissionsOf(['social:politics:write'])).toEqual([Permission.socialPoliticsWrite]);
+    for (const role of ['moderator', 'admin', 'supervisor']) {
+      expect(permissionsOf([role])).not.toContain(Permission.socialCorporationWrite);
+    }
+  });
 });

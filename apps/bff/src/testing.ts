@@ -46,7 +46,12 @@ export function createInProcessBff({
     persistenceUrl: PERSISTENCE_URL,
     definitions: createStaticDefinitions(),
     readCacheTtlMs: 0,
-    social: createSocialClient({ baseUrl: SOCIAL_URL, timeoutMs: 1000 }),
+    // `svc-admin` configured: organisation management on (ADR 0023 › Social — management).
+    social: createSocialClient({
+      baseUrl: SOCIAL_URL,
+      timeoutMs: 1000,
+      serviceToken: () => Promise.resolve('svc-admin-token'),
+    }),
   });
   const forward = async ({ request }: { request: Request }) => {
     const res = await app.fetch(request);

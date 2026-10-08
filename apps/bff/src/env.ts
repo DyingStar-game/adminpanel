@@ -27,6 +27,12 @@ const EnvSchema = z.object({
     .optional()
     .or(z.literal('').transform(() => undefined)),
   SOCIAL_URL: optionalString,
+  /**
+   * Service account of the panel for `social`'s internal API (ADR 0023 › Social — management).
+   * Without its secret, organisation management is off; reading and moderation keep working.
+   */
+  SVC_ADMIN_CLIENT_ID: z.string().min(1).default('svc-admin'),
+  SVC_ADMIN_CLIENT_SECRET: optionalString,
   /** Timeout of every call to a game service other than persistence. */
   SERVICE_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
   /** Timeout of every call to a persistence service. */
