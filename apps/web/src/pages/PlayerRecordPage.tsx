@@ -7,6 +7,7 @@ import { DataTable } from '@/components/molecules/DataTable';
 import { PageHeading } from '@/components/molecules/PageHeading';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { moderationErrorKey } from '@/components/organisms/moderationLabels';
+import { PersistencePlayerLink } from '@/components/organisms/PersistencePlayerLink';
 import { SanctionsTable } from '@/components/organisms/SanctionsTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,9 @@ interface PlayerRecordPageProps {
   onBack: () => void;
   onOpenPlayer: (id: string) => void;
   onOpenReport: (id: number) => void;
+  /** The player's item in persistence, and the map showing it. */
+  onOpenItem: (uuid: string) => void;
+  onOpenMap: (body: string, selected: string) => void;
 }
 
 /** A player's moderation sheet (ADR 0024, reading): profile, sanctions, reports, reputation. */
@@ -28,6 +32,8 @@ export function PlayerRecordPage({
   onBack,
   onOpenPlayer,
   onOpenReport,
+  onOpenItem,
+  onOpenMap,
 }: PlayerRecordPageProps) {
   const { t, i18n } = useTranslation();
   const record = usePlayerRecord(playerId);
@@ -172,6 +178,13 @@ export function PlayerRecordPage({
           )}
         </section>
       </div>
+      {player.entityType === 'player' && (
+        <PersistencePlayerLink
+          playerId={player.playerId}
+          onOpenItem={onOpenItem}
+          onOpenMap={onOpenMap}
+        />
+      )}
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">{t('moderation.player.sanctions')}</h2>
         <SanctionsTable

@@ -1,19 +1,26 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen, within } from '@testing-library/react';
-import { socialIds } from '@dyingstar-admin/testing';
+import userEvent from '@testing-library/user-event';
+import { ids, socialIds } from '@dyingstar-admin/testing';
 import { useInProcessBff } from '@/test/bff';
 import { renderWithProviders } from '@/test/render';
 import { PlayerRecordPage } from './PlayerRecordPage';
 
-const renderPage = (playerId: string) =>
+const renderPage = (playerId: string) => {
+  const onOpenItem = vi.fn();
+  const onOpenMap = vi.fn();
   renderWithProviders(
     <PlayerRecordPage
       playerId={playerId}
       onBack={vi.fn()}
       onOpenPlayer={vi.fn()}
       onOpenReport={vi.fn()}
+      onOpenItem={onOpenItem}
+      onOpenMap={onOpenMap}
     />,
   );
+  return { onOpenItem, onOpenMap };
+};
 
 afterEach(() => vi.useRealTimers());
 
@@ -60,5 +67,22 @@ describe('PlayerRecordPage (ADR 0024)', () => {
     renderPage('5b1d3c1e-0000-4000-8000-0000000000ff');
 
     expect(await screen.findByRole('alert')).toHaveTextContent('No player');
+  });
+
+  it('opens the player in persistence and on the map: same id as in social', async () => {
+    useInProcessBff();
+    const { onOpenItem, onOpenMap } = renderPage(socialIds.reporter);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Open their item' }));
+    expect(onOpenItem).toHaveBeenCalledWith(socialIds.reporter);
+    await userEvent.click(await screen.findByRole('button', { name: 'Show on map' }));
+    expect(onOpenMap).toHaveBeenCalledWith(ids.planet, socialIds.reporter);
+  });
+
+  it('says when persistence has no item for the player', async () => {
+    useInProcessBff();
+    renderPage(socialIds.griefer);
+
+    expect(await screen.findByText(/No player item with this id/)).toBeInTheDocument();
   });
 });

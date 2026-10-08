@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw';
+import { ids } from './fixtures';
 import type {
   ActivityEntry,
   CorporationRef,
@@ -14,11 +15,14 @@ import type {
 /** Base URL used by tests for the mocked `social` service (ADR 0024). */
 export const SOCIAL_URL = 'http://social.test';
 
-/** Player ids of the social fixtures. */
+/**
+ * Player ids of the social fixtures. A player's Keycloak id is also their `player` item's UUID
+ * in persistence (back team, 2026-10-08): the reporter is the persistence fixtures' player.
+ */
 export const socialIds = {
   moderator: '5b1d3c1e-0000-4000-8000-0000000000a1',
   griefer: '5b1d3c1e-0000-4000-8000-0000000000b2',
-  reporter: '5b1d3c1e-0000-4000-8000-0000000000c3',
+  reporter: ids.player,
 } as const;
 
 export interface SocialDataset {

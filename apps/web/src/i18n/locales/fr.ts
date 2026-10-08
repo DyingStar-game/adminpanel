@@ -593,6 +593,12 @@ export const fr: Translations = {
         country: 'Pays',
         federation: 'Fédération',
       },
+      world: {
+        title: 'Dans le monde du jeu',
+        open: 'Ouvrir son item',
+        missing: 'Aucun item player avec cet identifiant dans la persistance.',
+        hint: 'Positions telles que sauvegardées par le jeu, environ toutes les 60 s.',
+      },
       kind: { player: 'Joueur', npc: 'PNJ' },
       sanctions: 'Sanctions',
       reports: 'Signalements le visant',

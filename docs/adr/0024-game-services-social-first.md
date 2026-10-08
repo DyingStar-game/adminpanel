@@ -137,5 +137,6 @@ With the moderation module built, `moderator`, `admin` and `supervisor` open the
 4. The `social` management routes (`/api/internal/*`, `svc-admin`) stay out of this ADR until
    ADR 0023's management table is decided. They also hold what the sheet lacks: exact presence
    (system, scene, position) and the current group.
-5. Is a persistence `player`'s `object_uuid` its Keycloak `sub`, hence its `social` `playerId`?
-   Then the player sheet can open the player's item and show them on the map (back team).
+5. ~~Is a persistence `player`'s `object_uuid` its Keycloak `sub`?~~ Yes (maintainer,
+   2026-10-08): the player sheet opens the player's item and shows them on the map, for accounts
+   that may read persistence.

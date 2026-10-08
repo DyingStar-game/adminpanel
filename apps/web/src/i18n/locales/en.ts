@@ -585,6 +585,12 @@ export const en = {
         country: 'Country',
         federation: 'Federation',
       },
+      world: {
+        title: 'In the game world',
+        open: 'Open their item',
+        missing: 'No player item with this id in persistence.',
+        hint: 'Positions are those saved by the game, about every 60 s.',
+      },
       kind: { player: 'Player', npc: 'NPC' },
       sanctions: 'Sanctions',
       reports: 'Reports against them',

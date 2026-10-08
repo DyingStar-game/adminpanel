@@ -15,6 +15,10 @@ function PlayerRecordRoute() {
           : void navigate({ to: '/players', search: { q: '', page: 1 } })
       }
       onOpenPlayer={(id) => void navigate({ to: '/players/$playerId', params: { playerId: id } })}
+      onOpenItem={(uuid) => void navigate({ to: '/items/$uuid', params: { uuid } })}
+      onOpenMap={(body, selected) =>
+        void navigate({ to: '/map/$uuid', params: { uuid: body }, search: { selected } })
+      }
       onOpenReport={(report) =>
         void navigate({ to: '/moderation', search: { tab: 'reports', report } })
       }
