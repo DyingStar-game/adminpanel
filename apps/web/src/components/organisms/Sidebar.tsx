@@ -1,6 +1,7 @@
 import {
   BookOpenIcon,
   BoxesIcon,
+  Building2Icon,
   LayoutDashboardIcon,
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
@@ -20,7 +21,14 @@ import { cn } from '@/lib/cn';
 import { usePreferences } from '@/stores/preferences';
 
 export type NavId =
-  'dashboard' | 'servers' | 'explorer' | 'import' | 'players' | 'moderation' | 'settings';
+  | 'dashboard'
+  | 'servers'
+  | 'explorer'
+  | 'import'
+  | 'players'
+  | 'moderation'
+  | 'organisations'
+  | 'settings';
 
 interface SidebarProps {
   /** Section of the page on screen. */
@@ -61,6 +69,7 @@ const SECTIONS: {
     items: [
       { id: 'players', icon: UsersIcon },
       { id: 'moderation', icon: ShieldAlertIcon },
+      { id: 'organisations', icon: Building2Icon },
     ],
   },
   { title: 'configuration', items: [{ id: 'settings', icon: SettingsIcon, soon: true }] },
@@ -80,7 +89,7 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
     if (id === 'explorer') return can('persistence.read');
     // The import only writes.
     if (id === 'import') return can('persistence.write');
-    if (id === 'players' || id === 'moderation') {
+    if (id === 'players' || id === 'moderation' || id === 'organisations') {
       return services.includes('social') && can('social.moderate');
     }
     return true;

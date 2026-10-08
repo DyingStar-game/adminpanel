@@ -18,6 +18,8 @@ const renderPage = (playerId: string) => {
       onOpenReport={vi.fn()}
       onOpenItem={onOpenItem}
       onOpenMap={onOpenMap}
+      onOpenCorporation={vi.fn()}
+      onOpenPoliticalEntity={vi.fn()}
     />,
   );
   return { onOpenItem, onOpenMap };
@@ -116,6 +118,8 @@ describe('PlayerRecordPage (ADR 0024)', () => {
             onOpenReport={vi.fn()}
             onOpenItem={vi.fn()}
             onOpenMap={vi.fn()}
+            onOpenCorporation={vi.fn()}
+            onOpenPoliticalEntity={vi.fn()}
           />
         </PermissionsContext.Provider>,
       );

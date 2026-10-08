@@ -5,13 +5,21 @@ import {
   zError,
   zEscalateReportResponse,
   zGetCommunityStatsResponse,
+  zGetCorporationResponse,
   zGetMeResponse,
   zGetModerationLogResponse,
   zGetPlayerRecordResponse,
+  zGetPoliticalEntityResponse,
   zGetProfileResponse,
   zGetReportResponse,
   zIssueSanctionResponse,
+  zListCorporationMembersResponse,
+  zListCorporationsResponse,
+  zListPoliticalChildrenResponse,
+  zListPoliticalEntitiesResponse,
+  zListPoliticalMembersResponse,
   zListReportsResponse,
+  zListSubsidiariesResponse,
   zListSanctionsResponse,
   zRevokeSanctionResponse,
   zSearchProfilesResponse,
@@ -167,6 +175,46 @@ export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) 
       call('POST', token, `/admin/reports/${id}/escalate`, zEscalateReportResponse),
     /** The user's own profile, which `social` creates on the first call (a player route). */
     me: (token: string | undefined) => get(token, '/me', zGetMeResponse),
+    // Organisations (ADR 0024 step 2): player routes any signed-in player may read; the panel's
+    // `social.moderate` is what restricts them. Their activity is for members only: not read.
+    corporations: (token: string | undefined, query: Query) =>
+      get(token, '/corporations', zListCorporationsResponse, query),
+    /** A corporation with its ranks, first members, parent and first subsidiaries. */
+    corporation: (token: string | undefined, id: string) =>
+      get(token, `/corporations/${encodeURIComponent(id)}`, zGetCorporationResponse),
+    corporationMembers: (token: string | undefined, id: string, query: Query) =>
+      get(
+        token,
+        `/corporations/${encodeURIComponent(id)}/members`,
+        zListCorporationMembersResponse,
+        query,
+      ),
+    subsidiaries: (token: string | undefined, id: string, query: Query) =>
+      get(
+        token,
+        `/corporations/${encodeURIComponent(id)}/subsidiaries`,
+        zListSubsidiariesResponse,
+        query,
+      ),
+    politics: (token: string | undefined, query: Query) =>
+      get(token, '/politics', zListPoliticalEntitiesResponse, query),
+    /** A political entity with its offices, first members, parent and first children. */
+    politicalEntity: (token: string | undefined, id: string) =>
+      get(token, `/politics/${encodeURIComponent(id)}`, zGetPoliticalEntityResponse),
+    politicalMembers: (token: string | undefined, id: string, query: Query) =>
+      get(
+        token,
+        `/politics/${encodeURIComponent(id)}/members`,
+        zListPoliticalMembersResponse,
+        query,
+      ),
+    politicalChildren: (token: string | undefined, id: string, query: Query) =>
+      get(
+        token,
+        `/politics/${encodeURIComponent(id)}/children`,
+        zListPoliticalChildrenResponse,
+        query,
+      ),
     /** Profiles by display name (a player route: `social` has no admin listing, ADR 0024). */
     profiles: (token: string | undefined, query: Query) =>
       get(token, '/profiles', zSearchProfilesResponse, query),

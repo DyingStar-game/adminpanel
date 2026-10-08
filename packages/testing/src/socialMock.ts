@@ -2,8 +2,12 @@ import { http, HttpResponse } from 'msw';
 import { ids } from './fixtures';
 import type {
   ActivityEntry,
+  Corporation,
+  CorporationRank,
   CorporationRef,
+  PoliticalEntity,
   PoliticalEntityRef,
+  PoliticalOffice,
   PresenceStatus,
   ModerationLogEntry,
   PlayerProfile,
@@ -34,7 +38,46 @@ export interface SocialDataset {
   activity: ActivityEntry[];
   /** Public profile extras (`GET /api/profiles/{id}`), by player id; offline and none by default. */
   presence: Record<string, PresenceStatus>;
-  memberships: Record<string, { corporations: CorporationRef[]; politics: PoliticalEntityRef[] }>;
+  /** Organisations (ADR 0024 step 2): corporations and their ranks, members by rank. */
+  corporations: Corporation[];
+  ranks: CorporationRank[];
+  corporationMembers: {
+    corporationId: string;
+    playerId: string;
+    rankId: number;
+    joinedAt: string;
+  }[];
+  /** Political entities and their offices, members by office. */
+  politics: PoliticalEntity[];
+  offices: PoliticalOffice[];
+  politicalMembers: { entityId: string; playerId: string; officeId: number; joinedAt: string }[];
+}
+
+/** Organisation ids of the social fixtures. */
+export const organisationIds = {
+  /** A holding company, its political home the commune below. */
+  mining: '7c0a7e1e-0000-4000-8000-0000000000d4',
+  /** Its subsidiary. */
+  logistics: '7c0a7e1e-0000-4000-8000-0000000000d6',
+  /** A commune of the country below. */
+  commune: '7c0a7e1e-0000-4000-8000-0000000000e5',
+  country: '7c0a7e1e-0000-4000-8000-0000000000e7',
+} as const;
+
+/** A player's corporations and political entities, as their public profile lists them. */
+export function membershipsOf(
+  data: SocialDataset,
+  playerId: string,
+): { corporations: CorporationRef[]; politics: PoliticalEntityRef[] } {
+  const corporations = data.corporationMembers
+    .filter((m) => m.playerId === playerId)
+    .flatMap((m) => data.corporations.filter((c) => c.id === m.corporationId))
+    .map(({ id, name, ticker }) => ({ id, name, ticker }));
+  const politics = data.politicalMembers
+    .filter((m) => m.playerId === playerId)
+    .flatMap((m) => data.politics.filter((p) => p.id === m.entityId))
+    .map(({ id, type, name }) => ({ id, type, name }));
+  return { corporations, politics };
 }
 
 const at = (minutes: number) =>
@@ -54,6 +97,120 @@ const player = (playerId: string, displayName: string, reputation: number): Play
   createdAt: at(0),
   updatedAt: at(0),
 });
+
+const rank = (
+  id: number,
+  corporationId: string,
+  name: string,
+  priority: number,
+  flags: { isCeo?: boolean; isDefault?: boolean; permissions?: string[] } = {},
+): CorporationRank => ({
+  id,
+  corporationId,
+  name,
+  priority,
+  permissions: flags.permissions ?? [],
+  isCeo: flags.isCeo ?? false,
+  isDefault: flags.isDefault ?? false,
+});
+
+const office = (
+  id: number,
+  entityId: string,
+  name: string,
+  priority: number,
+  flags: { isHead?: boolean; isDefault?: boolean; permissions?: string[] } = {},
+): PoliticalOffice => ({
+  id,
+  entityId,
+  name,
+  priority,
+  permissions: flags.permissions ?? [],
+  isHead: flags.isHead ?? false,
+  isDefault: flags.isDefault ?? false,
+});
+
+/**
+ * Two corporations (a holding and its subsidiary) and two political entities (a commune of a
+ * country), with the default ranks and offices `social` creates (`createCorporation`,
+ * `createPoliticalEntity`).
+ */
+function organisations() {
+  const { moderator, griefer, reporter } = socialIds;
+  const { mining, logistics, commune, country } = organisationIds;
+  const corporation = (
+    id: string,
+    name: string,
+    ticker: string,
+    ceoId: string,
+    links: { parentId?: string; politicalEntityId?: string } = {},
+  ): Corporation => ({
+    id,
+    name,
+    ticker,
+    logoUrl: null,
+    description: null,
+    recruitment: 'apply',
+    parentId: links.parentId ?? null,
+    politicalEntityId: links.politicalEntityId ?? null,
+    ceoId,
+    createdAt: at(5),
+    updatedAt: at(5),
+  });
+  const entity = (
+    id: string,
+    type: PoliticalEntity['type'],
+    name: string,
+    headId: string,
+    parentId: string | null = null,
+  ): PoliticalEntity => ({
+    id,
+    type,
+    name,
+    description: null,
+    bannerUrl: null,
+    parentId,
+    headId,
+    createdAt: at(2),
+    updatedAt: at(2),
+  });
+  return {
+    corporations: [
+      {
+        ...corporation(mining, 'Deep Core Mining', 'DCM', griefer, { politicalEntityId: commune }),
+        description: 'Ore from the deep shafts of SandBox.',
+      },
+      corporation(logistics, 'DCM Logistics', 'DCML', moderator, { parentId: mining }),
+    ],
+    ranks: [
+      rank(1, mining, 'CEO', 100, { isCeo: true }),
+      rank(2, mining, 'Director', 50, { permissions: ['invite', 'recruit', 'manage_members'] }),
+      rank(3, mining, 'Member', 0, { isDefault: true }),
+      rank(4, logistics, 'CEO', 100, { isCeo: true }),
+      rank(5, logistics, 'Member', 0, { isDefault: true }),
+    ],
+    corporationMembers: [
+      { corporationId: mining, playerId: griefer, rankId: 1, joinedAt: at(5) },
+      { corporationId: logistics, playerId: moderator, rankId: 4, joinedAt: at(6) },
+    ],
+    politics: [
+      entity(country, 'country', 'Tarsis Union', moderator),
+      entity(commune, 'commune', 'Port Gaea', griefer, country),
+    ],
+    offices: [
+      office(1, country, 'Head of State', 100, { isHead: true }),
+      office(2, country, 'Citizen', 0, { isDefault: true }),
+      office(3, commune, 'Mayor', 100, { isHead: true }),
+      office(4, commune, 'Councilor', 20, { permissions: ['manage_members'] }),
+      office(5, commune, 'Citizen', 0, { isDefault: true }),
+    ],
+    politicalMembers: [
+      { entityId: country, playerId: moderator, officeId: 1, joinedAt: at(2) },
+      { entityId: commune, playerId: griefer, officeId: 3, joinedAt: at(3) },
+      { entityId: commune, playerId: reporter, officeId: 5, joinedAt: at(4) },
+    ],
+  };
+}
 
 /** A small moderation picture: one griefer reported twice, warned, then muted. */
 export function createSocialDataset(): SocialDataset {
@@ -76,16 +233,7 @@ export function createSocialDataset(): SocialDataset {
       player(reporter, 'ddurieux', 3),
     ],
     presence: { [griefer]: 'online' },
-    memberships: {
-      [griefer]: {
-        corporations: [
-          { id: '7c0a7e1e-0000-4000-8000-0000000000d4', name: 'Deep Core Mining', ticker: 'DCM' },
-        ],
-        politics: [
-          { id: '7c0a7e1e-0000-4000-8000-0000000000e5', type: 'commune', name: 'Port Gaea' },
-        ],
-      },
-    },
+    ...organisations(),
     reports: [
       {
         id: 1,
@@ -289,6 +437,42 @@ export function createSocialMock(
   const seen = (request: Request) => tokens.push(request.headers.get('Authorization'));
   const newestFirst = <T extends { createdAt: string }>(items: T[]) =>
     [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const presenceOf = (playerId: string) => ({
+    status: data.presence[playerId] ?? 'offline',
+    location: null,
+  });
+  const corporationSummary = (corporation: Corporation) => ({
+    ...corporation,
+    memberCount: data.corporationMembers.filter((m) => m.corporationId === corporation.id).length,
+  });
+  /** Members with their rank and presence, highest rank first (`listCorporationMembers`). */
+  const corporationMembers = (corporationId: string) =>
+    data.corporationMembers
+      .filter((m) => m.corporationId === corporationId)
+      .flatMap((m) => {
+        const profile = data.players.find((p) => p.playerId === m.playerId);
+        const memberRank = data.ranks.find((r) => r.id === m.rankId);
+        return profile && memberRank
+          ? [{ ...profile, joinedAt: m.joinedAt, rank: memberRank, ...presenceOf(m.playerId) }]
+          : [];
+      })
+      .sort((a, b) => b.rank.priority - a.rank.priority);
+  const politicalSummary = (entity: PoliticalEntity) => ({
+    ...entity,
+    memberCount: data.politicalMembers.filter((m) => m.entityId === entity.id).length,
+  });
+  /** Members with their office and presence, highest office first (`listPoliticalMembers`). */
+  const politicalMembers = (entityId: string) =>
+    data.politicalMembers
+      .filter((m) => m.entityId === entityId)
+      .flatMap((m) => {
+        const profile = data.players.find((p) => p.playerId === m.playerId);
+        const memberOffice = data.offices.find((o) => o.id === m.officeId);
+        return profile && memberOffice
+          ? [{ ...profile, joinedAt: m.joinedAt, office: memberOffice, ...presenceOf(m.playerId) }]
+          : [];
+      })
+      .sort((a, b) => b.office.priority - a.office.priority);
 
   const handlers = [
     http.get(`${api}/stats`, ({ request }) => {
@@ -347,6 +531,95 @@ export function createSocialMock(
         activity: data.activity.filter((a) => a.playerId === id),
       });
     }),
+    // Organisations (ADR 0024 step 2), player routes: directories, pages, members, children.
+    http.get(`${baseUrl}/api/corporations`, ({ request }) => {
+      seen(request);
+      const url = new URL(request.url);
+      const search = (url.searchParams.get('search') ?? '').toLowerCase();
+      const items = data.corporations
+        .filter((c) => `${c.name} ${c.ticker}`.toLowerCase().includes(search))
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(corporationSummary);
+      return HttpResponse.json(page(items, url));
+    }),
+    http.get(`${baseUrl}/api/corporations/:id`, ({ request, params }) => {
+      seen(request);
+      const corporation = data.corporations.find((c) => c.id === params.id);
+      if (!corporation) return notFound(`Corporation ${String(params.id)} not found`);
+      const parent = data.corporations.find((c) => c.id === corporation.parentId);
+      const subsidiaries = data.corporations.filter((c) => c.parentId === corporation.id);
+      const members = corporationMembers(corporation.id);
+      return HttpResponse.json({
+        ...corporationSummary(corporation),
+        ranks: data.ranks
+          .filter((r) => r.corporationId === corporation.id)
+          .sort((a, b) => b.priority - a.priority),
+        members: members.slice(0, 20),
+        parent: parent ? { id: parent.id, name: parent.name, ticker: parent.ticker } : null,
+        subsidiaries: subsidiaries.slice(0, 20).map(corporationSummary),
+        subsidiaryCount: subsidiaries.length,
+      });
+    }),
+    http.get(`${baseUrl}/api/corporations/:id/members`, ({ request, params }) => {
+      seen(request);
+      if (!data.corporations.some((c) => c.id === params.id)) {
+        return notFound(`Corporation ${String(params.id)} not found`);
+      }
+      return HttpResponse.json(page(corporationMembers(String(params.id)), new URL(request.url)));
+    }),
+    http.get(`${baseUrl}/api/corporations/:id/subsidiaries`, ({ request, params }) => {
+      seen(request);
+      if (!data.corporations.some((c) => c.id === params.id)) {
+        return notFound(`Corporation ${String(params.id)} not found`);
+      }
+      const items = data.corporations
+        .filter((c) => c.parentId === params.id)
+        .map(corporationSummary);
+      return HttpResponse.json(page(items, new URL(request.url)));
+    }),
+    http.get(`${baseUrl}/api/politics`, ({ request }) => {
+      seen(request);
+      const url = new URL(request.url);
+      const search = (url.searchParams.get('search') ?? '').toLowerCase();
+      const type = url.searchParams.get('type');
+      const items = data.politics
+        .filter((p) => p.name.toLowerCase().includes(search) && (!type || p.type === type))
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(politicalSummary);
+      return HttpResponse.json(page(items, url));
+    }),
+    http.get(`${baseUrl}/api/politics/:id`, ({ request, params }) => {
+      seen(request);
+      const entity = data.politics.find((p) => p.id === params.id);
+      if (!entity) return notFound(`Political entity ${String(params.id)} not found`);
+      const parent = data.politics.find((p) => p.id === entity.parentId);
+      const children = data.politics.filter((p) => p.parentId === entity.id);
+      return HttpResponse.json({
+        ...politicalSummary(entity),
+        offices: data.offices
+          .filter((o) => o.entityId === entity.id)
+          .sort((a, b) => b.priority - a.priority),
+        members: politicalMembers(entity.id).slice(0, 20),
+        parent: parent ? { id: parent.id, type: parent.type, name: parent.name } : null,
+        children: children.slice(0, 20).map(politicalSummary),
+        childCount: children.length,
+      });
+    }),
+    http.get(`${baseUrl}/api/politics/:id/members`, ({ request, params }) => {
+      seen(request);
+      if (!data.politics.some((p) => p.id === params.id)) {
+        return notFound(`Political entity ${String(params.id)} not found`);
+      }
+      return HttpResponse.json(page(politicalMembers(String(params.id)), new URL(request.url)));
+    }),
+    http.get(`${baseUrl}/api/politics/:id/children`, ({ request, params }) => {
+      seen(request);
+      if (!data.politics.some((p) => p.id === params.id)) {
+        return notFound(`Political entity ${String(params.id)} not found`);
+      }
+      const items = data.politics.filter((p) => p.parentId === params.id).map(politicalSummary);
+      return HttpResponse.json(page(items, new URL(request.url)));
+    }),
     // Player route: the caller's own profile, created on the first call (`getMe`). The mock does
     // not read tokens: the caller is the fixtures' moderator, as for the writes.
     http.get(`${baseUrl}/api/me`, ({ request }) => {
@@ -359,8 +632,7 @@ export function createSocialMock(
       return HttpResponse.json({
         ...profile,
         presence: { status: data.presence[actor] ?? 'offline', location: null, updatedAt: now() },
-        corporations: data.memberships[actor]?.corporations ?? [],
-        politics: data.memberships[actor]?.politics ?? [],
+        ...membershipsOf(data, actor),
         group: null,
       });
     }),
@@ -373,8 +645,7 @@ export function createSocialMock(
       return HttpResponse.json({
         ...profile,
         status: data.presence[id] ?? 'offline',
-        corporations: data.memberships[id]?.corporations ?? [],
-        politics: data.memberships[id]?.politics ?? [],
+        ...membershipsOf(data, id),
       });
     }),
     // Player route: profiles by display name, sorted by name (`searchProfiles`).

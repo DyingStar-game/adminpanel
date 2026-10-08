@@ -22,6 +22,20 @@ function PlayerRecordRoute() {
       onOpenReport={(report) =>
         void navigate({ to: '/moderation', search: { tab: 'reports', report } })
       }
+      onOpenCorporation={(corporationId) =>
+        void navigate({
+          to: '/organisations/corporations/$corporationId',
+          params: { corporationId },
+          search: { members: 1, children: 1 },
+        })
+      }
+      onOpenPoliticalEntity={(entityId) =>
+        void navigate({
+          to: '/organisations/politics/$entityId',
+          params: { entityId },
+          search: { members: 1, children: 1 },
+        })
+      }
     />
   );
 }

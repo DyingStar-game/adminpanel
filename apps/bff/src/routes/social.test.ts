@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { http, HttpResponse } from 'msw';
-import { createSocialDataset, SOCIAL_URL, socialIds } from '@dyingstar-admin/testing';
+import {
+  createSocialDataset,
+  organisationIds,
+  SOCIAL_URL,
+  socialIds,
+} from '@dyingstar-admin/testing';
 import { fakeProvider, ORIGIN, setup, signIn, tokens } from '../test/auth';
 import { buildApp, mswServer } from '../test/harness';
 
@@ -192,6 +197,64 @@ describe('social moderation routes (ADR 0024)', () => {
       expect(
         (await send(sanctions, { type: 'mute', reason: 'Spam', durationHours: 1 })).status,
       ).toBe(201);
+    });
+  });
+
+  describe('organisations, reading (step 2)', () => {
+    it('reads corporations: directory, page, members, subsidiaries', async () => {
+      const { request } = buildApp();
+      const { mining, logistics } = organisationIds;
+
+      expect(await (await request('/api/social/corporations?search=core')).json()).toMatchObject({
+        total: 1,
+        items: [{ id: mining, ticker: 'DCM', memberCount: 1 }],
+      });
+      expect(await (await request(`/api/social/corporations/${mining}`)).json()).toMatchObject({
+        name: 'Deep Core Mining',
+        parent: null,
+        subsidiaries: [{ id: logistics }],
+      });
+      expect(
+        await (await request(`/api/social/corporations/${mining}/members?limit=5`)).json(),
+      ).toMatchObject({ limit: 5, items: [{ displayName: 'griefer42', rank: { isCeo: true } }] });
+      expect(
+        await (await request(`/api/social/corporations/${mining}/subsidiaries`)).json(),
+      ).toMatchObject({ total: 1, items: [{ id: logistics, parentId: mining }] });
+    });
+
+    it('reads political entities: directory by type, page, members, children', async () => {
+      const { request } = buildApp();
+      const { commune, country } = organisationIds;
+
+      expect(await (await request('/api/social/politics?type=country')).json()).toMatchObject({
+        total: 1,
+        items: [{ id: country, name: 'Tarsis Union' }],
+      });
+      expect(await (await request(`/api/social/politics/${commune}`)).json()).toMatchObject({
+        parent: { id: country },
+        offices: [{ name: 'Mayor', isHead: true }, { name: 'Councilor' }, { name: 'Citizen' }],
+      });
+      expect(await (await request(`/api/social/politics/${commune}/members`)).json()).toMatchObject(
+        { total: 2 },
+      );
+      expect(
+        await (await request(`/api/social/politics/${country}/children`)).json(),
+      ).toMatchObject({ items: [{ id: commune }] });
+    });
+
+    it('refuses invalid ids and filters before calling social', async () => {
+      const { request, social } = buildApp();
+
+      expect((await request('/api/social/corporations/not-a-uuid')).status).toBe(400);
+      expect((await request('/api/social/politics?type=empire')).status).toBe(400);
+      expect((await request('/api/social/corporations?limit=500')).status).toBe(400);
+      expect(social.tokens).toHaveLength(0);
+    });
+
+    it("passes social's 404 on", async () => {
+      const { request } = buildApp();
+      const missing = '7c0a7e1e-0000-4000-8000-000000000000';
+      expect((await request(`/api/social/politics/${missing}`)).status).toBe(404);
     });
   });
 

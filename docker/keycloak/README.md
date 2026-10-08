@@ -72,7 +72,7 @@ The back team's stack recreates `social`'s database with everything else. Once t
 above is done (it holds the `player-*` users), `make seed-social` (container started with
 `make up K8S=1`) signs each player in through the realm's public `dyingstar-dev` client, which
 registers them in `social` (the staff accounts `dev-moderator`, `dev-admin`, `ynotna` too: without a profile, `social` refuses their reputation changes), then fills it: profiles, friendships (one request left pending),
-open reports against `player-dax` and `player-pell` (and one back), a warning and a mute on
+organisations (a country and its commune, three corporations, one the subsidiary of another), open reports against `player-dax` and `player-pell` (and one back), a warning and a mute on
 `player-dax` by `dev-moderator`, a 72 h suspension on `player-pell` by `dev-admin`. Run it again
 after every reset; on a filled database it skips what exists. `make reset-social` goes back to
 the start: it empties `social`'s database (`docker/minikube/social-reset.sql`, the SQL of

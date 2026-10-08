@@ -35,6 +35,9 @@ interface PlayerRecordPageProps {
   /** The player's item in persistence, and the map showing it. */
   onOpenItem: (uuid: string) => void;
   onOpenMap: (body: string, selected: string) => void;
+  /** The player's organisations (ADR 0024 step 2). */
+  onOpenCorporation: (id: string) => void;
+  onOpenPoliticalEntity: (id: string) => void;
 }
 
 type Dialog = { kind: 'sanction' } | { kind: 'reputation' } | { kind: 'lift'; sanction: Sanction };
@@ -47,6 +50,8 @@ export function PlayerRecordPage({
   onOpenReport,
   onOpenItem,
   onOpenMap,
+  onOpenCorporation,
+  onOpenPoliticalEntity,
 }: PlayerRecordPageProps) {
   const { t, i18n } = useTranslation();
   const record = usePlayerRecord(playerId);
@@ -140,7 +145,11 @@ export function PlayerRecordPage({
       />
       <div className="grid gap-6 md:grid-cols-2">
         <PlayerIdentity player={player} />
-        <PlayerOrganisations memberships={profile ?? null} />
+        <PlayerOrganisations
+          memberships={profile ?? null}
+          onOpenCorporation={onOpenCorporation}
+          onOpenPoliticalEntity={onOpenPoliticalEntity}
+        />
       </div>
       {actionable && (
         <PersistencePlayerLink

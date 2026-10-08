@@ -19,8 +19,8 @@ starting a session on lot 2.**
 | G. Players: search, fuller sheet (sanction banner, presence, identity, RP, organisations) | **Done** | `b1e7166` |
 | H. Player sheet → persistence item and map (same id everywhere) | **Done** | `cd404bc` |
 | I. Acting on players: sanction (warn, mute; suspend, ban for `admin`+), lift, reputation | **Done** | `c1c3a05` |
-| J. Report actions: claim, then confirm, dismiss or escalate (rules of ADR 0024 › Update) | **Done** (to try live) | see below |
-| K. Organisations, reading: corporations, political entities | **Next** | — |
+| J. Report actions: claim, then confirm, dismiss or escalate (rules of ADR 0024 › Update) | **Done** (to try live) | `bcb6bb2` |
+| K. Organisations, reading: corporations, political entities | **Done** (to try live) | — |
 | L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | To do | — |
 | M. Decide the final roles × actions matrix with the back team (ADR 0023) | Waiting for the back team | — |
 | N. Organisation management (`/api/internal/*` through `svc-admin`) | After M | — |
@@ -38,8 +38,10 @@ since the player sheet is where moderators look first.
 - **Step J** (report actions) is done on the pattern of step I (see its section), with the
   maintainer's rules (claim first, role ≥ escalation level, staff registered at sign-in);
   `make reset-social` then the walkthrough of its section remain to be tried live. Test data:
-  `6185dc4`. **Next: step K.** Reread ADR 0010, 0013, 0014, 0020, 0024 before coding
-  (`CLAUDE.md` › "ADRs are binding").
+  `6185dc4`.
+- **Step K** (organisations, reading) is done, without the activity (members only in `social`,
+  question 10). **Next: step L** (panel settings instead of `SERVERS`). Reread ADR 0010, 0011,
+  0013, 0014, 0020, 0023, 0024 before coding (`CLAUDE.md` › "ADRs are binding").
 - Not built, for lack of data in `social`: "claimed by X" on a report (its log has no filter;
   `social` stores no claimer).
 - Check `social`'s real behaviour on minikube before trusting its OpenAPI (it differed twice:
@@ -108,12 +110,26 @@ Claim first is the maintainer's rule (2026-10-08), enforced by the BFF (409 othe
   they hold `social.moderate`): without a profile, `social` refuses their reputation changes
   (open question 7). Tried on 2026-10-08 before this: dismissing report 5 as `ynotna` failed.
 
-### K. Organisations, reading
+### K. Organisations, reading — done, to try live on minikube
 
-Sidebar entry "Organisations", opened by `social.moderate`. Player routes called with the
-moderator's token: corporations (`GET /api/corporations?search`, `/{id}`, `/members`, `/ranks`,
-`/subsidiaries`, `/activity`) and political entities (`GET /api/politics?search&type`, `/{id}`,
-`/members`, `/offices`, `/children`, `/activity`). The player sheet's organisations become links.
+Sidebar entry "Organisations" (Administration), opened by `social.moderate`, shown when `social`
+is configured. Player routes called with the moderator's token, read only:
+
+- BFF: `GET /api/social/corporations` (`search`, page), `/corporations/:id` (ranks, parent,
+  first members and subsidiaries), `/corporations/:id/members`, `/corporations/:id/subsidiaries`;
+  `GET /api/social/politics` (`search`, `type`, page), `/politics/:id` (offices, parent, first
+  members and children), `/politics/:id/members`, `/politics/:id/children`. Inputs validated
+  with the contract.
+- SPA: `/organisations` (tabs Corporations / Political entities, search, level filter), a page
+  per corporation (CEO, holding, political home, ranks, members, subsidiaries) and per
+  political entity (head, higher level, offices, members, lower levels), all linked to each
+  other and to the player sheets; the player sheet's organisations become links.
+- Mock: two corporations (a holding and its subsidiary) and two political entities (a commune
+  of a country) with `social`'s default ranks and offices; the profiles' memberships derive from
+  them. `make seed-social` creates organisations in minikube's `social` too.
+- **Not built: the organisations' activity.** `social` keeps it for members only
+  (`requireCorporationMember`, `requirePoliticalMember`, no moderator bypass): a moderator gets
+  403. ADR 0024 lists it in step 2; question 10 below.
 
 ### L. Panel settings instead of `SERVERS`
 
@@ -189,6 +205,10 @@ From ADR 0023 and 0024, still open:
 9. `social`'s OpenAPI differs from its code (the panel follows the code): lifting an already
    lifted sanction answers 404 (documented 409); escalating above `supervisor` answers 403
    (documented 409).
+10. The organisations' activity (`GET /api/corporations/{id}/activity`,
+   `/api/politics/{id}/activity`) is for members only: should moderators read it (a role
+   bypass in `social`, or through `/api/internal/*` and `svc-admin`, ADR 0023's management
+   table)? Until then the panel does not show it.
 7. Persistence requiring a token one day (then `svc-admin` needs its audience).
 8. Access token lifetime (24 h in pre-production) for the panel's client.
 9. `social`'s OpenAPI says `DELETE /api/admin/sanctions/{id}` answers 409 when already lifted;

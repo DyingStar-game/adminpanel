@@ -3,11 +3,19 @@ import { z } from 'zod';
 import {
   zAdjustReputationBody,
   zEscalateReportPath,
+  zGetCorporationPath,
+  zGetPoliticalEntityPath,
   zGetModerationLogQuery,
   zGetPlayerRecordPath,
   zGetReportPath,
   zIssueSanctionBody,
+  zListCorporationMembersQuery,
+  zListCorporationsQuery,
+  zListPoliticalChildrenQuery,
+  zListPoliticalEntitiesQuery,
+  zListPoliticalMembersQuery,
   zListReportsQuery,
+  zListSubsidiariesQuery,
   zListSanctionsQuery,
   zRevokeSanctionPath,
   zSearchProfilesQuery,
@@ -97,6 +105,71 @@ export function socialRoutes(social: SocialClient) {
       )
       .get('/players/:playerId/profile', validate('param', zGetPlayerRecordPath), async (c) =>
         c.json(await social.profile(token(c.var.session), c.req.valid('param').playerId)),
+      )
+      // Organisations, reading (ADR 0024 step 2).
+      .get('/corporations', validate('query', fromQuery(zListCorporationsQuery)), async (c) =>
+        c.json(await social.corporations(token(c.var.session), c.req.valid('query'))),
+      )
+      .get('/corporations/:corporationId', validate('param', zGetCorporationPath), async (c) =>
+        c.json(await social.corporation(token(c.var.session), c.req.valid('param').corporationId)),
+      )
+      .get(
+        '/corporations/:corporationId/members',
+        validate('param', zGetCorporationPath),
+        validate('query', fromQuery(zListCorporationMembersQuery)),
+        async (c) =>
+          c.json(
+            await social.corporationMembers(
+              token(c.var.session),
+              c.req.valid('param').corporationId,
+              c.req.valid('query'),
+            ),
+          ),
+      )
+      .get(
+        '/corporations/:corporationId/subsidiaries',
+        validate('param', zGetCorporationPath),
+        validate('query', fromQuery(zListSubsidiariesQuery)),
+        async (c) =>
+          c.json(
+            await social.subsidiaries(
+              token(c.var.session),
+              c.req.valid('param').corporationId,
+              c.req.valid('query'),
+            ),
+          ),
+      )
+      .get('/politics', validate('query', fromQuery(zListPoliticalEntitiesQuery)), async (c) =>
+        c.json(await social.politics(token(c.var.session), c.req.valid('query'))),
+      )
+      .get('/politics/:entityId', validate('param', zGetPoliticalEntityPath), async (c) =>
+        c.json(await social.politicalEntity(token(c.var.session), c.req.valid('param').entityId)),
+      )
+      .get(
+        '/politics/:entityId/members',
+        validate('param', zGetPoliticalEntityPath),
+        validate('query', fromQuery(zListPoliticalMembersQuery)),
+        async (c) =>
+          c.json(
+            await social.politicalMembers(
+              token(c.var.session),
+              c.req.valid('param').entityId,
+              c.req.valid('query'),
+            ),
+          ),
+      )
+      .get(
+        '/politics/:entityId/children',
+        validate('param', zGetPoliticalEntityPath),
+        validate('query', fromQuery(zListPoliticalChildrenQuery)),
+        async (c) =>
+          c.json(
+            await social.politicalChildren(
+              token(c.var.session),
+              c.req.valid('param').entityId,
+              c.req.valid('query'),
+            ),
+          ),
       )
       .get('/sanctions', validate('query', fromQuery(zListSanctionsQuery)), async (c) =>
         c.json(await social.sanctions(token(c.var.session), c.req.valid('query'))),

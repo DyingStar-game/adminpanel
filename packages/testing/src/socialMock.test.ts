@@ -14,10 +14,24 @@ import {
   zRevokeSanctionResponse,
   zSearchProfilesResponse,
   zEscalateReportResponse,
+  zGetCorporationResponse,
   zGetMeResponse,
+  zGetPoliticalEntityResponse,
+  zListCorporationMembersResponse,
+  zListCorporationsResponse,
+  zListPoliticalChildrenResponse,
+  zListPoliticalEntitiesResponse,
+  zListPoliticalMembersResponse,
+  zListSubsidiariesResponse,
   zUpdateReportStatusResponse,
 } from '@dyingstar-admin/contracts/social';
-import { createSocialDataset, createSocialMock, SOCIAL_URL, socialIds } from './socialMock';
+import {
+  createSocialDataset,
+  createSocialMock,
+  organisationIds,
+  SOCIAL_URL,
+  socialIds,
+} from './socialMock';
 
 const mock = createSocialMock();
 const server = setupServer(...mock.handlers);
@@ -137,5 +151,42 @@ describe('social mock', () => {
     const res = await fetch('http://fresh.social.test/api/me');
     expect(zGetMeResponse.safeParse(await res.json()).error).toBeUndefined();
     expect(fresh.data.players.map((p) => p.playerId)).toEqual([socialIds.moderator]);
+  });
+
+  it('serves organisations as the contract says', async () => {
+    const read = async (path: string) => (await fetch(`${SOCIAL_URL}/api${path}`)).json();
+    const { mining, logistics, commune, country } = organisationIds;
+    const checks: [string, z.ZodType][] = [
+      ['/corporations?search=dcm', zListCorporationsResponse],
+      [`/corporations/${mining}`, zGetCorporationResponse],
+      [`/corporations/${mining}/members`, zListCorporationMembersResponse],
+      [`/corporations/${mining}/subsidiaries`, zListSubsidiariesResponse],
+      ['/politics?type=commune', zListPoliticalEntitiesResponse],
+      [`/politics/${commune}`, zGetPoliticalEntityResponse],
+      [`/politics/${commune}/members`, zListPoliticalMembersResponse],
+      [`/politics/${country}/children`, zListPoliticalChildrenResponse],
+    ];
+    for (const [path, schema] of checks) {
+      expect(schema.safeParse(await read(path)).error, path).toBeUndefined();
+    }
+
+    expect(await read(`/corporations/${mining}`)).toMatchObject({
+      memberCount: 1,
+      subsidiaryCount: 1,
+      subsidiaries: [{ id: logistics }],
+      ranks: [{ name: 'CEO' }, { name: 'Director' }, { name: 'Member' }],
+    });
+    expect(await read(`/politics/${commune}`)).toMatchObject({
+      parent: { id: country, type: 'country' },
+      members: [
+        { displayName: 'griefer42', office: { isHead: true } },
+        { office: { isDefault: true } },
+      ],
+    });
+    // A player's profile lists the organisations they belong to.
+    expect(await read(`/profiles/${socialIds.griefer}`)).toMatchObject({
+      corporations: [{ id: mining, ticker: 'DCM' }],
+      politics: [{ id: commune, type: 'commune' }],
+    });
   });
 });

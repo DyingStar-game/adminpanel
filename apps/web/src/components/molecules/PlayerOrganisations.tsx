@@ -1,15 +1,22 @@
 import { useTranslation } from 'react-i18next';
 import type { CorporationRef, PoliticalEntityRef } from '@dyingstar-admin/contracts/social';
+import { Chip } from '@/components/atoms/Chip';
 import { MonoText } from '@/components/atoms/MonoText';
 import { Badge } from '@/components/ui/badge';
 
 interface PlayerOrganisationsProps {
   /** Unknown while the public profile loads. */
   memberships: { corporations: CorporationRef[]; politics: PoliticalEntityRef[] } | null;
+  onOpenCorporation: (id: string) => void;
+  onOpenPoliticalEntity: (id: string) => void;
 }
 
-/** A player's corporations and political entities. */
-export function PlayerOrganisations({ memberships }: PlayerOrganisationsProps) {
+/** A player's corporations and political entities, each opening its page. */
+export function PlayerOrganisations({
+  memberships,
+  onOpenCorporation,
+  onOpenPoliticalEntity,
+}: PlayerOrganisationsProps) {
   const { t } = useTranslation();
   const count = memberships ? memberships.corporations.length + memberships.politics.length : 0;
   return (
@@ -20,14 +27,18 @@ export function PlayerOrganisations({ memberships }: PlayerOrganisationsProps) {
           {memberships.corporations.map((corporation) => (
             <li key={corporation.id} className="flex items-center gap-2">
               <Badge variant="outline">{t('moderation.player.corporation')}</Badge>
-              {corporation.name}
+              <Chip variant="link" onClick={() => onOpenCorporation(corporation.id)}>
+                {corporation.name}
+              </Chip>
               <MonoText tone="subtle">[{corporation.ticker}]</MonoText>
             </li>
           ))}
           {memberships.politics.map((entity) => (
             <li key={entity.id} className="flex items-center gap-2">
               <Badge variant="outline">{t(`moderation.player.political.${entity.type}`)}</Badge>
-              {entity.name}
+              <Chip variant="link" onClick={() => onOpenPoliticalEntity(entity.id)}>
+                {entity.name}
+              </Chip>
             </li>
           ))}
         </ul>

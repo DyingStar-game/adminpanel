@@ -60,9 +60,12 @@ function RootLayout() {
       ? 'moderation'
       : location.pathname.startsWith('/players')
         ? 'players'
-        : 'explorer';
+        : location.pathname.startsWith('/organisations')
+          ? 'organisations'
+          : 'explorer';
   // Pages of a service the account may not open say so instead of failing call by call.
-  const social = activeNav === 'moderation' || activeNav === 'players';
+  const social =
+    activeNav === 'moderation' || activeNav === 'players' || activeNav === 'organisations';
   const allowed = social ? can('social.moderate') : can('persistence.read');
   const deniedKey = social ? 'moderation.forbidden' : 'session.noReadRight';
 
@@ -160,7 +163,12 @@ function RootLayout() {
                   ? void navigate({ to: '/moderation', search: { tab: 'overview' } })
                   : id === 'players'
                     ? void navigate({ to: '/players', search: { q: '', page: 1 } })
-                    : void navigate({ to: '/explorer', search: ROOTS })
+                    : id === 'organisations'
+                      ? void navigate({
+                          to: '/organisations',
+                          search: { tab: 'corporations', q: '', page: 1 },
+                        })
+                      : void navigate({ to: '/explorer', search: ROOTS })
             }
             onHome={() => void navigate({ to: '/' })}
             version={APP_VERSION}

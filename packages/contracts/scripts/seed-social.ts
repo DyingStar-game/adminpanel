@@ -1,16 +1,21 @@
 /**
  * Fills the back team's minikube `social` with test players (`make seed-social`, after
  * `make up K8S=1`). Their databases are recreated with the stack, so it is safe to run again:
- * what already exists (profile, friendship, report, sanction) is kept and reported as skipped.
+ * what already exists (profile, friendship, organisation, report, sanction) is kept and reported
+ * as skipped.
  *
  * The players are Keycloak users of `docker/keycloak/k8s-partial-import.json` (`player-*`, fixed
  * ids, password = user name): import it first. Each one signs in through the realm's public
  * `dyingstar-dev` client (password grant), which registers them in `social` (`GET /api/me`).
  */
 import {
+  type CreateCorporation,
+  type CreatePoliticalEntity,
   type CreateReport,
   type IssueSanctionData,
   type ProfilePatch,
+  zCreateCorporation,
+  zCreatePoliticalEntity,
   zCreateReport,
   zIssueSanctionBody,
   zProfilePatch,
@@ -202,6 +207,113 @@ for (const [a, b] of FRIENDS) {
 for (const [a, b] of PENDING) {
   const ask = await social(a, 'POST', '/api/friends/requests', { playerId: id(b) });
   expect(`${a} → ${b} (pending)`, ask.status, ask.data, [200, 201], [409]);
+}
+
+/**
+ * Political entities: head, entity, members the head appoints (default office), higher level.
+ * Created before the corporations, which take one as their political home.
+ */
+const POLITICS: [string, CreatePoliticalEntity, string[], string?][] = [
+  [
+    'player-tess',
+    { type: 'country', name: 'Free Colonies', description: 'Test country of the seed.' },
+    ['player-kira'],
+  ],
+  [
+    'player-mara',
+    { type: 'commune', name: 'New Haven', description: 'Test commune of the seed.' },
+    ['player-orin', 'player-juno', 'player-pell'],
+    'Free Colonies',
+  ],
+];
+
+/** Corporations: CEO, corporation, members joining it (open ones), holding, political home. */
+const CORPORATIONS: [
+  string,
+  CreateCorporation,
+  string[],
+  { parent?: string; politics?: string },
+][] = [
+  [
+    'player-kira',
+    { name: 'Vance Freight', ticker: 'VFR', recruitment: 'open', description: 'Hauling.' },
+    ['player-orin', 'player-mara'],
+    { politics: 'New Haven' },
+  ],
+  [
+    'player-juno',
+    { name: 'Okafor Trading', ticker: 'OKT', recruitment: 'open' },
+    ['player-silas'],
+    { parent: 'Vance Freight', politics: 'New Haven' },
+  ],
+  ['player-dax', { name: 'Moreau Raiders', ticker: 'MRD', recruitment: 'closed' }, [], {}],
+];
+
+/** Id of the organisation of that exact name, from `social`'s directory (any player may read). */
+async function find(kind: 'corporations' | 'politics', name: string): Promise<string | null> {
+  const res = await social('player-kira', 'GET', `/api/${kind}?search=${encodeURIComponent(name)}`);
+  expect(`${kind} search`, res.status, res.data, [200]);
+  const found = (res.data as { items: { id: string; name: string }[] }).items;
+  return found.find((o) => o.name === name)?.id ?? null;
+}
+
+/** The organisation's id, created by `owner` when it does not exist yet. */
+async function ensure(
+  kind: 'corporations' | 'politics',
+  owner: string,
+  body: CreateCorporation | CreatePoliticalEntity,
+): Promise<string> {
+  const existing = await find(kind, body.name);
+  if (existing) {
+    console.log(`  · ${body.name}: already there`);
+    return existing;
+  }
+  const res = await social(owner, 'POST', `/api/${kind}`, body);
+  expect(`${body.name} by ${owner}`, res.status, res.data, [201]);
+  return (res.data as { id: string }).id;
+}
+
+console.log('Political entities');
+const politics = new Map<string, string>();
+for (const [head, entity, members, parent] of POLITICS) {
+  const entityId = await ensure('politics', head, zCreatePoliticalEntity.parse(entity));
+  politics.set(entity.name, entityId);
+  for (const member of members) {
+    const res = await social(head, 'POST', `/api/politics/${entityId}/members`, {
+      playerId: id(member),
+    });
+    expect(`  ${member} in ${entity.name}`, res.status, res.data, [201], [409]);
+  }
+  const parentId = parent && politics.get(parent);
+  if (parentId) {
+    const res = await social(head, 'PUT', `/api/politics/${entityId}/parent`, { parentId });
+    expect(`  ${entity.name} under ${parent}`, res.status, res.data, [200]);
+  }
+}
+
+console.log('Corporations');
+const corporations = new Map<string, string>();
+for (const [ceo, corporation, members, links] of CORPORATIONS) {
+  const corporationId = await ensure('corporations', ceo, zCreateCorporation.parse(corporation));
+  corporations.set(corporation.name, corporationId);
+  for (const member of members) {
+    const res = await social(member, 'POST', `/api/corporations/${corporationId}/join`);
+    expect(`  ${member} joins ${corporation.name}`, res.status, res.data, [200], [409]);
+  }
+  const parentId = links.parent && corporations.get(links.parent);
+  if (parentId) {
+    const res = await social(ceo, 'PUT', `/api/corporations/${corporationId}/parent`, {
+      parentId,
+    });
+    expect(`  ${corporation.name} under ${links.parent}`, res.status, res.data, [200]);
+  }
+  const politicalEntityId = links.politics && politics.get(links.politics);
+  if (politicalEntityId) {
+    const res = await social(ceo, 'PUT', `/api/corporations/${corporationId}/politics`, {
+      politicalEntityId,
+    });
+    expect(`  ${corporation.name} in ${links.politics}`, res.status, res.data, [200]);
+  }
 }
 
 console.log('Reports');

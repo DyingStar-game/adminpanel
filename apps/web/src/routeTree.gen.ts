@@ -16,8 +16,11 @@ import { Route as ItemsUuidRouteImport } from './routes/items.$uuid'
 import { Route as MapUuidRouteImport } from './routes/map.$uuid'
 import { Route as ModerationIndexRouteImport } from './routes/moderation.index'
 import { Route as OrbitUuidRouteImport } from './routes/orbit.$uuid'
+import { Route as OrganisationsIndexRouteImport } from './routes/organisations.index'
 import { Route as PlayersIndexRouteImport } from './routes/players.index'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
+import { Route as OrganisationsCorporationsCorporationIdRouteImport } from './routes/organisations.corporations.$corporationId'
+import { Route as OrganisationsPoliticsEntityIdRouteImport } from './routes/organisations.politics.$entityId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -54,6 +57,11 @@ const OrbitUuidRoute = OrbitUuidRouteImport.update({
   path: '/orbit/$uuid',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrganisationsIndexRoute = OrganisationsIndexRouteImport.update({
+  id: '/organisations/',
+  path: '/organisations/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlayersIndexRoute = PlayersIndexRouteImport.update({
   id: '/players/',
   path: '/players/',
@@ -64,6 +72,18 @@ const PlayersPlayerIdRoute = PlayersPlayerIdRouteImport.update({
   path: '/players/$playerId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrganisationsCorporationsCorporationIdRoute =
+  OrganisationsCorporationsCorporationIdRouteImport.update({
+    id: '/organisations/corporations/$corporationId',
+    path: '/organisations/corporations/$corporationId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const OrganisationsPoliticsEntityIdRoute =
+  OrganisationsPoliticsEntityIdRouteImport.update({
+    id: '/organisations/politics/$entityId',
+    path: '/organisations/politics/$entityId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -74,7 +94,10 @@ export interface FileRoutesByFullPath {
   '/orbit/$uuid': typeof OrbitUuidRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/moderation/': typeof ModerationIndexRoute
+  '/organisations/': typeof OrganisationsIndexRoute
   '/players/': typeof PlayersIndexRoute
+  '/organisations/corporations/$corporationId': typeof OrganisationsCorporationsCorporationIdRoute
+  '/organisations/politics/$entityId': typeof OrganisationsPoliticsEntityIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -85,7 +108,10 @@ export interface FileRoutesByTo {
   '/orbit/$uuid': typeof OrbitUuidRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/moderation': typeof ModerationIndexRoute
+  '/organisations': typeof OrganisationsIndexRoute
   '/players': typeof PlayersIndexRoute
+  '/organisations/corporations/$corporationId': typeof OrganisationsCorporationsCorporationIdRoute
+  '/organisations/politics/$entityId': typeof OrganisationsPoliticsEntityIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -97,7 +123,10 @@ export interface FileRoutesById {
   '/orbit/$uuid': typeof OrbitUuidRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/moderation/': typeof ModerationIndexRoute
+  '/organisations/': typeof OrganisationsIndexRoute
   '/players/': typeof PlayersIndexRoute
+  '/organisations/corporations/$corporationId': typeof OrganisationsCorporationsCorporationIdRoute
+  '/organisations/politics/$entityId': typeof OrganisationsPoliticsEntityIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -110,7 +139,10 @@ export interface FileRouteTypes {
     | '/orbit/$uuid'
     | '/players/$playerId'
     | '/moderation/'
+    | '/organisations/'
     | '/players/'
+    | '/organisations/corporations/$corporationId'
+    | '/organisations/politics/$entityId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -121,7 +153,10 @@ export interface FileRouteTypes {
     | '/orbit/$uuid'
     | '/players/$playerId'
     | '/moderation'
+    | '/organisations'
     | '/players'
+    | '/organisations/corporations/$corporationId'
+    | '/organisations/politics/$entityId'
   id:
     | '__root__'
     | '/'
@@ -132,7 +167,10 @@ export interface FileRouteTypes {
     | '/orbit/$uuid'
     | '/players/$playerId'
     | '/moderation/'
+    | '/organisations/'
     | '/players/'
+    | '/organisations/corporations/$corporationId'
+    | '/organisations/politics/$entityId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -144,7 +182,10 @@ export interface RootRouteChildren {
   OrbitUuidRoute: typeof OrbitUuidRoute
   PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
   ModerationIndexRoute: typeof ModerationIndexRoute
+  OrganisationsIndexRoute: typeof OrganisationsIndexRoute
   PlayersIndexRoute: typeof PlayersIndexRoute
+  OrganisationsCorporationsCorporationIdRoute: typeof OrganisationsCorporationsCorporationIdRoute
+  OrganisationsPoliticsEntityIdRoute: typeof OrganisationsPoliticsEntityIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -198,6 +239,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrbitUuidRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/organisations/': {
+      id: '/organisations/'
+      path: '/organisations'
+      fullPath: '/organisations/'
+      preLoaderRoute: typeof OrganisationsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/players/': {
       id: '/players/'
       path: '/players'
@@ -212,6 +260,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayersPlayerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/organisations/corporations/$corporationId': {
+      id: '/organisations/corporations/$corporationId'
+      path: '/organisations/corporations/$corporationId'
+      fullPath: '/organisations/corporations/$corporationId'
+      preLoaderRoute: typeof OrganisationsCorporationsCorporationIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/organisations/politics/$entityId': {
+      id: '/organisations/politics/$entityId'
+      path: '/organisations/politics/$entityId'
+      fullPath: '/organisations/politics/$entityId'
+      preLoaderRoute: typeof OrganisationsPoliticsEntityIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -224,7 +286,11 @@ const rootRouteChildren: RootRouteChildren = {
   OrbitUuidRoute: OrbitUuidRoute,
   PlayersPlayerIdRoute: PlayersPlayerIdRoute,
   ModerationIndexRoute: ModerationIndexRoute,
+  OrganisationsIndexRoute: OrganisationsIndexRoute,
   PlayersIndexRoute: PlayersIndexRoute,
+  OrganisationsCorporationsCorporationIdRoute:
+    OrganisationsCorporationsCorporationIdRoute,
+  OrganisationsPoliticsEntityIdRoute: OrganisationsPoliticsEntityIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
