@@ -198,6 +198,35 @@ export function createSocialDataset(): SocialDataset {
     ],
     activity: [
       { id: 1, playerId: griefer, type: 'profile_created', details: null, createdAt: at(0) },
+      {
+        id: 2,
+        playerId: griefer,
+        type: 'friend_added',
+        details: { playerId: reporter },
+        createdAt: at(10),
+      },
+      {
+        id: 3,
+        playerId: griefer,
+        type: 'sanction_received',
+        details: { sanctionId: 2, type: 'mute', expiresAt: at(60 * 24 + 40) },
+        createdAt: at(40),
+      },
+      {
+        id: 4,
+        playerId: griefer,
+        type: 'corporation_rank_changed',
+        details: { corporationId: '7c0a7e1e-0000-4000-8000-0000000000d4', rank: 'Pilot' },
+        createdAt: at(42),
+      },
+      // A type the game records itself (internal route).
+      {
+        id: 5,
+        playerId: griefer,
+        type: 'mission_completed',
+        details: { missionId: 'm-7' },
+        createdAt: at(44),
+      },
     ],
   };
 }

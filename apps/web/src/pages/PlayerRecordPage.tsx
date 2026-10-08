@@ -1,17 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeftIcon, GavelIcon, TrendingUpIcon } from 'lucide-react';
-import type {
-  ActivityEntry,
-  ReportView,
-  ReputationEvent,
-  Sanction,
-} from '@dyingstar-admin/contracts/social';
+import type { ReportView, ReputationEvent, Sanction } from '@dyingstar-admin/contracts/social';
 import { CopyButton } from '@/components/atoms/CopyButton';
 import { MonoText } from '@/components/atoms/MonoText';
 import { DataTable } from '@/components/molecules/DataTable';
 import { PageHeading } from '@/components/molecules/PageHeading';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
+import { ActivityTable } from '@/components/organisms/ActivityTable';
 import { LiftSanctionDialog } from '@/components/organisms/LiftSanctionDialog';
 import { moderationErrorKey } from '@/components/organisms/moderationLabels';
 import { PersistencePlayerLink } from '@/components/organisms/PersistencePlayerLink';
@@ -292,19 +288,10 @@ export function PlayerRecordPage({
       </section>
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">{t('moderation.player.activity')}</h2>
-        <DataTable<ActivityEntry>
-          label={t('moderation.player.activity')}
-          rows={player.activity}
-          rowKey={(a) => a.id}
-          empty={t('moderation.none')}
-          columns={[
-            { key: 'date', header: t('moderation.columns.date'), cell: (a) => date(a.createdAt) },
-            {
-              key: 'event',
-              header: t('moderation.columns.event'),
-              cell: (a) => <MonoText>{a.type}</MonoText>,
-            },
-          ]}
+        <ActivityTable
+          entries={player.activity}
+          onOpenPlayer={onOpenPlayer}
+          onOpenReport={onOpenReport}
         />
       </section>
       {dialog?.kind === 'sanction' && (

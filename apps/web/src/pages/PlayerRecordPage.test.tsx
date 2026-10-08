@@ -44,6 +44,23 @@ describe('PlayerRecordPage (ADR 0024)', () => {
     expect(screen.getByText('Port Gaea')).toBeInTheDocument();
   });
 
+  it("shows the player's activity in words, with its details", async () => {
+    useInProcessBff();
+    renderPage(socialIds.griefer);
+
+    const activity = await screen.findByRole('table', { name: 'Activity' });
+    expect(within(activity).getByText('Profile created')).toBeInTheDocument();
+    expect(within(activity).getByText('Sanction received')).toBeInTheDocument();
+    expect(within(activity).getByText('Mute')).toBeInTheDocument();
+    expect(within(activity).getByText('Rank changed')).toBeInTheDocument();
+    expect(within(activity).getByText('rank Pilot')).toBeInTheDocument();
+    // The friend by name, once their profile is read.
+    expect(await within(activity).findByRole('button', { name: 'ddurieux' })).toBeInTheDocument();
+    // A type of the game's own, shown as is with its details.
+    expect(within(activity).getByText('mission_completed')).toBeInTheDocument();
+    expect(within(activity).getByText('missionId: m-7')).toBeInTheDocument();
+  });
+
   it('shows no banner without a sanction in force', async () => {
     useInProcessBff();
     renderPage(socialIds.reporter);
