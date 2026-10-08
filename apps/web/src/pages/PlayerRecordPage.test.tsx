@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ids, socialIds } from '@dyingstar-admin/testing';
+import { PermissionsContext } from '@/hooks/useCan';
 import { useInProcessBff } from '@/test/bff';
 import { renderWithProviders } from '@/test/render';
 import { PlayerRecordPage } from './PlayerRecordPage';
@@ -84,5 +85,107 @@ describe('PlayerRecordPage (ADR 0024)', () => {
     renderPage(socialIds.griefer);
 
     expect(await screen.findByText(/No player item with this id/)).toBeInTheDocument();
+  });
+
+  describe('acting on the player (step 3)', () => {
+    const renderAs = (permissions: string[], playerId: string = socialIds.reporter) =>
+      renderWithProviders(
+        <PermissionsContext.Provider value={permissions}>
+          <PlayerRecordPage
+            playerId={playerId}
+            onBack={vi.fn()}
+            onOpenPlayer={vi.fn()}
+            onOpenReport={vi.fn()}
+            onOpenItem={vi.fn()}
+            onOpenMap={vi.fn()}
+          />
+        </PermissionsContext.Provider>,
+      );
+
+    it('warns a player after a confirmation, and shows it at once', async () => {
+      const bff = useInProcessBff();
+      renderAs(['social.moderate']);
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Sanction' }));
+      const dialog = screen.getByRole('dialog');
+      expect(within(dialog).getByRole('button', { name: 'Continue' })).toBeDisabled();
+      await userEvent.type(within(dialog).getByLabelText('Reason'), 'Spam in chat');
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Continue' }));
+      expect(within(dialog).getByRole('alert')).toHaveTextContent(
+        'Warning for ddurieux, No end: “Spam in chat”',
+      );
+      expect(bff.social.writes).toHaveLength(0);
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Confirm' }));
+
+      expect(await screen.findByRole('status')).toHaveTextContent(
+        'Warning permanent — Spam in chat',
+      );
+      expect(bff.social.writes).toEqual([
+        {
+          call: `POST /players/${socialIds.reporter}/sanctions`,
+          body: { type: 'warning', reason: 'Spam in chat', durationHours: null },
+        },
+      ]);
+    });
+
+    it('offers suspensions, bans and reputation to admins only', async () => {
+      useInProcessBff();
+      renderAs(['social.moderate']);
+      await screen.findByRole('button', { name: 'Sanction' });
+      expect(screen.queryByRole('button', { name: 'Adjust reputation' })).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: 'Sanction' }));
+      const [typeSelect] = within(screen.getByRole('dialog')).getAllByRole('combobox');
+      if (!typeSelect) throw new Error('no type select');
+      await userEvent.click(typeSelect);
+      const options = screen.getAllByRole('option').map((o) => o.textContent);
+      expect(options).toEqual(['Warning', 'Mute']);
+    });
+
+    it('adjusts reputation after a confirmation', async () => {
+      const bff = useInProcessBff();
+      renderAs(['social.moderate', 'social.sanctionSevere', 'social.reputation']);
+
+      await userEvent.click(await screen.findByRole('button', { name: 'Adjust reputation' }));
+      const dialog = screen.getByRole('dialog');
+      await userEvent.type(within(dialog).getByLabelText('Change'), '-5');
+      await userEvent.type(within(dialog).getByLabelText('Reason'), 'Insults');
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Continue' }));
+      expect(within(dialog).getByRole('alert')).toHaveTextContent('-5 for ddurieux (3 → -2)');
+      await userEvent.click(within(dialog).getByRole('button', { name: 'Confirm' }));
+
+      await vi.waitFor(() =>
+        expect(screen.getByText('Reputation', { selector: 'dt' }).nextSibling).toHaveTextContent(
+          '-2',
+        ),
+      );
+      expect(bff.social.writes.map((w) => w.call)).toEqual([
+        `POST /players/${socialIds.reporter}/reputation`,
+      ]);
+    });
+
+    it('lifts a sanction in force after a confirmation', async () => {
+      const bff = useInProcessBff();
+      renderAs(['social.moderate'], socialIds.griefer);
+
+      const sanctions = await screen.findByRole('table', { name: 'Sanctions' });
+      const [first] = within(sanctions).getAllByRole('button', { name: 'Lift' });
+      if (!first) throw new Error('no sanction to lift');
+      await userEvent.click(first);
+      await userEvent.click(
+        within(screen.getByRole('alertdialog')).getByRole('button', { name: 'Lift' }),
+      );
+
+      await vi.waitFor(() => expect(bff.social.writes.map((w) => w.call)).toHaveLength(1));
+      expect(bff.social.writes[0]?.call).toMatch(/^DELETE \/sanctions\/\d+$/);
+    });
+
+    it('offers no action to an account that may not moderate', async () => {
+      useInProcessBff();
+      renderAs(['persistence.read']);
+
+      await screen.findByRole('heading', { name: 'ddurieux' });
+      expect(screen.queryByRole('button', { name: 'Sanction' })).not.toBeInTheDocument();
+    });
   });
 });

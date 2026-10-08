@@ -29,8 +29,8 @@ describe('ModerationPage (ADR 0024)', () => {
 
     expect(await screen.findByText('Active sanctions')).toBeInTheDocument();
     const log = screen.getByRole('table', { name: 'Moderation log' });
-    expect(await within(log).findByText('report.dismissed')).toBeInTheDocument();
-    expect(within(log).getByText('sanction.issued')).toBeInTheDocument();
+    expect(await within(log).findByText('report_dismissed')).toBeInTheDocument();
+    expect(within(log).getByText('sanction_issued')).toBeInTheDocument();
   });
 
   it('opens a player sheet from the lowest reputation list', async () => {

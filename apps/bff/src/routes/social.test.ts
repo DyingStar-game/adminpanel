@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { SOCIAL_URL, socialIds } from '@dyingstar-admin/testing';
-import { fakeProvider, setup, signIn, tokens } from '../test/auth';
+import { fakeProvider, ORIGIN, setup, signIn, tokens } from '../test/auth';
 import { buildApp, mswServer } from '../test/harness';
 
 describe('social moderation routes (ADR 0024)', () => {
@@ -23,7 +23,7 @@ describe('social moderation routes (ADR 0024)', () => {
     expect(await (await request('/api/social/log?limit=1')).json()).toMatchObject({
       total: 2,
       limit: 1,
-      items: [{ action: 'report.dismissed' }],
+      items: [{ action: 'report_dismissed' }],
     });
     expect(await (await request('/api/social/reports?status=open')).json()).toMatchObject({
       total: 1,
@@ -110,5 +110,86 @@ describe('social moderation routes (ADR 0024)', () => {
 
   it('answers 404 when social is not configured', async () => {
     expect((await buildApp({ social: undefined }).request('/api/social/stats')).status).toBe(404);
+  });
+
+  describe('acting on players (step 3)', () => {
+    const json = (body: unknown) => ({
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    it('sanctions a player, lifts the sanction, adjusts reputation', async () => {
+      const { request, social } = buildApp();
+
+      const issued = await request(`/api/social/players/${socialIds.reporter}/sanctions`, {
+        method: 'POST',
+        ...json({ type: 'warning', reason: 'Spam in chat' }),
+      });
+      expect(issued.status).toBe(201);
+      const sanction = (await issued.json()) as { id: number; type: string };
+      expect(sanction.type).toBe('warning');
+
+      const lifted = await request(`/api/social/sanctions/${sanction.id}`, { method: 'DELETE' });
+      expect(await lifted.json()).toMatchObject({
+        id: sanction.id,
+        revokedBy: socialIds.moderator,
+      });
+      const again = await request(`/api/social/sanctions/${sanction.id}`, { method: 'DELETE' });
+      expect(again.status).toBe(404);
+
+      const reputation = await request(`/api/social/players/${socialIds.reporter}/reputation`, {
+        method: 'POST',
+        ...json({ delta: 10, reason: 'Helped new players' }),
+      });
+      expect(await reputation.json()).toMatchObject({ reputation: 13 });
+      expect(social.writes.map((w) => w.call)).toEqual([
+        `POST /players/${socialIds.reporter}/sanctions`,
+        `DELETE /sanctions/${sanction.id}`,
+        `DELETE /sanctions/${sanction.id}`,
+        `POST /players/${socialIds.reporter}/reputation`,
+      ]);
+    });
+
+    it('refuses invalid actions before calling social', async () => {
+      const { request, social } = buildApp();
+      const sanction = (body: unknown) =>
+        request(`/api/social/players/${socialIds.reporter}/sanctions`, {
+          method: 'POST',
+          ...json(body),
+        });
+
+      expect((await sanction({ type: 'kick', reason: 'x' })).status).toBe(400);
+      expect((await sanction({ type: 'mute', reason: '' })).status).toBe(400);
+      expect((await sanction({ type: 'mute', reason: 'x', durationHours: 9000 })).status).toBe(400);
+      const delta = await request(`/api/social/players/${socialIds.reporter}/reputation`, {
+        method: 'POST',
+        ...json({ delta: 500, reason: 'x' }),
+      });
+      expect(delta.status).toBe(400);
+      expect(social.writes).toHaveLength(0);
+    });
+
+    it('keeps bans and reputation to admins, mutes open to moderators', async () => {
+      const moderator = setup(
+        fakeProvider(() => tokens({ realmRoles: ['moderator'], clientRoles: {} })),
+      );
+      const { cookie } = await signIn(moderator);
+      const send = (path: string, body: unknown) =>
+        moderator.call(path, {
+          method: 'POST',
+          cookie,
+          headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+      const sanctions = `/api/social/players/${socialIds.reporter}/sanctions`;
+
+      expect((await send(sanctions, { type: 'ban', reason: 'Cheating' })).status).toBe(403);
+      const reputation = `/api/social/players/${socialIds.reporter}/reputation`;
+      expect((await send(reputation, { delta: 1, reason: 'x' })).status).toBe(403);
+      expect(moderator.social.writes).toHaveLength(0);
+      expect(
+        (await send(sanctions, { type: 'mute', reason: 'Spam', durationHours: 1 })).status,
+      ).toBe(201);
+    });
   });
 });

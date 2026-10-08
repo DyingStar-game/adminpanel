@@ -169,7 +169,7 @@ export function createSocialDataset(): SocialDataset {
       {
         id: 1,
         actorId: moderator,
-        action: 'sanction.issued',
+        action: 'sanction_issued',
         targetPlayerId: griefer,
         details: { type: 'warning' },
         createdAt: at(35),
@@ -177,7 +177,7 @@ export function createSocialDataset(): SocialDataset {
       {
         id: 2,
         actorId: moderator,
-        action: 'report.dismissed',
+        action: 'report_dismissed',
         targetPlayerId: reporter,
         details: { reportId: 3 },
         createdAt: at(50),
@@ -204,6 +204,8 @@ export function createSocialDataset(): SocialDataset {
 
 export interface SocialMock {
   handlers: ReturnType<typeof http.get>[];
+  /** Writes received (sanctions, lifts, reputation), newest last: `METHOD path` and body. */
+  writes: { call: string; body: unknown }[];
   data: SocialDataset;
   /** Authorization headers received, newest last. */
   tokens: (string | null)[];
@@ -228,6 +230,13 @@ export function createSocialMock(
   baseUrl: string = SOCIAL_URL,
 ): SocialMock {
   const tokens: (string | null)[] = [];
+  const writes: { call: string; body: unknown }[] = [];
+  // Actor of the writes: the fixtures' moderator (the mock does not read tokens).
+  const actor = socialIds.moderator;
+  const now = () => new Date().toISOString();
+  const nextId = (rows: { id: number }[]) => Math.max(0, ...rows.map((r) => r.id)) + 1;
+  const badRequest = (message: string) =>
+    HttpResponse.json({ error: 'VALIDATION_ERROR', message, status: 400 }, { status: 400 });
   const api = `${baseUrl}/api/admin`;
   const players = `${baseUrl}/api/profiles`;
   const seen = (request: Request) => tokens.push(request.headers.get('Authorization'));
@@ -315,6 +324,84 @@ export function createSocialMock(
         .sort((a, b) => a.displayName.localeCompare(b.displayName));
       return HttpResponse.json(page(items, url));
     }),
+    // Acting on players (`issueSanction`, `revokeSanction`, `adjustReputation`).
+    http.post(`${api}/players/:playerId/sanctions`, async ({ request, params }) => {
+      seen(request);
+      const id = String(params.playerId);
+      const body = (await request.json()) as {
+        type: Sanction['type'];
+        reason: string;
+        durationHours?: number | null;
+      };
+      writes.push({ call: `POST /players/${id}/sanctions`, body });
+      const profile = data.players.find((p) => p.playerId === id);
+      if (!profile) return notFound(`Player ${id} not found`);
+      if (profile.entityType === 'npc') return badRequest('NPCs cannot be sanctioned');
+      const sanction: Sanction = {
+        id: nextId(data.sanctions),
+        playerId: id,
+        type: body.type,
+        reason: body.reason,
+        automatic: false,
+        issuedBy: actor,
+        expiresAt: body.durationHours
+          ? new Date(Date.now() + body.durationHours * 3_600_000).toISOString()
+          : null,
+        revokedAt: null,
+        revokedBy: null,
+        createdAt: now(),
+      };
+      data.sanctions.push(sanction);
+      data.log.push({
+        id: nextId(data.log),
+        actorId: actor,
+        action: 'sanction_issued',
+        targetPlayerId: id,
+        details: { type: body.type },
+        createdAt: now(),
+      });
+      return HttpResponse.json(sanction, { status: 201 });
+    }),
+    http.delete(`${api}/sanctions/:id`, ({ request, params }) => {
+      seen(request);
+      writes.push({ call: `DELETE /sanctions/${String(params.id)}`, body: null });
+      const sanction = data.sanctions.find((s) => s.id === Number(params.id));
+      if (!sanction) return notFound(`Sanction ${String(params.id)} not found`);
+      // As `social` does (its OpenAPI lists a 409): an already lifted sanction is not found.
+      if (sanction.revokedAt) return notFound(`Sanction ${String(params.id)} not found`);
+      sanction.revokedAt = now();
+      sanction.revokedBy = actor;
+      data.log.push({
+        id: nextId(data.log),
+        actorId: actor,
+        action: 'sanction_revoked',
+        targetPlayerId: sanction.playerId,
+        details: { sanctionId: sanction.id, type: sanction.type },
+        createdAt: now(),
+      });
+      return HttpResponse.json(sanction);
+    }),
+    http.post(`${api}/players/:playerId/reputation`, async ({ request, params }) => {
+      seen(request);
+      const id = String(params.playerId);
+      const body = (await request.json()) as { delta: number; reason: string };
+      writes.push({ call: `POST /players/${id}/reputation`, body });
+      const profile = data.players.find((p) => p.playerId === id);
+      if (!profile) return notFound(`Player ${id} not found`);
+      profile.reputation += body.delta;
+      data.reputationEvents.push({
+        id: nextId(data.reputationEvents),
+        playerId: id,
+        delta: body.delta,
+        balance: profile.reputation,
+        source: 'moderation',
+        reason: body.reason,
+        actorId: actor,
+        details: null,
+        createdAt: now(),
+      });
+      return HttpResponse.json({ playerId: id, reputation: profile.reputation });
+    }),
     http.get(`${api}/sanctions`, ({ request }) => {
       seen(request);
       const url = new URL(request.url);
@@ -327,5 +414,5 @@ export function createSocialMock(
     }),
   ];
 
-  return { handlers, data, tokens };
+  return { handlers, data, tokens, writes };
 }

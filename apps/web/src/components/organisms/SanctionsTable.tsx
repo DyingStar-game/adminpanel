@@ -4,6 +4,8 @@ import { Chip } from '@/components/atoms/Chip';
 import { MonoText } from '@/components/atoms/MonoText';
 import { DataTable } from '@/components/molecules/DataTable';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { activeSanctions } from '@/lib/sanctions';
 import { formatDateTime, shortId } from '@/lib/format';
 
 interface SanctionsTableProps {
@@ -11,6 +13,8 @@ interface SanctionsTableProps {
   /** Hidden on a player's own sheet. */
   showPlayer?: boolean;
   onOpenPlayer: (id: string) => void;
+  /** Offers to lift the sanctions in force (ADR 0024 step 3). */
+  onLift?: ((sanction: Sanction) => void) | undefined;
 }
 
 /** Sanctions of `social`: type, reason, who issued it, expiry, lifting. */
@@ -18,8 +22,10 @@ export function SanctionsTable({
   sanctions,
   showPlayer = true,
   onOpenPlayer,
+  onLift,
 }: SanctionsTableProps) {
   const { t, i18n } = useTranslation();
+  const inForce = new Set(activeSanctions(sanctions).map((s) => s.id));
   const date = (iso: string | null) => (iso ? formatDateTime(iso, i18n.language) : '—');
   return (
     <DataTable<Sanction>
@@ -82,6 +88,21 @@ export function SanctionsTable({
           cell: (s) => date(s.revokedAt),
           className: 'whitespace-nowrap',
         },
+        ...(onLift
+          ? [
+              {
+                key: 'lift',
+                header: '',
+                cell: (s: Sanction) =>
+                  inForce.has(s.id) && (
+                    <Button variant="outline" size="xs" onClick={() => onLift(s)}>
+                      {t('moderation.actions.lift')}
+                    </Button>
+                  ),
+                className: 'text-right',
+              },
+            ]
+          : []),
       ]}
     />
   );

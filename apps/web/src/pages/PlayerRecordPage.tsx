@@ -1,16 +1,26 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeftIcon } from 'lucide-react';
-import type { ActivityEntry, ReportView, ReputationEvent } from '@dyingstar-admin/contracts/social';
+import { ArrowLeftIcon, GavelIcon, TrendingUpIcon } from 'lucide-react';
+import type {
+  ActivityEntry,
+  ReportView,
+  ReputationEvent,
+  Sanction,
+} from '@dyingstar-admin/contracts/social';
 import { CopyButton } from '@/components/atoms/CopyButton';
 import { MonoText } from '@/components/atoms/MonoText';
 import { DataTable } from '@/components/molecules/DataTable';
 import { PageHeading } from '@/components/molecules/PageHeading';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
+import { LiftSanctionDialog } from '@/components/organisms/LiftSanctionDialog';
 import { moderationErrorKey } from '@/components/organisms/moderationLabels';
 import { PersistencePlayerLink } from '@/components/organisms/PersistencePlayerLink';
+import { ReputationDialog } from '@/components/organisms/ReputationDialog';
+import { SanctionDialog } from '@/components/organisms/SanctionDialog';
 import { SanctionsTable } from '@/components/organisms/SanctionsTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useCan } from '@/hooks/useCan';
 import { usePlayerProfile, usePlayerRecord } from '@/hooks/useModeration';
 import { ApiError } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
@@ -39,6 +49,10 @@ export function PlayerRecordPage({
   const record = usePlayerRecord(playerId);
   // Public profile (presence, organisations): the sheet stays readable without it.
   const profile = usePlayerProfile(playerId).data;
+  const can = useCan();
+  const [dialog, setDialog] = useState<
+    { kind: 'sanction' } | { kind: 'reputation' } | { kind: 'lift'; sanction: Sanction } | null
+  >(null);
   const date = (iso: string) => formatDateTime(iso, i18n.language);
 
   const back = (
@@ -83,7 +97,31 @@ export function PlayerRecordPage({
           />
         )}
         <div className="min-w-0 flex-1">
-          <PageHeading title={player.displayName} actions={back}>
+          <PageHeading
+            title={player.displayName}
+            actions={
+              <div className="flex flex-wrap gap-2">
+                {/* NPCs are excluded from sanctions and reputation by `social`. */}
+                {player.entityType === 'player' && can('social.moderate') && (
+                  <Button size="sm" onClick={() => setDialog({ kind: 'sanction' })}>
+                    <GavelIcon />
+                    {t('moderation.actions.sanction')}
+                  </Button>
+                )}
+                {player.entityType === 'player' && can('social.reputation') && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDialog({ kind: 'reputation' })}
+                  >
+                    <TrendingUpIcon />
+                    {t('moderation.actions.reputation')}
+                  </Button>
+                )}
+                {back}
+              </div>
+            }
+          >
             <div className="flex flex-wrap items-center gap-2 text-sm text-fg-3">
               <Badge variant="outline">{t(`moderation.player.kind.${player.entityType}`)}</Badge>
               {profile && (
@@ -191,6 +229,9 @@ export function PlayerRecordPage({
           sanctions={player.sanctions}
           showPlayer={false}
           onOpenPlayer={onOpenPlayer}
+          onLift={
+            can('social.moderate') ? (sanction) => setDialog({ kind: 'lift', sanction }) : undefined
+          }
         />
       </section>
       <section className="flex flex-col gap-2">
@@ -266,6 +307,28 @@ export function PlayerRecordPage({
           ]}
         />
       </section>
+      {dialog?.kind === 'sanction' && (
+        <SanctionDialog
+          playerId={player.playerId}
+          playerName={player.displayName}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog?.kind === 'reputation' && (
+        <ReputationDialog
+          playerId={player.playerId}
+          playerName={player.displayName}
+          reputation={player.reputation}
+          onClose={() => setDialog(null)}
+        />
+      )}
+      {dialog?.kind === 'lift' && (
+        <LiftSanctionDialog
+          sanction={dialog.sanction}
+          playerName={player.displayName}
+          onClose={() => setDialog(null)}
+        />
+      )}
     </div>
   );
 }

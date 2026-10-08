@@ -2,13 +2,16 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { setupServer } from 'msw/node';
 import type { z } from 'zod';
 import {
+  zAdjustReputationResponse,
   zGetCommunityStatsResponse,
   zGetModerationLogResponse,
   zGetPlayerRecordResponse,
   zGetProfileResponse,
   zGetReportResponse,
   zListReportsResponse,
+  zIssueSanctionResponse,
   zListSanctionsResponse,
+  zRevokeSanctionResponse,
   zSearchProfilesResponse,
 } from '@dyingstar-admin/contracts/social';
 import { createSocialMock, SOCIAL_URL, socialIds } from './socialMock';
@@ -60,5 +63,36 @@ describe('social mock', () => {
       (all.body as { items: { displayName: string }[] }).items.map((p) => p.displayName),
     ).toEqual(['ddurieux', 'dev-moderator', 'griefer42']);
     expect(await get('/profiles?search=GRIEF')).toMatchObject({ body: { total: 1 } });
+  });
+
+  it('sanctions, lifts and adjusts reputation as the contract says', async () => {
+    const send = async (method: string, path: string, body?: unknown) => {
+      const res = await fetch(`${SOCIAL_URL}/api/admin${path}`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      });
+      return { status: res.status, body: (await res.json()) as unknown };
+    };
+
+    const issued = await send('POST', `/players/${socialIds.reporter}/sanctions`, {
+      type: 'mute',
+      reason: 'Spam',
+      durationHours: 2,
+    });
+    expect(issued.status).toBe(201);
+    expect(zIssueSanctionResponse.safeParse(issued.body).error).toBeUndefined();
+
+    const id = (issued.body as { id: number }).id;
+    const lifted = await send('DELETE', `/sanctions/${id}`);
+    expect(zRevokeSanctionResponse.safeParse(lifted.body).error).toBeUndefined();
+    expect((await send('DELETE', `/sanctions/${id}`)).status).toBe(404);
+
+    const adjusted = await send('POST', `/players/${socialIds.reporter}/reputation`, {
+      delta: -5,
+      reason: 'Spam',
+    });
+    expect(zAdjustReputationResponse.safeParse(adjusted.body).error).toBeUndefined();
+    expect(adjusted.body).toMatchObject({ reputation: -2 });
   });
 });

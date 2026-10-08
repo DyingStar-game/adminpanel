@@ -1,14 +1,19 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import {
+  zAdjustReputationBody,
   zGetModerationLogQuery,
   zGetPlayerRecordPath,
   zGetReportPath,
+  zIssueSanctionBody,
   zListReportsQuery,
   zListSanctionsQuery,
+  zRevokeSanctionPath,
   zSearchProfilesQuery,
 } from '@dyingstar-admin/contracts/social';
-import type { SessionContext } from '../auth/auth';
+import { requirePermission, type SessionContext } from '../auth/auth';
+import { ApiError } from '../lib/errors';
+import { ErrorCode } from '@dyingstar-admin/schemas';
 import type { SocialClient } from '../clients/social';
 import { validate } from '../lib/validate';
 
@@ -39,27 +44,70 @@ export function socialRoutes(social: SocialClient) {
   const token = (session: SessionContext['Variables']['session'] | undefined) =>
     session?.tokens.accessToken;
 
-  return new Hono<SessionContext>()
-    .get('/stats', async (c) => c.json(await social.stats(token(c.var.session))))
-    .get('/log', validate('query', fromQuery(zGetModerationLogQuery)), async (c) =>
-      c.json(await social.log(token(c.var.session), c.req.valid('query'))),
-    )
-    .get('/reports', validate('query', fromQuery(zListReportsQuery)), async (c) =>
-      c.json(await social.reports(token(c.var.session), c.req.valid('query'))),
-    )
-    .get('/reports/:id', validate('param', fromQuery(zGetReportPath)), async (c) =>
-      c.json(await social.report(token(c.var.session), c.req.valid('param').id)),
-    )
-    .get('/players', validate('query', fromQuery(zSearchProfilesQuery)), async (c) =>
-      c.json(await social.profiles(token(c.var.session), c.req.valid('query'))),
-    )
-    .get('/players/:playerId', validate('param', zGetPlayerRecordPath), async (c) =>
-      c.json(await social.player(token(c.var.session), c.req.valid('param').playerId)),
-    )
-    .get('/players/:playerId/profile', validate('param', zGetPlayerRecordPath), async (c) =>
-      c.json(await social.profile(token(c.var.session), c.req.valid('param').playerId)),
-    )
-    .get('/sanctions', validate('query', fromQuery(zListSanctionsQuery)), async (c) =>
-      c.json(await social.sanctions(token(c.var.session), c.req.valid('query'))),
-    );
+  return (
+    new Hono<SessionContext>()
+      .get('/stats', async (c) => c.json(await social.stats(token(c.var.session))))
+      .get('/log', validate('query', fromQuery(zGetModerationLogQuery)), async (c) =>
+        c.json(await social.log(token(c.var.session), c.req.valid('query'))),
+      )
+      .get('/reports', validate('query', fromQuery(zListReportsQuery)), async (c) =>
+        c.json(await social.reports(token(c.var.session), c.req.valid('query'))),
+      )
+      .get('/reports/:id', validate('param', fromQuery(zGetReportPath)), async (c) =>
+        c.json(await social.report(token(c.var.session), c.req.valid('param').id)),
+      )
+      .get('/players', validate('query', fromQuery(zSearchProfilesQuery)), async (c) =>
+        c.json(await social.profiles(token(c.var.session), c.req.valid('query'))),
+      )
+      .get('/players/:playerId', validate('param', zGetPlayerRecordPath), async (c) =>
+        c.json(await social.player(token(c.var.session), c.req.valid('param').playerId)),
+      )
+      .get('/players/:playerId/profile', validate('param', zGetPlayerRecordPath), async (c) =>
+        c.json(await social.profile(token(c.var.session), c.req.valid('param').playerId)),
+      )
+      .get('/sanctions', validate('query', fromQuery(zListSanctionsQuery)), async (c) =>
+        c.json(await social.sanctions(token(c.var.session), c.req.valid('query'))),
+      )
+      // Acting on players (ADR 0024 step 3). `social` checks every role itself; the panel refuses
+      // early what it knows `social` would, so the user gets a clear answer.
+      .post(
+        '/players/:playerId/sanctions',
+        validate('param', zGetPlayerRecordPath),
+        validate('json', zIssueSanctionBody),
+        async (c) => {
+          const body = c.req.valid('json');
+          const severe = body.type === 'suspension' || body.type === 'ban';
+          if (
+            severe &&
+            c.var.session &&
+            !c.var.session.permissions.includes('social.sanctionSevere')
+          ) {
+            throw new ApiError(403, ErrorCode.forbidden, `A ${body.type} needs the admin role`);
+          }
+          const sanction = await social.issueSanction(
+            token(c.var.session),
+            c.req.valid('param').playerId,
+            body,
+          );
+          return c.json(sanction, 201);
+        },
+      )
+      .delete('/sanctions/:id', validate('param', fromQuery(zRevokeSanctionPath)), async (c) =>
+        c.json(await social.revokeSanction(token(c.var.session), c.req.valid('param').id)),
+      )
+      .post(
+        '/players/:playerId/reputation',
+        requirePermission('social.reputation'),
+        validate('param', zGetPlayerRecordPath),
+        validate('json', zAdjustReputationBody),
+        async (c) =>
+          c.json(
+            await social.adjustReputation(
+              token(c.var.session),
+              c.req.valid('param').playerId,
+              c.req.valid('json'),
+            ),
+          ),
+      )
+  );
 }

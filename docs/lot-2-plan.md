@@ -18,8 +18,8 @@ starting a session on lot 2.**
 | F. Social reading: moderation overview, reports, sanctions, player sheet | **Done** | `ae3dce8` |
 | G. Players: search, fuller sheet (sanction banner, presence, identity, RP, organisations) | **Done** | `b1e7166` |
 | H. Player sheet → persistence item and map (same id everywhere) | **Done** | `cd404bc` |
-| I. **Acting on players**: sanction (warn, mute; suspend, ban for `admin`+), lift, reputation | **Next** | — |
-| J. Report actions: status with a note, escalate | To do | — |
+| I. Acting on players: sanction (warn, mute; suspend, ban for `admin`+), lift, reputation | **Done** | see git log |
+| J. **Report actions**: status with a note, escalate | **Next** | — |
 | K. Organisations, reading: corporations, political entities | To do | — |
 | L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | To do | — |
 | M. Decide the final roles × actions matrix with the back team (ADR 0023) | Waiting for the back team | — |
@@ -34,9 +34,10 @@ player sheet, and the test user `ynotna` in `docker/keycloak/*.json` (see below)
 
 ## The steps to come
 
-### I. Acting on players (ADR 0024 step 3)
+### I. Acting on players (ADR 0024 step 3) — done
 
-From the player sheet, an action bar filtered by the user's moderation role:
+Done on 2026-10-08 and tried for real on minikube's `social` (warning issued then lifted by
+`ynotna`, a moderator's ban refused by `social` itself). What was built:
 
 | Action | `social` route | Input | Minimum role |
 |---|---|---|---|
@@ -50,7 +51,11 @@ From the player sheet, an action bar filtered by the user's moderation role:
 - SPA: each action in a confirmation dialog (player, type, duration, reason), like persistence
   writes; the banner, sanctions and reputation history refresh after. `social` logs the actor.
 - Permissions already exist: `social.moderate`, `social.sanctionSevere`, `social.reputation`.
-- Test in minikube on `devplayer` (writes to the local cluster only).
+- Lift and reputation from the sheet: a "Lift" button on each sanction in force, an "Adjust
+  reputation" dialog (`admin`+); NPCs get no action (`social` excludes them).
+- Real behaviour differs from `social`'s OpenAPI: lifting an already lifted sanction answers
+  **404**, not the documented 409 (mock follows the real service). Log actions are
+  `sanction_issued`, `sanction_revoked`, `report_<status>`, `report_escalated`.
 
 ### J. Report actions
 
@@ -119,3 +124,5 @@ From ADR 0023 and 0024, still open:
 6. Services' `OIDC_JWKS_URL` in dev-local (the `401 Invalid token` bug).
 7. Persistence requiring a token one day (then `svc-admin` needs its audience).
 8. Access token lifetime (24 h in pre-production) for the panel's client.
+9. `social`'s OpenAPI says `DELETE /api/admin/sanctions/{id}` answers 409 when already lifted;
+   the service answers 404.

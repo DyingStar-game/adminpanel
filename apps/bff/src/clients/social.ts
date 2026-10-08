@@ -1,15 +1,20 @@
 import type { z } from 'zod';
 import { ErrorCode } from '@dyingstar-admin/schemas';
 import {
+  zAdjustReputationResponse,
   zError,
   zGetCommunityStatsResponse,
   zGetModerationLogResponse,
   zGetPlayerRecordResponse,
   zGetProfileResponse,
   zGetReportResponse,
+  zIssueSanctionResponse,
   zListReportsResponse,
   zListSanctionsResponse,
+  zRevokeSanctionResponse,
   zSearchProfilesResponse,
+  type AdjustReputationData,
+  type IssueSanctionData,
 } from '@dyingstar-admin/contracts/social';
 import { ApiError } from '../lib/errors';
 
@@ -32,6 +37,7 @@ async function upstreamError(res: Response): Promise<ApiError> {
   if (res.status === 400) return new ApiError(400, ErrorCode.upstreamRejected, message);
   if (res.status === 403) return new ApiError(403, ErrorCode.forbidden, message);
   if (res.status === 404) return new ApiError(404, ErrorCode.notFound, message);
+  if (res.status === 409) return new ApiError(409, ErrorCode.editConflict, message);
   if (res.status === 401) {
     return new ApiError(502, ErrorCode.upstreamRejected, `Social refused the session: ${message}`);
   }
@@ -46,11 +52,13 @@ async function upstreamError(res: Response): Promise<ApiError> {
 export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) {
   const root = `${baseUrl.replace(/\/$/, '')}/api`;
 
-  async function get<T extends z.ZodType>(
+  /** One call to `social`: the user's token, a JSON body when given, the answer validated. */
+  async function call<T extends z.ZodType>(
+    method: 'GET' | 'POST' | 'DELETE',
     token: string | undefined,
     path: string,
     schema: T,
-    query: Query = {},
+    { query = {}, body }: { query?: Query; body?: unknown } = {},
   ): Promise<z.infer<T>> {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(query)) {
@@ -59,10 +67,13 @@ export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) 
     let res: Response;
     try {
       res = await fetch(`${root}${path}${params.size ? `?${params}` : ''}`, {
+        method,
         headers: {
           Accept: 'application/json',
+          ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
         signal: AbortSignal.timeout(timeoutMs),
       });
     } catch (error) {
@@ -83,6 +94,13 @@ export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) 
     return parsed.data;
   }
 
+  const get = <T extends z.ZodType>(
+    token: string | undefined,
+    path: string,
+    schema: T,
+    query: Query = {},
+  ) => call('GET', token, path, schema, { query });
+
   return {
     stats: (token?: string) => get(token, '/admin/stats', zGetCommunityStatsResponse),
     log: (token: string | undefined, query: Query) =>
@@ -98,6 +116,35 @@ export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) 
     /** Public profile: presence, corporations, political entities (a player route). */
     profile: (token: string | undefined, playerId: string) =>
       get(token, `/profiles/${encodeURIComponent(playerId)}`, zGetProfileResponse),
+    /** Sanctions a player; `social` checks the role (`suspension` / `ban`: `admin`). */
+    issueSanction: (token: string | undefined, playerId: string, body: IssueSanctionData['body']) =>
+      call(
+        'POST',
+        token,
+        `/admin/players/${encodeURIComponent(playerId)}/sanctions`,
+        zIssueSanctionResponse,
+        {
+          body,
+        },
+      ),
+    /** Lifts a sanction; `social` answers 404 when it is already lifted (its OpenAPI says 409). */
+    revokeSanction: (token: string | undefined, id: number) =>
+      call('DELETE', token, `/admin/sanctions/${id}`, zRevokeSanctionResponse),
+    /** Adds `delta` to a player's reputation (`admin`). */
+    adjustReputation: (
+      token: string | undefined,
+      playerId: string,
+      body: AdjustReputationData['body'],
+    ) =>
+      call(
+        'POST',
+        token,
+        `/admin/players/${encodeURIComponent(playerId)}/reputation`,
+        zAdjustReputationResponse,
+        {
+          body,
+        },
+      ),
     /** Profiles by display name (a player route: `social` has no admin listing, ADR 0024). */
     profiles: (token: string | undefined, query: Query) =>
       get(token, '/profiles', zSearchProfilesResponse, query),
