@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { http, HttpResponse } from 'msw';
-import { SOCIAL_URL, socialIds } from '@dyingstar-admin/testing';
+import { createSocialDataset, SOCIAL_URL, socialIds } from '@dyingstar-admin/testing';
 import { fakeProvider, ORIGIN, setup, signIn, tokens } from '../test/auth';
 import { buildApp, mswServer } from '../test/harness';
 
@@ -100,7 +100,8 @@ describe('social moderation routes (ADR 0024)', () => {
     const { cookie } = await signIn(moderator);
 
     expect((await moderator.call('/api/social/stats', { cookie })).status).toBe(200);
-    expect(moderator.social.tokens).toEqual(['Bearer moderator-token']);
+    // Registered in `social` at sign-in, then the stats: both with the moderator's own token.
+    expect(moderator.social.tokens).toEqual(['Bearer moderator-token', 'Bearer moderator-token']);
 
     const editor = setup(); // persistence:write only
     const editorSession = await signIn(editor);
@@ -191,6 +192,173 @@ describe('social moderation routes (ADR 0024)', () => {
       expect(
         (await send(sanctions, { type: 'mute', reason: 'Spam', durationHours: 1 })).status,
       ).toBe(201);
+    });
+  });
+
+  describe('report actions (step 3)', () => {
+    const json = (body: unknown) => ({
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    it('claims a report, escalates it to the top level by level, then confirms it', async () => {
+      const { request, social } = buildApp();
+      const status = (id: number, body: unknown) =>
+        request(`/api/social/reports/${id}`, { method: 'PATCH', ...json(body) });
+      const escalate = (id: number) =>
+        request(`/api/social/reports/${id}/escalate`, { method: 'POST' });
+      const reputation = async () =>
+        (
+          (await (await request(`/api/social/players/${socialIds.griefer}`)).json()) as {
+            reputation: number;
+          }
+        ).reputation;
+      const before = await reputation();
+
+      expect(await (await status(1, { status: 'reviewing' })).json()).toMatchObject({
+        status: 'reviewing',
+        resolvedAt: null,
+      });
+      // Escalating puts the report back in the queue, one level up, to be claimed there.
+      expect(await (await escalate(1)).json()).toMatchObject({
+        status: 'open',
+        escalation: 'admin',
+      });
+      await status(1, { status: 'reviewing' });
+      expect(await (await escalate(1)).json()).toMatchObject({ escalation: 'supervisor' });
+      await status(1, { status: 'reviewing' });
+      // `social` refuses above the top level with a 403 (its OpenAPI says 409).
+      expect((await escalate(1)).status).toBe(403);
+
+      const confirmed = await status(1, { status: 'resolved', note: 'Seen on the replay.' });
+      expect(await confirmed.json()).toMatchObject({
+        status: 'resolved',
+        resolvedBy: socialIds.moderator,
+        resolutionNote: 'Seen on the replay.',
+      });
+      expect(await reputation()).toBe(before - 10);
+      expect(social.writes.map((w) => w.call)).toEqual([
+        'PATCH /reports/1',
+        'POST /reports/1/escalate',
+        'PATCH /reports/1',
+        'POST /reports/1/escalate',
+        'PATCH /reports/1',
+        'POST /reports/1/escalate',
+        'PATCH /reports/1',
+      ]);
+    });
+
+    it('claims first, then decides (the panel’s rule), and stops once closed', async () => {
+      const { request, social } = buildApp();
+      const status = (id: number, body: unknown) =>
+        request(`/api/social/reports/${id}`, { method: 'PATCH', ...json(body) });
+      const escalate = (id: number) =>
+        request(`/api/social/reports/${id}/escalate`, { method: 'POST' });
+
+      // Report 1 is open: neither decided nor escalated before being claimed.
+      expect((await status(1, { status: 'dismissed' })).status).toBe(409);
+      expect((await escalate(1)).status).toBe(409);
+      // Report 2 is claimed already: not twice.
+      expect((await status(2, { status: 'reviewing' })).status).toBe(409);
+      // Report 3 is closed.
+      expect((await status(3, { status: 'resolved' })).status).toBe(409);
+      expect(social.writes).toHaveLength(0);
+    });
+
+    it('refuses invalid report actions before calling social', async () => {
+      const { request, social } = buildApp();
+      const status = (id: string, body: unknown) =>
+        request(`/api/social/reports/${id}`, { method: 'PATCH', ...json(body) });
+
+      expect((await status('1', { status: 'open' })).status).toBe(400);
+      expect((await status('1', { status: 'resolved', note: 'x'.repeat(1001) })).status).toBe(400);
+      expect((await status('abc', { status: 'resolved' })).status).toBe(400);
+      expect((await request('/api/social/reports/0/escalate', { method: 'POST' })).status).toBe(
+        400,
+      );
+      expect(social.writes).toHaveLength(0);
+    });
+
+    it('opens report actions to moderators, from the panel only', async () => {
+      const moderator = setup(
+        fakeProvider(() => tokens({ realmRoles: ['moderator'], clientRoles: {} })),
+      );
+      const { cookie } = await signIn(moderator);
+      const claim = (origin: string) =>
+        moderator.call('/api/social/reports/1', {
+          method: 'PATCH',
+          cookie,
+          headers: { Origin: origin, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'reviewing' }),
+        });
+
+      expect((await claim('https://elsewhere.example')).status).toBe(403);
+      expect(moderator.social.writes).toHaveLength(0);
+      expect((await claim(ORIGIN)).status).toBe(200);
+    });
+
+    it('handles a report at its escalation level or above (the panel’s rule)', async () => {
+      const as = async (role: string) => {
+        const ctx = setup(fakeProvider(() => tokens({ realmRoles: [role], clientRoles: {} })));
+        const { cookie } = await signIn(ctx);
+        const send = (path: string, method: string, body?: unknown) =>
+          ctx.call(path, {
+            method,
+            cookie,
+            headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
+            ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+          });
+        return { ctx, send };
+      };
+
+      // Report 2 is claimed, at the admin level: closed to a moderator, though `social` would
+      // accept.
+      const moderator = await as('moderator');
+      const refused = await moderator.send('/api/social/reports/2', 'PATCH', {
+        status: 'dismissed',
+      });
+      expect(refused.status).toBe(403);
+      expect((await moderator.send('/api/social/reports/2/escalate', 'POST')).status).toBe(403);
+      expect(moderator.ctx.social.writes).toHaveLength(0);
+
+      const admin = await as('admin');
+      expect(
+        (await admin.send('/api/social/reports/2', 'PATCH', { status: 'dismissed' })).status,
+      ).toBe(200);
+    });
+  });
+
+  describe('staff known to social (ADR 0024 › Update 2026-10-08)', () => {
+    const withoutModerator = () => {
+      const data = createSocialDataset();
+      data.players = data.players.filter((p) => p.playerId !== socialIds.moderator);
+      return data;
+    };
+    const registered = (ctx: ReturnType<typeof setup>) =>
+      ctx.social.data.players.some((p) => p.playerId === socialIds.moderator);
+
+    it('registers a moderation account in social at sign-in', async () => {
+      const ctx = setup(
+        fakeProvider(() => tokens({ realmRoles: ['moderator'], clientRoles: {} })),
+        { socialData: withoutModerator() },
+      );
+      expect(registered(ctx)).toBe(false);
+      await signIn(ctx);
+      expect(registered(ctx)).toBe(true);
+    });
+
+    it('leaves the other accounts alone', async () => {
+      const ctx = setup(fakeProvider(), { socialData: withoutModerator() });
+      await signIn(ctx);
+      expect(registered(ctx)).toBe(false);
+    });
+
+    it('signs in even when social is down', async () => {
+      const ctx = setup(fakeProvider(() => tokens({ realmRoles: ['moderator'], clientRoles: {} })));
+      mswServer.use(http.get(`${SOCIAL_URL}/api/me`, () => HttpResponse.error()));
+      const { callback, cookie } = await signIn(ctx);
+      expect(callback.status).toBe(302);
+      expect(cookie).not.toBe('');
     });
   });
 });

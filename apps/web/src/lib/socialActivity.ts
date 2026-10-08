@@ -98,3 +98,14 @@ export function eventTone(type: string): string {
   const family = activityFamily(type);
   return EVENT_TONE[type] ?? (family ? FAMILY_TONE[family] : TONES.neutral);
 }
+
+/**
+ * The other player an activity names: `playerId` (friends, groups…), or the target of a report
+ * on a player (`report_filed` records `targetType` / `targetId`).
+ */
+export function activityPlayerId(details: Record<string, unknown> | null): string | null {
+  const text = (value: unknown) => (typeof value === 'string' && value ? value : null);
+  return (
+    text(details?.playerId) ?? (details?.targetType === 'player' ? text(details.targetId) : null)
+  );
+}

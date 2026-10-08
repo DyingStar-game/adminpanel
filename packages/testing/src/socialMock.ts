@@ -227,6 +227,14 @@ export function createSocialDataset(): SocialDataset {
         details: { missionId: 'm-7' },
         createdAt: at(44),
       },
+      // Report 3, as `social` records it for the reporter (`reports.service.ts`).
+      {
+        id: 6,
+        playerId: griefer,
+        type: 'report_filed',
+        details: { reportId: 3, targetType: 'player', targetId: reporter },
+        createdAt: at(46),
+      },
     ],
   };
 }
@@ -246,11 +254,21 @@ const page = <T>(items: T[], url: URL) => {
   return { items: items.slice(offset, offset + limit), total: items.length, limit, offset };
 };
 
+/** `social`'s defaults (`REPUTATION_REPORT_PENALTY`, `REPUTATION_UPHELD_REPORT_PENALTY`). */
+const REPORT_PENALTY = 2;
+const UPHELD_REPORT_PENALTY = 10;
+const OPEN_STATUSES = new Set<ReportView['status']>(['open', 'reviewing']);
+const ESCALATION_LEVELS: ReportView['escalation'][] = ['moderator', 'admin', 'supervisor'];
+
+const conflict = (message: string) =>
+  HttpResponse.json({ error: 'CONFLICT', message, status: 409 }, { status: 409 });
+
 const notFound = (message: string) =>
   HttpResponse.json({ error: 'NOT_FOUND', message, status: 404 }, { status: 404 });
 
 /**
- * MSW handlers reproducing `social`'s moderation API (`/api/admin/*`, read routes) and its
+ * MSW handlers reproducing `social`'s moderation API (`/api/admin/*`: reading, sanctions,
+ * reputation, report actions) and its
  * profile search: filters,
  * limit / offset pages, `{ error, message, status }` bodies. Roles are not checked here.
  */
@@ -327,6 +345,23 @@ export function createSocialMock(
         sanctions: data.sanctions.filter((s) => s.playerId === id),
         reports: data.reports.filter((r) => r.targetPlayerId === id),
         activity: data.activity.filter((a) => a.playerId === id),
+      });
+    }),
+    // Player route: the caller's own profile, created on the first call (`getMe`). The mock does
+    // not read tokens: the caller is the fixtures' moderator, as for the writes.
+    http.get(`${baseUrl}/api/me`, ({ request }) => {
+      seen(request);
+      let profile = data.players.find((p) => p.playerId === actor);
+      if (!profile) {
+        profile = { ...player(actor, 'dev-moderator', 0), createdAt: now(), updatedAt: now() };
+        data.players.push(profile);
+      }
+      return HttpResponse.json({
+        ...profile,
+        presence: { status: data.presence[actor] ?? 'offline', location: null, updatedAt: now() },
+        corporations: data.memberships[actor]?.corporations ?? [],
+        politics: data.memberships[actor]?.politics ?? [],
+        group: null,
       });
     }),
     // Player route: the public profile, with presence and memberships (`getProfile`).
@@ -436,6 +471,92 @@ export function createSocialMock(
         createdAt: now(),
       });
       return HttpResponse.json({ playerId: id, reputation: profile.reputation });
+    }),
+    // Report actions (`updateReportStatus`, `escalateReport`), as `reports.service.ts` does them.
+    http.patch(`${api}/reports/:id`, async ({ request, params }) => {
+      seen(request);
+      const body = (await request.json()) as {
+        status: 'reviewing' | 'resolved' | 'dismissed';
+        note?: string;
+      };
+      writes.push({ call: `PATCH /reports/${String(params.id)}`, body });
+      const report = data.reports.find((r) => r.id === Number(params.id));
+      if (!report) return notFound(`Report ${String(params.id)} not found`);
+      if (!OPEN_STATUSES.has(report.status)) return conflict(`Report is ${report.status}`);
+      const closing = body.status !== 'reviewing';
+      Object.assign(report, {
+        status: body.status,
+        resolvedBy: closing ? actor : null,
+        resolutionNote: body.note ?? null,
+        resolvedAt: closing ? now() : null,
+      });
+      data.log.push({
+        id: nextId(data.log),
+        actorId: actor,
+        action: `report_${body.status}`,
+        targetPlayerId: report.targetPlayerId,
+        details: { reportId: report.id, note: body.note },
+        createdAt: now(),
+      });
+      // Upheld: the target loses more; dismissed: the filing penalty is refunded.
+      const delta =
+        body.status === 'resolved'
+          ? -UPHELD_REPORT_PENALTY
+          : body.status === 'dismissed'
+            ? REPORT_PENALTY
+            : 0;
+      const target = data.players.find((p) => p.playerId === report.targetPlayerId);
+      if (target && report.reporterId && delta !== 0) {
+        target.reputation += delta;
+        data.reputationEvents.push({
+          id: nextId(data.reputationEvents),
+          playerId: target.playerId,
+          delta,
+          balance: target.reputation,
+          source: 'moderation',
+          reason:
+            body.status === 'resolved' ? `Report upheld: ${report.reason}` : 'Report dismissed',
+          actorId: actor,
+          details: { reportId: report.id },
+          createdAt: now(),
+        });
+      }
+      if (report.reporterId && closing) {
+        data.activity.push({
+          id: nextId(data.activity),
+          playerId: report.reporterId,
+          type: `report_${body.status}`,
+          details: { reportId: report.id },
+          createdAt: now(),
+        });
+      }
+      return HttpResponse.json(report);
+    }),
+    http.post(`${api}/reports/:id/escalate`, ({ request, params }) => {
+      seen(request);
+      writes.push({ call: `POST /reports/${String(params.id)}/escalate`, body: null });
+      const report = data.reports.find((r) => r.id === Number(params.id));
+      if (!report) return notFound(`Report ${String(params.id)} not found`);
+      if (!OPEN_STATUSES.has(report.status)) return conflict(`Report is ${report.status}`);
+      const level = ESCALATION_LEVELS.indexOf(report.escalation);
+      // As `social` does (its OpenAPI lists a 409): the top level is a 403.
+      const next = ESCALATION_LEVELS[level + 1];
+      if (!next) {
+        return HttpResponse.json(
+          { error: 'FORBIDDEN', message: 'Report already at the highest level', status: 403 },
+          { status: 403 },
+        );
+      }
+      Object.assign(report, { escalation: next, status: 'open' });
+      data.log.push({
+        id: nextId(data.log),
+        actorId: actor,
+        action: 'report_escalated',
+        targetPlayerId: report.targetPlayerId,
+        details: { reportId: report.id, to: next },
+        createdAt: now(),
+      });
+      return HttpResponse.json(report);
     }),
     http.get(`${api}/sanctions`, ({ request }) => {
       seen(request);

@@ -19,8 +19,8 @@ starting a session on lot 2.**
 | G. Players: search, fuller sheet (sanction banner, presence, identity, RP, organisations) | **Done** | `b1e7166` |
 | H. Player sheet → persistence item and map (same id everywhere) | **Done** | `cd404bc` |
 | I. Acting on players: sanction (warn, mute; suspend, ban for `admin`+), lift, reputation | **Done** | `c1c3a05` |
-| J. **Report actions**: status with a note, escalate | **Next** | — |
-| K. Organisations, reading: corporations, political entities | To do | — |
+| J. Report actions: claim, then confirm, dismiss or escalate (rules of ADR 0024 › Update) | **Done** (to try live) | see below |
+| K. Organisations, reading: corporations, political entities | **Next** | — |
 | L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | To do | — |
 | M. Decide the final roles × actions matrix with the back team (ADR 0023) | Waiting for the back team | — |
 | N. Organisation management (`/api/internal/*` through `svc-admin`) | After M | — |
@@ -35,10 +35,13 @@ since the player sheet is where moderators look first.
   After step I: readable moderation log (`e82086b`), warnings as one-off records (`f940e6c`),
   readable player activity (`889d78a`), ADR conformity + `conventions.test.ts` (`dc2cc6f`),
   table alignment and shared event colours (`d9fee50`).
-- **Next: step J** (report actions). Before coding, reread ADR 0010, 0013, 0014, 0020, 0024
-  (`CLAUDE.md` › "ADRs are binding"); follow the pattern of step I (BFF route validated with
-  the contract, mock behaving as the real service, RHF + Zod dialog with a confirmation, tests
-  next to every component).
+- **Step J** (report actions) is done on the pattern of step I (see its section), with the
+  maintainer's rules (claim first, role ≥ escalation level, staff registered at sign-in);
+  `make reset-social` then the walkthrough of its section remain to be tried live. Test data:
+  `6185dc4`. **Next: step K.** Reread ADR 0010, 0013, 0014, 0020, 0024 before coding
+  (`CLAUDE.md` › "ADRs are binding").
+- Not built, for lack of data in `social`: "claimed by X" on a report (its log has no filter;
+  `social` stores no claimer).
 - Check `social`'s real behaviour on minikube before trusting its OpenAPI (it differed twice:
   lifting twice answers 404, warnings expire at once). Read its code in
   `DyingStar-game/services` › `social/src/services/reports.service.ts` for J.
@@ -74,11 +77,36 @@ Done on 2026-10-08 and tried for real on minikube's `social` (warning issued the
 - A **warning is a record, never in force**: `social` sets its `expiresAt` to its creation, so
   it has no duration, no banner and nothing to lift ("One-off" / "Ponctuel" in the tables).
 
-### J. Report actions
+### J. Report actions — done, to try live on minikube
 
-On a report (moderation › reports): `PATCH /api/admin/reports/{id}` (status `reviewing` /
-`resolved` / `dismissed`, optional note ≤ 1000), `POST /api/admin/reports/{id}/escalate`
-(moderator → admin → supervisor). Same confirmation and refresh pattern.
+On a report (moderation › reports, `ReportDetail`), while it is open, for a role at least equal
+to its escalation level (`social.moderate`, `social.reportsAdmin`, `social.reportsSupervisor`;
+the panel's rule, ADR 0024 › Update 2026-10-08; the BFF reads the level before forwarding):
+
+| Action | `social` route | Effect (`reports.service.ts`) |
+|---|---|---|
+| Claim (« Prendre en charge ») | `PATCH /api/admin/reports/{id}` `{ status: 'reviewing', note? }` | the only action on an `open` report |
+| Confirm (« Confirmer ») | same, `resolved` | on a claimed report; closed; target loses `REPUTATION_UPHELD_REPORT_PENALTY` (10) |
+| Dismiss (« Classer sans suite ») | same, `dismissed` | on a claimed report; closed; target gets the filing penalty back (2) |
+| Escalate (« Escalader ») | `POST /api/admin/reports/{id}/escalate` | on a claimed report; one level up, back to `open`; hidden at `supervisor` |
+
+Claim first is the maintainer's rule (2026-10-08), enforced by the BFF (409 otherwise).
+
+- BFF: `PATCH /api/social/reports/:id`, `POST /api/social/reports/:id/escalate`, inputs
+  validated with the contract (note ≤ 1000), the user's token forwarded, Origin checked.
+- SPA: a note form (React Hook Form + Zod) then a summary to confirm, telling the reputation
+  effect (none for the system's reports: `social` needs a reporter); escalation confirmed
+  with its levels; everything under `social` refreshed after.
+- `social` read in its code (2026-10-08), not yet tried live: `moderator`+ at any escalation
+  level; a closed report answers **409** to both routes; escalating above `supervisor` answers
+  **403** (`forbidden.report_max_escalation`), where its OpenAPI says 409; the mock follows the
+  code. Reputation changes only when the report has both a reporter and a target player; the
+  reporter gets a `report_resolved` / `report_dismissed` activity.
+- To try: `make seed-social` gives open reports against `player-dax` and `player-pell`;
+  `make reset-social` empties minikube's `social` and seeds it again (back to the start).
+- Staff accounts are registered in `social` at sign-in (`GET /api/me` with their token, when
+  they hold `social.moderate`): without a profile, `social` refuses their reputation changes
+  (open question 7). Tried on 2026-10-08 before this: dismissing report 5 as `ynotna` failed.
 
 ### K. Organisations, reading
 
@@ -116,6 +144,8 @@ The rules lint cannot check are now enforced by `apps/web/src/conventions.test.t
   the maintainer's real pre-production player). List and roles: `docker/keycloak/README.md`.
 - Minikube Keycloak loses our client and users when its database is recreated: re-import
   `docker/keycloak/k8s-partial-import.json` (Realm settings › Action › Partial import).
+- Test data in minikube's `social` (players `player-*`, friendships, open reports, sanctions):
+  `make seed-social` after that import, again after each reset (`docker/keycloak/README.md`).
 - Services rejecting every token (`401 Invalid token`) in minikube: CoreDNS workaround in
   `docker/keycloak/README.md` until the back team sets `OIDC_JWKS_URL` (reported 2026-10-08).
 - `social` only knows players who went through it (the game registers them at login): a
@@ -148,6 +178,17 @@ From ADR 0023 and 0024, still open:
 4. The final roles × actions matrix, including organisation management.
 5. `OIDC_AUDIENCE` on pre-production `social` (would need an audience mapper).
 6. Services' `OIDC_JWKS_URL` in dev-local (the `401 Invalid token` bug).
+7. `social` refuses the reputation changes of a staff account without a profile
+   (`reputation_events.actor_id` → `player_profiles`): accepting or dismissing a report,
+   adjusting reputation fail with a 500 until the account called `GET /api/me` once. And
+   `updateReportStatus` is not atomic: the report is closed and logged before the reputation
+   change fails (seen 2026-10-08 on report 5: dismissed, refund missing).
+8. `social` does not check the escalation level against the role: a `moderator` may act on a
+   report escalated to `admin` or `supervisor`, which its README's "instances supérieures" and
+   the system reports opened at `admin` suggest it should not. The panel enforces it meanwhile.
+9. `social`'s OpenAPI differs from its code (the panel follows the code): lifting an already
+   lifted sanction answers 404 (documented 409); escalating above `supervisor` answers 403
+   (documented 409).
 7. Persistence requiring a token one day (then `svc-admin` needs its audience).
 8. Access token lifetime (24 h in pre-production) for the panel's client.
 9. `social`'s OpenAPI says `DELETE /api/admin/sanctions/{id}` answers 409 when already lifted;

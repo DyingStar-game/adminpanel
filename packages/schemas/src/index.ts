@@ -7,3 +7,4 @@ export * from './import';
 export * from './permissions';
 export * from './persistence';
 export * from './relations';
+export * from './reports';

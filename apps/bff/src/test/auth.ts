@@ -1,7 +1,8 @@
 import { vi } from 'vitest';
-import type { AppOptions } from '../app';
+import { SOCIAL_URL } from '@dyingstar-admin/testing';
 import { createAuth, LOGIN_COOKIE, SESSION_COOKIE } from '../auth/auth';
 import type { OidcProvider, OidcTokens } from '../auth/oidc';
+import { createSocialClient, registerStaffInSocial } from '../clients/social';
 import { buildApp } from './harness';
 
 /** Sign-in helpers for BFF tests: a Keycloak stand-in and the whole flow (ADR 0023). */
@@ -43,11 +44,13 @@ export const fakeProvider = (issued: () => OidcTokens = () => tokens()) => {
 
 export const setup = (
   provider = fakeProvider(),
-  options: Partial<Omit<AppOptions, 'definitions' | 'auth'>> = {},
+  options: Omit<NonNullable<Parameters<typeof buildApp>[0]>, 'definitions' | 'auth'> = {},
 ) => {
+  // As in production: staff accounts registered in `social` at sign-in (ADR 0024).
   const auth = createAuth({
     provider: provider.provider,
     clientId: 'dyingstar-admin',
+    onSignIn: registerStaffInSocial(createSocialClient({ baseUrl: SOCIAL_URL, timeoutMs: 1000 })),
   });
   const { app, social } = buildApp({ ...options, auth });
   const call = (path: string, init: RequestInit & { cookie?: string } = {}) =>

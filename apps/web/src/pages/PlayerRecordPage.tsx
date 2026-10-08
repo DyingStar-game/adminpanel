@@ -107,7 +107,7 @@ export function PlayerRecordPage({
       actions={
         <div className="flex flex-wrap gap-2">
           {actionable && can('social.moderate') && (
-            <Button size="sm" onClick={() => setDialog({ kind: 'sanction' })}>
+            <Button variant="outline" size="sm" onClick={() => setDialog({ kind: 'sanction' })}>
               <GavelIcon />
               {t('moderation.actions.sanction')}
             </Button>

@@ -180,6 +180,7 @@ export function SanctionDialog({ playerId, playerName, onClose }: SanctionDialog
             ) : (
               <Button
                 type="button"
+                variant="outline"
                 disabled={!form.formState.isValid}
                 onClick={() => setConfirming(true)}
               >

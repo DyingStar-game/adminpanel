@@ -13,6 +13,10 @@ export const Permission = {
   socialSanctionSevere: 'social.sanctionSevere',
   /** Reputation adjustments. */
   socialReputation: 'social.reputation',
+  /** Acting on reports escalated to the `admin` level (the panel's rule, ADR 0024). */
+  socialReportsAdmin: 'social.reportsAdmin',
+  /** Acting on reports escalated to the `supervisor` level. */
+  socialReportsSupervisor: 'social.reportsSupervisor',
 } as const;
 export type Permission = (typeof Permission)[keyof typeof Permission];
 
@@ -33,6 +37,17 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
   [Permission.socialModerate]: ['moderator', 'admin', 'supervisor'],
   [Permission.socialSanctionSevere]: ['admin', 'supervisor'],
   [Permission.socialReputation]: ['admin', 'supervisor'],
+  // The panel's own rule, stricter than `social` (which lets any moderator act at any level):
+  // a report is handled at its escalation level (ADR 0024 › Update 2026-10-08).
+  [Permission.socialReportsAdmin]: ['admin', 'supervisor'],
+  [Permission.socialReportsSupervisor]: ['supervisor'],
+};
+
+/** Permission needed to change the status of, or escalate, a report at each escalation level. */
+export const REPORT_LEVEL_PERMISSION: Record<'moderator' | 'admin' | 'supervisor', Permission> = {
+  moderator: Permission.socialModerate,
+  admin: Permission.socialReportsAdmin,
+  supervisor: Permission.socialReportsSupervisor,
 };
 
 export const ALL_PERMISSIONS = Object.values(Permission);

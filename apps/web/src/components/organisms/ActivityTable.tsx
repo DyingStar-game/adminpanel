@@ -6,7 +6,7 @@ import { DataTable } from '@/components/molecules/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { usePlayerNames } from '@/hooks/useModeration';
 import { formatDateTime, shortId } from '@/lib/format';
-import { activityFamily, eventTone } from '@/lib/socialActivity';
+import { activityFamily, activityPlayerId, eventTone } from '@/lib/socialActivity';
 
 interface ActivityTableProps {
   entries: ActivityEntry[];
@@ -39,7 +39,7 @@ const SHOWN = new Set([
 export function ActivityTable({ entries, onOpenPlayer, onOpenReport }: ActivityTableProps) {
   const { t, i18n } = useTranslation();
   const names = usePlayerNames(
-    entries.flatMap((e) => [asText(e.details?.playerId), asText(e.details?.by)]),
+    entries.flatMap((e) => [activityPlayerId(e.details), asText(e.details?.by)]),
   );
 
   const player = (id: string) => (
@@ -75,7 +75,7 @@ export function ActivityTable({ entries, onOpenPlayer, onOpenReport }: ActivityT
   const details = (entry: ActivityEntry) => {
     const d = entry.details ?? {};
     const type = asText(d.type);
-    const playerId = asText(d.playerId) ?? (d.targetType === 'player' ? asText(d.targetId) : null);
+    const playerId = activityPlayerId(d);
     const by = asText(d.by);
     const name = asText(d.name);
     const rank = asText(d.rank);

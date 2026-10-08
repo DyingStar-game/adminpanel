@@ -13,8 +13,11 @@ import {
   zListSanctionsResponse,
   zRevokeSanctionResponse,
   zSearchProfilesResponse,
+  zEscalateReportResponse,
+  zGetMeResponse,
+  zUpdateReportStatusResponse,
 } from '@dyingstar-admin/contracts/social';
-import { createSocialMock, SOCIAL_URL, socialIds } from './socialMock';
+import { createSocialDataset, createSocialMock, SOCIAL_URL, socialIds } from './socialMock';
 
 const mock = createSocialMock();
 const server = setupServer(...mock.handlers);
@@ -94,5 +97,45 @@ describe('social mock', () => {
     });
     expect(zAdjustReputationResponse.safeParse(adjusted.body).error).toBeUndefined();
     expect(adjusted.body).toMatchObject({ reputation: -2 });
+  });
+
+  it('moves reports through the workflow as social does', async () => {
+    const send = async (method: string, path: string, body?: unknown) => {
+      const res = await fetch(`${SOCIAL_URL}/api/admin${path}`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      });
+      return { status: res.status, body: (await res.json()) as unknown };
+    };
+    const griefer = () => mock.data.players.find((p) => p.playerId === socialIds.griefer);
+    const before = griefer()?.reputation ?? 0;
+
+    // Report 2 (reviewing, raised by the system, at the admin level).
+    const escalated = await send('POST', '/reports/2/escalate');
+    expect(zEscalateReportResponse.safeParse(escalated.body).error).toBeUndefined();
+    expect(escalated.body).toMatchObject({ status: 'open', escalation: 'supervisor' });
+    expect((await send('POST', '/reports/2/escalate')).status).toBe(403);
+
+    const dismissed = await send('PATCH', '/reports/2', { status: 'dismissed', note: 'Bot' });
+    expect(zUpdateReportStatusResponse.safeParse(dismissed.body).error).toBeUndefined();
+    // No reporter, no refund: the system's reports cost nothing (`social` checks both ids).
+    expect(griefer()?.reputation).toBe(before);
+    expect((await send('PATCH', '/reports/2', { status: 'resolved' })).status).toBe(409);
+    expect(mock.data.log.at(-1)).toMatchObject({
+      action: 'report_dismissed',
+      details: { reportId: 2, note: 'Bot' },
+    });
+  });
+
+  it("creates the caller's profile on their first GET /api/me, as social does", async () => {
+    const fresh = createSocialMock(
+      { ...createSocialDataset(), players: [] },
+      'http://fresh.social.test',
+    );
+    server.use(...fresh.handlers);
+    const res = await fetch('http://fresh.social.test/api/me');
+    expect(zGetMeResponse.safeParse(await res.json()).error).toBeUndefined();
+    expect(fresh.data.players.map((p) => p.playerId)).toEqual([socialIds.moderator]);
   });
 });

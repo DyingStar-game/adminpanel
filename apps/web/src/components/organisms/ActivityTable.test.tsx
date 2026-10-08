@@ -8,6 +8,13 @@ import { ActivityTable } from './ActivityTable';
 
 const entries = createSocialDataset().activity;
 
+/** The table row of an event, by its badge. */
+function row(event: string) {
+  const found = screen.getAllByRole('row').find((tr) => within(tr).queryByText(event));
+  if (!found) throw new Error(`No row for ${event}`);
+  return found;
+}
+
 describe('ActivityTable', () => {
   it("shows social's events in words, with their details", async () => {
     useInProcessBff();
@@ -22,8 +29,21 @@ describe('ActivityTable', () => {
       'Sanction receivedMute',
     );
     expect(within(table).getByText('rank Pilot')).toBeInTheDocument();
-    await userEvent.click(await within(table).findByRole('button', { name: 'ddurieux' }));
+    await userEvent.click(
+      await within(row('Friend added')).findByRole('button', { name: 'ddurieux' }),
+    );
     expect(onOpenPlayer).toHaveBeenCalledWith(socialIds.reporter);
+  });
+
+  it('names the player a report was filed against, not their id', async () => {
+    useInProcessBff();
+    renderWithProviders(
+      <ActivityTable entries={entries} onOpenPlayer={vi.fn()} onOpenReport={vi.fn()} />,
+    );
+    expect(
+      await within(row('Report filed')).findByRole('button', { name: 'ddurieux' }),
+    ).toBeInTheDocument();
+    expect(within(row('Report filed')).getByText('Report #3')).toBeInTheDocument();
   });
 
   it("keeps the game's own types as they are, with their details", () => {

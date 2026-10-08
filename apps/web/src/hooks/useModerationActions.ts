@@ -1,9 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   zAdjustReputationResponse,
+  zEscalateReportResponse,
   zIssueSanctionResponse,
   zRevokeSanctionResponse,
+  zUpdateReportStatusResponse,
   type SanctionType,
+  type UpdateReportStatusData,
 } from '@dyingstar-admin/contracts/social';
 import { apiSend } from '@/lib/api';
 
@@ -53,6 +56,29 @@ export function useAdjustReputation() {
         body,
         schema: zAdjustReputationResponse,
       }),
+    onSuccess: afterAction,
+  });
+}
+
+/** Moves an open report on: under review, upheld (`resolved`) or dismissed, with a note. */
+export function useUpdateReportStatus() {
+  const afterAction = useAfterAction();
+  return useMutation({
+    mutationFn: ({ id, ...body }: { id: number } & UpdateReportStatusData['body']) =>
+      apiSend('PATCH', `/api/social/reports/${id}`, {
+        body,
+        schema: zUpdateReportStatusResponse,
+      }),
+    onSuccess: afterAction,
+  });
+}
+
+/** Escalates an open report one level (moderator → admin → supervisor). */
+export function useEscalateReport() {
+  const afterAction = useAfterAction();
+  return useMutation({
+    mutationFn: (id: number) =>
+      apiSend('POST', `/api/social/reports/${id}/escalate`, { schema: zEscalateReportResponse }),
     onSuccess: afterAction,
   });
 }

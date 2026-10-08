@@ -115,6 +115,32 @@ With the moderation module built, `moderator`, `admin` and `supervisor` open the
 (they hold `social.*` permissions), seeing moderation only; persistence still needs a
 `persistence:*` role (ADR 0023).
 
+### Update (2026-10-08): report actions by escalation level, staff known to `social`
+
+Decided by the maintainer after step 3's report actions were tried on minikube:
+
+- **A report is handled at its escalation level.** Changing its status or escalating it needs a
+  moderation role at least equal to its level: `moderator` for a `moderator` report, `admin`
+  for an `admin` one, `supervisor` for a `supervisor` one. `social`'s README describes
+  escalation as going to "instances supérieures", and `social` opens its own reports at the
+  `admin` level, but its code lets any `moderator` act at any level: the panel enforces the
+  rule (permissions `social.reportsAdmin`, `social.reportsSupervisor`; the BFF reads the
+  report's level before forwarding, the SPA shows the actions only to those who may), and the
+  back team is asked to enforce it in `social`. The panel stays allowed to grant less than
+  `social` (ADR 0023).
+- **A report is claimed before anything else.** An open report offers one action, "Claim"
+  (status `reviewing`); only then may it be confirmed (`resolved`), dismissed or escalated.
+  Escalating sends it back to `open`, to be claimed at its new level. `social` accepts any
+  order: the panel enforces this one (`reportActions` in `packages/schemas`, checked by the BFF
+  before forwarding, followed by the SPA).
+- **Staff accounts are registered in `social` at sign-in.** `social` requires the author of a
+  reputation change to have a profile (`reputation_events.actor_id`), which it only creates on
+  an account's first `GET /api/me`: a moderator who never played could not accept or dismiss a
+  report, nor adjust reputation. After a sign-in holding `social.moderate`, the BFF calls
+  `GET /api/me` with the user's token, best effort (a failure is logged, the sign-in goes on).
+  Staff accounts thus get a player profile in `social` (searchable, with a reputation): they are
+  players too (realm role `player`). Asked of the back team: accept an author without a profile.
+
 ## Consequences
 
 - One more workspace package (`packages/contracts`) and a code generator in the toolchain; the

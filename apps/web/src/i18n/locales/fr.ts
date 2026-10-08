@@ -518,9 +518,9 @@ export const fr: Translations = {
       actions: {
         sanction_issued: 'Sanction donnée',
         sanction_revoked: 'Sanction levée',
-        report_reviewing: 'Signalement en cours d’examen',
-        report_resolved: 'Signalement résolu',
-        report_dismissed: 'Signalement classé',
+        report_reviewing: 'Signalement pris en charge',
+        report_resolved: 'Signalement confirmé',
+        report_dismissed: 'Signalement classé sans suite',
         report_escalated: 'Signalement escaladé',
         auto_escalated: 'Escalade automatique',
       },
@@ -560,8 +560,8 @@ export const fr: Translations = {
     reportStatus: {
       open: 'Ouvert',
       reviewing: 'En cours',
-      resolved: 'Résolu',
-      dismissed: 'Classé',
+      resolved: 'Confirmé',
+      dismissed: 'Sans suite',
     },
     escalation: { moderator: 'Modérateur', admin: 'Admin', supervisor: 'Superviseur' },
     reason: {
@@ -616,9 +616,9 @@ export const fr: Translations = {
         sanction_received: 'Sanction reçue',
         sanction_revoked: 'Sanction levée',
         report_filed: 'Signalement déposé',
-        report_reviewing: 'Son signalement en examen',
-        report_resolved: 'Son signalement résolu',
-        report_dismissed: 'Son signalement classé',
+        report_reviewing: 'Son signalement pris en charge',
+        report_resolved: 'Son signalement confirmé',
+        report_dismissed: 'Son signalement classé sans suite',
         reputation_rehabilitated: 'Réputation rétablie',
         friend_request_sent: 'Demande d’ami envoyée',
         friend_request_received: 'Demande d’ami reçue',
@@ -659,6 +659,35 @@ export const fr: Translations = {
       noMessage: 'Aucun message.',
       resolution: 'Résolution',
       close: 'Fermer le signalement',
+      review: 'Prendre en charge',
+      uphold: 'Confirmer',
+      dismiss: 'Classer sans suite',
+      escalate: 'Escalader',
+      note: 'Note',
+      noteHint: 'Facultative ; conservée avec le signalement et dans le journal de modération.',
+      moveTitle: {
+        reviewing: 'Prendre en charge le signalement n° {{id}}',
+        resolved: 'Confirmer le signalement n° {{id}}',
+        dismissed: 'Classer sans suite le signalement n° {{id}}',
+      },
+      moveHint: {
+        reviewing:
+          'Vous prenez le signalement en charge : il passe En cours, puis vous pourrez le confirmer, le classer sans suite ou l’escalader.',
+        resolved: 'Le signalement est fondé et clos définitivement. Son auteur le voit confirmé.',
+        dismissed:
+          'Le signalement est infondé et clos définitivement. Son auteur le voit classé sans suite.',
+      },
+      reputation: {
+        resolved: '{{name}} perd à nouveau de la réputation.',
+        dismissed: '{{name}} récupère la réputation que le signalement lui a coûtée.',
+      },
+      moveConfirm: 'Signalement n° {{id}} contre {{name}} : {{status}}.',
+      moved: 'Signalement n° {{id}} : {{status}}.',
+      escalateTitle: 'Escalader le signalement n° {{id}} ?',
+      escalateHint: 'De {{from}} à {{to}} : il redevient Ouvert, à prendre en charge à ce niveau.',
+      escalated: 'Signalement n° {{id}} escaladé à {{to}}.',
+      otherLevel:
+        'Escaladé au niveau {{level}} : seul ce rôle ou un rôle supérieur peut le traiter.',
     },
     player: {
       title: 'Fiche joueur',

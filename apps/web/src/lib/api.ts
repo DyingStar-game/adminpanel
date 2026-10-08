@@ -60,7 +60,7 @@ export async function apiGet<T extends z.ZodType>(
 
 /** Sends a write to the BFF; validates the response when a schema is given (none for 204). */
 export async function apiSend<T extends z.ZodType>(
-  method: 'POST' | 'PUT' | 'DELETE',
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   path: string,
   { body, schema, ...options }: ApiOptions & { body?: unknown; schema?: T },
 ): Promise<z.infer<T> | null> {

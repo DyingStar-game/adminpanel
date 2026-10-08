@@ -54,8 +54,8 @@ describe('PlayerRecordPage (ADR 0024)', () => {
     expect(within(activity).getByText('Mute')).toBeInTheDocument();
     expect(within(activity).getByText('Rank changed')).toBeInTheDocument();
     expect(within(activity).getByText('rank Pilot')).toBeInTheDocument();
-    // The friend by name, once their profile is read.
-    expect(await within(activity).findByRole('button', { name: 'ddurieux' })).toBeInTheDocument();
+    // The friend and the reported player by name, once their profile is read.
+    expect(await within(activity).findAllByRole('button', { name: 'ddurieux' })).toHaveLength(2);
     // A type of the game's own, shown as is with its details.
     expect(within(activity).getByText('mission_completed')).toBeInTheDocument();
     expect(within(activity).getByText('missionId: m-7')).toBeInTheDocument();

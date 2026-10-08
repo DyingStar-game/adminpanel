@@ -144,6 +144,7 @@ export function ReputationDialog({
             ) : (
               <Button
                 type="button"
+                variant="outline"
                 disabled={!form.formState.isValid}
                 onClick={() => setConfirming(true)}
               >

@@ -195,7 +195,10 @@ Realm roles, each implying the ones before it. The persistence roles open nothin
 | Action (route) | `moderator` | `admin` ¹ | `supervisor` ¹ |
 |---|---|---|---|
 | Community stats, moderation log (`GET /stats`, `/log`) | ✅ | ✅ | ✅ |
-| Report queue, report detail, change status, escalate (`/reports…`) | ✅ | ✅ | ✅ |
+| Report queue, report detail (`GET /reports…`) | ✅ | ✅ | ✅ |
+| Change the status of, or escalate, a report at the `moderator` level (`PATCH /reports/:id`, `POST …/escalate`) | ✅ | ✅ | ✅ |
+| Same, on a report at the `admin` level | ❌ ² | ✅ | ✅ |
+| Same, on a report at the `supervisor` level | ❌ ² | ❌ ² | ✅ |
 | Player moderation sheet (`GET /players/:id`) | ✅ | ✅ | ✅ |
 | Sanction: warning or mute (`POST /players/:id/sanctions`) | ✅ | ✅ | ✅ |
 | Sanction: suspension or ban (same route) | ❌ | ✅ | ✅ |
@@ -203,7 +206,8 @@ Realm roles, each implying the ones before it. The persistence roles open nothin
 | Sanctions list, lift a sanction (`GET /sanctions`, `DELETE /sanctions/:id`) | ✅ | ✅ | ✅ |
 
 These rows follow `social/src/routes/admin.routes.ts` as merged; the panel must not grant more
-than `social` does. Whether `supervisor` has rights of its own (beyond `admin`) is not visible in
+than `social` does. ² Refused by the panel, not by `social`, which lets any `moderator` act at
+any level (ADR 0024 › Update 2026-10-08, raised with the back team). Whether `supervisor` has rights of its own (beyond `admin`) is not visible in
 the code yet.
 
 #### Social — management (`/api/internal/*`, sent as `svc-admin`, checked by the panel only)

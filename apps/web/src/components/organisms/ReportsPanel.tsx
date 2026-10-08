@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import { XIcon } from 'lucide-react';
 import type { EscalationLevel, ReportStatus, ReportView } from '@dyingstar-admin/contracts/social';
 import { Chip } from '@/components/atoms/Chip';
 import { DataTable } from '@/components/molecules/DataTable';
@@ -7,11 +6,11 @@ import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { Pagination } from '@/components/molecules/Pagination';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { useReport, useReports } from '@/hooks/useModeration';
 import { formatDateTime } from '@/lib/format';
 import { MODERATION_PAGE_SIZE, type ModerationSearch } from '@/lib/moderationSearch';
 import { moderationErrorKey } from '@/lib/moderationErrors';
+import { ReportDetail } from './ReportDetail';
 
 const STATUSES: ReportStatus[] = ['open', 'reviewing', 'resolved', 'dismissed'];
 const LEVELS: EscalationLevel[] = ['moderator', 'admin', 'supervisor'];
@@ -23,7 +22,7 @@ interface ReportsPanelProps {
   onOpenPlayer: (id: string) => void;
 }
 
-/** Report queue with its filters, and the opened report (ADR 0024, reading). */
+/** Report queue with its filters, and the opened report with its actions (ADR 0024). */
 export function ReportsPanel({ search, onSearchChange, onOpenPlayer }: ReportsPanelProps) {
   const { t, i18n } = useTranslation();
   const reports = useReports({ status: search.status, escalation: search.escalation }, search.page);
@@ -142,50 +141,11 @@ export function ReportsPanel({ search, onSearchChange, onOpenPlayer }: ReportsPa
         />
       )}
       {opened.data && (
-        <section
-          aria-label={t('moderation.report.title', { id: opened.data.id })}
-          className="flex flex-col gap-3 rounded-lg border p-4"
-        >
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold">
-              {t('moderation.report.title', { id: opened.data.id })}
-            </h2>
-            <Badge variant="outline">{statusLabel(opened.data.status)}</Badge>
-            <span className="text-xs text-fg-3">{levelLabel(opened.data.escalation)}</span>
-            <span className="flex-1" />
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              aria-label={t('moderation.report.close')}
-              onClick={() => onSearchChange({ ...search, report: undefined })}
-            >
-              <XIcon />
-            </Button>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            {reasonLabel(opened.data.reason)} ·{' '}
-            {formatDateTime(opened.data.createdAt, i18n.language)} ·{' '}
-            {t('moderation.columns.target')}{' '}
-            {name(opened.data.targetPlayerId, opened.data.targetName)}
-            {t('moderation.columns.reporter')}{' '}
-            {name(opened.data.reporterId, opened.data.reporterName)}
-          </div>
-          <div className="flex flex-col gap-1">
-            <span className="text-xs text-fg-3">{t('moderation.report.message')}</span>
-            <p className="text-sm whitespace-pre-wrap">
-              {opened.data.message ?? t('moderation.report.noMessage')}
-            </p>
-          </div>
-          {opened.data.resolvedAt && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-fg-3">{t('moderation.report.resolution')}</span>
-              <p className="text-sm">
-                {formatDateTime(opened.data.resolvedAt, i18n.language)}
-                {opened.data.resolutionNote && ` — ${opened.data.resolutionNote}`}
-              </p>
-            </div>
-          )}
-        </section>
+        <ReportDetail
+          report={opened.data}
+          player={name}
+          onClose={() => onSearchChange({ ...search, report: undefined })}
+        />
       )}
     </div>
   );

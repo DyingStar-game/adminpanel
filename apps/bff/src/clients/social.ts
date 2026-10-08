@@ -1,9 +1,11 @@
 import type { z } from 'zod';
-import { ErrorCode } from '@dyingstar-admin/schemas';
+import { ErrorCode, Permission } from '@dyingstar-admin/schemas';
 import {
   zAdjustReputationResponse,
   zError,
+  zEscalateReportResponse,
   zGetCommunityStatsResponse,
+  zGetMeResponse,
   zGetModerationLogResponse,
   zGetPlayerRecordResponse,
   zGetProfileResponse,
@@ -13,9 +15,12 @@ import {
   zListSanctionsResponse,
   zRevokeSanctionResponse,
   zSearchProfilesResponse,
+  zUpdateReportStatusResponse,
   type AdjustReputationData,
   type IssueSanctionData,
+  type UpdateReportStatusData,
 } from '@dyingstar-admin/contracts/social';
+import type { Session } from '../auth/auth';
 import { ApiError } from '../lib/errors';
 
 export interface SocialClientOptions {
@@ -54,7 +59,7 @@ export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) 
 
   /** One call to `social`: the user's token, a JSON body when given, the answer validated. */
   async function call<T extends z.ZodType>(
-    method: 'GET' | 'POST' | 'DELETE',
+    method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
     token: string | undefined,
     path: string,
     schema: T,
@@ -145,6 +150,23 @@ export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) 
           body,
         },
       ),
+    /**
+     * Moves an open report on (`reviewing`, `resolved`, `dismissed`) with an optional note;
+     * `social` answers 409 once it is closed.
+     */
+    updateReportStatus: (
+      token: string | undefined,
+      id: number,
+      body: UpdateReportStatusData['body'],
+    ) => call('PATCH', token, `/admin/reports/${id}`, zUpdateReportStatusResponse, { body }),
+    /**
+     * Escalates an open report one level (moderator → admin → supervisor), back to `open`;
+     * `social` answers 403 at the top level (its OpenAPI says 409), 409 once it is closed.
+     */
+    escalateReport: (token: string | undefined, id: number) =>
+      call('POST', token, `/admin/reports/${id}/escalate`, zEscalateReportResponse),
+    /** The user's own profile, which `social` creates on the first call (a player route). */
+    me: (token: string | undefined) => get(token, '/me', zGetMeResponse),
     /** Profiles by display name (a player route: `social` has no admin listing, ADR 0024). */
     profiles: (token: string | undefined, query: Query) =>
       get(token, '/profiles', zSearchProfilesResponse, query),
@@ -152,3 +174,14 @@ export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) 
 }
 
 export type SocialClient = ReturnType<typeof createSocialClient>;
+
+/**
+ * Sign-in hook registering staff accounts in `social` (ADR 0024 › Update 2026-10-08): it refuses
+ * the reputation changes of an author without a profile, and creates the profile on the
+ * account's first `GET /api/me` only.
+ */
+export const registerStaffInSocial = (social: SocialClient) => async (session: Session) => {
+  if (session.permissions.includes(Permission.socialModerate)) {
+    await social.me(session.tokens.accessToken);
+  }
+};

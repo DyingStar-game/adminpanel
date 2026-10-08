@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Permission, permissionsOf } from './permissions';
+import { Permission, permissionsOf, REPORT_LEVEL_PERMISSION } from './permissions';
 
 describe('permissionsOf (interim matrix, ADR 0023)', () => {
   it('opens nothing to a player', () => {
@@ -38,12 +38,28 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
 
   it("mirrors social's moderation roles (ADR 0024)", () => {
     expect(permissionsOf(['moderator'])).toEqual([Permission.socialModerate]);
-    for (const role of ['admin', 'supervisor']) {
-      expect(permissionsOf([role])).toEqual([
-        Permission.socialModerate,
-        Permission.socialSanctionSevere,
-        Permission.socialReputation,
-      ]);
-    }
+    expect(permissionsOf(['admin'])).toEqual([
+      Permission.socialModerate,
+      Permission.socialSanctionSevere,
+      Permission.socialReputation,
+      Permission.socialReportsAdmin,
+    ]);
+    expect(permissionsOf(['supervisor'])).toEqual([
+      Permission.socialModerate,
+      Permission.socialSanctionSevere,
+      Permission.socialReputation,
+      Permission.socialReportsAdmin,
+      Permission.socialReportsSupervisor,
+    ]);
+  });
+
+  it('handles a report at its escalation level, or above', () => {
+    const handles = (role: string) =>
+      (['moderator', 'admin', 'supervisor'] as const).filter((level) =>
+        permissionsOf([role]).includes(REPORT_LEVEL_PERMISSION[level]),
+      );
+    expect(handles('moderator')).toEqual(['moderator']);
+    expect(handles('admin')).toEqual(['moderator', 'admin']);
+    expect(handles('supervisor')).toEqual(['moderator', 'admin', 'supervisor']);
   });
 });

@@ -29,6 +29,8 @@ export interface AuthOptions {
   publicUrl?: string | undefined;
   /** Idle lifetime of a BFF session. */
   sessionTtlMs?: number;
+  /** Run after each sign-in, best effort: a failure is logged, the sign-in goes on. */
+  onSignIn?: ((session: Session) => Promise<unknown>) | undefined;
 }
 
 export interface Session {
@@ -72,6 +74,7 @@ export function createAuth({
   clientId,
   publicUrl,
   sessionTtlMs = 12 * 60 * 60 * 1000,
+  onSignIn,
 }: AuthOptions) {
   const sessions = new LRUCache<string, Session>({
     max: 5000,
@@ -176,6 +179,9 @@ export function createAuth({
       const id = randomId();
       sessions.set(id, session);
       setCookie(c, SESSION_COOKIE, id, cookieOptions(c));
+      await onSignIn?.(session).catch((error: unknown) => {
+        console.error('After sign-in:', error);
+      });
       return c.redirect(pending.returnTo);
     })
     .post('/logout', async (c) => {
