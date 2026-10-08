@@ -8,7 +8,9 @@ import { AppShell } from '@/components/templates/AppShell';
 import { Sidebar, type NavId } from '@/components/organisms/Sidebar';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { UserMenu } from '@/components/molecules/UserMenu';
+import { useCan } from '@/hooks/useCan';
 import { useGoToItem } from '@/hooks/useGoToItem';
 import { signOut, useSession } from '@/hooks/useSession';
 import { ExplorerSearchSchema, searchForItem } from '@/lib/explorerSearch';
@@ -34,6 +36,7 @@ function RootLayout() {
   const expand = useExplorerTree((s) => s.expand);
   const location = useRouterState({ select: (s) => s.location });
   const { me } = useSession();
+  const can = useCan();
 
   // The API has no name search (ADR 0007): only full UUIDs can be opened.
   const search = async (query: string) => {
@@ -50,8 +53,15 @@ function RootLayout() {
     void navigate({ to: '/explorer', search: searchForItem(item) });
   };
 
-  // Every view of lot 1 is part of the persistence explorer, except the import.
-  const activeNav: NavId = location.pathname.startsWith('/import') ? 'import' : 'explorer';
+  // Section of the page on screen; every other view belongs to the persistence explorer.
+  const activeNav: NavId = location.pathname.startsWith('/import')
+    ? 'import'
+    : location.pathname.startsWith('/moderation')
+      ? 'moderation'
+      : 'explorer';
+  // Pages of a service the account may not open say so instead of failing call by call.
+  const allowed = activeNav === 'moderation' ? can('social.moderate') : can('persistence.read');
+  const deniedKey = activeNav === 'moderation' ? 'moderation.forbidden' : 'session.noReadRight';
 
   /** Level on screen: the item being viewed, or the listed explorer level. */
   const levelOnScreen = () => {
@@ -141,9 +151,13 @@ function RootLayout() {
           <Sidebar
             active={activeNav}
             onNavigate={(id) =>
-              id === 'import' ? openImport() : void navigate({ to: '/explorer', search: ROOTS })
+              id === 'import'
+                ? openImport()
+                : id === 'moderation'
+                  ? void navigate({ to: '/moderation', search: { tab: 'overview' } })
+                  : void navigate({ to: '/explorer', search: ROOTS })
             }
-            onHome={() => void navigate({ to: '/explorer', search: ROOTS })}
+            onHome={() => void navigate({ to: '/' })}
             version={APP_VERSION}
           />
         }
@@ -171,7 +185,7 @@ function RootLayout() {
           />
         }
       >
-        <Outlet />
+        {allowed ? <Outlet /> : <ServiceNotice message={t(deniedKey)} />}
       </AppShell>
       <ItemActionsHost onCreated={afterCreate} onDeleted={afterDelete} />
       {/* Dark only, like the first panel. */}

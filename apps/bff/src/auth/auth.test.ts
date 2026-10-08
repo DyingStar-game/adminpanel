@@ -1,84 +1,9 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
 import { MeResponseSchema } from '@dyingstar-admin/schemas';
-import { buildApp } from '../test/harness';
-import {
-  createAuth,
-  LOGIN_COOKIE,
-  persistencePermission,
-  safeReturnTo,
-  SESSION_COOKIE,
-} from './auth';
-import type { OidcProvider, OidcTokens } from './oidc';
-
-const ORIGIN = 'http://localhost:5173';
-
-const tokens = (overrides: Partial<OidcTokens> = {}): OidcTokens => ({
-  accessToken: 'access',
-  refreshToken: 'refresh',
-  idToken: 'id-token',
-  expiresAt: Date.now() + 300_000,
-  user: { id: 'user-1', username: 'dev-editor', name: 'Dev Editor' },
-  realmRoles: ['player'],
-  clientRoles: { 'dyingstar-admin': ['persistence:write'] },
-  ...overrides,
-});
-
-/** A Keycloak stand-in recording what the BFF asks. */
-const fakeProvider = (issued: () => OidcTokens = () => tokens()) => {
-  const calls = { authorization: [] as Record<string, string>[], exchange: [] as unknown[] };
-  const provider: OidcProvider = {
-    authorizationUrl: async (input) => {
-      calls.authorization.push({ ...input });
-      const url = new URL('http://kc.test/auth');
-      url.searchParams.set('redirect_uri', input.redirectUri);
-      url.searchParams.set('state', input.state);
-      return url;
-    },
-    exchange: vi.fn(async (callbackUrl: URL, checks) => {
-      calls.exchange.push({ callbackUrl: callbackUrl.href, checks });
-      return issued();
-    }),
-    refresh: vi.fn(async () => issued()),
-    endSessionUrl: async ({ idToken, postLogoutRedirectUri }) =>
-      new URL(`http://kc.test/logout?id_token_hint=${idToken}&post=${postLogoutRedirectUri}`),
-  };
-  return { provider, calls };
-};
-
-const setup = (provider = fakeProvider()) => {
-  const auth = createAuth({
-    provider: provider.provider,
-    clientId: 'dyingstar-admin',
-  });
-  const { app } = buildApp({ auth });
-  const call = (path: string, init: RequestInit & { cookie?: string } = {}) =>
-    app.request(`${ORIGIN}${path}`, {
-      ...init,
-      headers: {
-        'X-Server-Id': 'universe-testing',
-        ...(init.cookie ? { Cookie: init.cookie } : {}),
-        ...init.headers,
-      },
-    });
-  return { ...provider, call };
-};
-
-const cookieValue = (res: Response, name: string) =>
-  res.headers
-    .getSetCookie()
-    .find((c) => c.startsWith(`${name}=`))
-    ?.split(';')[0];
-
-/** Runs the whole sign-in and returns the session cookie. */
-const signIn = async (ctx: ReturnType<typeof setup>, returnTo = '/explorer') => {
-  const login = await ctx.call(`/auth/login?returnTo=${encodeURIComponent(returnTo)}`);
-  const state = new URL(login.headers.get('Location') ?? '').searchParams.get('state');
-  const callback = await ctx.call(`/auth/callback?code=abc&state=${state}`, {
-    cookie: cookieValue(login, LOGIN_COOKIE) ?? '',
-  });
-  return { callback, cookie: cookieValue(callback, SESSION_COOKIE) ?? '' };
-};
+import { cookieValue, fakeProvider, ORIGIN, setup, signIn, tokens } from '../test/auth';
+import { LOGIN_COOKIE, persistencePermission, safeReturnTo, SESSION_COOKIE } from './auth';
+import type { OidcTokens } from './oidc';
 
 describe('sign-in with Keycloak', () => {
   it('refuses the API without a session, and keeps the healthcheck open', async () => {

@@ -26,8 +26,9 @@ describe('BFF app', () => {
     expect(body).toEqual({
       environment: 'testing',
       servers: [{ id: 'universe-testing', name: 'Universe Testing', environment: 'testing' }],
+      services: ['persistence', 'social'],
     });
-    expect(JSON.stringify(body)).not.toContain('persistence');
+    expect(JSON.stringify(body)).not.toContain('http');
   });
 
   it('returns a JSON 404 for unknown API routes', async () => {

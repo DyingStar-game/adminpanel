@@ -10,8 +10,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@dyingstar-admin/contracts": "workspace:*",
     "@dyingstar-admin/schemas": "workspace:*",
-    "msw": "^2.15.0"
+    "msw": "^2.15.0",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^24.19.0"

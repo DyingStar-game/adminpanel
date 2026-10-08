@@ -2,6 +2,9 @@ pnpm-lock.yaml
 **/dist
 **/coverage
 apps/web/src/routeTree.gen.ts
+# Pinned service contracts and their generated code (ADR 0024), kept as fetched / generated.
+packages/contracts/src/*/openapi.yaml
+packages/contracts/src/*/generated
 docs/design
 # Documentation is formatted by hand (ADR tables); legacy deploy files are rewritten in step 10.
 *.md

@@ -27,5 +27,7 @@ export function useServers() {
     select: setServerId,
     /** The panel's environment: one panel per environment (ADR 0023). */
     environment: query.data?.environment ?? null,
+    /** Game services this panel manages (ADR 0024). */
+    services: query.data?.services ?? [],
   };
 }

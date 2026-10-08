@@ -6,13 +6,20 @@ import {
   type HealthResponse,
   type MeResponse,
 } from '@dyingstar-admin/schemas';
-import { requirePersistencePermission, type Auth, type SessionContext } from './auth/auth';
+import {
+  requirePermission,
+  requirePersistencePermission,
+  type Auth,
+  type SessionContext,
+} from './auth/auth';
+import type { SocialClient } from './clients/social';
 import { toPublicServer, type ServerConfig } from './config/servers';
 import { createPersistenceClient } from './clients/persistence';
 import { ApiError } from './lib/errors';
 import { requireServer } from './middleware/server';
 import { bodiesRoutes } from './routes/bodies';
 import { itemsRoutes } from './routes/items';
+import { socialRoutes } from './routes/social';
 import type { DefinitionsService } from './services/definitions';
 import { createItemsService } from './services/items';
 
@@ -34,6 +41,8 @@ export interface AppOptions {
   auth: Auth | false;
   /** Environment this panel serves; every server belongs to it (`parseServers`). */
   environment?: string;
+  /** `social` of this environment (ADR 0024); unset, its routes answer 404 and the SPA hides it. */
+  social?: SocialClient | undefined;
   servers?: ServerConfig[];
   definitions: DefinitionsService;
   persistenceTimeoutMs?: number;
@@ -46,6 +55,7 @@ export interface AppOptions {
 export function createApp({
   auth,
   environment = 'testing',
+  social,
   servers = [],
   definitions,
   persistenceTimeoutMs = 5000,
@@ -86,7 +96,14 @@ export function createApp({
 
   const api = new Hono<SessionContext>()
     .get('/me', (c) => c.json<MeResponse>(auth ? auth.me(c.var.session) : NO_AUTH_ME))
-    .get('/servers', (c) => c.json({ environment, servers: servers.map(toPublicServer) }))
+    .get('/servers', (c) =>
+      c.json({
+        environment,
+        servers: servers.map(toPublicServer),
+        // Game services this panel manages (ADR 0024): the SPA shows their modules.
+        services: ['persistence', ...(social ? ['social'] : [])],
+      }),
+    )
     .get('/definitions', async (c) => c.json(await definitions.list()))
     .get('/definitions/:type', async (c) => {
       const definition = await definitions.get(c.req.param('type'));
@@ -100,6 +117,10 @@ export function createApp({
   api.route('/items', itemsRoutes);
   api.use('/bodies/*', requirePersistencePermission, requireServer(registry, definitions));
   api.route('/bodies', bodiesRoutes);
+  if (social) {
+    api.use('/social/*', requirePermission('social.moderate'));
+    api.route('/social', socialRoutes(social));
+  }
   app.route('/api', api);
   // Registered after the API routes and before the SPA fallback, so unknown API paths never
   // return index.html.

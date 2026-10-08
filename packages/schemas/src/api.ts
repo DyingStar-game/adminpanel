@@ -17,6 +17,8 @@ export type PublicServer = z.infer<typeof PublicServerSchema>;
 export const ServersResponseSchema = z.object({
   environment: z.string(),
   servers: z.array(PublicServerSchema),
+  /** Game services this panel manages (ADR 0024), e.g. `persistence`, `social`. */
+  services: z.array(z.string()),
 });
 
 /**

@@ -1,8 +1,16 @@
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
-import { createDataset, createPersistenceMock, PERSISTENCE_URL } from '@dyingstar-admin/testing';
+import {
+  createDataset,
+  createPersistenceMock,
+  createSocialMock,
+  PERSISTENCE_URL,
+  SOCIAL_URL,
+  type SocialDataset,
+} from '@dyingstar-admin/testing';
 import type { Item } from '@dyingstar-admin/schemas';
 import { createApp, type AppOptions } from '../app';
+import { createSocialClient } from '../clients/social';
 import { createDefinitionsService } from '../services/definitions';
 
 export const SERVER_ID = 'universe-testing';
@@ -34,12 +42,15 @@ export const githubDefinitionsHandlers = [
   ),
 ];
 
-/** Builds an app wired to a fresh persistence mock; returns both. */
+/** Builds an app wired to fresh persistence and `social` mocks; returns them. */
 export function buildApp(
-  options: { dataset?: Item[] } & Partial<Omit<AppOptions, 'definitions'>> = {},
+  options: { dataset?: Item[]; socialData?: SocialDataset } & Partial<
+    Omit<AppOptions, 'definitions'>
+  > = {},
 ) {
   const persistence = createPersistenceMock(options.dataset ?? createDataset());
-  mswServer.use(...persistence.handlers, ...githubDefinitionsHandlers);
+  const social = createSocialMock(options.socialData);
+  mswServer.use(...persistence.handlers, ...social.handlers, ...githubDefinitionsHandlers);
   const app = createApp({
     auth: false,
     servers: [
@@ -57,6 +68,7 @@ export function buildApp(
       ttlMs: 60_000,
     }),
     readCacheTtlMs: 0,
+    social: createSocialClient({ baseUrl: SOCIAL_URL, timeoutMs: 1000 }),
     ...options,
   });
 
@@ -66,5 +78,5 @@ export function buildApp(
       headers: { 'X-Server-Id': SERVER_ID, 'Content-Type': 'application/json', ...init.headers },
     });
 
-  return { app, persistence, request };
+  return { app, persistence, social, request };
 }

@@ -13,7 +13,9 @@ const servers = [{ id: 'universe-testing', name: 'Universe Testing', environment
 
 const renderTopBar = () => {
   server.use(
-    http.get('*/api/servers', () => HttpResponse.json({ environment: 'testing', servers })),
+    http.get('*/api/servers', () =>
+      HttpResponse.json({ environment: 'testing', servers, services: ['persistence'] }),
+    ),
   );
   const onSearch = vi.fn();
   renderWithProviders(<TopBar crumbs={['Admin', 'Persistence']} onSearch={onSearch} />);

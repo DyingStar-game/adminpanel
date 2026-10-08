@@ -1,0 +1,271 @@
+import { http, HttpResponse } from 'msw';
+import type {
+  ActivityEntry,
+  ModerationLogEntry,
+  PlayerProfile,
+  ReportView,
+  ReputationEvent,
+  Sanction,
+} from '@dyingstar-admin/contracts/social';
+
+/** Base URL used by tests for the mocked `social` service (ADR 0024). */
+export const SOCIAL_URL = 'http://social.test';
+
+/** Player ids of the social fixtures. */
+export const socialIds = {
+  moderator: '5b1d3c1e-0000-4000-8000-0000000000a1',
+  griefer: '5b1d3c1e-0000-4000-8000-0000000000b2',
+  reporter: '5b1d3c1e-0000-4000-8000-0000000000c3',
+} as const;
+
+export interface SocialDataset {
+  players: PlayerProfile[];
+  reports: ReportView[];
+  sanctions: Sanction[];
+  log: ModerationLogEntry[];
+  reputationEvents: ReputationEvent[];
+  activity: ActivityEntry[];
+}
+
+const at = (minutes: number) =>
+  new Date(Date.UTC(2026, 9, 8, 10, 0) + minutes * 60_000).toISOString();
+
+const player = (playerId: string, displayName: string, reputation: number): PlayerProfile => ({
+  playerId,
+  entityType: 'player',
+  displayName,
+  avatarUrl: null,
+  faction: null,
+  biography: null,
+  role: null,
+  reputation,
+  playtimeSeconds: 3600,
+  rpSheet: null,
+  createdAt: at(0),
+  updatedAt: at(0),
+});
+
+/** A small moderation picture: one griefer reported twice, warned, then muted. */
+export function createSocialDataset(): SocialDataset {
+  const { moderator, griefer, reporter } = socialIds;
+  return {
+    players: [
+      player(moderator, 'dev-moderator', 0),
+      player(griefer, 'griefer42', -27),
+      player(reporter, 'ddurieux', 3),
+    ],
+    reports: [
+      {
+        id: 1,
+        reporterId: reporter,
+        targetType: 'player',
+        targetPlayerId: griefer,
+        targetCorporationId: null,
+        reason: 'griefing',
+        message: 'Blew up my truck at the spawn.',
+        status: 'open',
+        escalation: 'moderator',
+        resolvedBy: null,
+        resolutionNote: null,
+        resolvedAt: null,
+        createdAt: at(30),
+        reporterName: 'ddurieux',
+        targetName: 'griefer42',
+      },
+      {
+        id: 2,
+        reporterId: null,
+        targetType: 'player',
+        targetPlayerId: griefer,
+        targetCorporationId: null,
+        reason: 'reputation_threshold',
+        message: null,
+        status: 'reviewing',
+        escalation: 'admin',
+        resolvedBy: null,
+        resolutionNote: null,
+        resolvedAt: null,
+        createdAt: at(40),
+        reporterName: null,
+        targetName: 'griefer42',
+      },
+      {
+        id: 3,
+        reporterId: griefer,
+        targetType: 'player',
+        targetPlayerId: reporter,
+        targetCorporationId: null,
+        reason: 'harassment',
+        message: 'He keeps reporting me.',
+        status: 'dismissed',
+        escalation: 'moderator',
+        resolvedBy: moderator,
+        resolutionNote: 'Retaliation report.',
+        resolvedAt: at(50),
+        createdAt: at(45),
+        reporterName: 'griefer42',
+        targetName: 'ddurieux',
+      },
+    ],
+    sanctions: [
+      {
+        id: 1,
+        playerId: griefer,
+        type: 'warning',
+        reason: 'Griefing at the spawn',
+        automatic: false,
+        issuedBy: moderator,
+        expiresAt: null,
+        revokedAt: null,
+        revokedBy: null,
+        createdAt: at(35),
+      },
+      {
+        id: 2,
+        playerId: griefer,
+        type: 'mute',
+        reason: 'Reputation below -25',
+        automatic: true,
+        issuedBy: null,
+        expiresAt: at(60 * 24 + 40),
+        revokedAt: null,
+        revokedBy: null,
+        createdAt: at(40),
+      },
+    ],
+    log: [
+      {
+        id: 1,
+        actorId: moderator,
+        action: 'sanction.issued',
+        targetPlayerId: griefer,
+        details: { type: 'warning' },
+        createdAt: at(35),
+      },
+      {
+        id: 2,
+        actorId: moderator,
+        action: 'report.dismissed',
+        targetPlayerId: reporter,
+        details: { reportId: 3 },
+        createdAt: at(50),
+      },
+    ],
+    reputationEvents: [
+      {
+        id: 1,
+        playerId: griefer,
+        delta: -25,
+        balance: -27,
+        source: 'report',
+        reason: 'Upheld report',
+        actorId: moderator,
+        details: null,
+        createdAt: at(36),
+      },
+    ],
+    activity: [
+      { id: 1, playerId: griefer, type: 'profile_created', details: null, createdAt: at(0) },
+    ],
+  };
+}
+
+export interface SocialMock {
+  handlers: ReturnType<typeof http.get>[];
+  data: SocialDataset;
+  /** Authorization headers received, newest last. */
+  tokens: (string | null)[];
+}
+
+const page = <T>(items: T[], url: URL) => {
+  const limit = Number(url.searchParams.get('limit') ?? 20);
+  const offset = Number(url.searchParams.get('offset') ?? 0);
+  return { items: items.slice(offset, offset + limit), total: items.length, limit, offset };
+};
+
+const notFound = (message: string) =>
+  HttpResponse.json({ error: 'NOT_FOUND', message, status: 404 }, { status: 404 });
+
+/**
+ * MSW handlers reproducing `social`'s moderation API (`/api/admin/*`, read routes): filters,
+ * limit / offset pages, `{ error, message, status }` bodies. Roles are not checked here.
+ */
+export function createSocialMock(
+  data: SocialDataset = createSocialDataset(),
+  baseUrl: string = SOCIAL_URL,
+): SocialMock {
+  const tokens: (string | null)[] = [];
+  const api = `${baseUrl}/api/admin`;
+  const seen = (request: Request) => tokens.push(request.headers.get('Authorization'));
+  const newestFirst = <T extends { createdAt: string }>(items: T[]) =>
+    [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+  const handlers = [
+    http.get(`${api}/stats`, ({ request }) => {
+      seen(request);
+      const active = data.sanctions.filter((s) => !s.revokedAt);
+      const reports: Record<string, number> = {};
+      for (const r of data.reports) reports[r.status] = (reports[r.status] ?? 0) + 1;
+      return HttpResponse.json({
+        players: { total: data.players.length, online: 0 },
+        corporations: { total: 0, top: [] },
+        reports,
+        sanctions: { active: active.length },
+        activityLast24h: data.activity.length,
+        mostReported: [{ playerId: socialIds.griefer, reports: 2 }],
+        lowestReputation: [...data.players]
+          .sort((a, b) => a.reputation - b.reputation)
+          .slice(0, 5)
+          .map(({ playerId, displayName, reputation }) => ({ playerId, displayName, reputation })),
+      });
+    }),
+    http.get(`${api}/log`, ({ request }) => {
+      seen(request);
+      return HttpResponse.json(page(newestFirst(data.log), new URL(request.url)));
+    }),
+    http.get(`${api}/reports`, ({ request }) => {
+      seen(request);
+      const url = new URL(request.url);
+      const status = url.searchParams.get('status');
+      const escalation = url.searchParams.get('escalation');
+      const target = url.searchParams.get('targetPlayerId');
+      const items = data.reports.filter(
+        (r) =>
+          (!status || r.status === status) &&
+          (!escalation || r.escalation === escalation) &&
+          (!target || r.targetPlayerId === target),
+      );
+      return HttpResponse.json(page(newestFirst(items), url));
+    }),
+    http.get(`${api}/reports/:id`, ({ request, params }) => {
+      seen(request);
+      const report = data.reports.find((r) => r.id === Number(params.id));
+      return report ? HttpResponse.json(report) : notFound(`Report ${String(params.id)} not found`);
+    }),
+    http.get(`${api}/players/:playerId`, ({ request, params }) => {
+      seen(request);
+      const id = String(params.playerId);
+      const profile = data.players.find((p) => p.playerId === id);
+      if (!profile) return notFound(`Player ${id} not found`);
+      return HttpResponse.json({
+        ...profile,
+        reputationEvents: data.reputationEvents.filter((e) => e.playerId === id),
+        sanctions: data.sanctions.filter((s) => s.playerId === id),
+        reports: data.reports.filter((r) => r.targetPlayerId === id),
+        activity: data.activity.filter((a) => a.playerId === id),
+      });
+    }),
+    http.get(`${api}/sanctions`, ({ request }) => {
+      seen(request);
+      const url = new URL(request.url);
+      const playerId = url.searchParams.get('playerId');
+      const active = (url.searchParams.get('active') ?? 'true') === 'true';
+      const items = data.sanctions.filter(
+        (s) => (!playerId || s.playerId === playerId) && (active ? !s.revokedAt : true),
+      );
+      return HttpResponse.json(page(newestFirst(items), url));
+    }),
+  ];
+
+  return { handlers, data, tokens };
+}

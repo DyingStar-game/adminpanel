@@ -61,3 +61,27 @@ Regenerate it whenever `dyingstar-realm.json` changes.
 Then `make up K8S=1` (their stack running, `minikube tunnel` on) recreates the dev container on
 minikube's network and points the BFF at `http://auth.dyingstar.local/realms/dyingstar`
 (`docker/docker-compose.k8s.yml`); `make up` goes back to the local Keycloak.
+
+## Workaround: services rejecting every token in minikube (`401 Invalid token`)
+
+The back team's services read Keycloak's keys at `http://auth.dyingstar.local/…/certs` (no
+`OIDC_JWKS_URL` in their `values-dev`), so the pods must resolve `auth.dyingstar.local`. The
+cluster's DNS forwards unknown names to the host's resolver: with WSL + Docker Desktop it reads
+the **Windows hosts file**, where `auth.dyingstar.local` is `127.0.0.1` (needed by the browser),
+which inside a pod is the pod itself (`ECONNREFUSED`). Reported to the back team on 2026-10-08;
+their fix: `OIDC_JWKS_URL=http://keycloak.keycloak.svc.cluster.local:8080/realms/dyingstar/protocol/openid-connect/certs`.
+
+Until then, tell CoreDNS that these names lead to Traefik inside the cluster (local, reversible,
+lost when minikube is recreated; applied here on 2026-10-08):
+
+```sh
+TIP=$(kubectl get svc traefik -n traefik -o jsonpath='{.spec.clusterIP}')
+kubectl -n kube-system edit configmap coredns
+#   in the `hosts { … }` block, after `host.minikube.internal`, add:
+#   <TIP> auth.dyingstar.local services.dyingstar.local
+kubectl -n kube-system rollout restart deployment coredns
+```
+
+Check: `kubectl exec deploy/service-social -n dyingstar -- node -e "fetch('http://auth.dyingstar.local/realms/dyingstar/protocol/openid-connect/certs').then(r=>console.log(r.status))"`
+answers `200`. To undo: remove the line and restart CoreDNS again. Not needed any more once the
+back team sets `OIDC_JWKS_URL`.

@@ -16,7 +16,16 @@ const higherThan = (level) => LEVELS.slice(LEVELS.indexOf(level) + 1);
 const PURE_LEVELS = ['ui', 'atoms', 'molecules'];
 
 export default tseslint.config(
-  { ignores: ['**/dist', '**/coverage', 'apps/web/src/routeTree.gen.ts', 'docs/design'] },
+  {
+    ignores: [
+      '**/dist',
+      '**/coverage',
+      'apps/web/src/routeTree.gen.ts',
+      'docs/design',
+      // Generated from the services' OpenAPI (ADR 0024).
+      'packages/contracts/src/*/generated',
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.strict,
   {

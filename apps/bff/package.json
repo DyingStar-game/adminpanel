@@ -14,6 +14,7 @@
     "definitions:update": "tsx src/scripts/update-definitions.ts"
   },
   "dependencies": {
+    "@dyingstar-admin/contracts": "workspace:*",
     "@dyingstar-admin/schemas": "workspace:*",
     "@hono/node-server": "^2.1.3",
     "@hono/zod-validator": "^0.9.1",

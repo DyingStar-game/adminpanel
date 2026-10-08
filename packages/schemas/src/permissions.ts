@@ -7,6 +7,12 @@ export const Permission = {
   persistenceCheck: 'persistence.check',
   persistenceWrite: 'persistence.write',
   persistenceDelete: 'persistence.delete',
+  /** `social` moderation: stats, log, reports, player sheets, sanctions, warnings and mutes. */
+  socialModerate: 'social.moderate',
+  /** Suspensions and bans. */
+  socialSanctionSevere: 'social.sanctionSevere',
+  /** Reputation adjustments. */
+  socialReputation: 'social.reputation',
 } as const;
 export type Permission = (typeof Permission)[keyof typeof Permission];
 
@@ -22,6 +28,11 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
   [Permission.persistenceCheck]: ['persistence:read', 'persistence:write', 'persistence:delete'],
   [Permission.persistenceWrite]: ['persistence:write', 'persistence:delete'],
   [Permission.persistenceDelete]: ['persistence:write', 'persistence:delete'],
+  // Mirror of `social`'s own roles (`moderator` < `admin` < `supervisor`), which `social` checks
+  // itself on every call (ADR 0024): these only decide what the SPA shows.
+  [Permission.socialModerate]: ['moderator', 'admin', 'supervisor'],
+  [Permission.socialSanctionSevere]: ['admin', 'supervisor'],
+  [Permission.socialReputation]: ['admin', 'supervisor'],
 };
 
 export const ALL_PERMISSIONS = Object.values(Permission);

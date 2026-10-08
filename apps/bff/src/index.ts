@@ -2,6 +2,7 @@ import { serve } from '@hono/node-server';
 import { createApp } from './app';
 import { createAuth } from './auth/auth';
 import { createOidcProvider } from './auth/oidc';
+import { createSocialClient } from './clients/social';
 import { parseServers } from './config/servers';
 import { authEnv, loadEnv } from './env';
 import { createDefinitionsService } from './services/definitions';
@@ -11,6 +12,9 @@ const servers = parseServers(env.SERVERS, env.ENVIRONMENT);
 const { issuer, discoveryUrl, clientId, clientSecret, ...session } = authEnv(env);
 const app = createApp({
   environment: env.ENVIRONMENT,
+  social: env.SOCIAL_URL
+    ? createSocialClient({ baseUrl: env.SOCIAL_URL, timeoutMs: env.SERVICE_TIMEOUT_MS })
+    : undefined,
   auth: createAuth({
     provider: createOidcProvider({ issuer, discoveryUrl, clientId, clientSecret }),
     clientId,
@@ -32,6 +36,7 @@ const app = createApp({
 serve({ fetch: app.fetch, port: env.PORT }, (info) => {
   console.log(`DyingStar Admin BFF listening on http://localhost:${info.port}`);
   console.log(`Environment: ${env.ENVIRONMENT}`);
+  console.log(`Social: ${env.SOCIAL_URL ?? 'not configured (moderation hidden)'}`);
   console.log(`Keycloak: ${issuer} (client ${clientId})`);
   console.log(`Game servers: ${servers.map((s) => s.id).join(', ') || 'none (set SERVERS)'}`);
 });

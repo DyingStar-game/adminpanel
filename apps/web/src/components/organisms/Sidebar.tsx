@@ -6,7 +6,7 @@ import {
   PanelLeftOpenIcon,
   ServerIcon,
   SettingsIcon,
-  ShieldOffIcon,
+  ShieldAlertIcon,
   UploadIcon,
   UsersIcon,
   type LucideIcon,
@@ -14,11 +14,13 @@ import {
 import { useTranslation } from 'react-i18next';
 import { GithubMark } from '@/components/atoms/GithubMark';
 import { useCan } from '@/hooks/useCan';
+import { useServers } from '@/hooks/useServers';
 import { WIKI_HOME } from '@/lib/bodies';
 import { cn } from '@/lib/cn';
 import { usePreferences } from '@/stores/preferences';
 
-export type NavId = 'dashboard' | 'servers' | 'explorer' | 'import' | 'users' | 'bans' | 'settings';
+export type NavId =
+  'dashboard' | 'servers' | 'explorer' | 'import' | 'moderation' | 'users' | 'settings';
 
 interface SidebarProps {
   /** Section of the page on screen. */
@@ -57,8 +59,8 @@ const SECTIONS: {
   {
     title: 'administration',
     items: [
+      { id: 'moderation', icon: ShieldAlertIcon },
       { id: 'users', icon: UsersIcon, soon: true },
-      { id: 'bans', icon: ShieldOffIcon, soon: true },
     ],
   },
   { title: 'configuration', items: [{ id: 'settings', icon: SettingsIcon, soon: true }] },
@@ -72,6 +74,15 @@ const SECTIONS: {
 export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
   const { t } = useTranslation();
   const can = useCan();
+  const { services } = useServers();
+  /** Built sections the account may open (ADR 0023, 0024); the others are greyed out. */
+  const visible = (id: NavId) => {
+    if (id === 'explorer') return can('persistence.read');
+    // The import only writes.
+    if (id === 'import') return can('persistence.write');
+    if (id === 'moderation') return services.includes('social') && can('social.moderate');
+    return true;
+  };
   const collapsed = usePreferences((s) => s.sidebarCollapsed);
   const setCollapsed = usePreferences((s) => s.setSidebarCollapsed);
 
@@ -127,8 +138,7 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
               </div>
             )}
             {section.items
-              // The import only writes.
-              .filter(({ id }) => id !== 'import' || can('persistence.write'))
+              .filter(({ id }) => visible(id))
               .map(({ id, icon: Icon, soon }) => (
                 <button
                   key={id}

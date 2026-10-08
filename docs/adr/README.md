@@ -38,3 +38,4 @@ using lightweight ADRs ([Michael Nygard format](https://cognitect.com/blog/2011/
 | [0021](./0021-persistence-query-needs-at-scale.md) | Persistence query needs for the admin at game scale | Proposed | 2026-10-04 |
 | [0022](./0022-item-form-coherence-checks.md) | Coherence checks on the create and edit forms, for every type | Accepted | 2026-10-07 |
 | [0023](./0023-keycloak-authentication.md) | Keycloak authentication and role-based access | Accepted in part (sign-in, local dev) | 2026-10-08 |
+| [0024](./0024-game-services-social-first.md) | Game services in the panel, social moderation first | Accepted | 2026-10-08 |

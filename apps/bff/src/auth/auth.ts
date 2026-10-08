@@ -238,6 +238,19 @@ export function persistencePermission(method: string, path: string): Permission 
 }
 
 /**
+ * Refuses (403) a route when the session lacks `permission`. Without authentication (tests)
+ * there is no session and every route is open.
+ */
+export const requirePermission = (permission: Permission) =>
+  createMiddleware<SessionContext>(async (c, next) => {
+    const session = c.var.session as Session | undefined;
+    if (session && !session.permissions.includes(permission)) {
+      throw new ApiError(403, ErrorCode.forbidden, `This account lacks ${permission}`);
+    }
+    await next();
+  });
+
+/**
  * Refuses (403) a persistence route whose permission the session lacks. Without authentication
  * (tests) there is no session and every route is open.
  */

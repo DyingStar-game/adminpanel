@@ -144,6 +144,15 @@ Views adapt to the data through declarative files, validated with Zod at load ti
 The generic organism `SchematicCard` draws any schematic on the object page; nothing else to
 wire.
 
+- **Game service — per service** ([ADR 0024](./docs/adr/0024-game-services-social-first.md)),
+  `social` being the model: pin its OpenAPI in `packages/contracts` (`SERVICES` in
+  `src/services.ts`, `make contracts-update` generates its Zod schemas, a GitHub sync test
+  alerts on drift), a client in `apps/bff/src/clients/<service>.ts`, curated routes
+  `/api/<service>/…` guarded by a permission (`packages/schemas/src/permissions.ts`), its URL
+  (`<SERVICE>_URL`, listed in `GET /api/servers` › `services`), an MSW mock in
+  `packages/testing` checked against the contract, then its SPA section (sidebar entry shown
+  when configured and allowed).
+
 ## Checking in a browser
 
 Visible changes are checked against the dev servers (`make pnpm dev`) with Playwright in a

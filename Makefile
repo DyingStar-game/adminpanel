@@ -115,6 +115,11 @@ definitions-update: ## Update the bundled type definitions (fallback.json) from 
 	@echo "$(CYAN)📥 Updating type definitions from GitHub...$(RESET)"
 	@$(PNPM) --filter @dyingstar-admin/bff definitions:update
 
+.PHONY: contracts-update
+contracts-update: ## Pin the game services' OpenAPI from GitHub and regenerate their Zod schemas (ADR 0024)
+	@echo "$(CYAN)📥 Updating service contracts from GitHub...$(RESET)"
+	@$(PNPM) --filter @dyingstar-admin/contracts contracts:update
+
 .PHONY: image
 image: ## Build the production image (docker/Dockerfile.prod), tag with IMAGE=...
 	@echo "$(CYAN)🐳 Building production image $(IMAGE)...$(RESET)"

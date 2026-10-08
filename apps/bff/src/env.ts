@@ -17,6 +17,10 @@ const EnvSchema = z.object({
   ENVIRONMENT: z.string().min(1).default('testing'),
   /** JSON array of game servers, see `config/servers.ts`. */
   SERVERS: z.string().default('[]'),
+  /** `social` of this environment, without `/api` (ADR 0024); unset, moderation is hidden. */
+  SOCIAL_URL: optionalString,
+  /** Timeout of every call to a game service other than persistence. */
+  SERVICE_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
   /** Timeout of every call to a persistence service. */
   PERSISTENCE_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
   /** Lifetime of a coalesced persistence GET, shared by concurrent viewers (ADR 0009). */

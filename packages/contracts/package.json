@@ -1,0 +1,23 @@
+{
+  "name": "@dyingstar-admin/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pinned OpenAPI contracts of the game services and their generated Zod schemas (ADR 0024).",
+  "exports": {
+    "./social": "./src/social/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "generate": "openapi-ts",
+    "contracts:update": "tsx scripts/update.ts && openapi-ts"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.99.0",
+    "@types/node": "^24.19.0",
+    "tsx": "^4.23.15"
+  }
+}

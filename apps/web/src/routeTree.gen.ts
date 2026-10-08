@@ -14,7 +14,9 @@ import { Route as ExplorerRouteImport } from './routes/explorer'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as ItemsUuidRouteImport } from './routes/items.$uuid'
 import { Route as MapUuidRouteImport } from './routes/map.$uuid'
+import { Route as ModerationIndexRouteImport } from './routes/moderation.index'
 import { Route as OrbitUuidRouteImport } from './routes/orbit.$uuid'
+import { Route as ModerationPlayersPlayerIdRouteImport } from './routes/moderation.players.$playerId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,11 +43,22 @@ const MapUuidRoute = MapUuidRouteImport.update({
   path: '/map/$uuid',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ModerationIndexRoute = ModerationIndexRouteImport.update({
+  id: '/moderation/',
+  path: '/moderation/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrbitUuidRoute = OrbitUuidRouteImport.update({
   id: '/orbit/$uuid',
   path: '/orbit/$uuid',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ModerationPlayersPlayerIdRoute =
+  ModerationPlayersPlayerIdRouteImport.update({
+    id: '/moderation/players/$playerId',
+    path: '/moderation/players/$playerId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +67,8 @@ export interface FileRoutesByFullPath {
   '/items/$uuid': typeof ItemsUuidRoute
   '/map/$uuid': typeof MapUuidRoute
   '/orbit/$uuid': typeof OrbitUuidRoute
+  '/moderation/': typeof ModerationIndexRoute
+  '/moderation/players/$playerId': typeof ModerationPlayersPlayerIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +77,8 @@ export interface FileRoutesByTo {
   '/items/$uuid': typeof ItemsUuidRoute
   '/map/$uuid': typeof MapUuidRoute
   '/orbit/$uuid': typeof OrbitUuidRoute
+  '/moderation': typeof ModerationIndexRoute
+  '/moderation/players/$playerId': typeof ModerationPlayersPlayerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +88,8 @@ export interface FileRoutesById {
   '/items/$uuid': typeof ItemsUuidRoute
   '/map/$uuid': typeof MapUuidRoute
   '/orbit/$uuid': typeof OrbitUuidRoute
+  '/moderation/': typeof ModerationIndexRoute
+  '/moderation/players/$playerId': typeof ModerationPlayersPlayerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +100,8 @@ export interface FileRouteTypes {
     | '/items/$uuid'
     | '/map/$uuid'
     | '/orbit/$uuid'
+    | '/moderation/'
+    | '/moderation/players/$playerId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +110,8 @@ export interface FileRouteTypes {
     | '/items/$uuid'
     | '/map/$uuid'
     | '/orbit/$uuid'
+    | '/moderation'
+    | '/moderation/players/$playerId'
   id:
     | '__root__'
     | '/'
@@ -97,6 +120,8 @@ export interface FileRouteTypes {
     | '/items/$uuid'
     | '/map/$uuid'
     | '/orbit/$uuid'
+    | '/moderation/'
+    | '/moderation/players/$playerId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,6 +131,8 @@ export interface RootRouteChildren {
   ItemsUuidRoute: typeof ItemsUuidRoute
   MapUuidRoute: typeof MapUuidRoute
   OrbitUuidRoute: typeof OrbitUuidRoute
+  ModerationIndexRoute: typeof ModerationIndexRoute
+  ModerationPlayersPlayerIdRoute: typeof ModerationPlayersPlayerIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -145,11 +172,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MapUuidRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/moderation/': {
+      id: '/moderation/'
+      path: '/moderation'
+      fullPath: '/moderation/'
+      preLoaderRoute: typeof ModerationIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/orbit/$uuid': {
       id: '/orbit/$uuid'
       path: '/orbit/$uuid'
       fullPath: '/orbit/$uuid'
       preLoaderRoute: typeof OrbitUuidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/moderation/players/$playerId': {
+      id: '/moderation/players/$playerId'
+      path: '/moderation/players/$playerId'
+      fullPath: '/moderation/players/$playerId'
+      preLoaderRoute: typeof ModerationPlayersPlayerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -162,6 +203,8 @@ const rootRouteChildren: RootRouteChildren = {
   ItemsUuidRoute: ItemsUuidRoute,
   MapUuidRoute: MapUuidRoute,
   OrbitUuidRoute: OrbitUuidRoute,
+  ModerationIndexRoute: ModerationIndexRoute,
+  ModerationPlayersPlayerIdRoute: ModerationPlayersPlayerIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

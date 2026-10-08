@@ -6,8 +6,16 @@ import {
   type Item,
   type ObjectDefinition,
 } from '@dyingstar-admin/schemas';
-import { createDataset, createPersistenceMock, PERSISTENCE_URL } from '@dyingstar-admin/testing';
+import {
+  createDataset,
+  createPersistenceMock,
+  createSocialMock,
+  PERSISTENCE_URL,
+  SOCIAL_URL,
+  type SocialDataset,
+} from '@dyingstar-admin/testing';
 import { createApp } from './app';
+import { createSocialClient } from './clients/social';
 import fallback from './definitions/fallback.json';
 import type { DefinitionsService } from './services/definitions';
 
@@ -28,8 +36,12 @@ export function createStaticDefinitions(
  * The real BFF running in-process behind MSW, on top of the persistence mock. Frontend tests
  * use it so they exercise the actual API contract instead of hand-written stubs.
  */
-export function createInProcessBff({ dataset = createDataset() }: { dataset?: Item[] } = {}) {
+export function createInProcessBff({
+  dataset = createDataset(),
+  socialData,
+}: { dataset?: Item[]; socialData?: SocialDataset } = {}) {
   const persistence = createPersistenceMock(dataset);
+  const social = createSocialMock(socialData);
   const app = createApp({
     auth: false,
     servers: [
@@ -42,6 +54,7 @@ export function createInProcessBff({ dataset = createDataset() }: { dataset?: It
     ],
     definitions: createStaticDefinitions(),
     readCacheTtlMs: 0,
+    social: createSocialClient({ baseUrl: SOCIAL_URL, timeoutMs: 1000 }),
   });
   const forward = async ({ request }: { request: Request }) => {
     const res = await app.fetch(request);
@@ -50,8 +63,10 @@ export function createInProcessBff({ dataset = createDataset() }: { dataset?: It
 
   return {
     persistence,
+    social,
     handlers: [
       ...persistence.handlers,
+      ...social.handlers,
       http.all('*/api/*', forward),
       http.get('*/health', forward),
     ],
