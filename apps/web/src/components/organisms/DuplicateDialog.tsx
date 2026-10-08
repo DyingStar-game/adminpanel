@@ -76,7 +76,7 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
   const { players, isPending: playersLoading } = usePlayers();
   const goToItem = useGoToItem();
   const duplicate = useDuplicateItem();
-  const { isProduction, server } = useWriteTarget();
+  const { isProduction, serverName } = useWriteTarget();
   const [placement, setPlacement] = useState<Placement | null>(null);
   const [withChildren, setWithChildren] = useState(true);
   const [referenceUuid, setReferenceUuid] = useState('');
@@ -275,9 +275,7 @@ export function DuplicateDialog({ uuid, onDuplicated, onCancel }: DuplicateDialo
           </div>
           <p className="text-xs text-fg-2">{t('duplicate.cleared')}</p>
           {isProduction && (
-            <p className="font-medium">
-              {t('editor.productionBody', { server: server?.name ?? '' })}
-            </p>
+            <p className="font-medium">{t('editor.productionBody', { server: serverName })}</p>
           )}
           {error && (
             <p role="alert" className="text-xs text-destructive">

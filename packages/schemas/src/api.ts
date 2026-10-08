@@ -2,24 +2,18 @@ import { z } from 'zod';
 import { UuidSchema } from './common';
 import { ItemSchema, ObjectDataSchema, ObjectTypeSchema, Vec3Schema } from './persistence';
 
-/** Game server as exposed to the browser: never any internal URL (ADR 0011). */
-export const PublicServerSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  environment: z.string(),
-});
-export type PublicServer = z.infer<typeof PublicServerSchema>;
-
 /**
- * `GET /api/servers` — the game servers of the panel's environment. One panel is deployed per
- * environment, each with its own Keycloak (ADR 0023): every server shares that environment.
+ * `GET /api/panel` — what this panel serves: one environment with its Keycloak (ADR 0023), one
+ * game server, and the game services it manages (ADR 0024). Never any internal URL (ADR 0011).
  */
-export const ServersResponseSchema = z.object({
+export const PanelResponseSchema = z.object({
   environment: z.string(),
-  servers: z.array(PublicServerSchema),
-  /** Game services this panel manages (ADR 0024), e.g. `persistence`, `social`. */
+  /** The game server of this environment, shown in the top bar. */
+  gameServerName: z.string(),
+  /** Game services this panel manages, e.g. `persistence`, `social`. */
   services: z.array(z.string()),
 });
+export type PanelResponse = z.infer<typeof PanelResponseSchema>;
 
 /**
  * `GET /api/me` — the signed-in user, the roles of their session and what they allow
@@ -36,9 +30,6 @@ export type MeResponse = z.infer<typeof MeResponseSchema>;
 
 /** `POST /auth/logout` — where the browser goes next (Keycloak's end of session). */
 export const LogoutResponseSchema = z.object({ redirect: z.string() });
-
-/** Header carrying the target game server on item routes. */
-export const SERVER_HEADER = 'X-Server-Id';
 
 /** `GET /api/items/:uuid/ancestors` — root first, closest parent last. */
 export const AncestorsResponseSchema = z.object({

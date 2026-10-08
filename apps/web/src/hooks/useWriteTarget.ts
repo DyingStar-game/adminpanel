@@ -1,7 +1,7 @@
-import { useServers } from './useServers';
+import { usePanel } from './usePanel';
 
-/** Server receiving writes; production writes ask for an extra confirmation (ADR 0004). */
+/** Game server receiving writes; production writes ask for an extra confirmation (ADR 0004). */
 export function useWriteTarget() {
-  const { selected, environment } = useServers();
-  return { server: selected, isProduction: environment === 'production' };
+  const { gameServerName, environment } = usePanel();
+  return { serverName: gameServerName ?? '', isProduction: environment === 'production' };
 }

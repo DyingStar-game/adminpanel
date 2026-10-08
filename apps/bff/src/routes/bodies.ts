@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { validate } from '../lib/validate';
-import type { ServerContext } from '../middleware/server';
+import type { PersistenceContext } from '../middleware/persistence';
 
 const UuidParam = z.object({ uuid: z.string().min(1) });
 /**
@@ -11,7 +11,7 @@ const UuidParam = z.object({ uuid: z.string().min(1) });
 const MapQuery = z.object({ hide: z.string().optional(), include: z.string().optional() });
 
 /** Celestial body routes (ADR 0018); the target server comes from `requireServer`. */
-export const bodiesRoutes = new Hono<ServerContext>().get(
+export const bodiesRoutes = new Hono<PersistenceContext>().get(
   '/:uuid/map',
   validate('param', UuidParam),
   validate('query', MapQuery),

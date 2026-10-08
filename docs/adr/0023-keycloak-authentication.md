@@ -88,14 +88,14 @@ and signed in to that environment's Keycloak (pre-production → `auth-preprod�
 `auth…`). The environment is chosen by the URL, before signing in; a session never spans two
 environments, and a production secret only lives in the production deployment.
 
-- The BFF's `ENVIRONMENT` names the environment it serves; every entry of `SERVERS` belongs to it,
-  and the BFF refuses to start otherwise (`config/servers.ts`).
+- The BFF's `ENVIRONMENT` names the environment it serves, with its one game server
+  (`GAME_SERVER_NAME`, `PERSISTENCE_URL`; formerly the `SERVERS` list, removed 2026-10-08).
 - **One game server per environment** (maintainer, 2026-10-08: pre-production → one server,
   production → one server). There is nothing to choose: the server selector is gone, the top
   bar shows the environment and its server; production writes still ask for the extra
   confirmation, now from the panel's environment.
-- Follow-up: `SERVERS` (a list) and the `X-Server-Id` header remain from the multi-server design;
-  they become the panel's own service URLs (`persistence`, then `social`…) with the services ADR.
+- Follow-up, done 2026-10-08 (ADR 0024, lot 2 step L): `SERVERS` and the `X-Server-Id` header
+  gave way to the panel's own service URLs (`PERSISTENCE_URL`, `SOCIAL_URL`…).
 - Locally, `make up` or `make up K8S=1` chooses the Keycloak the same way.
 
 ### Flow

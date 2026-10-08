@@ -12,8 +12,12 @@ import { Sidebar } from './Sidebar';
 /** The sidebar reads which services the panel manages (ADR 0024). */
 const servesPersistence = () =>
   server.use(
-    http.get('*/api/servers', () =>
-      HttpResponse.json({ environment: 'testing', servers: [], services: ['persistence'] }),
+    http.get('*/api/panel', () =>
+      HttpResponse.json({
+        environment: 'testing',
+        gameServerName: 'Test',
+        services: ['persistence'],
+      }),
     ),
   );
 

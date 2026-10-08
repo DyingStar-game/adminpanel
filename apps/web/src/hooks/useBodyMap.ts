@@ -12,7 +12,6 @@ import { useLiveInterval } from './useLive';
  * hidden, so it stays on the map.
  */
 export function useBodyMap(uuid: string, selected?: Item | null) {
-  const serverId = usePreferences((s) => s.serverId);
   const mapHidden = usePreferences((s) => s.mapHidden);
   const hide = hiddenTypes(mapHidden).join(',');
   const include =
@@ -23,12 +22,9 @@ export function useBodyMap(uuid: string, selected?: Item | null) {
   const search = params.size > 0 ? `?${params.toString()}` : '';
   const refetchInterval = useLiveInterval('list');
   return useQuery({
-    queryKey: ['body-map', serverId, uuid, hide, include],
+    queryKey: ['body-map', uuid, hide, include],
     queryFn: () =>
-      apiGet(`/api/bodies/${encodeURIComponent(uuid)}/map${search}`, BodyMapResponseSchema, {
-        serverId,
-      }),
-    enabled: !!serverId,
+      apiGet(`/api/bodies/${encodeURIComponent(uuid)}/map${search}`, BodyMapResponseSchema),
     placeholderData: keepPreviousData,
     refetchInterval,
   });

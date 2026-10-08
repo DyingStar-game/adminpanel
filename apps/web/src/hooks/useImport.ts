@@ -10,7 +10,6 @@ import {
 import { apiGet, apiSend } from '@/lib/api';
 import { overwriteRequest, sendWaves, type NormalizedImport } from '@/lib/importInput';
 import { useImportDraft, type ImportOutcome } from '@/stores/importDraft';
-import { usePreferences } from '@/stores/preferences';
 import { useAfterWrite } from './mutations';
 
 export type { ImportOutcome, ImportRunState } from '@/stores/importDraft';
@@ -20,29 +19,24 @@ export type { ImportOutcome, ImportRunState } from '@/stores/importDraft';
  * unless the text changed meanwhile; it lands even if the user left the page.
  */
 export function useImportCheck() {
-  const serverId = usePreferences((s) => s.serverId);
-  return useCallback(
-    async (normalized: NormalizedImport) => {
-      const draft = useImportDraft.getState();
-      const started = draft.generation;
-      draft.setChecking(true);
-      try {
-        const { rows, items } = (await apiSend('POST', '/api/items/import/check', {
-          serverId,
-          body: { items: normalized.items },
-          schema: ImportCheckResponseSchema,
-        })) as ImportCheckResponse;
-        if (useImportDraft.getState().generation === started) {
-          useImportDraft.getState().setChecked({ ...normalized, items, rows, fromServer: true });
-        }
-      } finally {
-        if (useImportDraft.getState().generation === started) {
-          useImportDraft.getState().setChecking(false);
-        }
+  return useCallback(async (normalized: NormalizedImport) => {
+    const draft = useImportDraft.getState();
+    const started = draft.generation;
+    draft.setChecking(true);
+    try {
+      const { rows, items } = (await apiSend('POST', '/api/items/import/check', {
+        body: { items: normalized.items },
+        schema: ImportCheckResponseSchema,
+      })) as ImportCheckResponse;
+      if (useImportDraft.getState().generation === started) {
+        useImportDraft.getState().setChecked({ ...normalized, items, rows, fromServer: true });
       }
-    },
-    [serverId],
-  );
+    } finally {
+      if (useImportDraft.getState().generation === started) {
+        useImportDraft.getState().setChecking(false);
+      }
+    }
+  }, []);
 }
 
 /** Items sent at once inside a wave (ADR 0004: limited concurrency). */
@@ -55,7 +49,6 @@ const CONCURRENCY = 4;
  * while the user is on another page. Lists and counts refresh once at the end.
  */
 export function useImportRun() {
-  const serverId = usePreferences((s) => s.serverId);
   const afterWrite = useAfterWrite();
 
   const run = useCallback(
@@ -87,9 +80,8 @@ export function useImportRun() {
         try {
           if (overwrite.get(index)) {
             const path = `/api/items/${encodeURIComponent(item.object_uuid)}`;
-            const latest = await apiGet(path, ItemSchema, { serverId });
+            const latest = await apiGet(path, ItemSchema);
             await apiSend('PUT', path, {
-              serverId,
               body: overwriteRequest(
                 latest.object_data,
                 item.object_type,
@@ -99,7 +91,7 @@ export function useImportRun() {
             });
             outcomes.set(index, { state: 'overwritten' });
           } else {
-            await apiSend('POST', '/api/items', { serverId, body: item, schema: ItemSchema });
+            await apiSend('POST', '/api/items', { body: item, schema: ItemSchema });
             outcomes.set(index, { state: 'created' });
           }
         } catch (error) {
@@ -122,7 +114,7 @@ export function useImportRun() {
       await afterWrite();
       useImportDraft.getState().setRun((s) => ({ ...s, running: false, cancelled: cancelled() }));
     },
-    [serverId, afterWrite],
+    [afterWrite],
   );
 
   const cancel = useCallback(() => useImportDraft.getState().requestCancel(true), []);

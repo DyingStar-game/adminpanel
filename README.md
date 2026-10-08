@@ -99,19 +99,42 @@ make check   # format, lint, typecheck, test, format check
 ### Configuration
 
 The first `make up` or `make start` creates `.env.local` from [`.env.sample`](./.env.sample).
-Edit it to choose the game servers the admin targets (`SERVERS`: id, name, environment,
-persistence URL) and where object type definitions are read from (`DEFINITIONS_*`).
+One panel serves one environment and its one game server (ADR 0023, 0024): set its name
+(`GAME_SERVER_NAME`), the URLs of the game services it manages (`PERSISTENCE_URL`,
+`SOCIAL_URL`; unset, the service is hidden), its Keycloak (`OIDC_*`) and where object type
+definitions are read from (`DEFINITIONS_*`).
+
+#### Migrating from `SERVERS` (2026-10-08)
+
+`SERVERS` and the `X-Server-Id` header are gone: the BFF refuses to start while `SERVERS` is
+set. In `.env.local` and in every deployment, replace
+
+```bash
+SERVERS='[{"id":"universe-testing","name":"Universe Testing","environment":"testing","persistenceUrl":"http://46.231.240.213:31001"}]'
+```
+
+by the entry's `name` and `persistenceUrl`:
+
+```bash
+GAME_SERVER_NAME=Universe Testing
+PERSISTENCE_URL=http://46.231.240.213:31001
+```
+
+The `environment` field becomes the panel's `ENVIRONMENT` (already set). `GET /api/servers` is
+now `GET /api/panel` (`environment`, `gameServerName`, `services`); the browser forgets the
+server it had picked.
 
 ### Production image
 
 ```bash
 make image IMAGE=dyingstar-admin:local
 docker run -p 3000:3000 \
-  -e SERVERS='[{"id":"universe-testing","name":"Universe Testing","environment":"testing","persistenceUrl":"http://46.231.240.213:31001"}]' \
+  -e GAME_SERVER_NAME='Universe Testing' -e PERSISTENCE_URL=http://46.231.240.213:31001 \
   dyingstar-admin:local
 ```
 
-Pass the variables of [`.env.sample`](./.env.sample) with `-e` (at least `SERVERS`).
+Pass the variables of [`.env.sample`](./.env.sample) with `-e` (at least `PERSISTENCE_URL` and
+the `OIDC_*` settings).
 
 `make help` lists every target.
 

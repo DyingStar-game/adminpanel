@@ -20,8 +20,6 @@ export type ApiErrorBody = z.infer<typeof ApiErrorSchema>;
 /** Stable error codes of the BFF API. */
 export const ErrorCode = {
   validation: 'VALIDATION_ERROR',
-  serverRequired: 'SERVER_REQUIRED',
-  unknownServer: 'UNKNOWN_SERVER',
   notFound: 'NOT_FOUND',
   alreadyExists: 'ALREADY_EXISTS',
   unknownObjectType: 'UNKNOWN_OBJECT_TYPE',

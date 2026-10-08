@@ -22,7 +22,7 @@ export function DeleteItemDialog({ uuid, onDeleted, onCancel }: DeleteItemDialog
   const item = useItem(uuid);
   const counts = useChildrenCounts(uuid);
   const remove = useDeleteItem();
-  const { isProduction, server } = useWriteTarget();
+  const { isProduction, serverName } = useWriteTarget();
   const children = counts.data?.total ?? 0;
 
   if (!item.data) return null;
@@ -43,9 +43,7 @@ export function DeleteItemDialog({ uuid, onDeleted, onCancel }: DeleteItemDialog
           )}
           <p>{t('editor.deleteNotPropagated')}</p>
           {isProduction && (
-            <p className="font-medium">
-              {t('editor.productionBody', { server: server?.name ?? '' })}
-            </p>
+            <p className="font-medium">{t('editor.productionBody', { server: serverName })}</p>
           )}
         </>
       }

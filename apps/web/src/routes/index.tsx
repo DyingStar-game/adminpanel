@@ -1,11 +1,11 @@
 import { createFileRoute, Navigate } from '@tanstack/react-router';
 import { useCan } from '@/hooks/useCan';
-import { useServers } from '@/hooks/useServers';
+import { usePanel } from '@/hooks/usePanel';
 
 /** Home: the persistence explorer, or moderation for an account that may only moderate. */
 function Home() {
   const can = useCan();
-  const { services, isPending } = useServers();
+  const { services, isPending } = usePanel();
   if (!can('persistence.read') && isPending) return null;
   if (!can('persistence.read') && services.includes('social') && can('social.moderate')) {
     return <Navigate to="/moderation" search={{ tab: 'overview' }} replace />;

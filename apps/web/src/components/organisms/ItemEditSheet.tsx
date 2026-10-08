@@ -65,7 +65,7 @@ function EditForm({
   const definition = definitions.data
     ? (definitions.data.definitions.find((d) => d.type === base.object_type) ?? null)
     : undefined;
-  const { isProduction, server } = useWriteTarget();
+  const { isProduction, serverName } = useWriteTarget();
   const update = useUpdateItem();
   const sceneOptions = useSceneOptions();
   const [pending, setPending] = useState<{
@@ -165,9 +165,7 @@ function EditForm({
             <MonoText tone="subtle" className="text-2xs break-all">
               {base.object_type} · {base.object_uuid}
             </MonoText>
-            <span className="text-xs">
-              {t('editor.liveWarning', { server: server?.name ?? '' })}
-            </span>
+            <span className="text-xs">{t('editor.liveWarning', { server: serverName })}</span>
           </div>
         </SheetDescription>
       </SheetHeader>
@@ -210,7 +208,7 @@ function EditForm({
       <WriteConfirm
         open={!!pending && !conflicts}
         title={t('editor.productionTitle')}
-        description={<p>{t('editor.productionBody', { server: server?.name ?? '' })}</p>}
+        description={<p>{t('editor.productionBody', { server: serverName })}</p>}
         confirmLabel={t('editor.save')}
         cancelLabel={t('confirm.cancel')}
         onConfirm={() => pending && void save(pending)}

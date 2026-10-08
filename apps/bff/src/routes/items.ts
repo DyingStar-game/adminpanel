@@ -11,12 +11,12 @@ import {
   ItemsSearchSchema,
 } from '@dyingstar-admin/schemas';
 import { parseQuery, validate } from '../lib/validate';
-import type { ServerContext } from '../middleware/server';
+import type { PersistenceContext } from '../middleware/persistence';
 
 const UuidParam = z.object({ uuid: z.string().min(1) });
 
 /** Item routes; the target server comes from `requireServer`. */
-export const itemsRoutes = new Hono<ServerContext>()
+export const itemsRoutes = new Hono<PersistenceContext>()
   .get('/', async (c) => {
     // Allowed object types come from the definitions (ADR 0006).
     const types = (await c.var.definitions.list()).definitions.map((d) => d.type);

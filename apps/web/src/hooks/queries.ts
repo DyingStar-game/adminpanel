@@ -14,7 +14,6 @@ import {
   type Item,
 } from '@dyingstar-admin/schemas';
 import { ApiError, apiGet } from '@/lib/api';
-import { usePreferences } from '@/stores/preferences';
 import { useLiveInterval } from './useLive';
 
 /** Filters of a children / list query. `parentId: ''` targets roots. */
@@ -36,22 +35,18 @@ const listPath = ({ parentId, objectType, q }: ListFilter, page: number, pageSiz
 /** Query keys, all scoped by game server so switching server never mixes data. */
 export const queryKeys = {
   definitions: ['definitions'] as const,
-  item: (serverId: string | null, uuid: string) => ['item', serverId, uuid] as const,
-  list: (serverId: string | null, filter: ListFilter, page: number, pageSize: number) =>
-    ['items', serverId, filter, page, pageSize] as const,
-  infinite: (serverId: string | null, filter: ListFilter, pageSize: number) =>
-    ['items-infinite', serverId, filter, pageSize] as const,
-  ancestors: (serverId: string | null, uuid: string) => ['ancestors', serverId, uuid] as const,
-  childrenCounts: (serverId: string | null, uuid: string) =>
-    ['children-counts', serverId, uuid] as const,
+  item: (uuid: string) => ['item', uuid] as const,
+  list: (filter: ListFilter, page: number, pageSize: number) =>
+    ['items', filter, page, pageSize] as const,
+  infinite: (filter: ListFilter, pageSize: number) => ['items-infinite', filter, pageSize] as const,
+  ancestors: (uuid: string) => ['ancestors', uuid] as const,
+  childrenCounts: (uuid: string) => ['children-counts', uuid] as const,
 };
 
-const useServerId = () => usePreferences((s) => s.serverId);
-
 /** Fetches one item; resolves to null when it does not exist. */
-export async function fetchItem(serverId: string | null, uuid: string): Promise<Item | null> {
+export async function fetchItem(uuid: string): Promise<Item | null> {
   try {
-    return await apiGet(`/api/items/${encodeURIComponent(uuid)}`, ItemSchema, { serverId });
+    return await apiGet(`/api/items/${encodeURIComponent(uuid)}`, ItemSchema);
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) return null;
     throw error;
@@ -72,12 +67,11 @@ export interface LiveOption {
 }
 
 export function useItem(uuid: string | undefined, { live = false }: LiveOption = {}) {
-  const serverId = useServerId();
   const refetchInterval = useLiveInterval('entity', live);
   return useQuery({
-    queryKey: queryKeys.item(serverId, uuid ?? ''),
-    queryFn: () => fetchItem(serverId, uuid ?? ''),
-    enabled: !!serverId && !!uuid,
+    queryKey: queryKeys.item(uuid ?? ''),
+    queryFn: () => fetchItem(uuid ?? ''),
+    enabled: !!uuid,
     // An item that no longer exists (deleted, or respawned under another UUID by the game) is
     // not polled any more.
     refetchInterval: (query) => (query.state.data === null ? false : refetchInterval),
@@ -86,12 +80,10 @@ export function useItem(uuid: string | undefined, { live = false }: LiveOption =
 
 /** Several items at once (reference resolution); results keep the input order. */
 export function useItems(uuids: string[]) {
-  const serverId = useServerId();
   return useQueries({
     queries: uuids.map((uuid) => ({
-      queryKey: queryKeys.item(serverId, uuid),
-      queryFn: () => fetchItem(serverId, uuid),
-      enabled: !!serverId,
+      queryKey: queryKeys.item(uuid),
+      queryFn: () => fetchItem(uuid),
       staleTime: 30_000,
     })),
   });
@@ -103,12 +95,11 @@ export function useItemsPage(
   pageSize: number,
   { live = false, enabled = true }: LiveOption & { enabled?: boolean } = {},
 ) {
-  const serverId = useServerId();
   const refetchInterval = useLiveInterval('list', live);
   return useQuery({
-    queryKey: queryKeys.list(serverId, filter, page, pageSize),
-    queryFn: () => apiGet(listPath(filter, page, pageSize), PaginatedItemsSchema, { serverId }),
-    enabled: !!serverId && enabled,
+    queryKey: queryKeys.list(filter, page, pageSize),
+    queryFn: () => apiGet(listPath(filter, page, pageSize), PaginatedItemsSchema),
+    enabled,
     placeholderData: keepPreviousData,
     refetchInterval,
   });
@@ -124,13 +115,11 @@ export function useItemsPages(
   pageSize: number,
   { live = false }: LiveOption = {},
 ) {
-  const serverId = useServerId();
   const refetchInterval = useLiveInterval('list', live);
   return useQueries({
     queries: requests.map(({ filter, page }) => ({
-      queryKey: queryKeys.list(serverId, filter, page, pageSize),
-      queryFn: () => apiGet(listPath(filter, page, pageSize), PaginatedItemsSchema, { serverId }),
-      enabled: !!serverId,
+      queryKey: queryKeys.list(filter, page, pageSize),
+      queryFn: () => apiGet(listPath(filter, page, pageSize), PaginatedItemsSchema),
       placeholderData: keepPreviousData,
       refetchInterval,
     })),
@@ -141,12 +130,11 @@ export function useItemsPages(
 
 /** Reads a page ahead of time (e.g. a cluster hovered before it is opened). */
 export function usePrefetchItemsPage(pageSize: number) {
-  const serverId = useServerId();
   const client = useQueryClient();
   return (filter: ListFilter, page: number) =>
     void client.prefetchQuery({
-      queryKey: queryKeys.list(serverId, filter, page, pageSize),
-      queryFn: () => apiGet(listPath(filter, page, pageSize), PaginatedItemsSchema, { serverId }),
+      queryKey: queryKeys.list(filter, page, pageSize),
+      queryFn: () => apiGet(listPath(filter, page, pageSize), PaginatedItemsSchema),
     });
 }
 
@@ -157,29 +145,24 @@ export function useItemsInfinite(
   enabled = true,
   { live = false }: LiveOption = {},
 ) {
-  const serverId = useServerId();
   const refetchInterval = useLiveInterval('list', live);
   return useInfiniteQuery({
     refetchInterval,
-    queryKey: queryKeys.infinite(serverId, filter, pageSize),
-    queryFn: ({ pageParam }) =>
-      apiGet(listPath(filter, pageParam, pageSize), PaginatedItemsSchema, { serverId }),
+    queryKey: queryKeys.infinite(filter, pageSize),
+    queryFn: ({ pageParam }) => apiGet(listPath(filter, pageParam, pageSize), PaginatedItemsSchema),
     initialPageParam: 1,
     getNextPageParam: (last) =>
       last.page * last.page_size < last.total ? last.page + 1 : undefined,
-    enabled: enabled && !!serverId,
+    enabled,
   });
 }
 
 export function useAncestors(uuid: string | undefined) {
-  const serverId = useServerId();
   return useQuery({
-    queryKey: queryKeys.ancestors(serverId, uuid ?? ''),
+    queryKey: queryKeys.ancestors(uuid ?? ''),
     queryFn: () =>
-      apiGet(`/api/items/${encodeURIComponent(uuid ?? '')}/ancestors`, AncestorsResponseSchema, {
-        serverId,
-      }),
-    enabled: !!serverId && !!uuid,
+      apiGet(`/api/items/${encodeURIComponent(uuid ?? '')}/ancestors`, AncestorsResponseSchema),
+    enabled: !!uuid,
   });
 }
 
@@ -188,18 +171,16 @@ export function useChildrenCounts(
   enabled = true,
   { live = false }: LiveOption = {},
 ) {
-  const serverId = useServerId();
   const refetchInterval = useLiveInterval('counts', live);
   return useQuery({
     refetchInterval,
-    queryKey: queryKeys.childrenCounts(serverId, uuid ?? ''),
+    queryKey: queryKeys.childrenCounts(uuid ?? ''),
     queryFn: () =>
       apiGet(
         `/api/items/${encodeURIComponent(uuid ?? '')}/children-counts`,
         ChildrenCountsResponseSchema,
-        { serverId },
       ),
-    enabled: enabled && !!serverId && !!uuid,
+    enabled: enabled && !!uuid,
     staleTime: 30_000,
   });
 }

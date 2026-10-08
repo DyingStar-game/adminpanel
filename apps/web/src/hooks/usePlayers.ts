@@ -2,18 +2,14 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { PaginatedItemsSchema, type Item } from '@dyingstar-admin/schemas';
 import { apiGet } from '@/lib/api';
-import { usePreferences } from '@/stores/preferences';
 
 /** Every player, human players first then by name (NPCs make most of them). */
 export function usePlayers(enabled = true) {
-  const serverId = usePreferences((s) => s.serverId);
   const query = useQuery({
-    queryKey: ['players', serverId],
+    queryKey: ['players'],
     queryFn: () =>
-      apiGet('/api/items?object_type=player&page=1&page_size=10000', PaginatedItemsSchema, {
-        serverId,
-      }),
-    enabled: enabled && !!serverId,
+      apiGet('/api/items?object_type=player&page=1&page_size=10000', PaginatedItemsSchema),
+    enabled,
     staleTime: 60_000,
   });
   const players = useMemo(() => {

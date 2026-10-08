@@ -81,7 +81,10 @@ When a service is unreachable or refuses, its pages say so; the rest of the pane
 
 In the same step, `SERVERS` and `X-Server-Id` give way to the panel's own settings:
 `GAME_SERVER_NAME` (shown in the top bar), `PERSISTENCE_URL`, `SOCIAL_URL`, … The browser never
-sees these URLs (ADR 0011). The persistence routes stop requiring `X-Server-Id`.
+sees these URLs (ADR 0011). The persistence routes stop requiring `X-Server-Id`. Done on
+2026-10-08 (lot 2 step L): `GET /api/panel` (environment, game server name, services) replaces
+`GET /api/servers`; the BFF refuses to start while `SERVERS` is set; migration note in the
+README.
 
 ### Social in the panel: what is wanted, in three steps
 

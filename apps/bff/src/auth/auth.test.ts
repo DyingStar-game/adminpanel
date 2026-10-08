@@ -9,7 +9,7 @@ describe('sign-in with Keycloak', () => {
   it('refuses the API without a session, and keeps the healthcheck open', async () => {
     const ctx = setup();
 
-    const res = await ctx.call('/api/servers');
+    const res = await ctx.call('/api/panel');
 
     expect(res.status).toBe(401);
     expect(await res.json()).toMatchObject({ error: 'UNAUTHENTICATED' });
@@ -69,7 +69,7 @@ describe('sign-in with Keycloak', () => {
       ],
       access: true,
     });
-    expect((await ctx.call('/api/servers', { cookie })).status).toBe(200);
+    expect((await ctx.call('/api/panel', { cookie })).status).toBe(200);
   });
 
   it('lets a player without a panel role sign in, but opens only /api/me', async () => {
@@ -81,12 +81,12 @@ describe('sign-in with Keycloak', () => {
     const { cookie } = await signIn(ctx);
 
     const me = MeResponseSchema.parse(await (await ctx.call('/api/me', { cookie })).json());
-    const servers = await ctx.call('/api/servers', { cookie });
+    const panel = await ctx.call('/api/panel', { cookie });
 
     // Another client's roles do not count.
     expect(me).toMatchObject({ access: false, roles: ['player'] });
-    expect(servers.status).toBe(403);
-    expect(await servers.json()).toMatchObject({ error: 'ACCESS_DENIED' });
+    expect(panel.status).toBe(403);
+    expect(await panel.json()).toMatchObject({ error: 'ACCESS_DENIED' });
   });
 
   it('opens the panel to a moderator holding a persistence role', async () => {
@@ -100,7 +100,7 @@ describe('sign-in with Keycloak', () => {
     );
     const { cookie } = await signIn(ctx);
 
-    expect((await ctx.call('/api/servers', { cookie })).status).toBe(200);
+    expect((await ctx.call('/api/panel', { cookie })).status).toBe(200);
   });
 
   it('comes back to the sign-in page when the login expired, failed or was refused', async () => {

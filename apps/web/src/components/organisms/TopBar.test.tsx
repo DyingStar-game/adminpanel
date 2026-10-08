@@ -9,12 +9,14 @@ import { renderWithProviders } from '@/test/render';
 import { usePreferences } from '@/stores/preferences';
 import { TopBar } from './TopBar';
 
-const servers = [{ id: 'universe-testing', name: 'Universe Testing', environment: 'testing' }];
-
 const renderTopBar = () => {
   server.use(
-    http.get('*/api/servers', () =>
-      HttpResponse.json({ environment: 'testing', servers, services: ['persistence'] }),
+    http.get('*/api/panel', () =>
+      HttpResponse.json({
+        environment: 'testing',
+        gameServerName: 'Universe Testing',
+        services: ['persistence'],
+      }),
     ),
   );
   const onSearch = vi.fn();
@@ -32,8 +34,6 @@ describe('TopBar', () => {
     expect(await screen.findByText('Universe Testing')).toBeInTheDocument();
     // One panel per environment (ADR 0023): its environment is always in sight.
     expect(screen.getByText('Pre-production')).toBeInTheDocument();
-    // Its only game server is the target of every call.
-    expect(usePreferences.getState().serverId).toBe('universe-testing');
   });
 
   it('searches the whole universe by a piece of name, the parent as hint', async () => {

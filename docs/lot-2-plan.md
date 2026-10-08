@@ -21,7 +21,7 @@ starting a session on lot 2.**
 | I. Acting on players: sanction (warn, mute; suspend, ban for `admin`+), lift, reputation | **Done** | `c1c3a05` |
 | J. Report actions: claim, then confirm, dismiss or escalate (rules of ADR 0024 › Update) | **Done** (to try live) | `bcb6bb2` |
 | K. Organisations, reading: corporations, political entities | **Done** (to try live) | — |
-| L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | To do | — |
+| L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | **Done** | see below |
 | M. Decide the final roles × actions matrix with the back team (ADR 0023) | Waiting for the back team | — |
 | N. Organisation management (`/api/internal/*` through `svc-admin`) | After M | — |
 | O. Next services (`economie`, `inventory`, `mission`, `market`), one by one with the ADR 0024 pattern | Later | — |
@@ -40,8 +40,9 @@ since the player sheet is where moderators look first.
   `make reset-social` then the walkthrough of its section remain to be tried live. Test data:
   `6185dc4`.
 - **Step K** (organisations, reading) is done, without the activity (members only in `social`,
-  question 10). **Next: step L** (panel settings instead of `SERVERS`). Reread ADR 0010, 0011,
-  0013, 0014, 0020, 0023, 0024 before coding (`CLAUDE.md` › "ADRs are binding").
+  question 10).
+- **Step L** (panel settings) is done: `.env.local` needs the migration of the README.
+  **Next: step M**, waiting for the back team (roles × actions matrix, questions below).
 - Not built, for lack of data in `social`: "claimed by X" on a report (its log has no filter;
   `social` stores no claimer).
 - Check `social`'s real behaviour on minikube before trusting its OpenAPI (it differed twice:
@@ -131,12 +132,16 @@ is configured. Player routes called with the moderator's token, read only:
   (`requireCorporationMember`, `requirePoliticalMember`, no moderator bypass): a moderator gets
   403. ADR 0024 lists it in step 2; question 10 below.
 
-### L. Panel settings instead of `SERVERS`
+### L. Panel settings instead of `SERVERS` — done
 
-`SERVERS` (a list) and the `X-Server-Id` header remain from the multi-server design; with one
-panel per environment and one game server per environment they become `GAME_SERVER_NAME`,
-`PERSISTENCE_URL`, `SOCIAL_URL`… About 25 files, mostly the SPA's query keys; one commit of its
-own, with a migration note for `.env.local` and deployments.
+- BFF: `GAME_SERVER_NAME` and `PERSISTENCE_URL` replace `SERVERS` (`config/servers.ts` removed);
+  one persistence, mounted only when `PERSISTENCE_URL` is set (like `SOCIAL_URL`); no more
+  `X-Server-Id`; `GET /api/panel` (`environment`, `gameServerName`, `services`) replaces
+  `GET /api/servers`. The BFF refuses to start while `SERVERS` is set, saying what replaces it.
+- SPA: `usePanel` replaces `useServers`; no server id in the API calls, the query keys or the
+  preferences (persisted version 1 drops the former `serverId`).
+- Migration note in the README (`.env.local` and deployments); `.env.sample`, `CLAUDE.md` and
+  `deploy/` updated (the latter still describe the previous panel, flagged as such).
 
 ## Conformity to the ADRs (2026-10-08)
 

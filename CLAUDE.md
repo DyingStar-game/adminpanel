@@ -71,7 +71,7 @@ to remove it — raise them whenever auth, local dev or the services integration
 
 Check shapes against live data rather than guessing (**GET only**, never POST / PUT / DELETE):
 
-- **Persistence test server**: base URL in [`.env.sample`](./.env.sample) (`SERVERS[0].persistenceUrl`,
+- **Persistence test server**: base URL in [`.env.sample`](./.env.sample) (`PERSISTENCE_URL`,
   today `http://46.231.240.213:31001`). Routes: `GET /items?page=1&page_size=50` with exact
   filters `parent_id` (roots: `parent_id=`), `object_type`, `scenename` (`page_size` up to
   10000); `GET /items/{uuid}`. Example: `curl -s "$URL/items?object_type=vehicle&page=1&page_size=5"`.
@@ -100,8 +100,8 @@ Check shapes against live data rather than guessing (**GET only**, never POST / 
   the admin keeps those facts in `apps/web/src/lib/bodies.ts`, matched on the body's scene
   (`tarsis_3.tscn` → `tarsis_III/`, `tarsis_3_1.tscn` → its first moon, linked to its section
   anchor); persistence has none.
-- **Through the BFF** (dev servers running): `curl -H "X-Server-Id: universe-testing" localhost:3000/api/items?page=1&page_size=5`
-  — also GET only.
+- **Through the BFF** (dev servers running, with a session cookie):
+  `curl -b "ds_admin_session=…" localhost:3000/api/items?page=1&page_size=5` — also GET only.
 
 ## Domain facts
 
@@ -152,7 +152,7 @@ wire.
   `src/services.ts`, `make contracts-update` generates its Zod schemas, a GitHub sync test
   alerts on drift), a client in `apps/bff/src/clients/<service>.ts`, curated routes
   `/api/<service>/…` guarded by a permission (`packages/schemas/src/permissions.ts`), its URL
-  (`<SERVICE>_URL`, listed in `GET /api/servers` › `services`), an MSW mock in
+  (`<SERVICE>_URL`, listed in `GET /api/panel` › `services`), an MSW mock in
   `packages/testing` checked against the contract, then its SPA section (sidebar entry shown
   when configured and allowed).
 

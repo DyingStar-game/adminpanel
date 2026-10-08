@@ -5,7 +5,7 @@ describe('loadEnv', () => {
   it('applies defaults', () => {
     expect(loadEnv({})).toMatchObject({
       PORT: 3000,
-      SERVERS: '[]',
+      GAME_SERVER_NAME: 'Game server',
       PERSISTENCE_TIMEOUT_MS: 5000,
       READ_CACHE_TTL_MS: 500,
       DEFINITIONS_REF: 'develop',
@@ -40,5 +40,27 @@ describe('loadEnv', () => {
       discoveryUrl: undefined,
       publicUrl: 'https://admin.test',
     });
+  });
+
+  it('reads the game server and its service URLs', () => {
+    expect(
+      loadEnv({
+        GAME_SERVER_NAME: 'Universe Testing',
+        PERSISTENCE_URL: 'http://46.231.240.213:31001',
+        SOCIAL_URL: '',
+      }),
+    ).toMatchObject({
+      GAME_SERVER_NAME: 'Universe Testing',
+      PERSISTENCE_URL: 'http://46.231.240.213:31001',
+      SOCIAL_URL: undefined,
+    });
+    expect(loadEnv({ PERSISTENCE_URL: '' }).PERSISTENCE_URL).toBeUndefined();
+    expect(() => loadEnv({ PERSISTENCE_URL: 'not a url' })).toThrow();
+  });
+
+  it('refuses the former SERVERS, saying what replaces it', () => {
+    expect(() => loadEnv({ SERVERS: '[{"id":"universe-testing"}]' })).toThrow(
+      /GAME_SERVER_NAME and PERSISTENCE_URL/,
+    );
   });
 });

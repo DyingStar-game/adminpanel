@@ -46,7 +46,7 @@ export function ImportPage({ search }: ImportPageProps) {
   const definitions = useDefinitions();
   const check = useImportCheck();
   const { run: start, cancel } = useImportRun();
-  const { isProduction, server } = useWriteTarget();
+  const { isProduction, serverName } = useWriteTarget();
   const {
     text,
     fileName,
@@ -143,7 +143,7 @@ export function ImportPage({ search }: ImportPageProps) {
   const downloadReport = () => {
     if (!checked) return;
     const report = {
-      server: server?.id ?? null,
+      server: serverName,
       at: new Date().toISOString(),
       rows: checked.rows.map((row) => ({
         index: row.index,
@@ -182,9 +182,7 @@ export function ImportPage({ search }: ImportPageProps) {
           <p className="text-sm text-fg-2">
             {t('import.intro', { max: IMPORT_MAX_ITEMS, size: megabytes(IMPORT_MAX_BYTES) })}
           </p>
-          <p className="text-xs text-fg-3">
-            {t('editor.liveWarning', { server: server?.name ?? '' })}
-          </p>
+          <p className="text-xs text-fg-3">{t('editor.liveWarning', { server: serverName })}</p>
         </PageHeading>
         <div className="flex flex-col gap-5 rounded-xl border bg-surface-2 p-5">
           <section aria-label={t('import.input')} className="flex flex-col gap-3">
@@ -413,11 +411,9 @@ export function ImportPage({ search }: ImportPageProps) {
               {withWarnings > 0 && <li>{t('import.confirmWarnings', { count: withWarnings })}</li>}
               {skipped > 0 && <li>{t('import.confirmSkipped', { count: skipped })}</li>}
             </ul>
-            <p>{t('import.confirmLive', { server: server?.name ?? '' })}</p>
+            <p>{t('import.confirmLive', { server: serverName })}</p>
             {isProduction && (
-              <p className="font-medium">
-                {t('editor.productionBody', { server: server?.name ?? '' })}
-              </p>
+              <p className="font-medium">{t('editor.productionBody', { server: serverName })}</p>
             )}
           </>
         }

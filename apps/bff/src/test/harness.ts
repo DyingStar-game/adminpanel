@@ -13,8 +13,6 @@ import { createApp, type AppOptions } from '../app';
 import { createSocialClient } from '../clients/social';
 import { createDefinitionsService } from '../services/definitions';
 
-export const SERVER_ID = 'universe-testing';
-
 /** Shared MSW server for BFF tests; handlers are registered per test through `buildApp`. */
 export const mswServer = setupServer();
 
@@ -53,14 +51,8 @@ export function buildApp(
   mswServer.use(...persistence.handlers, ...social.handlers, ...githubDefinitionsHandlers);
   const app = createApp({
     auth: false,
-    servers: [
-      {
-        id: SERVER_ID,
-        name: 'Universe Testing',
-        environment: 'testing',
-        persistenceUrl: PERSISTENCE_URL,
-      },
-    ],
+    gameServerName: 'Universe Testing',
+    persistenceUrl: PERSISTENCE_URL,
     definitions: createDefinitionsService({
       repo: 'DyingStar-game/horizonserver',
       path: 'ds_genericprops/props',
@@ -75,7 +67,7 @@ export function buildApp(
   const request = (path: string, init: RequestInit = {}) =>
     app.request(path, {
       ...init,
-      headers: { 'X-Server-Id': SERVER_ID, 'Content-Type': 'application/json', ...init.headers },
+      headers: { 'Content-Type': 'application/json', ...init.headers },
     });
 
   return { app, persistence, social, request };

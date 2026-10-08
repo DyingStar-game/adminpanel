@@ -6,7 +6,6 @@ import {
   type ItemCheckResponse,
 } from '@dyingstar-admin/schemas';
 import { apiSend } from '@/lib/api';
-import { usePreferences } from '@/stores/preferences';
 
 interface CheckState {
   /** The item as checked: a second submit of the same item saves despite warnings. */
@@ -23,7 +22,6 @@ export type CheckVerdict = 'save' | 'blocked' | 'confirm';
  * warnings (save anyway), `blocked` on errors, `confirm` on warnings or when the check failed.
  */
 export function useItemCheck() {
-  const serverId = usePreferences((s) => s.serverId);
   const [state, setState] = useState<CheckState | null>(null);
   const [checking, setChecking] = useState(false);
 
@@ -35,7 +33,6 @@ export function useItemCheck() {
       setChecking(true);
       try {
         const { findings } = (await apiSend('POST', '/api/items/check', {
-          serverId,
           body: request,
           schema: ItemCheckResponseSchema,
         })) as ItemCheckResponse;
@@ -50,7 +47,7 @@ export function useItemCheck() {
         setChecking(false);
       }
     },
-    [serverId, state],
+    [state],
   );
 
   /** Whether the next submit of `item` saves despite the findings shown. */

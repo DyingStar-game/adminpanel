@@ -1,5 +1,11 @@
 # Kubernetes environment — DyingStar platform
 
+> **Outdated (2026-10-08):** this page describes the previous panel (`packages/backend`). The
+> current BFF serves one environment and one game server: `ENVIRONMENT`, `GAME_SERVER_NAME`,
+> `PERSISTENCE_URL`, `SOCIAL_URL` and `OIDC_*` (see `.env.sample` and the README's migration
+> note); `SERVERS` is no longer read. In-cluster, `PERSISTENCE_URL` is
+> `http://service-persistence:3001`.
+
 Authoritative stack definition: **[`../kubernetes`](../../kubernetes)** (DyingStar Helm charts + Skaffold).
 
 Admin panel runs in namespace **`dyingstar-dev-local`** (local dev) alongside game services so the BFF can use in-cluster DNS.
@@ -17,7 +23,7 @@ Admin panel runs in namespace **`dyingstar-dev-local`** (local dev) alongside ga
 
 Helm **release names** = Kubernetes **Service** DNS names in the namespace.
 
-| Skaffold module | K8s Service | Ports | Admin BFF (`SERVERS` / env) |
+| Skaffold module | K8s Service | Ports | Admin BFF (env) |
 |---------------|-------------|-------|-----------------------------|
 | `service-persistence` | `service-persistence` | **3001** HTTP (`http`), **9100** WS (`ws`) | `persistenceUrl`, `wsUrl` |
 | `service-resourcesdynamic` | `service-resourcesdynamic` | **3001** HTTP, **9200** WS | `resourcesDynamicUrl`, `RESOURCES_DYNAMIC_*` |
@@ -106,7 +112,7 @@ Add admin panel: see [SKAFFOLD.md](./SKAFFOLD.md).
 ## Admin panel checklist
 
 - [ ] Backend deployed in `dyingstar-dev-local` (or port-forward to cluster DNS)
-- [ ] `SERVERS` uses in-cluster hostnames above
+- [ ] `PERSISTENCE_URL` uses the in-cluster hostname above
 - [ ] `keycloakRealm` = `dyingstar` for dev-local
 - [ ] `RESOURCES_DYNAMIC_HORIZONS_PATH` aligned with resourcesDynamic OpenAPI
 - [ ] Skaffold module `dyingstar-admin` added (optional)

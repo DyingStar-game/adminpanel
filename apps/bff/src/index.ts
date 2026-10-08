@@ -3,18 +3,18 @@ import { createApp } from './app';
 import { createAuth } from './auth/auth';
 import { createOidcProvider } from './auth/oidc';
 import { createSocialClient, registerStaffInSocial } from './clients/social';
-import { parseServers } from './config/servers';
 import { authEnv, loadEnv } from './env';
 import { createDefinitionsService } from './services/definitions';
 
 const env = loadEnv();
-const servers = parseServers(env.SERVERS, env.ENVIRONMENT);
 const { issuer, discoveryUrl, clientId, clientSecret, ...session } = authEnv(env);
 const social = env.SOCIAL_URL
   ? createSocialClient({ baseUrl: env.SOCIAL_URL, timeoutMs: env.SERVICE_TIMEOUT_MS })
   : undefined;
 const app = createApp({
   environment: env.ENVIRONMENT,
+  gameServerName: env.GAME_SERVER_NAME,
+  persistenceUrl: env.PERSISTENCE_URL,
   social,
   auth: createAuth({
     provider: createOidcProvider({ issuer, discoveryUrl, clientId, clientSecret }),
@@ -22,7 +22,6 @@ const app = createApp({
     ...session,
     onSignIn: social && registerStaffInSocial(social),
   }),
-  servers,
   definitions: createDefinitionsService({
     repo: env.DEFINITIONS_REPO,
     path: env.DEFINITIONS_PATH,
@@ -38,7 +37,8 @@ const app = createApp({
 serve({ fetch: app.fetch, port: env.PORT }, (info) => {
   console.log(`DyingStar Admin BFF listening on http://localhost:${info.port}`);
   console.log(`Environment: ${env.ENVIRONMENT}`);
+  console.log(`Game server: ${env.GAME_SERVER_NAME}`);
+  console.log(`Persistence: ${env.PERSISTENCE_URL ?? 'not configured (items hidden)'}`);
   console.log(`Social: ${env.SOCIAL_URL ?? 'not configured (moderation hidden)'}`);
   console.log(`Keycloak: ${issuer} (client ${clientId})`);
-  console.log(`Game servers: ${servers.map((s) => s.id).join(', ') || 'none (set SERVERS)'}`);
 });

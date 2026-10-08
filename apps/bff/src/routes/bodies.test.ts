@@ -28,11 +28,10 @@ describe('GET /api/bodies/:uuid/map', () => {
     expect(body.referenceRadius).toBeGreaterThan(6_000_000);
   });
 
-  it('requires a server and answers 404 for an unknown body', async () => {
-    const { app, request } = buildApp();
-
-    expect((await app.request(`/api/bodies/${ids.planet}/map`)).status).toBe(400);
-    expect((await request('/api/bodies/unknown/map')).status).toBe(404);
+  it('answers 404 for an unknown body, and without persistence', async () => {
+    expect((await buildApp().request('/api/bodies/unknown/map')).status).toBe(404);
+    const without = buildApp({ persistenceUrl: undefined });
+    expect((await without.request(`/api/bodies/${ids.planet}/map`)).status).toBe(404);
   });
 
   it('omits a shown type too numerous for the limit instead of failing', async () => {

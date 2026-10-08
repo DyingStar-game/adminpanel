@@ -68,7 +68,7 @@ export function ItemCreateSheet({
   const { t } = useTranslation();
   const definitions = useDefinitions();
   const create = useCreateItem();
-  const { isProduction, server } = useWriteTarget();
+  const { isProduction, serverName } = useWriteTarget();
   const [pending, setPending] = useState<Item | null>(null);
 
   const form = useForm<CreateFormValues>({
@@ -164,9 +164,7 @@ export function ItemCreateSheet({
     <form onSubmit={(e) => void submit(e)} className="flex h-full min-h-0 flex-col">
       <SheetHeader className="border-b">
         <SheetTitle>{t('editor.createTitle')}</SheetTitle>
-        <SheetDescription>
-          {t('editor.liveWarning', { server: server?.name ?? '' })}
-        </SheetDescription>
+        <SheetDescription>{t('editor.liveWarning', { server: serverName })}</SheetDescription>
       </SheetHeader>
       <ScrollArea className="min-h-0 flex-1">
         <div className="flex flex-col gap-4 p-4">
@@ -282,7 +280,7 @@ export function ItemCreateSheet({
       <WriteConfirm
         open={!!pending}
         title={t('editor.productionTitle')}
-        description={<p>{t('editor.productionBody', { server: server?.name ?? '' })}</p>}
+        description={<p>{t('editor.productionBody', { server: serverName })}</p>}
         confirmLabel={t('editor.create')}
         cancelLabel={t('confirm.cancel')}
         onConfirm={() => pending && void send(pending)}

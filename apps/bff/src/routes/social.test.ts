@@ -11,11 +11,13 @@ import { buildApp, mswServer } from '../test/harness';
 
 describe('social moderation routes (ADR 0024)', () => {
   it('lists the services this panel manages', async () => {
-    const res = await buildApp().request('/api/servers');
+    const res = await buildApp().request('/api/panel');
     expect(await res.json()).toMatchObject({ services: ['persistence', 'social'] });
 
-    const without = await buildApp({ social: undefined }).request('/api/servers');
+    const without = await buildApp({ social: undefined }).request('/api/panel');
     expect(await without.json()).toMatchObject({ services: ['persistence'] });
+    const alone = await buildApp({ persistenceUrl: undefined }).request('/api/panel');
+    expect(await alone.json()).toMatchObject({ services: ['social'] });
   });
 
   it('reads stats, the log, reports, a player sheet and sanctions', async () => {

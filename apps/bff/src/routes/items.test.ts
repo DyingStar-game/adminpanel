@@ -7,19 +7,18 @@ const json = (body: unknown) => ({ method: 'POST', body: JSON.stringify(body) })
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const read = async (res: Response): Promise<any> => res.json();
 
-describe('server resolution', () => {
-  it('requires the X-Server-Id header', async () => {
-    const res = await buildApp().app.request('/api/items');
+describe("the panel's persistence (ADR 0024)", () => {
+  it('needs no server header: one game server per panel', async () => {
+    const res = await buildApp().app.request('/api/items?parent_id=');
 
-    expect(res.status).toBe(400);
-    expect(await res.json()).toMatchObject({ error: 'SERVER_REQUIRED' });
+    expect(res.status).toBe(200);
   });
 
-  it('rejects an unknown server', async () => {
-    const res = await buildApp().app.request('/api/items', { headers: { 'X-Server-Id': 'nope' } });
+  it('answers 404 when persistence is not configured', async () => {
+    const res = await buildApp({ persistenceUrl: undefined }).app.request('/api/items');
 
     expect(res.status).toBe(404);
-    expect(await res.json()).toMatchObject({ error: 'UNKNOWN_SERVER' });
+    expect(await res.json()).toMatchObject({ error: 'NOT_FOUND' });
   });
 });
 

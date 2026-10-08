@@ -12,12 +12,20 @@ const EnvSchema = z.object({
   STATIC_DIR: z.string().min(1).optional(),
   /**
    * Environment this panel serves (`testing`, `production`…): one panel is deployed per
-   * environment, with its Keycloak (ADR 0023). Every entry of `SERVERS` belongs to it.
+   * environment, with its Keycloak and its game server (ADR 0023).
    */
   ENVIRONMENT: z.string().min(1).default('testing'),
-  /** JSON array of game servers, see `config/servers.ts`. */
-  SERVERS: z.string().default('[]'),
-  /** `social` of this environment, without `/api` (ADR 0024); unset, moderation is hidden. */
+  /** The game server of this environment, shown in the top bar (ADR 0024). */
+  GAME_SERVER_NAME: z.string().min(1).default('Game server'),
+  /**
+   * The game services of this environment (ADR 0024), internal URLs never sent to the browser
+   * (ADR 0011). Unset, the service is hidden. `persistence` without `/items`, `social` without
+   * `/api`.
+   */
+  PERSISTENCE_URL: z
+    .url()
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
   SOCIAL_URL: optionalString,
   /** Timeout of every call to a game service other than persistence. */
   SERVICE_TIMEOUT_MS: z.coerce.number().int().positive().default(5000),
@@ -76,5 +84,12 @@ export function authEnv(env: Env) {
 
 /** Parses and validates the process environment; throws with every invalid key listed. */
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
+  // Replaced by the panel's own settings (ADR 0024): refuse it rather than lose persistence.
+  if (source.SERVERS) {
+    throw new Error(
+      'SERVERS is no longer read: set GAME_SERVER_NAME and PERSISTENCE_URL instead (its ' +
+        '`name` and `persistenceUrl`), then remove SERVERS (see .env.sample)',
+    );
+  }
   return EnvSchema.parse(source);
 }

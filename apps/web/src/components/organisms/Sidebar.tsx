@@ -15,7 +15,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { GithubMark } from '@/components/atoms/GithubMark';
 import { useCan } from '@/hooks/useCan';
-import { useServers } from '@/hooks/useServers';
+import { usePanel } from '@/hooks/usePanel';
 import { WIKI_HOME } from '@/lib/bodies';
 import { cn } from '@/lib/cn';
 import { usePreferences } from '@/stores/preferences';
@@ -83,7 +83,7 @@ const SECTIONS: {
 export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
   const { t } = useTranslation();
   const can = useCan();
-  const { services } = useServers();
+  const { services } = usePanel();
   /** Built sections the account may open (ADR 0023, 0024); the others are greyed out. */
   const visible = (id: NavId) => {
     if (id === 'explorer') return can('persistence.read');

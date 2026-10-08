@@ -19,8 +19,6 @@ import { createSocialClient } from './clients/social';
 import fallback from './definitions/fallback.json';
 import type { DefinitionsService } from './services/definitions';
 
-export const TEST_SERVER_ID = 'universe-testing';
-
 /** Definitions service serving a fixed list (the bundled snapshot by default). */
 export function createStaticDefinitions(
   definitions: ObjectDefinition[] = z.array(ObjectDefinitionSchema).parse(fallback.definitions),
@@ -44,14 +42,8 @@ export function createInProcessBff({
   const social = createSocialMock(socialData);
   const app = createApp({
     auth: false,
-    servers: [
-      {
-        id: TEST_SERVER_ID,
-        name: 'Universe Testing',
-        environment: 'testing',
-        persistenceUrl: PERSISTENCE_URL,
-      },
-    ],
+    gameServerName: 'Universe Testing',
+    persistenceUrl: PERSISTENCE_URL,
     definitions: createStaticDefinitions(),
     readCacheTtlMs: 0,
     social: createSocialClient({ baseUrl: SOCIAL_URL, timeoutMs: 1000 }),

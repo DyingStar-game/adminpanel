@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import { ApiErrorSchema, SERVER_HEADER, type ApiErrorBody } from '@dyingstar-admin/schemas';
+import { ApiErrorSchema, type ApiErrorBody } from '@dyingstar-admin/schemas';
 
 /** Error raised for non-2xx BFF responses, carrying the HTTP status and parsed body. */
 export class ApiError extends Error {
@@ -24,20 +24,9 @@ export class ApiError extends Error {
   }
 }
 
-export interface ApiOptions {
-  /** Target game server, sent as `X-Server-Id` (required by item routes). */
-  serverId?: string | null | undefined;
-}
-
-async function request(
-  method: string,
-  path: string,
-  { serverId }: ApiOptions,
-  body?: unknown,
-): Promise<unknown> {
+async function request(method: string, path: string, body?: unknown): Promise<unknown> {
   const url = new URL(path, window.location.origin);
   const headers: Record<string, string> = { Accept: 'application/json' };
-  if (serverId) headers[SERVER_HEADER] = serverId;
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   const res = await fetch(url, {
     method,
@@ -50,20 +39,16 @@ async function request(
 }
 
 /** Fetches a BFF endpoint and validates the JSON response against a Zod schema. */
-export async function apiGet<T extends z.ZodType>(
-  path: string,
-  schema: T,
-  options: ApiOptions = {},
-): Promise<z.infer<T>> {
-  return schema.parse(await request('GET', path, options));
+export async function apiGet<T extends z.ZodType>(path: string, schema: T): Promise<z.infer<T>> {
+  return schema.parse(await request('GET', path));
 }
 
 /** Sends a write to the BFF; validates the response when a schema is given (none for 204). */
 export async function apiSend<T extends z.ZodType>(
   method: 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   path: string,
-  { body, schema, ...options }: ApiOptions & { body?: unknown; schema?: T },
+  { body, schema }: { body?: unknown; schema?: T } = {},
 ): Promise<z.infer<T> | null> {
-  const payload = await request(method, path, options, body);
+  const payload = await request(method, path, body);
   return schema ? schema.parse(payload) : null;
 }

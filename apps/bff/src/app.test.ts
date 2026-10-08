@@ -19,13 +19,13 @@ describe('BFF app', () => {
     expect(HealthResponseSchema.parse(await res.json()).status).toBe('ok');
   });
 
-  it('lists servers without any internal URL', async () => {
-    const res = await buildApp().app.request('/api/servers');
+  it('describes the panel without any internal URL', async () => {
+    const res = await buildApp().app.request('/api/panel');
 
     const body = await res.json();
     expect(body).toEqual({
       environment: 'testing',
-      servers: [{ id: 'universe-testing', name: 'Universe Testing', environment: 'testing' }],
+      gameServerName: 'Universe Testing',
       services: ['persistence', 'social'],
     });
     expect(JSON.stringify(body)).not.toContain('http');

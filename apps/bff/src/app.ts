@@ -5,6 +5,7 @@ import {
   ErrorCode,
   type HealthResponse,
   type MeResponse,
+  type PanelResponse,
 } from '@dyingstar-admin/schemas';
 import {
   requirePermission,
@@ -13,10 +14,9 @@ import {
   type SessionContext,
 } from './auth/auth';
 import type { SocialClient } from './clients/social';
-import { toPublicServer, type ServerConfig } from './config/servers';
 import { createPersistenceClient } from './clients/persistence';
 import { ApiError } from './lib/errors';
-import { requireServer } from './middleware/server';
+import { withPersistence } from './middleware/persistence';
 import { bodiesRoutes } from './routes/bodies';
 import { itemsRoutes } from './routes/items';
 import { socialRoutes } from './routes/social';
@@ -39,11 +39,17 @@ export interface AppOptions {
    * always passes one.
    */
   auth: Auth | false;
-  /** Environment this panel serves; every server belongs to it (`parseServers`). */
+  /** Environment this panel serves, with its Keycloak and its game server (ADR 0023). */
   environment?: string;
+  /** The game server of this environment, shown in the top bar. */
+  gameServerName?: string;
+  /**
+   * Persistence of this game server (ADR 0024); unset, the item routes answer 404 and the SPA
+   * hides persistence.
+   */
+  persistenceUrl?: string | undefined;
   /** `social` of this environment (ADR 0024); unset, its routes answer 404 and the SPA hides it. */
   social?: SocialClient | undefined;
-  servers?: ServerConfig[];
   definitions: DefinitionsService;
   persistenceTimeoutMs?: number;
   readCacheTtlMs?: number;
@@ -55,29 +61,21 @@ export interface AppOptions {
 export function createApp({
   auth,
   environment = 'testing',
+  gameServerName = 'Game server',
+  persistenceUrl,
   social,
-  servers = [],
   definitions,
   persistenceTimeoutMs = 5000,
   readCacheTtlMs = 500,
   staticDir,
 }: AppOptions) {
-  const registry = new Map(
-    servers.map((server) => [
-      server.id,
-      {
-        server,
-        items: createItemsService({
-          client: createPersistenceClient({
-            baseUrl: server.persistenceUrl,
-            timeoutMs: persistenceTimeoutMs,
-          }),
-          definitions,
-          readCacheTtlMs,
-        }),
-      },
-    ]),
-  );
+  const items =
+    persistenceUrl &&
+    createItemsService({
+      client: createPersistenceClient({ baseUrl: persistenceUrl, timeoutMs: persistenceTimeoutMs }),
+      definitions,
+      readCacheTtlMs,
+    });
 
   const app = new Hono();
 
@@ -96,12 +94,12 @@ export function createApp({
 
   const api = new Hono<SessionContext>()
     .get('/me', (c) => c.json<MeResponse>(auth ? auth.me(c.var.session) : NO_AUTH_ME))
-    .get('/servers', (c) =>
-      c.json({
+    .get('/panel', (c) =>
+      c.json<PanelResponse>({
         environment,
-        servers: servers.map(toPublicServer),
+        gameServerName,
         // Game services this panel manages (ADR 0024): the SPA shows their modules.
-        services: ['persistence', ...(social ? ['social'] : [])],
+        services: [...(items ? ['persistence'] : []), ...(social ? ['social'] : [])],
       }),
     )
     .get('/definitions', async (c) => c.json(await definitions.list()))
@@ -112,11 +110,14 @@ export function createApp({
       }
       return c.json(definition);
     });
-  api.use('/items/*', requirePersistencePermission, requireServer(registry, definitions));
-  api.use('/items', requirePersistencePermission, requireServer(registry, definitions));
-  api.route('/items', itemsRoutes);
-  api.use('/bodies/*', requirePersistencePermission, requireServer(registry, definitions));
-  api.route('/bodies', bodiesRoutes);
+  if (items) {
+    const persistence = withPersistence(items, definitions);
+    api.use('/items/*', requirePersistencePermission, persistence);
+    api.use('/items', requirePersistencePermission, persistence);
+    api.route('/items', itemsRoutes);
+    api.use('/bodies/*', requirePersistencePermission, persistence);
+    api.route('/bodies', bodiesRoutes);
+  }
   if (social) {
     api.use('/social/*', requirePermission('social.moderate'));
     api.route('/social', socialRoutes(social));

@@ -19,7 +19,7 @@ Short DNS from the same namespace: `http://service-persistence:3001`, `http://se
 
 ## Backend env in cluster
 
-Deploy the admin backend with `SERVERS` and `RESOURCES_DYNAMIC_*` pointing to the table above (see `packages/backend/.env.example`).
+Deploy the admin backend with `PERSISTENCE_URL` (formerly `SERVERS`) and `RESOURCES_DYNAMIC_*` pointing to the table above (see `packages/backend/.env.example`).
 
 The BFF calls **service-resourcesdynamic** to count active Horizon instances per game server:
 

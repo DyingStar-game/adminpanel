@@ -57,7 +57,6 @@ export const setup = (
     app.request(`${ORIGIN}${path}`, {
       ...init,
       headers: {
-        'X-Server-Id': 'universe-testing',
         ...(init.cookie ? { Cookie: init.cookie } : {}),
         ...init.headers,
       },
