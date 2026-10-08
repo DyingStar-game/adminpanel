@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useReport, useReports } from '@/hooks/useModeration';
 import { formatDateTime } from '@/lib/format';
 import { MODERATION_PAGE_SIZE, type ModerationSearch } from '@/lib/moderationSearch';
-import { moderationErrorKey } from './moderationLabels';
+import { moderationErrorKey } from '@/lib/moderationErrors';
 
 const STATUSES: ReportStatus[] = ['open', 'reviewing', 'resolved', 'dismissed'];
 const LEVELS: EscalationLevel[] = ['moderator', 'admin', 'supervisor'];

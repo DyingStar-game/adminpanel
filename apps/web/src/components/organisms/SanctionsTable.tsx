@@ -5,6 +5,7 @@ import { MonoText } from '@/components/atoms/MonoText';
 import { DataTable } from '@/components/molecules/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { usePlayerNames } from '@/hooks/useModeration';
 import { activeSanctions } from '@/lib/sanctions';
 import { formatDateTime, shortId } from '@/lib/format';
 
@@ -26,6 +27,8 @@ export function SanctionsTable({
 }: SanctionsTableProps) {
   const { t, i18n } = useTranslation();
   const inForce = new Set(activeSanctions(sanctions).map((s) => s.id));
+  // Sanctions carry the player's id only: their name comes from their profile.
+  const names = usePlayerNames(showPlayer ? sanctions.map((s) => s.playerId) : []);
   const date = (iso: string | null) => (iso ? formatDateTime(iso, i18n.language) : '—');
   return (
     <DataTable<Sanction>
@@ -47,7 +50,7 @@ export function SanctionsTable({
                 header: t('moderation.columns.player'),
                 cell: (s: Sanction) => (
                   <Chip variant="link" title={s.playerId} onClick={() => onOpenPlayer(s.playerId)}>
-                    <MonoText>{shortId(s.playerId)}</MonoText>
+                    {names.get(s.playerId) ?? <MonoText>{shortId(s.playerId)}</MonoText>}
                   </Chip>
                 ),
               },
@@ -93,12 +96,15 @@ export function SanctionsTable({
           ? [
               {
                 key: 'lift',
-                header: t('moderation.actions.lift'),
+                header: t('moderation.columns.actions'),
                 cell: (s: Sanction) =>
-                  inForce.has(s.id) && (
+                  inForce.has(s.id) ? (
                     <Button variant="outline" size="xs" onClick={() => onLift(s)}>
                       {t('moderation.actions.lift')}
                     </Button>
+                  ) : (
+                    // Nothing to do on a warning (a record) or an ended sanction.
+                    <span className="text-fg-3">—</span>
                   ),
                 className: 'text-right',
               },

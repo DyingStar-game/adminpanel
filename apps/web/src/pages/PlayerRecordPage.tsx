@@ -1,25 +1,30 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeftIcon, GavelIcon, TrendingUpIcon } from 'lucide-react';
-import type { ReportView, ReputationEvent, Sanction } from '@dyingstar-admin/contracts/social';
+import type { Sanction } from '@dyingstar-admin/contracts/social';
 import { CopyButton } from '@/components/atoms/CopyButton';
 import { MonoText } from '@/components/atoms/MonoText';
-import { DataTable } from '@/components/molecules/DataTable';
-import { PageHeading } from '@/components/molecules/PageHeading';
+import { FactTiles } from '@/components/molecules/FactTiles';
+import { PlayerIdentity } from '@/components/molecules/PlayerIdentity';
+import { PlayerOrganisations } from '@/components/molecules/PlayerOrganisations';
+import { SanctionBanner } from '@/components/molecules/SanctionBanner';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { ActivityTable } from '@/components/organisms/ActivityTable';
 import { LiftSanctionDialog } from '@/components/organisms/LiftSanctionDialog';
-import { moderationErrorKey } from '@/components/organisms/moderationLabels';
 import { PersistencePlayerLink } from '@/components/organisms/PersistencePlayerLink';
+import { PlayerReportsTable } from '@/components/organisms/PlayerReportsTable';
 import { ReputationDialog } from '@/components/organisms/ReputationDialog';
+import { ReputationHistoryTable } from '@/components/organisms/ReputationHistoryTable';
 import { SanctionDialog } from '@/components/organisms/SanctionDialog';
 import { SanctionsTable } from '@/components/organisms/SanctionsTable';
+import { ServicePageLayout } from '@/components/templates/ServicePageLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCan } from '@/hooks/useCan';
 import { usePlayerProfile, usePlayerRecord } from '@/hooks/useModeration';
 import { ApiError } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
+import { moderationErrorKey } from '@/lib/moderationErrors';
 import { activeSanctions } from '@/lib/sanctions';
 
 interface PlayerRecordPageProps {
@@ -32,7 +37,9 @@ interface PlayerRecordPageProps {
   onOpenMap: (body: string, selected: string) => void;
 }
 
-/** A player's moderation sheet (ADR 0024, reading): profile, sanctions, reports, reputation. */
+type Dialog = { kind: 'sanction' } | { kind: 'reputation' } | { kind: 'lift'; sanction: Sanction };
+
+/** A player's moderation sheet (ADR 0024): the template wired to the sheet's data and actions. */
 export function PlayerRecordPage({
   playerId,
   onBack,
@@ -46,10 +53,7 @@ export function PlayerRecordPage({
   // Public profile (presence, organisations): the sheet stays readable without it.
   const profile = usePlayerProfile(playerId).data;
   const can = useCan();
-  const [dialog, setDialog] = useState<
-    { kind: 'sanction' } | { kind: 'reputation' } | { kind: 'lift'; sanction: Sanction } | null
-  >(null);
-  const date = (iso: string) => formatDateTime(iso, i18n.language);
+  const [dialog, setDialog] = useState<Dialog | null>(null);
 
   const back = (
     <Button variant="outline" size="sm" onClick={onBack}>
@@ -60,8 +64,7 @@ export function PlayerRecordPage({
   if (record.isError) {
     const missing = record.error instanceof ApiError && record.error.status === 404;
     return (
-      <div className="flex flex-col gap-4 px-6 py-5">
-        {back}
+      <ServicePageLayout title={t('moderation.player.title')} actions={back}>
         <ServiceNotice
           message={
             missing
@@ -69,150 +72,77 @@ export function PlayerRecordPage({
               : t(moderationErrorKey(record.error))
           }
         />
-      </div>
+      </ServicePageLayout>
     );
   }
   const player = record.data;
   if (!player) return null;
-  const inForce = activeSanctions(player.sanctions);
-  const identity = [
-    [t('moderation.player.faction'), player.faction],
-    [t('moderation.player.role'), player.role],
-    [t('moderation.player.rp.characterName'), player.rpSheet?.characterName],
-    [t('moderation.player.rp.alignment'), player.rpSheet?.alignment],
-  ].filter((entry): entry is [string, string] => !!entry[1]);
+  // NPCs are excluded from sanctions and reputation by `social`.
+  const actionable = player.entityType === 'player';
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-5">
-      <div className="flex items-start gap-4">
-        {player.avatarUrl && (
+    <ServicePageLayout
+      title={player.displayName}
+      leading={
+        player.avatarUrl && (
           <img
             src={player.avatarUrl}
             alt=""
             className="size-16 shrink-0 rounded-lg border object-cover"
           />
-        )}
-        <div className="min-w-0 flex-1">
-          <PageHeading
-            title={player.displayName}
-            actions={
-              <div className="flex flex-wrap gap-2">
-                {/* NPCs are excluded from sanctions and reputation by `social`. */}
-                {player.entityType === 'player' && can('social.moderate') && (
-                  <Button size="sm" onClick={() => setDialog({ kind: 'sanction' })}>
-                    <GavelIcon />
-                    {t('moderation.actions.sanction')}
-                  </Button>
-                )}
-                {player.entityType === 'player' && can('social.reputation') && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setDialog({ kind: 'reputation' })}
-                  >
-                    <TrendingUpIcon />
-                    {t('moderation.actions.reputation')}
-                  </Button>
-                )}
-                {back}
-              </div>
-            }
-          >
-            <div className="flex flex-wrap items-center gap-2 text-sm text-fg-3">
-              <Badge variant="outline">{t(`moderation.player.kind.${player.entityType}`)}</Badge>
-              {profile && (
-                <Badge variant={profile.status === 'offline' ? 'outline' : 'secondary'}>
-                  {t(`moderation.player.status.${profile.status}`)}
-                </Badge>
-              )}
-              <MonoText tone="subtle">{player.playerId}</MonoText>
-              <CopyButton value={player.playerId} />
-            </div>
-          </PageHeading>
+        )
+      }
+      meta={
+        <div className="flex flex-wrap items-center gap-2 text-sm text-fg-3">
+          <Badge variant="outline">{t(`moderation.player.kind.${player.entityType}`)}</Badge>
+          {profile && (
+            <Badge variant={profile.status === 'offline' ? 'outline' : 'secondary'}>
+              {t(`moderation.player.status.${profile.status}`)}
+            </Badge>
+          )}
+          <MonoText tone="subtle">{player.playerId}</MonoText>
+          <CopyButton value={player.playerId} />
         </div>
-      </div>
-      {inForce.length > 0 && (
-        <div
-          role="status"
-          className="flex flex-col gap-1 rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm"
-        >
-          {inForce.map((sanction) => (
-            <p key={sanction.id}>
-              <span className="font-semibold">{t(`moderation.sanctionType.${sanction.type}`)}</span>{' '}
-              {sanction.expiresAt
-                ? t('moderation.player.until', { date: date(sanction.expiresAt) })
-                : t('moderation.player.permanent')}{' '}
-              — {sanction.reason}
-            </p>
-          ))}
+      }
+      actions={
+        <div className="flex flex-wrap gap-2">
+          {actionable && can('social.moderate') && (
+            <Button size="sm" onClick={() => setDialog({ kind: 'sanction' })}>
+              <GavelIcon />
+              {t('moderation.actions.sanction')}
+            </Button>
+          )}
+          {actionable && can('social.reputation') && (
+            <Button variant="outline" size="sm" onClick={() => setDialog({ kind: 'reputation' })}>
+              <TrendingUpIcon />
+              {t('moderation.actions.reputation')}
+            </Button>
+          )}
+          {back}
         </div>
-      )}
-      <dl className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        {[
-          [t('moderation.player.reputation'), String(player.reputation)],
-          [
-            t('moderation.player.playtime'),
-            t('moderation.player.hours', { count: Math.round(player.playtimeSeconds / 3600) }),
-          ],
-          [t('moderation.player.since'), date(player.createdAt)],
-        ].map(([label, value]) => (
-          <div key={label} className="flex flex-col gap-1 rounded-lg border px-4 py-3">
-            <dt className="text-xs text-fg-3">{label}</dt>
-            <dd className="text-lg font-semibold tabular-nums">{value}</dd>
-          </div>
-        ))}
-      </dl>
+      }
+    >
+      <SanctionBanner sanctions={activeSanctions(player.sanctions)} />
+      <FactTiles
+        facts={[
+          { label: t('moderation.player.reputation'), value: player.reputation },
+          {
+            label: t('moderation.player.playtime'),
+            value: t('moderation.player.hours', {
+              count: Math.round(player.playtimeSeconds / 3600),
+            }),
+          },
+          {
+            label: t('moderation.player.since'),
+            value: formatDateTime(player.createdAt, i18n.language),
+          },
+        ]}
+      />
       <div className="grid gap-6 md:grid-cols-2">
-        <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-semibold">{t('moderation.player.identity')}</h2>
-          {identity.length > 0 && (
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-              {identity.map(([label, value]) => (
-                <div key={label} className="contents">
-                  <dt className="text-fg-3">{label}</dt>
-                  <dd>{value}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-          {player.biography && <p className="text-sm whitespace-pre-wrap">{player.biography}</p>}
-          {player.rpSheet?.story && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-fg-3">{t('moderation.player.rp.story')}</span>
-              <p className="text-sm whitespace-pre-wrap">{player.rpSheet.story}</p>
-            </div>
-          )}
-          {identity.length === 0 && !player.biography && !player.rpSheet?.story && (
-            <p className="text-sm text-fg-3">{t('moderation.none')}</p>
-          )}
-          <p className="text-xs text-fg-3">
-            {t('moderation.player.updated', { date: date(player.updatedAt) })}
-          </p>
-        </section>
-        <section className="flex flex-col gap-2">
-          <h2 className="text-sm font-semibold">{t('moderation.player.organisations')}</h2>
-          {profile && profile.corporations.length + profile.politics.length > 0 ? (
-            <ul className="flex flex-col gap-1.5 text-sm">
-              {profile.corporations.map((corporation) => (
-                <li key={corporation.id} className="flex items-center gap-2">
-                  <Badge variant="outline">{t('moderation.player.corporation')}</Badge>
-                  {corporation.name}
-                  <MonoText tone="subtle">[{corporation.ticker}]</MonoText>
-                </li>
-              ))}
-              {profile.politics.map((entity) => (
-                <li key={entity.id} className="flex items-center gap-2">
-                  <Badge variant="outline">{t(`moderation.player.political.${entity.type}`)}</Badge>
-                  {entity.name}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-sm text-fg-3">{profile ? t('moderation.none') : '…'}</p>
-          )}
-        </section>
+        <PlayerIdentity player={player} />
+        <PlayerOrganisations memberships={profile ?? null} />
       </div>
-      {player.entityType === 'player' && (
+      {actionable && (
         <PersistencePlayerLink
           playerId={player.playerId}
           onOpenItem={onOpenItem}
@@ -232,59 +162,11 @@ export function PlayerRecordPage({
       </section>
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">{t('moderation.player.reports')}</h2>
-        <DataTable<ReportView>
-          label={t('moderation.player.reports')}
-          rows={player.reports}
-          rowKey={(r) => r.id}
-          empty={t('moderation.none')}
-          onPick={(r) => onOpenReport(r.id)}
-          columns={[
-            { key: 'date', header: t('moderation.columns.date'), cell: (r) => date(r.createdAt) },
-            {
-              key: 'reason',
-              header: t('moderation.columns.reason'),
-              cell: (r) => t(`moderation.reason.${r.reason}`),
-            },
-            {
-              key: 'reporter',
-              header: t('moderation.columns.reporter'),
-              cell: (r) => r.reporterName ?? t('moderation.system'),
-            },
-            {
-              key: 'status',
-              header: t('moderation.columns.status'),
-              cell: (r) => (
-                <Badge variant="outline">{t(`moderation.reportStatus.${r.status}`)}</Badge>
-              ),
-            },
-          ]}
-        />
+        <PlayerReportsTable reports={player.reports} onOpenReport={onOpenReport} />
       </section>
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">{t('moderation.player.reputationEvents')}</h2>
-        <DataTable<ReputationEvent>
-          label={t('moderation.player.reputationEvents')}
-          rows={player.reputationEvents}
-          rowKey={(e) => e.id}
-          empty={t('moderation.none')}
-          columns={[
-            { key: 'date', header: t('moderation.columns.date'), cell: (e) => date(e.createdAt) },
-            {
-              key: 'delta',
-              header: t('moderation.columns.delta'),
-              cell: (e) => (e.delta > 0 ? `+${e.delta}` : String(e.delta)),
-              className: 'tabular-nums',
-            },
-            {
-              key: 'balance',
-              header: t('moderation.columns.reputation'),
-              cell: (e) => e.balance,
-              className: 'tabular-nums',
-            },
-            { key: 'source', header: t('moderation.columns.source'), cell: (e) => e.source },
-            { key: 'reason', header: t('moderation.columns.reason'), cell: (e) => e.reason },
-          ]}
-        />
+        <ReputationHistoryTable events={player.reputationEvents} />
       </section>
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">{t('moderation.player.activity')}</h2>
@@ -316,6 +198,6 @@ export function PlayerRecordPage({
           onClose={() => setDialog(null)}
         />
       )}
-    </div>
+    </ServicePageLayout>
   );
 }

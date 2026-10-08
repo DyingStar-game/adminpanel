@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,6 +21,26 @@ import { ApiError } from '@/lib/api';
 
 const REASON_MAX = 128;
 
+/** The form, within the contract's limits (`zAdjustReputationBody`: −100…100, reason ≤ 128). */
+const ReputationFormSchema = z.object({
+  delta: z
+    .string()
+    .trim()
+    .regex(/^[+-]?\d+$/)
+    .transform(Number)
+    .pipe(
+      z
+        .number()
+        .int()
+        .min(-100)
+        .max(100)
+        .refine((value) => value !== 0),
+    ),
+  reason: z.string().trim().min(1).max(REASON_MAX),
+});
+type ReputationFormInput = z.input<typeof ReputationFormSchema>;
+type ReputationForm = z.output<typeof ReputationFormSchema>;
+
 interface ReputationDialogProps {
   playerId: string;
   playerName: string;
@@ -34,21 +57,19 @@ export function ReputationDialog({
 }: ReputationDialogProps) {
   const { t } = useTranslation();
   const adjust = useAdjustReputation();
-  const [delta, setDelta] = useState('');
-  const [reason, setReason] = useState('');
+  const form = useForm<ReputationFormInput, unknown, ReputationForm>({
+    resolver: zodResolver(ReputationFormSchema),
+    defaultValues: { delta: '', reason: '' },
+    mode: 'onChange',
+  });
+  const [delta, reason] = useWatch({ control: form.control, name: ['delta', 'reason'] });
   const [confirming, setConfirming] = useState(false);
   const value = Number(delta);
-  const valid =
-    delta.trim() !== '' &&
-    Number.isInteger(value) &&
-    value !== 0 &&
-    Math.abs(value) <= 100 &&
-    reason.trim().length > 0;
   const signed = value > 0 ? `+${value}` : String(value);
 
-  const submit = async () => {
+  const submit = form.handleSubmit(async (values) => {
     try {
-      const result = await adjust.mutateAsync({ playerId, delta: value, reason: reason.trim() });
+      const result = await adjust.mutateAsync({ playerId, ...values });
       toast.success(
         t('moderation.actions.reputationDone', {
           name: playerName,
@@ -60,67 +81,77 @@ export function ReputationDialog({
       toast.error(error instanceof ApiError ? error.message : t('moderation.unavailable'));
       setConfirming(false);
     }
-  };
+  });
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-110">
-        <DialogHeader>
-          <DialogTitle>{t('moderation.actions.reputationTitle', { name: playerName })}</DialogTitle>
-          <DialogDescription>
-            {t('moderation.actions.reputationHint', { reputation })}
-          </DialogDescription>
-        </DialogHeader>
-        {confirming ? (
-          <p role="alert" className="rounded-lg border px-3 py-2 text-sm">
-            {t('moderation.actions.reputationConfirm', {
-              name: playerName,
-              delta: signed,
-              from: reputation,
-              to: reputation + value,
-              reason: reason.trim(),
-            })}
-          </p>
-        ) : (
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="reputation-delta">{t('moderation.columns.delta')}</Label>
-              <Input
-                id="reputation-delta"
-                type="number"
-                min={-100}
-                max={100}
-                step={1}
-                value={delta}
-                onChange={(event) => setDelta(event.target.value)}
-                className="w-32"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="reputation-reason">{t('moderation.columns.reason')}</Label>
-              <Textarea
-                id="reputation-reason"
-                value={reason}
-                maxLength={REASON_MAX}
-                onChange={(event) => setReason(event.target.value)}
-              />
-            </div>
-          </div>
-        )}
-        <DialogFooter>
-          <Button variant="outline" onClick={confirming ? () => setConfirming(false) : onClose}>
-            {confirming ? t('moderation.actions.back') : t('confirm.cancel')}
-          </Button>
+        <form onSubmit={(event) => void submit(event)} className="flex flex-col gap-4">
+          <DialogHeader>
+            <DialogTitle>
+              {t('moderation.actions.reputationTitle', { name: playerName })}
+            </DialogTitle>
+            <DialogDescription>
+              {t('moderation.actions.reputationHint', { reputation })}
+            </DialogDescription>
+          </DialogHeader>
           {confirming ? (
-            <Button disabled={adjust.isPending} onClick={() => void submit()}>
-              {t('moderation.actions.confirm')}
-            </Button>
+            <p role="alert" className="rounded-lg border px-3 py-2 text-sm">
+              {t('moderation.actions.reputationConfirm', {
+                name: playerName,
+                delta: signed,
+                from: reputation,
+                to: reputation + value,
+                reason: reason.trim(),
+              })}
+            </p>
           ) : (
-            <Button disabled={!valid} onClick={() => setConfirming(true)}>
-              {t('moderation.actions.continue')}
-            </Button>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="reputation-delta">{t('moderation.columns.delta')}</Label>
+                <Input
+                  id="reputation-delta"
+                  type="number"
+                  min={-100}
+                  max={100}
+                  step={1}
+                  className="w-32"
+                  {...form.register('delta')}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="reputation-reason">{t('moderation.columns.reason')}</Label>
+                <Textarea
+                  id="reputation-reason"
+                  maxLength={REASON_MAX}
+                  {...form.register('reason')}
+                />
+              </div>
+            </div>
           )}
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={confirming ? () => setConfirming(false) : onClose}
+            >
+              {confirming ? t('moderation.actions.back') : t('confirm.cancel')}
+            </Button>
+            {confirming ? (
+              <Button type="submit" disabled={adjust.isPending}>
+                {t('moderation.actions.confirm')}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                disabled={!form.formState.isValid}
+                onClick={() => setConfirming(true)}
+              >
+                {t('moderation.actions.continue')}
+              </Button>
+            )}
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

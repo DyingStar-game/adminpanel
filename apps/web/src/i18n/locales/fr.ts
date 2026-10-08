@@ -531,6 +531,7 @@ export const fr: Translations = {
     automatic: 'automatique',
     openPlayer: 'Ouvrir la fiche du joueur',
     columns: {
+      actions: 'Actions',
       date: 'Date',
       reason: 'Motif',
       target: 'Visé',

@@ -523,6 +523,7 @@ export const en = {
     automatic: 'automatic',
     openPlayer: 'Open the player sheet',
     columns: {
+      actions: 'Actions',
       date: 'Date',
       reason: 'Reason',
       target: 'Target',

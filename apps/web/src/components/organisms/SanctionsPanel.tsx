@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useSanctions } from '@/hooks/useModeration';
 import { MODERATION_PAGE_SIZE, type ModerationSearch } from '@/lib/moderationSearch';
-import { moderationErrorKey } from './moderationLabels';
+import { moderationErrorKey } from '@/lib/moderationErrors';
 import { SanctionsTable } from './SanctionsTable';
 
 interface SanctionsPanelProps {

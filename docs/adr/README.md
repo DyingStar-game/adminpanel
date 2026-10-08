@@ -9,6 +9,10 @@ using lightweight ADRs ([Michael Nygard format](https://cognitect.com/blog/2011/
 - Start from [`template.md`](./template.md).
 - Statuses: `Proposed` → `Accepted` | `Rejected`; later `Deprecated` or `Superseded by NNNN`.
 - An accepted ADR is not rewritten: write a new ADR that supersedes it.
+- **An accepted ADR is binding, to the letter.** Reread the ADRs of an area before working in
+  it and check each of their rules before calling the work done: lint enforces only part of
+  them. `apps/web/src/conventions.test.ts` checks the frontend rules lint cannot (ADR 0010,
+  0014, 0020); when it fails, fix the code, not the test.
 - Written in English, like the rest of the contributor documentation.
 
 ## Index

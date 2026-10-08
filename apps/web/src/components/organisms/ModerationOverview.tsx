@@ -3,23 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { Chip } from '@/components/atoms/Chip';
 import { MonoText } from '@/components/atoms/MonoText';
 import { DataTable } from '@/components/molecules/DataTable';
+import { FactTiles } from '@/components/molecules/FactTiles';
 import { Pagination } from '@/components/molecules/Pagination';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { useModerationLog, usePlayerNames, useSocialStats } from '@/hooks/useModeration';
 import { shortId } from '@/lib/format';
 import { MODERATION_PAGE_SIZE } from '@/lib/moderationSearch';
 import { ModerationLogTable } from './ModerationLogTable';
-import { moderationErrorKey } from './moderationLabels';
-
-function Tile({ label, value, hint }: { label: string; value: number; hint?: string }) {
-  return (
-    <div className="flex flex-col gap-1 rounded-lg border px-4 py-3">
-      <span className="text-xs text-fg-3">{label}</span>
-      <span className="text-2xl font-semibold tabular-nums">{value}</span>
-      {hint && <span className="text-xs text-fg-3">{hint}</span>}
-    </div>
-  );
-}
+import { moderationErrorKey } from '@/lib/moderationErrors';
 
 /** Community figures and the moderation log (ADR 0024, reading). */
 export function ModerationOverview({
@@ -51,22 +42,24 @@ export function ModerationOverview({
   return (
     <div className="flex flex-col gap-6">
       {data && (
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          <Tile
-            label={t('moderation.stats.players')}
-            value={data.players.total}
-            hint={t('moderation.stats.online', { count: data.players.online })}
-          />
-          <Tile
-            label={t('moderation.stats.reports')}
-            value={reports}
-            hint={Object.entries(data.reports)
-              .map(([status, n]) => `${t(`moderation.reportStatus.${status}` as never)} ${n}`)
-              .join(' · ')}
-          />
-          <Tile label={t('moderation.stats.activeSanctions')} value={data.sanctions.active} />
-          <Tile label={t('moderation.stats.activity')} value={data.activityLast24h} />
-        </div>
+        <FactTiles
+          facts={[
+            {
+              label: t('moderation.stats.players'),
+              value: data.players.total,
+              hint: t('moderation.stats.online', { count: data.players.online }),
+            },
+            {
+              label: t('moderation.stats.reports'),
+              value: reports,
+              hint: Object.entries(data.reports)
+                .map(([status, n]) => `${t(`moderation.reportStatus.${status}` as never)} ${n}`)
+                .join(' · '),
+            },
+            { label: t('moderation.stats.activeSanctions'), value: data.sanctions.active },
+            { label: t('moderation.stats.activity'), value: data.activityLast24h },
+          ]}
+        />
       )}
       {data && (
         <div className="grid gap-6 md:grid-cols-2">

@@ -44,7 +44,7 @@ export function UserMenu({ username, name, roles, onSignOut, labels }: UserMenuP
               roles.map((role) => (
                 <span
                   key={role}
-                  className="rounded border px-1.5 py-0.5 font-mono text-[0.7rem] font-normal"
+                  className="rounded border px-1.5 py-0.5 font-mono text-2xs font-normal"
                 >
                   {role}
                 </span>

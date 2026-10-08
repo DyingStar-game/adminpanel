@@ -80,6 +80,15 @@ panel per environment and one game server per environment they become `GAME_SERV
 `PERSISTENCE_URL`, `SOCIAL_URL`… About 25 files, mostly the SPA's query keys; one commit of its
 own, with a migration note for `.env.local` and deployments.
 
+## Conformity to the ADRs (2026-10-08)
+
+The lot 2 screens had drifted from ADR 0010 / 0014 / 0020 while lint passed. Fixed: a
+`ServicePageLayout` template, business rendering moved out of the pages, `DataTable` on
+TanStack Table (columns kept stable through the table meta: `FlexRender` remounts cells
+otherwise), React Hook Form + Zod for the moderation forms, a test next to every new component.
+The rules lint cannot check are now enforced by `apps/web/src/conventions.test.ts`, and
+`CLAUDE.md` › "ADRs are binding" says how to work with them.
+
 ## Working locally
 
 - `make up` → our compose Keycloak (`localhost:8080`), persistence of pre-production, no

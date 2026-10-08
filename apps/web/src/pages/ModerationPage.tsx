@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { PageHeading } from '@/components/molecules/PageHeading';
+import { ServicePageLayout } from '@/components/templates/ServicePageLayout';
 import { ModerationOverview } from '@/components/organisms/ModerationOverview';
 import { ReportsPanel } from '@/components/organisms/ReportsPanel';
 import { SanctionsPanel } from '@/components/organisms/SanctionsPanel';
@@ -16,10 +16,10 @@ interface ModerationPageProps {
 export function ModerationPage({ search, onSearchChange, onOpenPlayer }: ModerationPageProps) {
   const { t } = useTranslation();
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-6 py-5">
-      <PageHeading title={t('moderation.title')}>
-        <p className="text-sm text-fg-3">{t('moderation.lead')}</p>
-      </PageHeading>
+    <ServicePageLayout
+      title={t('moderation.title')}
+      meta={<p className="text-sm text-fg-3">{t('moderation.lead')}</p>}
+    >
       <Tabs
         value={search.tab}
         onValueChange={(tab) =>
@@ -59,6 +59,6 @@ export function ModerationPage({ search, onSearchChange, onOpenPlayer }: Moderat
           />
         </TabsContent>
       </Tabs>
-    </div>
+    </ServicePageLayout>
   );
 }

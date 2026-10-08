@@ -168,6 +168,29 @@ docker run --rm --network host -v "$SCRATCH":/out mcr.microsoft.com/playwright:v
 The script opens `http://localhost:5173/...`, records `page.on('request')` methods other than GET
 and page errors, and writes screenshots to `/out`.
 
+## ADRs are binding — follow them to the letter
+
+An **accepted ADR is a rule, not a suggestion**. Passing lint is **not** proof of compliance:
+lint only checks part of them.
+
+1. **Before coding in an area, reread every ADR governing it** and list its rules:
+   - SPA, components, pages: [0010](./docs/adr/0010-frontend-stack.md) (stack: Zustand, Zod,
+     TanStack Query / Router, **React Hook Form + Zod for forms**),
+     [0014](./docs/adr/0014-atomic-design-shadcn.md) (atomic levels, **pages = templates +
+     data**, business rendering in molecules / organisms, **TanStack Table for tables**, reuse
+     before creating, **a test next to each component**),
+     [0020](./docs/adr/0020-visual-identity-first-panel.md) (look: column headers in spaced
+     capitals, monospace for technical values only, sizes from the scale);
+   - tests: [0013](./docs/adr/0013-testing-strategy.md) (mocks built from the contract and real
+     data); BFF: [0011](./docs/adr/0011-bff-hono.md), [0023](./docs/adr/0023-keycloak-authentication.md),
+     [0024](./docs/adr/0024-game-services-social-first.md); per feature: its own ADR.
+2. **Before saying a step is done**, go through that list rule by rule, then `make check`.
+3. A rule that cannot be followed is **raised with the maintainer**, never skipped silently.
+4. `apps/web/src/conventions.test.ts` (run by `make check`) enforces the rules lint cannot:
+   tests next to components, templates in pages, helpers out of `components/`, TanStack Table,
+   React Hook Form, text sizes. **Fix the code, never the test**; its debt lists (left by lot 1)
+   may only shrink.
+
 ## Way of working
 
 - Analyse the need before coding. Significant decisions are recorded as ADRs in
