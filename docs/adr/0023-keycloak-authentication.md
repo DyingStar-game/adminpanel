@@ -212,14 +212,23 @@ the code yet.
 
 #### Social — management (`/api/internal/*`, sent as `svc-admin`, checked by the panel only)
 
-Which roles open these is open: the moderation roles, or client roles of their own (e.g.
-`social:manage`) on `dyingstar-admin`.
+`social`'s internal API takes service-account tokens only, and its required roles
+(`social:corporation:write`…) are **capability roles of the calling service**: called as
+`svc-admin`, `social` cannot tell which person acts. The panel decides.
 
-| Action | `moderator` | `admin` ¹ | `supervisor` ¹ | own client role? |
-|---|---|---|---|---|
-| Create, edit, transfer, delete corporations | ❓ | ❓ | ❓ | ❓ |
-| Create, edit, transfer, delete political entities | ❓ | ❓ | ❓ | ❓ |
-| NPC memberships (corporation, political entity) | ❓ | ❓ | ❓ | ❓ |
+**Decided 2026-10-08 (maintainer):** a person gets **the capability roles of `social`'s
+README** (› Interne), under the same names, as client roles on `dyingstar-admin`; the panel
+checks them, then calls as `svc-admin`. The rights thus follow `social`'s own documentation,
+like the `persistence:*` roles.
+
+| Action (internal route) | Client role of the person on `dyingstar-admin` |
+|---|---|
+| Create, edit, transfer, delete a corporation; change or remove a member; NPC memberships (`/api/internal/corporations…`, `/players/:id/corporation`) | `social:corporation:write` |
+| Create, edit, transfer, delete a political entity; NPC memberships (`/api/internal/politics…`, `/players/:id/politics`) | `social:politics:write` |
+
+The moderation roles add nothing here. Still open with the back team: the panel's use of
+`svc-admin` and how its pre-production secret is handed over; `social` records the CEO or the
+head as the actor, not the person (an "actual author" field, or the panel's own log).
 
 #### Economie, inventory, mission, market — later lots (sent as `svc-admin`)
 

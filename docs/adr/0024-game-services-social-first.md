@@ -101,8 +101,9 @@ Asked by the maintainer (2026-10-08): **administer the players** (see their prof
    members and ranks, subsidiaries, activity) and political entities (`GET /api/politics…`:
    list by type, page, members and offices, children, activity). Player routes too, any
    signed-in player may read them: the panel's permission is what restricts them. Creating,
-   editing or disbanding an organisation goes through `/api/internal/*` (`svc-admin`) and waits
-   for ADR 0023's management table.
+   editing or disbanding an organisation goes through `/api/internal/*` (`svc-admin`), opened
+   by the capability roles of `social`'s README held by the person (ADR 0023's management
+   table, decided 2026-10-08).
 3. **Acting on players**: sanction (warning, mute; suspension and ban for `admin`+), lift a
    sanction, adjust reputation (`admin`+); then the report actions (status with a note,
    escalate). Each confirmed, like persistence writes, and refreshed after.
@@ -163,9 +164,10 @@ Decided by the maintainer after step 3's report actions were tried on minikube:
    (local cluster only), or ask the back team for a seed.
 3. Pre-production `social`: does it set `OIDC_AUDIENCE`? Then `dyingstar-admin` needs an
    audience mapper (ADR 0023, question 6).
-4. The `social` management routes (`/api/internal/*`, `svc-admin`) stay out of this ADR until
-   ADR 0023's management table is decided. They also hold what the sheet lacks: exact presence
-   (system, scene, position) and the current group.
+4. The `social` management routes (`/api/internal/*`, `svc-admin`): rights decided in ADR
+   0023's management table (2026-10-08); the panel's use of `svc-admin` and its secret wait
+   for the back team. They also hold what the sheet lacks: exact presence (system, scene,
+   position) and the current group.
 5. ~~Is a persistence `player`'s `object_uuid` its Keycloak `sub`?~~ Yes (maintainer,
    2026-10-08): the player sheet opens the player's item and shows them on the map, for accounts
    that may read persistence.

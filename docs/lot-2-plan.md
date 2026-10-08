@@ -23,7 +23,7 @@ starting a session on lot 2.**
 | K. Organisations, reading: corporations, political entities | **Done** (to try live) | — |
 | L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | **Done** | see below |
 | M. Decide the final roles × actions matrix with the back team (ADR 0023) | Waiting for the back team | — |
-| N. Organisation management (`/api/internal/*` through `svc-admin`) | After M | — |
+| N. Organisation management (`/api/internal/*` through `svc-admin`; rights decided, ADR 0023) | Waiting for `svc-admin` (question 11) | — |
 | O. Next services (`economie`, `inventory`, `mission`, `market`), one by one with the ADR 0024 pattern | Later | — |
 
 Order agreed with the maintainer on 2026-10-08: I (acting on players) before K (organisations),
@@ -212,8 +212,11 @@ From ADR 0023 and 0024, still open:
    (documented 409).
 10. The organisations' activity (`GET /api/corporations/{id}/activity`,
    `/api/politics/{id}/activity`) is for members only: should moderators read it (a role
-   bypass in `social`, or through `/api/internal/*` and `svc-admin`, ADR 0023's management
-   table)? Until then the panel does not show it.
+   bypass in `social`, or an internal route)? Until then the panel does not show it.
+11. Managing organisations (step N): the rights are decided (ADR 0023 › Social — management:
+   the person holds `social:corporation:write` / `social:politics:write` on
+   `dyingstar-admin`). Open: the panel's use of `svc-admin` and its pre-production secret;
+   the person acting is unknown to `social` (an "actual author" field, or the panel's log).
 7. Persistence requiring a token one day (then `svc-admin` needs its audience).
 8. Access token lifetime (24 h in pre-production) for the panel's client.
 9. `social`'s OpenAPI says `DELETE /api/admin/sanctions/{id}` answers 409 when already lifted;
