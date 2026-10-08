@@ -136,6 +136,29 @@ docker run -p 3000:3000 \
 Pass the variables of [`.env.sample`](./.env.sample) with `-e` (at least `PERSISTENCE_URL` and
 the `OIDC_*` settings).
 
+#### Secrets of a deployment
+
+Two secrets, both from the environment's Keycloak (the back team's), never in the repository nor
+in an image: give them to the container from a secret store (a Kubernetes `Secret` read with
+`envFrom` / `secretKeyRef`, the CI's secrets…).
+
+| Variable | What | Without it |
+|---|---|---|
+| `OIDC_CLIENT_SECRET` | Secret of the panel's client `dyingstar-admin` (sign-in, ADR 0023) | The BFF does not start |
+| `SVC_ADMIN_CLIENT_SECRET` | Secret of the service account `svc-admin` (`SVC_ADMIN_CLIENT_ID`, default `svc-admin`), for `social`'s internal API: organisation management (ADR 0023 › Social — management) | Organisations stay readable, not managed |
+
+For `svc-admin`, ask the back team to:
+
+1. give its secret to the panel's deployment of that environment (pre-production, production:
+   one secret each), as they do for the game services' `svc-*` accounts;
+2. keep on `svc-admin` the capability roles of `social`'s README the panel uses:
+   `social:corporation:write` and `social:politics:write`, with the audience `social-api`;
+3. list `svc-admin` in `social`'s `INTERNAL_SERVICE_CLIENTS` (already the case in dev-local).
+
+People get the same capability roles as client roles on `dyingstar-admin` to see the
+management actions. Locally, `make up K8S=1` reads the secret from minikube
+(`svc-admin-client-secret`, key `secret`). When a secret changes, restart the BFF.
+
 `make help` lists every target.
 
 ## Contributor documentation

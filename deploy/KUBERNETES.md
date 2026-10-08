@@ -4,7 +4,8 @@
 > current BFF serves one environment and one game server: `ENVIRONMENT`, `GAME_SERVER_NAME`,
 > `PERSISTENCE_URL`, `SOCIAL_URL` and `OIDC_*` (see `.env.sample` and the README's migration
 > note); `SERVERS` is no longer read. In-cluster, `PERSISTENCE_URL` is
-> `http://service-persistence:3001`.
+> `http://service-persistence:3001`. Secrets (`OIDC_CLIENT_SECRET`, `SVC_ADMIN_CLIENT_SECRET`):
+> see the README › Secrets of a deployment.
 
 Authoritative stack definition: **[`../kubernetes`](../../kubernetes)** (DyingStar Helm charts + Skaffold).
 
