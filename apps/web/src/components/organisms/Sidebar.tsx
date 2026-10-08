@@ -20,7 +20,7 @@ import { cn } from '@/lib/cn';
 import { usePreferences } from '@/stores/preferences';
 
 export type NavId =
-  'dashboard' | 'servers' | 'explorer' | 'import' | 'moderation' | 'users' | 'settings';
+  'dashboard' | 'servers' | 'explorer' | 'import' | 'players' | 'moderation' | 'settings';
 
 interface SidebarProps {
   /** Section of the page on screen. */
@@ -59,8 +59,8 @@ const SECTIONS: {
   {
     title: 'administration',
     items: [
+      { id: 'players', icon: UsersIcon },
       { id: 'moderation', icon: ShieldAlertIcon },
-      { id: 'users', icon: UsersIcon, soon: true },
     ],
   },
   { title: 'configuration', items: [{ id: 'settings', icon: SettingsIcon, soon: true }] },
@@ -80,7 +80,9 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
     if (id === 'explorer') return can('persistence.read');
     // The import only writes.
     if (id === 'import') return can('persistence.write');
-    if (id === 'moderation') return services.includes('social') && can('social.moderate');
+    if (id === 'players' || id === 'moderation') {
+      return services.includes('social') && can('social.moderate');
+    }
     return true;
   };
   const collapsed = usePreferences((s) => s.sidebarCollapsed);

@@ -61,7 +61,7 @@ describe('Sidebar', () => {
     );
     await userEvent.click(within(nav).getByRole('button', { name: 'Persistence — Import JSON' }));
     expect(onNavigate).toHaveBeenCalledWith('import');
-    expect(within(nav).getByRole('button', { name: /Users/ })).toBeDisabled();
+    expect(within(nav).getByRole('button', { name: /Settings/ })).toBeDisabled();
   });
 
   it('hides the import from an account that may not write', () => {

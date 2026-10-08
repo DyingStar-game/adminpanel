@@ -3,10 +3,13 @@ import {
   zGetCommunityStatsResponse,
   zGetModerationLogResponse,
   zGetPlayerRecordResponse,
+  zGetProfileResponse,
   zGetReportResponse,
   zListReportsResponse,
   zListSanctionsResponse,
+  zSearchProfilesResponse,
   type EscalationLevel,
+  type ProfileKind,
   type ReportStatus,
 } from '@dyingstar-admin/contracts/social';
 import { apiGet } from '@/lib/api';
@@ -82,4 +85,28 @@ export const useSanctions = (filter: { playerId?: string; ended: boolean }, page
       return apiGet(withParams('/api/social/sanctions', params), zListSanctionsResponse);
     },
     placeholderData: keepPreviousData,
+  });
+
+/** Players and NPCs by display name, sorted by name (`social`'s profile search). */
+export const useSocialPlayers = (
+  filter: { search: string; kind?: ProfileKind | undefined },
+  page: number,
+) =>
+  useQuery({
+    queryKey: ['social', 'players', filter, page],
+    queryFn: () => {
+      const params = pageParams(page);
+      params.set('search', filter.search);
+      if (filter.kind) params.set('entityType', filter.kind);
+      return apiGet(withParams('/api/social/players', params), zSearchProfilesResponse);
+    },
+    placeholderData: keepPreviousData,
+  });
+
+/** A player's public profile: presence, corporations, political entities. */
+export const usePlayerProfile = (playerId: string) =>
+  useQuery({
+    queryKey: ['social', 'profile', playerId],
+    queryFn: () =>
+      apiGet(`/api/social/players/${encodeURIComponent(playerId)}/profile`, zGetProfileResponse),
   });

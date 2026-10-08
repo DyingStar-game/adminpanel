@@ -58,10 +58,13 @@ function RootLayout() {
     ? 'import'
     : location.pathname.startsWith('/moderation')
       ? 'moderation'
-      : 'explorer';
+      : location.pathname.startsWith('/players')
+        ? 'players'
+        : 'explorer';
   // Pages of a service the account may not open say so instead of failing call by call.
-  const allowed = activeNav === 'moderation' ? can('social.moderate') : can('persistence.read');
-  const deniedKey = activeNav === 'moderation' ? 'moderation.forbidden' : 'session.noReadRight';
+  const social = activeNav === 'moderation' || activeNav === 'players';
+  const allowed = social ? can('social.moderate') : can('persistence.read');
+  const deniedKey = social ? 'moderation.forbidden' : 'session.noReadRight';
 
   /** Level on screen: the item being viewed, or the listed explorer level. */
   const levelOnScreen = () => {
@@ -155,7 +158,9 @@ function RootLayout() {
                 ? openImport()
                 : id === 'moderation'
                   ? void navigate({ to: '/moderation', search: { tab: 'overview' } })
-                  : void navigate({ to: '/explorer', search: ROOTS })
+                  : id === 'players'
+                    ? void navigate({ to: '/players', search: { q: '', page: 1 } })
+                    : void navigate({ to: '/explorer', search: ROOTS })
             }
             onHome={() => void navigate({ to: '/' })}
             version={APP_VERSION}

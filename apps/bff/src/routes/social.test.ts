@@ -41,6 +41,24 @@ describe('social moderation routes (ADR 0024)', () => {
     ).toMatchObject({ total: 2 });
   });
 
+  it("reads a player's public profile: presence and memberships", async () => {
+    const res = await buildApp().request(`/api/social/players/${socialIds.griefer}/profile`);
+    expect(await res.json()).toMatchObject({
+      status: 'online',
+      corporations: [{ ticker: 'DCM' }],
+      politics: [{ name: 'Port Gaea' }],
+    });
+  });
+
+  it('searches players by name', async () => {
+    const res = await buildApp().request('/api/social/players?search=dev&limit=5');
+    expect(await res.json()).toMatchObject({
+      total: 1,
+      limit: 5,
+      items: [{ displayName: 'dev-moderator' }],
+    });
+  });
+
   it('refuses invalid inputs before calling social', async () => {
     const { request, social } = buildApp();
 
@@ -48,6 +66,7 @@ describe('social moderation routes (ADR 0024)', () => {
     expect((await request('/api/social/reports?limit=500')).status).toBe(400);
     expect((await request('/api/social/reports/abc')).status).toBe(400);
     expect((await request('/api/social/players/not-a-uuid')).status).toBe(400);
+    expect((await request('/api/social/players?entityType=robot')).status).toBe(400);
     expect(social.tokens).toHaveLength(0);
   });
 

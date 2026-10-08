@@ -1,6 +1,9 @@
 import { http, HttpResponse } from 'msw';
 import type {
   ActivityEntry,
+  CorporationRef,
+  PoliticalEntityRef,
+  PresenceStatus,
   ModerationLogEntry,
   PlayerProfile,
   ReportView,
@@ -25,6 +28,9 @@ export interface SocialDataset {
   log: ModerationLogEntry[];
   reputationEvents: ReputationEvent[];
   activity: ActivityEntry[];
+  /** Public profile extras (`GET /api/profiles/{id}`), by player id; offline and none by default. */
+  presence: Record<string, PresenceStatus>;
+  memberships: Record<string, { corporations: CorporationRef[]; politics: PoliticalEntityRef[] }>;
 }
 
 const at = (minutes: number) =>
@@ -51,9 +57,31 @@ export function createSocialDataset(): SocialDataset {
   return {
     players: [
       player(moderator, 'dev-moderator', 0),
-      player(griefer, 'griefer42', -27),
+      {
+        ...player(griefer, 'griefer42', -27),
+        faction: 'Free miners',
+        role: 'Pilot',
+        biography: 'Hauls ore between SandBox and its moons.',
+        rpSheet: {
+          characterName: 'Grif',
+          alignment: 'chaotic',
+          story: 'Left the guild after a duel.',
+        },
+        updatedAt: at(20),
+      },
       player(reporter, 'ddurieux', 3),
     ],
+    presence: { [griefer]: 'online' },
+    memberships: {
+      [griefer]: {
+        corporations: [
+          { id: '7c0a7e1e-0000-4000-8000-0000000000d4', name: 'Deep Core Mining', ticker: 'DCM' },
+        ],
+        politics: [
+          { id: '7c0a7e1e-0000-4000-8000-0000000000e5', type: 'commune', name: 'Port Gaea' },
+        ],
+      },
+    },
     reports: [
       {
         id: 1,
@@ -187,7 +215,8 @@ const notFound = (message: string) =>
   HttpResponse.json({ error: 'NOT_FOUND', message, status: 404 }, { status: 404 });
 
 /**
- * MSW handlers reproducing `social`'s moderation API (`/api/admin/*`, read routes): filters,
+ * MSW handlers reproducing `social`'s moderation API (`/api/admin/*`, read routes) and its
+ * profile search: filters,
  * limit / offset pages, `{ error, message, status }` bodies. Roles are not checked here.
  */
 export function createSocialMock(
@@ -196,6 +225,7 @@ export function createSocialMock(
 ): SocialMock {
   const tokens: (string | null)[] = [];
   const api = `${baseUrl}/api/admin`;
+  const players = `${baseUrl}/api/profiles`;
   const seen = (request: Request) => tokens.push(request.headers.get('Authorization'));
   const newestFirst = <T extends { createdAt: string }>(items: T[]) =>
     [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -254,6 +284,32 @@ export function createSocialMock(
         reports: data.reports.filter((r) => r.targetPlayerId === id),
         activity: data.activity.filter((a) => a.playerId === id),
       });
+    }),
+    // Player route: the public profile, with presence and memberships (`getProfile`).
+    http.get(`${players}/:playerId`, ({ request, params }) => {
+      seen(request);
+      const id = String(params.playerId);
+      const profile = data.players.find((p) => p.playerId === id);
+      if (!profile) return notFound(`Profile ${id} not found`);
+      return HttpResponse.json({
+        ...profile,
+        status: data.presence[id] ?? 'offline',
+        corporations: data.memberships[id]?.corporations ?? [],
+        politics: data.memberships[id]?.politics ?? [],
+      });
+    }),
+    // Player route: profiles by display name, sorted by name (`searchProfiles`).
+    http.get(players, ({ request }) => {
+      seen(request);
+      const url = new URL(request.url);
+      const search = (url.searchParams.get('search') ?? '').toLowerCase();
+      const kind = url.searchParams.get('entityType');
+      const items = data.players
+        .filter(
+          (p) => p.displayName.toLowerCase().includes(search) && (!kind || p.entityType === kind),
+        )
+        .sort((a, b) => a.displayName.localeCompare(b.displayName));
+      return HttpResponse.json(page(items, url));
     }),
     http.get(`${api}/sanctions`, ({ request }) => {
       seen(request);

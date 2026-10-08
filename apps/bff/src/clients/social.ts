@@ -5,9 +5,11 @@ import {
   zGetCommunityStatsResponse,
   zGetModerationLogResponse,
   zGetPlayerRecordResponse,
+  zGetProfileResponse,
   zGetReportResponse,
   zListReportsResponse,
   zListSanctionsResponse,
+  zSearchProfilesResponse,
 } from '@dyingstar-admin/contracts/social';
 import { ApiError } from '../lib/errors';
 
@@ -17,7 +19,7 @@ export interface SocialClientOptions {
   timeoutMs: number;
 }
 
-type Query = Record<string, string | number | boolean | undefined>;
+type Query = Record<string, string | number | boolean | null | undefined>;
 
 /**
  * Turns a refusal of `social` into an `ApiError`, keeping its message. A 403 is its own role
@@ -37,12 +39,12 @@ async function upstreamError(res: Response): Promise<ApiError> {
 }
 
 /**
- * HTTP client for `social`'s moderation API (`/api/admin/*`, contract pinned in
- * `@dyingstar-admin/contracts/social`). Every call carries the signed-in user's token: `social`
- * checks their moderation role and records them as the actor.
+ * HTTP client for `social` (contract pinned in `@dyingstar-admin/contracts/social`): its
+ * moderation API (`/api/admin/*`) and the player routes the panel reads (profiles). Every call
+ * carries the signed-in user's token: `social` checks their role and records them as the actor.
  */
 export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) {
-  const root = `${baseUrl.replace(/\/$/, '')}/api/admin`;
+  const root = `${baseUrl.replace(/\/$/, '')}/api`;
 
   async function get<T extends z.ZodType>(
     token: string | undefined,
@@ -52,7 +54,7 @@ export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) 
   ): Promise<z.infer<T>> {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(query)) {
-      if (value !== undefined) params.set(key, String(value));
+      if (value !== undefined && value !== null) params.set(key, String(value));
     }
     let res: Response;
     try {
@@ -82,17 +84,23 @@ export function createSocialClient({ baseUrl, timeoutMs }: SocialClientOptions) 
   }
 
   return {
-    stats: (token?: string) => get(token, '/stats', zGetCommunityStatsResponse),
+    stats: (token?: string) => get(token, '/admin/stats', zGetCommunityStatsResponse),
     log: (token: string | undefined, query: Query) =>
-      get(token, '/log', zGetModerationLogResponse, query),
+      get(token, '/admin/log', zGetModerationLogResponse, query),
     reports: (token: string | undefined, query: Query) =>
-      get(token, '/reports', zListReportsResponse, query),
+      get(token, '/admin/reports', zListReportsResponse, query),
     report: (token: string | undefined, id: number) =>
-      get(token, `/reports/${id}`, zGetReportResponse),
+      get(token, `/admin/reports/${id}`, zGetReportResponse),
     player: (token: string | undefined, playerId: string) =>
-      get(token, `/players/${encodeURIComponent(playerId)}`, zGetPlayerRecordResponse),
+      get(token, `/admin/players/${encodeURIComponent(playerId)}`, zGetPlayerRecordResponse),
     sanctions: (token: string | undefined, query: Query) =>
-      get(token, '/sanctions', zListSanctionsResponse, query),
+      get(token, '/admin/sanctions', zListSanctionsResponse, query),
+    /** Public profile: presence, corporations, political entities (a player route). */
+    profile: (token: string | undefined, playerId: string) =>
+      get(token, `/profiles/${encodeURIComponent(playerId)}`, zGetProfileResponse),
+    /** Profiles by display name (a player route: `social` has no admin listing, ADR 0024). */
+    profiles: (token: string | undefined, query: Query) =>
+      get(token, '/profiles', zSearchProfilesResponse, query),
   };
 }
 

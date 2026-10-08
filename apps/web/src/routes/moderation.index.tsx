@@ -9,9 +9,7 @@ function ModerationRoute() {
     <ModerationPage
       search={search}
       onSearchChange={(next) => void navigate({ search: next })}
-      onOpenPlayer={(playerId) =>
-        void navigate({ to: '/moderation/players/$playerId', params: { playerId } })
-      }
+      onOpenPlayer={(playerId) => void navigate({ to: '/players/$playerId', params: { playerId } })}
     />
   );
 }

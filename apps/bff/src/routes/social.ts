@@ -6,6 +6,7 @@ import {
   zGetReportPath,
   zListReportsQuery,
   zListSanctionsQuery,
+  zSearchProfilesQuery,
 } from '@dyingstar-admin/contracts/social';
 import type { SessionContext } from '../auth/auth';
 import type { SocialClient } from '../clients/social';
@@ -28,7 +29,8 @@ const fromQuery = <T extends z.ZodType>(schema: T) =>
   );
 
 /**
- * `social` moderation, reading (ADR 0024 step 1): curated routes over `/api/admin/*`, inputs
+ * `social`, reading (ADR 0024 step 1): curated routes over `/api/admin/*` and the profile
+ * search, inputs
  * validated with the pinned contract, the signed-in user's token forwarded. `social` checks the
  * moderation role; the panel's `social.moderate` permission guards the mount point.
  */
@@ -48,8 +50,14 @@ export function socialRoutes(social: SocialClient) {
     .get('/reports/:id', validate('param', fromQuery(zGetReportPath)), async (c) =>
       c.json(await social.report(token(c.var.session), c.req.valid('param').id)),
     )
+    .get('/players', validate('query', fromQuery(zSearchProfilesQuery)), async (c) =>
+      c.json(await social.profiles(token(c.var.session), c.req.valid('query'))),
+    )
     .get('/players/:playerId', validate('param', zGetPlayerRecordPath), async (c) =>
       c.json(await social.player(token(c.var.session), c.req.valid('param').playerId)),
+    )
+    .get('/players/:playerId/profile', validate('param', zGetPlayerRecordPath), async (c) =>
+      c.json(await social.profile(token(c.var.session), c.req.valid('param').playerId)),
     )
     .get('/sanctions', validate('query', fromQuery(zListSanctionsQuery)), async (c) =>
       c.json(await social.sanctions(token(c.var.session), c.req.valid('query'))),

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import { socialIds } from '@dyingstar-admin/testing';
 import { useInProcessBff } from '@/test/bff';
@@ -15,7 +15,34 @@ const renderPage = (playerId: string) =>
     />,
   );
 
+afterEach(() => vi.useRealTimers());
+
 describe('PlayerRecordPage (ADR 0024)', () => {
+  it('shows the sanction in force, presence, identity and organisations', async () => {
+    // The fixtures' mute ends on 2026-10-09 10:40 UTC.
+    vi.useFakeTimers({ now: Date.parse('2026-10-08T12:00:00.000Z'), shouldAdvanceTime: true });
+    useInProcessBff();
+    renderPage(socialIds.griefer);
+
+    const banner = await screen.findByRole('status');
+    expect(banner).toHaveTextContent(/Mute until .* Reputation below -25/);
+    expect(banner).toHaveTextContent(/Warning permanent — Griefing at the spawn/);
+    expect(await screen.findByText('Online')).toBeInTheDocument();
+    expect(screen.getByText('Free miners')).toBeInTheDocument();
+    expect(screen.getByText('Grif')).toBeInTheDocument();
+    expect(screen.getByText('Left the guild after a duel.')).toBeInTheDocument();
+    expect(await screen.findByText('Deep Core Mining')).toBeInTheDocument();
+    expect(screen.getByText('Port Gaea')).toBeInTheDocument();
+  });
+
+  it('shows no banner without a sanction in force', async () => {
+    useInProcessBff();
+    renderPage(socialIds.reporter);
+
+    await screen.findByRole('heading', { name: 'ddurieux' });
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it("shows a player's reputation, sanctions and the reports against them", async () => {
     useInProcessBff();
     renderPage(socialIds.griefer);
