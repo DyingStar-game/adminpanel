@@ -4,10 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
-import {
-  zInternalMovementType,
-  type InternalMovementType,
-} from '@dyingstar-admin/contracts/economie';
+import { MOVEMENT_TYPES, type InternalMovementType } from '@dyingstar-admin/contracts/economie';
 import type { WalletHolder } from '@dyingstar-admin/schemas';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { TwoStepDialog } from '@/components/molecules/TwoStepDialog';
@@ -31,7 +28,8 @@ interface MoneyMovementDialogProps {
 
 /**
  * Credits or debits a wallet in `economie` (ADR 0024 step O.3, through `svc-admin`): the amount,
- * the type of movement and why, then a summary to confirm. The `externalId` is drawn when the
+ * the type of movement (those of its direction, `MOVEMENT_TYPES`) and why, then a summary to
+ * confirm. The `externalId` is drawn when the
  * dialog opens, so sending it twice records it once; a debit never goes below the balance.
  */
 export function MoneyMovementDialog({
@@ -52,7 +50,7 @@ export function MoneyMovementDialog({
           .refine((text) => direction === 'credit' || Number(text) <= balance, {
             message: 'overdraft',
           }),
-        type: zInternalMovementType,
+        type: z.enum(MOVEMENT_TYPES[direction]),
         reference: z.string().trim().min(1).max(REFERENCE_MAX),
       }),
     [direction, balance],
@@ -138,7 +136,7 @@ export function MoneyMovementDialog({
               <OptionSelect<InternalMovementType>
                 label={t('economy.movement.type')}
                 value={field.value}
-                options={zInternalMovementType.options.map((option) => ({
+                options={MOVEMENT_TYPES[direction].map((option) => ({
                   value: option,
                   label: t(`economy.types.${option}`),
                 }))}

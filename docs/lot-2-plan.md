@@ -239,6 +239,10 @@ Through `economie`'s Interne API as `svc-admin` (README › Interne, « Rôle re
   type among the internal ones (`deposit`, `withdrawal`, `fee`, `mission_reward`, `salary`,
   `prime`, `corporation_fund`, `system`), a reason (≤ 128), an `externalId`; ledger ids sent
   back JSON-safe. Each call lands in the BFF's record of writes.
+- Types split by direction (maintainer, 2026-10-09; `code.ts` › `MOVEMENT_TYPES`, checked by the
+  BFF): a credit is a deposit, mission reward, salary, bonus, corporation funding or system
+  adjustment; a debit a withdrawal, fee or system adjustment. `economie` takes any of them
+  either way. The ledger shows each movement's reason (`reference`, else a memo).
 - SPA: Credit / Debit on a wallet or treasury card (player sheet, corporation, political
   entity), Issue money on a country's or federation's treasury; a form (amount, type, reason)
   then a summary with the balance before → after (`TwoStepDialog`). The `externalId`

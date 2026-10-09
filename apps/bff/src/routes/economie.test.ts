@@ -287,6 +287,11 @@ describe('economie money movements (step O.3, as svc-admin)', () => {
     expect((await post(path, movement('c', { reference: ' ' }))).status).toBe(400);
     expect((await post(path, { amount: 5, type: 'deposit', reference: 'x' })).status).toBe(400);
     expect((await post(path, movement('d', { type: 'issuance' }))).status).toBe(400);
+    // The panel's split: money comes in as a deposit, goes out as a withdrawal, not the reverse.
+    expect((await post(path, movement('h', { type: 'withdrawal' }))).status).toBe(400);
+    expect((await post(`/wallets/players/${socialIds.griefer}/debit`, movement('i'))).status).toBe(
+      400,
+    );
     expect((await post(path, movement('e', { amount: 0 }))).status).toBe(400);
     expect((await post(path, movement('f', { currency: 'gold' }))).status).toBe(400);
     expect((await post(`/wallets/players/${socialIds.griefer}/refund`, movement('g'))).status).toBe(
@@ -314,7 +319,14 @@ describe('economie money movements (step O.3, as svc-admin)', () => {
             body: JSON.stringify(body),
           })
         ).status;
-      const move = (path: string) => send(path, movement(`k${(key += 1)}`, { amount: 1 }));
+      const move = (path: string) =>
+        send(
+          path,
+          movement(`k${(key += 1)}`, {
+            amount: 1,
+            type: path.endsWith('/debit') ? 'withdrawal' : 'deposit',
+          }),
+        );
       return {
         credit: await move(`/wallets/players/${socialIds.reporter}/credit`),
         debit: await move(`/wallets/corporations/${mining}/debit`),

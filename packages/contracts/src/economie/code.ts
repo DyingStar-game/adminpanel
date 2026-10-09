@@ -62,6 +62,16 @@ export const zInternalMovementType = z.enum([
 export type InternalMovementType = z.infer<typeof zInternalMovementType>;
 
 /**
+ * The types the panel offers for each direction (maintainer, 2026-10-09): money coming in, or
+ * going out; `system` (a technical adjustment) both ways. `economie` takes any internal type
+ * either way: this split is the panel's rule, checked by the BFF too.
+ */
+export const MOVEMENT_TYPES = {
+  credit: ['deposit', 'mission_reward', 'salary', 'prime', 'corporation_fund', 'system'],
+  debit: ['withdrawal', 'fee', 'system'],
+} as const satisfies Record<'credit' | 'debit', readonly InternalMovementType[]>;
+
+/**
  * A credit or a debit as the panel sends it (`movementBody`), stricter than `economie`: in
  * credits, with a reference saying why and an `externalId`, so that sending it twice records it
  * once (409 `DUPLICATE_EXTERNAL_ID`).

@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import {
+  MOVEMENT_TYPES,
   zCorporationAffiliation,
   zCorporationSettingsChange,
   zGetApiAdminStatsQuery,
@@ -9,9 +10,10 @@ import {
   zPanelMovement,
   zPoliticalSettingsChange,
 } from '@dyingstar-admin/contracts/economie';
-import { movementPermission, type Permission } from '@dyingstar-admin/schemas';
+import { ErrorCode, movementPermission, type Permission } from '@dyingstar-admin/schemas';
 import { requirePermission, type SessionContext } from '../auth/auth';
 import type { EconomieClient, WalletHolder } from '../clients/economie';
+import { ApiError } from '../lib/errors';
 import { fromQuery, jsonSafe, validate } from '../lib/validate';
 
 const IdParams = z.object({ id: z.uuid() });
@@ -80,6 +82,15 @@ export function economieRoutes(economie: EconomieClient) {
         validate('json', zPanelMovement),
         async (c) => {
           const { holder, id, direction } = c.req.valid('param');
+          const { type } = c.req.valid('json');
+          // The panel's split of the types by direction (`MOVEMENT_TYPES`).
+          if (!(MOVEMENT_TYPES[direction] as readonly string[]).includes(type)) {
+            throw new ApiError(
+              400,
+              ErrorCode.validation,
+              `A ${direction} cannot be of type ${type}`,
+            );
+          }
           // The ledger row's id is int64 in the contract.
           const result = await economie.move(holder, id, direction, c.req.valid('json'));
           return c.json(jsonSafe(result), 201);

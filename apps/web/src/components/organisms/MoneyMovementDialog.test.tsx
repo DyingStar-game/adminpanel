@@ -67,4 +67,21 @@ describe('MoneyMovementDialog', () => {
     expect(within(dialog).getByRole('alert')).toHaveTextContent('→ 0 credits');
     expect(bff.economie.writes).toHaveLength(0);
   });
+
+  it('offers the types of its direction only', async () => {
+    useInProcessBff();
+    renderWithProviders(
+      <MoneyMovementDialog
+        holder="players"
+        target={{ id: socialIds.griefer, name: 'griefer42' }}
+        direction="debit"
+        balance={40}
+        onClose={vi.fn()}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('combobox', { name: 'Type of movement' }));
+    const options = screen.getAllByRole('option').map((o) => o.textContent);
+    expect(options).toEqual(['Withdrawal', 'Fee', 'System']);
+  });
 });
