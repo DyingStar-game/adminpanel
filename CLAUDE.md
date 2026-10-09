@@ -61,8 +61,8 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 [`docs/lot-2-plan.md`](./docs/lot-2-plan.md) first** (status, "where to resume", local setup,
 open questions for the back team), then the ADR index. Done: sign-in, `social` (moderation,
 players, report actions, organisations read and managed), one game server per panel, `economie`
-reading (O.1) and settings (O.2: corporations, political taxes, assessments). **Next: O.3,
-money movements** (credit, debit, mint). Much was not
+reading (O.1), settings (O.2: corporations, political taxes, assessments) and money movements
+(O.3: credit, debit, mint). **Next: `inventory`**, same pattern. Much was not
 tried live yet: the plan says what. Lot 1 (persistence items) is done:
 [`docs/lot-1-plan.md`](./docs/lot-1-plan.md).
 `ONBOARDING.md` and `ARCHITECTURE.md` still describe the previous panel (step 10).

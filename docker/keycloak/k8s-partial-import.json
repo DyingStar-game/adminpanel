@@ -52,6 +52,18 @@
         {
           "name": "economie:politics:manage",
           "description": "Change political tax rates and minting, run tax assessments through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:wallet:credit",
+          "description": "Credit wallets and treasuries through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:wallet:debit",
+          "description": "Debit wallets and treasuries through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:money:issue",
+          "description": "Issue money into political treasuries through economie's internal API (ADR 0023)"
         }
       ]
     }
@@ -183,7 +195,10 @@
           "economie:wallet:read",
           "economie:politics:read",
           "economie:corporation:manage",
-          "economie:politics:manage"
+          "economie:politics:manage",
+          "economie:wallet:credit",
+          "economie:wallet:debit",
+          "economie:money:issue"
         ]
       },
       "groups": ["/staff"]
@@ -214,7 +229,10 @@
           "economie:wallet:read",
           "economie:politics:read",
           "economie:corporation:manage",
-          "economie:politics:manage"
+          "economie:politics:manage",
+          "economie:wallet:credit",
+          "economie:wallet:debit",
+          "economie:money:issue"
         ]
       },
       "groups": ["/staff"]

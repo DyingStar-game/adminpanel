@@ -58,3 +58,9 @@ export const zAmountField = z
  * without checking it (the panel's rule, ADR 0023 › Economie).
  */
 export const MINTING_LEVELS: readonly PoliticalEntityType[] = ['country', 'federation'];
+
+/**
+ * The idempotency key of a money movement sent by the panel (`economie`'s `externalId`, up to
+ * 128 characters): drawn once per dialog, so a resend of the same form is recorded once.
+ */
+export const movementKey = () => `admin-panel:${crypto.randomUUID()}`;

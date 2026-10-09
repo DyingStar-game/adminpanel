@@ -24,6 +24,7 @@ import {
 } from '@/hooks/useOrganisations';
 import { usePanel } from '@/hooks/usePanel';
 import { ApiError } from '@/lib/api';
+import { MINTING_LEVELS } from '@/lib/economy';
 import { formatDateTime, shortId } from '@/lib/format';
 import { moderationErrorKey } from '@/lib/moderationErrors';
 import { MODERATION_PAGE_SIZE } from '@/lib/moderationSearch';
@@ -151,7 +152,13 @@ export function PoliticalEntityPage({
       {treasury && (
         <>
           <TaxSettings entity={e} manages={managesTaxes} />
-          <WalletCard holder="politics" id={e.id} title={t('economy.treasury')} />
+          <WalletCard
+            holder="politics"
+            id={e.id}
+            title={t('economy.treasury')}
+            name={e.name}
+            mintable={MINTING_LEVELS.includes(e.type)}
+          />
         </>
       )}
       <section className="flex flex-col gap-2">

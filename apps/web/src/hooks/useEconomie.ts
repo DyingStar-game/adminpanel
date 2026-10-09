@@ -7,11 +7,11 @@ import {
   zGetApiInternalPoliticsByEntityIdSettingsResponse,
 } from '@dyingstar-admin/contracts/economie';
 import { zGetCorporationResponse } from '@dyingstar-admin/contracts/social';
+import type { WalletHolder } from '@dyingstar-admin/schemas';
 import { apiGet } from '@/lib/api';
 import { MODERATION_PAGE_SIZE } from '@/lib/moderationSearch';
 
-/** Whose wallet: `economie` keeps players, NPCs, corporations and political entities apart. */
-export type WalletHolder = 'players' | 'npcs' | 'corporations' | 'politics';
+export type { WalletHolder };
 
 const walletPath = (holder: WalletHolder, id: string) =>
   `/api/economie/wallets/${holder}/${encodeURIComponent(id)}`;

@@ -41,3 +41,43 @@ export const zCorporationAffiliation = z
   .object({ politicalEntityId: z.uuid().nullable() })
   .strict();
 export type CorporationAffiliation = z.infer<typeof zCorporationAffiliation>;
+
+/** Amounts: whole units from 1 to 10¹³ (`routes/schemas.ts` › `amount`). */
+const zAmount = z.int().gte(1).lte(10_000_000_000_000);
+
+/**
+ * Types a trusted service may give a credit or a debit: every type but `transfer`, `donation`,
+ * `tax` and `issuance` (`INTERNAL_TYPES`); the OpenAPI takes any string.
+ */
+export const zInternalMovementType = z.enum([
+  'deposit',
+  'withdrawal',
+  'fee',
+  'mission_reward',
+  'salary',
+  'prime',
+  'corporation_fund',
+  'system',
+]);
+export type InternalMovementType = z.infer<typeof zInternalMovementType>;
+
+/**
+ * A credit or a debit as the panel sends it (`movementBody`), stricter than `economie`: in
+ * credits, with a reference saying why and an `externalId`, so that sending it twice records it
+ * once (409 `DUPLICATE_EXTERNAL_ID`).
+ */
+export const zPanelMovement = z
+  .object({
+    amount: zAmount,
+    type: zInternalMovementType,
+    reference: z.string().trim().min(1).max(128),
+    externalId: z.string().trim().min(1).max(128),
+  })
+  .strict();
+export type PanelMovement = z.infer<typeof zPanelMovement>;
+
+/** Money issued as the panel sends it (`mintBody`): in credits, with a reason. */
+export const zPanelMint = z
+  .object({ amount: zAmount, reason: z.string().trim().min(1).max(128) })
+  .strict();
+export type PanelMint = z.infer<typeof zPanelMint>;

@@ -184,7 +184,9 @@ export function CorporationPage({
           onOpenPoliticalEntity={onOpenPoliticalEntity}
         />
       )}
-      {treasury && <WalletCard holder="corporations" id={c.id} title={t('economy.treasury')} />}
+      {treasury && (
+        <WalletCard holder="corporations" id={c.id} title={t('economy.treasury')} name={c.name} />
+      )}
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">{t('organisations.ranks')}</h2>
         <OrganisationRolesTable roles={ranks} label={t('organisations.ranks')} />

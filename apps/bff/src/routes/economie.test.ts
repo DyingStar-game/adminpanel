@@ -229,3 +229,115 @@ describe('economie settings and assessments (step O.2, as svc-admin)', () => {
     ]);
   });
 });
+
+describe('economie money movements (step O.3, as svc-admin)', () => {
+  const { commune, mining } = organisationIds;
+  const movement = (externalId: string, extra: object = {}) => ({
+    amount: 500,
+    type: 'deposit',
+    reference: 'Lost cargo after a server crash',
+    externalId,
+    ...extra,
+  });
+
+  it('credits and debits wallets in credits, once per externalId', async () => {
+    const { request, economie } = buildApp();
+    const post = (path: string, body: unknown) =>
+      request(`/api/economie${path}`, { method: 'POST', ...json(body) });
+
+    const credited = await post(`/wallets/players/${socialIds.griefer}/credit`, movement('a'));
+    expect(credited.status).toBe(201);
+    expect(await credited.json()).toMatchObject({ toBalance: 540, transaction: { id: 5 } });
+    expect((await post(`/wallets/players/${socialIds.griefer}/credit`, movement('a'))).status).toBe(
+      409,
+    );
+    const debited = await post(
+      `/wallets/corporations/${mining}/debit`,
+      movement('b', { amount: 1_000, type: 'withdrawal' }),
+    );
+    expect(await debited.json()).toMatchObject({ fromBalance: 8_000 });
+    expect(economie.writes[0]?.body).toEqual({ ...movement('a'), currency: 'credits' });
+  });
+
+  it('issues money where the settings allow it', async () => {
+    const { request } = buildApp();
+    const mint = () =>
+      request(`/api/economie/politics/${commune}/mint`, {
+        method: 'POST',
+        ...json({ amount: 1_000, reason: 'Stimulus' }),
+      });
+
+    expect((await mint()).status).toBe(403);
+    await request(`/api/economie/politics/${commune}/settings`, {
+      method: 'PUT',
+      ...json({ allowMinting: true }),
+    });
+    expect(await (await mint()).json()).toMatchObject({
+      toBalance: 1_300,
+      transaction: { type: 'issuance' },
+    });
+  });
+
+  it('refuses movements without a reason, a key, or with a type economie keeps for itself', async () => {
+    const { request, economie } = buildApp();
+    const post = (path: string, body: unknown) =>
+      request(`/api/economie${path}`, { method: 'POST', ...json(body) });
+    const path = `/wallets/players/${socialIds.griefer}/credit`;
+
+    expect((await post(path, movement('c', { reference: ' ' }))).status).toBe(400);
+    expect((await post(path, { amount: 5, type: 'deposit', reference: 'x' })).status).toBe(400);
+    expect((await post(path, movement('d', { type: 'issuance' }))).status).toBe(400);
+    expect((await post(path, movement('e', { amount: 0 }))).status).toBe(400);
+    expect((await post(path, movement('f', { currency: 'gold' }))).status).toBe(400);
+    expect((await post(`/wallets/players/${socialIds.griefer}/refund`, movement('g'))).status).toBe(
+      400,
+    );
+    expect((await post(`/politics/${commune}/mint`, { amount: 5 })).status).toBe(400);
+    expect(economie.writes).toHaveLength(0);
+  });
+
+  it("opens each movement to economie's capability role for that holder", async () => {
+    const as = async (clientRoles: string[]) => {
+      const ctx = setup(
+        fakeProvider(() =>
+          tokens({ realmRoles: ['moderator'], clientRoles: { 'dyingstar-admin': clientRoles } }),
+        ),
+      );
+      const { cookie } = await signIn(ctx);
+      let key = 0;
+      const send = async (path: string, body: unknown) =>
+        (
+          await ctx.call(`/api/economie${path}`, {
+            method: 'POST',
+            cookie,
+            headers: { Origin: ORIGIN, 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          })
+        ).status;
+      const move = (path: string) => send(path, movement(`k${(key += 1)}`, { amount: 1 }));
+      return {
+        credit: await move(`/wallets/players/${socialIds.reporter}/credit`),
+        debit: await move(`/wallets/corporations/${mining}/debit`),
+        treasury: await move(`/wallets/politics/${commune}/credit`),
+        mint: await send(`/politics/${commune}/mint`, { amount: 1, reason: 'Test' }),
+      };
+    };
+
+    expect(await as(['economie:wallet:read'])).toEqual({
+      credit: 403,
+      debit: 403,
+      treasury: 403,
+      mint: 403,
+    });
+    expect(await as(['economie:wallet:credit'])).toEqual({
+      credit: 201,
+      debit: 403,
+      treasury: 403,
+      mint: 403,
+    });
+    expect(await as(['economie:wallet:debit'])).toMatchObject({ credit: 403, debit: 201 });
+    expect(await as(['economie:politics:manage'])).toMatchObject({ credit: 403, treasury: 201 });
+    // Allowed by the panel, refused by economie: the commune may not issue money.
+    expect(await as(['economie:money:issue'])).toMatchObject({ treasury: 403, mint: 403 });
+  });
+});

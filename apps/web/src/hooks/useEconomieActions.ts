@@ -1,11 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   zCorporationSettingsAsServed,
+  zMovementResult,
   zPostApiInternalPoliticsByEntityIdTaxesAssessResponse,
   zPutApiInternalPoliticsByEntityIdSettingsResponse,
   type CorporationSettingsChange,
+  type PanelMint,
+  type PanelMovement,
   type PoliticalSettingsChange,
 } from '@dyingstar-admin/contracts/economie';
+import type { WalletHolder } from '@dyingstar-admin/schemas';
 import { apiSend } from '@/lib/api';
 
 /** Settings, treasuries and the dashboard may all change after an action. */
@@ -72,5 +76,28 @@ export function useUpdateCorporationSettings(id: string) {
     },
     // Even when the second call failed, the first one may have changed something.
     onSettled: afterAction,
+  });
+}
+
+/** Credits or debits a holder's wallet (step O.3); the `externalId` makes a resend a 409. */
+export function useMoveMoney(holder: WalletHolder, id: string, direction: 'credit' | 'debit') {
+  const afterAction = useAfterAction();
+  return useMutation({
+    mutationFn: (body: PanelMovement) =>
+      apiSend('POST', `/api/economie/wallets/${holder}/${encodeURIComponent(id)}/${direction}`, {
+        body,
+        schema: zMovementResult,
+      }),
+    onSuccess: afterAction,
+  });
+}
+
+/** Issues money into a political treasury, within its settings. */
+export function useMintMoney(id: string) {
+  const afterAction = useAfterAction();
+  return useMutation({
+    mutationFn: (body: PanelMint) =>
+      apiSend('POST', `${politicalPath(id)}/mint`, { body, schema: zMovementResult }),
+    onSuccess: afterAction,
   });
 }

@@ -539,6 +539,35 @@ export const fr: Translations = {
     mintCeiling: 'Au plus {{amount}} à la fois',
     lastAssessed: 'Dernière assiette',
     never: 'Jamais',
+    actions: { credit: 'Créditer', debit: 'Débiter', mint: 'Créer de la monnaie' },
+    movement: {
+      title: { credit: 'Créditer {{name}}', debit: 'Débiter {{name}}' },
+      hint: 'Envoyé au service economie et inscrit dans son journal ; le panel note qui l’a fait.',
+      amount: 'Montant (crédits)',
+      type: 'Type de mouvement',
+      reference: 'Motif (inscrit au journal)',
+      current: 'Solde actuel : {{balance}}.',
+      available: 'Disponible : {{balance}} ; un débit ne peut pas passer sous zéro.',
+      summary: {
+        credit: '{{amount}} crédités à {{name}} ({{type}}).',
+        debit: '{{amount}} débités de {{name}} ({{type}}).',
+      },
+      reason: 'Motif : {{reference}}',
+      balanceAfter: 'Solde : {{before}} → {{after}}.',
+      done: {
+        credit: '{{amount}} crédités à {{name}}.',
+        debit: '{{amount}} débités de {{name}}.',
+      },
+    },
+    mint: {
+      title: 'Créer de la monnaie pour la trésorerie de {{name}}',
+      hint: 'Crée de nouveaux crédits : la masse monétaire augmente d’autant.',
+      summary: '{{amount}} créés et crédités à la trésorerie de {{name}}.',
+      done: '{{amount}} créés pour la trésorerie de {{name}}.',
+      noCeiling: 'Sans plafond.',
+      disabled:
+        'Cette entité ne peut pas créer de monnaie : autorisez-le d’abord dans ses réglages.',
+    },
     settings: {
       title: 'Réglages économiques',
       edit: 'Modifier les réglages',

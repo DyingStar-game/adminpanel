@@ -5,9 +5,11 @@ import {
   zCorporationSettingsChange,
   zGetApiAdminStatsQuery,
   zGetApiInternalPlayersByPlayerIdWalletTransactionsQuery,
+  zPanelMint,
+  zPanelMovement,
   zPoliticalSettingsChange,
 } from '@dyingstar-admin/contracts/economie';
-import type { Permission } from '@dyingstar-admin/schemas';
+import { movementPermission, type Permission } from '@dyingstar-admin/schemas';
 import { requirePermission, type SessionContext } from '../auth/auth';
 import type { EconomieClient, WalletHolder } from '../clients/economie';
 import { fromQuery, jsonSafe, validate } from '../lib/validate';
@@ -22,6 +24,8 @@ const HolderParams = z.object({
 /** Who may read a wallet: the capability role of `economie`'s README (ADR 0023 › Economie). */
 const walletPermission = (holder: WalletHolder): Permission =>
   holder === 'politics' ? 'economie.politicsRead' : 'economie.walletRead';
+
+const MovementParams = HolderParams.extend({ direction: z.enum(['credit', 'debit']) });
 
 /**
  * `economie` (ADR 0024 step O): its dashboard with the user's token; wallets, political and
@@ -64,6 +68,30 @@ export function economieRoutes(economie: EconomieClient) {
           // Transaction ids are int64 in the contract.
           return c.json(jsonSafe(await economie.ledger(holder, id, c.req.valid('query'))));
         },
+      )
+      // Money movements (step O.3).
+      .post(
+        '/wallets/:holder/:id/:direction',
+        validate('param', MovementParams),
+        (c, next) => {
+          const { holder, direction } = c.req.valid('param');
+          return requirePermission(movementPermission(holder, direction))(c, next);
+        },
+        validate('json', zPanelMovement),
+        async (c) => {
+          const { holder, id, direction } = c.req.valid('param');
+          // The ledger row's id is int64 in the contract.
+          const result = await economie.move(holder, id, direction, c.req.valid('json'));
+          return c.json(jsonSafe(result), 201);
+        },
+      )
+      .post(
+        '/politics/:id/mint',
+        requirePermission('economie.moneyIssue'),
+        validate('param', IdParams),
+        validate('json', zPanelMint),
+        async (c) =>
+          c.json(jsonSafe(await economie.mint(c.req.valid('param').id, c.req.valid('json'))), 201),
       )
       .get(
         '/politics/:id/settings',

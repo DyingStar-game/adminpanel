@@ -6,7 +6,7 @@ permissions, one panel per environment) and [ADR 0024](./adr/0024-game-services-
 step needs a new decision, it goes into an ADR before coding. **Read this file first when
 starting a session on lot 2.**
 
-## Status (2026-10-09, O.2 done)
+## Status (2026-10-09, O.3 done)
 
 | Step | Status | Commit |
 |------|--------|--------|
@@ -24,12 +24,25 @@ starting a session on lot 2.**
 | L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | **Done** | `cd2a70d` |
 | M. Final roles × actions matrix (ADR 0023): `social` and `economie` decided (their READMEs' roles); persistence's 🟡 cells left | Persistence: the maintainer's call | — |
 | N. Organisation management (`/api/internal/*` through `svc-admin`; rights decided, ADR 0023) | **Done** on minikube (to try live); pre-production waits for `svc-admin` | `96506c7` |
-| O. Next services, one by one with the ADR 0024 pattern: `economie` first (1. reading, 2. settings, 3. money movements), then `inventory`, `mission`, `market` | **O.1** (`ca9b4b0`) **and O.2 done** (to try live); **O.3 next** | — |
+| O. Next services, one by one with the ADR 0024 pattern: `economie` first (1. reading, 2. settings, 3. money movements), then `inventory`, `mission`, `market` | **O.1** (`ca9b4b0`), **O.2** (`64ffd9e`) **and O.3 done** (to try live); then `inventory` | — |
 
 Order agreed with the maintainer on 2026-10-08: I (acting on players) before K (organisations),
 since the player sheet is where moderators look first.
 
-### 2026-10-09 — O.2 done, where to resume
+### 2026-10-09 — O.3 done, where to resume
+
+- **O.3 built** (below): credit and debit a player's, an NPC's, a corporation's wallet or a
+  political treasury, issue money into a country's or federation's treasury. Not tried live.
+- **To try on minikube**: create the client roles `economie:wallet:credit`,
+  `economie:wallet:debit`, `economie:money:issue` on `dyingstar-admin` in minikube's Keycloak
+  (and O.2's `economie:corporation:read`, `economie:corporation:manage`,
+  `economie:politics:manage` if not done), give them to `ynotna`, sign in again. Then: a player
+  sheet's wallet (Credit, Debit), a corporation's treasury, Free Colonies' treasury (Issue
+  money: `make seed-social` allows it, ceiling 100,000).
+- **Next**: `inventory`, with the ADR 0024 pattern (its README section by section, roles copied
+  from its « Rôle requis »); or what the maintainer finds while trying J to O.3.
+
+### 2026-10-09 — O.2 done
 
 - **O.2 built** (below): a corporation's economic settings and fiscal home, a political
   entity's tax rates and minting, its tax assessment; the BFF's record of writes to the game
@@ -44,10 +57,7 @@ since the player sheet is where moderators look first.
   panel does not use).
 - `make check` under load (minikube, `make pnpm dev`): Vitest is capped at 8 workers
   (`vitest.config.ts`, `bc46487`), which also fixed a fixture mute that expired on 2026-10-09.
-- **Next: O.3**, money movements (as `svc-admin`): credit / debit a player, an NPC, a corporation
-  (`economie:wallet:credit`, `economie:wallet:debit`) or a political treasury
-  (`economie:politics:manage`), mint money (`economie:money:issue`); each confirmed
-  (`TwoStepDialog`) with an idempotent `externalId`. `economie` has no Admin route for them.
+- O.3 followed the same day (block above).
 
 ### End of session 2026-10-08 (second)
 
@@ -212,6 +222,34 @@ ADR 0023 › Economie: its Admin API with the person's token (`moderator`+), its
   `social`, and minikube's `economie` has no `SOCIAL_SERVICE_CLIENT_SECRET` (to tell the back
   team). Amounts are shown as `economie` keeps them (integer units).
 
+### O.3 Economie, money movements — done, to try live on minikube
+
+Through `economie`'s Interne API as `svc-admin` (README › Interne, « Rôle requis »; code read in
+`transactions.service.ts` › `movement`, `politics.service.ts` › `issueCurrency`):
+
+| Action | `economie` route | Panel permission ← role |
+|---|---|---|
+| Credit a player, an NPC, a corporation | `POST /internal/players\|npcs\|corporations/:id/wallet/credit` | `economie.walletCredit` ← `economie:wallet:credit` |
+| Debit one | `…/wallet/debit` | `economie.walletDebit` ← `economie:wallet:debit` |
+| Credit or debit a political treasury | `POST /internal/politics/:id/wallet/credit\|debit` | `economie.politicsManage` ← `economie:politics:manage` |
+| Issue money | `POST /internal/politics/:id/mint` | `economie.moneyIssue` ← `economie:money:issue` |
+
+- BFF: `POST /api/economie/wallets/:holder/:id/credit|debit`, `POST /api/economie/politics/:id/mint`;
+  bodies stricter than `economie` (`code.ts` › `zPanelMovement`, `zPanelMint`): in credits, a
+  type among the internal ones (`deposit`, `withdrawal`, `fee`, `mission_reward`, `salary`,
+  `prime`, `corporation_fund`, `system`), a reason (≤ 128), an `externalId`; ledger ids sent
+  back JSON-safe. Each call lands in the BFF's record of writes.
+- SPA: Credit / Debit on a wallet or treasury card (player sheet, corporation, political
+  entity), Issue money on a country's or federation's treasury; a form (amount, type, reason)
+  then a summary with the balance before → after (`TwoStepDialog`). The `externalId`
+  (`admin-panel:<uuid>`) is drawn when the dialog opens: confirming twice records once. A debit
+  above the balance cannot be sent; issuing respects the entity's ceiling.
+- `economie`'s behaviour, followed by the mock: an account is opened on its first credit; a
+  recorded `externalId` answers 409 `DUPLICATE_EXTERNAL_ID`; a debit beyond the balance 409
+  `INSUFFICIENT_FUNDS`; a locked account 403 `ACCOUNT_LOCKED`; issuing 403 `MINTING_DISABLED`
+  or 400 `MINT_CEILING_EXCEEDED`, booked as an `issuance`; `caller` = `svc-admin` in the ledger.
+- Question 17: issuing money takes no idempotency key.
+
 ### O.2 Economie, settings — done, to try live on minikube
 
 Through `economie`'s Interne API as `svc-admin`, for the capability roles of its README held by
@@ -364,3 +402,6 @@ Ready to post (a Discord message was drafted on 2026-10-08). Still open:
 16. Fiscal homes and political members are `economie`'s own copies, set by the game server: who
    keeps them in step with `social` (a corporation changing its political home, a member
    leaving)? Until then an assessment may tax according to stale data.
+17. `economie`'s `POST /api/internal/politics/:id/mint` takes no `externalId`, unlike credits and
+   debits: a resend after a lost answer issues the money twice. Could it accept one? The panel
+   only prevents a double click.

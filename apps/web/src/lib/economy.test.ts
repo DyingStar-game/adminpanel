@@ -4,6 +4,7 @@ import {
   bpsToPercent,
   formatAmount,
   formatBps,
+  movementKey,
   percentToBps,
   signedAmount,
   zAmountField,
@@ -45,5 +46,13 @@ describe('economy form fields', () => {
     expect(zAmountField.safeParse('10000000000000').success).toBe(true);
     expect(zAmountField.safeParse('10000000000001').success).toBe(false);
     expect(zAmountField.safeParse('1.5').success).toBe(false);
+  });
+});
+
+describe('movementKey', () => {
+  it("draws a new idempotency key each time, within economie's 128 characters", () => {
+    const key = movementKey();
+    expect(key).toMatch(/^admin-panel:[0-9a-f-]{36}$/);
+    expect(movementKey()).not.toBe(key);
   });
 });

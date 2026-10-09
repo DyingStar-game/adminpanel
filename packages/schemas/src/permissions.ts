@@ -33,6 +33,12 @@ export const Permission = {
   economieCorporationRead: 'economie.corporationRead',
   /** Changing them, likewise. */
   economieCorporationManage: 'economie.corporationManage',
+  /** Crediting a player's, an NPC's or a corporation's wallet, likewise. */
+  economieWalletCredit: 'economie.walletCredit',
+  /** Debiting one, likewise. */
+  economieWalletDebit: 'economie.walletDebit',
+  /** Issuing money into a political treasury, likewise. */
+  economieMoneyIssue: 'economie.moneyIssue',
 } as const;
 export type Permission = (typeof Permission)[keyof typeof Permission];
 
@@ -73,6 +79,10 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
     'economie:corporation:manage',
   ],
   [Permission.economieCorporationManage]: ['economie:corporation:manage'],
+  // Money movements (step O.3); a political treasury's are `economie:politics:manage`'s.
+  [Permission.economieWalletCredit]: ['economie:wallet:credit'],
+  [Permission.economieWalletDebit]: ['economie:wallet:debit'],
+  [Permission.economieMoneyIssue]: ['economie:money:issue'],
 };
 
 /** Permission needed to change the status of, or escalate, a report at each escalation level. */
@@ -81,6 +91,23 @@ export const REPORT_LEVEL_PERMISSION: Record<'moderator' | 'admin' | 'supervisor
   admin: Permission.socialReportsAdmin,
   supervisor: Permission.socialReportsSupervisor,
 };
+
+/** Whose wallet: `economie` keeps players, NPCs, corporations and political entities apart. */
+export type WalletHolder = 'players' | 'npcs' | 'corporations' | 'politics';
+
+/**
+ * Permission to credit or debit a holder's wallet (step O.3): `economie`'s README asks
+ * `economie:wallet:credit` / `:debit`, and `economie:politics:manage` for a political treasury.
+ */
+export const movementPermission = (
+  holder: WalletHolder,
+  direction: 'credit' | 'debit',
+): Permission =>
+  holder === 'politics'
+    ? Permission.economiePoliticsManage
+    : direction === 'credit'
+      ? Permission.economieWalletCredit
+      : Permission.economieWalletDebit;
 
 export const ALL_PERMISSIONS = Object.values(Permission);
 

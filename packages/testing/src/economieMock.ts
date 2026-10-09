@@ -124,6 +124,18 @@ export function createEconomieDataset(): EconomieDataset {
   };
 }
 
+/** Types a service may give a credit or a debit (`routes/schemas.ts` › `INTERNAL_TYPES`). */
+const INTERNAL_TYPES: readonly Transaction['type'][] = [
+  'deposit',
+  'withdrawal',
+  'fee',
+  'mission_reward',
+  'salary',
+  'prime',
+  'corporation_fund',
+  'system',
+];
+
 /** Transaction types counted as taxable income (`taxation.service.ts`). */
 const INCOME_TYPES: readonly Transaction['type'][] = ['salary', 'prime', 'mission_reward'];
 
@@ -192,6 +204,64 @@ export function createEconomieMock(
   const uuid = (v: unknown) =>
     typeof v === 'string' &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
+  const failure = (status: number, error: string, message: string) =>
+    HttpResponse.json({ error, message, status }, { status });
+  /** The holder's account in that currency, opened with nothing on first use. */
+  const ensureAccount = (holderType: Account['holderType'], holderId: string, currency: string) => {
+    let found = data.accounts.find(
+      (a) => a.holderType === holderType && a.holderId === holderId && a.currency === currency,
+    );
+    if (!found) {
+      found = {
+        id: crypto.randomUUID(),
+        holderType,
+        holderId,
+        currency,
+        balance: 0,
+        status: 'active',
+        createdAt: now(),
+        updatedAt: now(),
+      };
+      data.accounts.push(found);
+    }
+    return found;
+  };
+  /** Moves the balance and writes the ledger row; the caller is `svc-admin` (the panel). */
+  const record = ({
+    direction,
+    account,
+    amount,
+    type,
+    reference,
+    externalId,
+  }: {
+    direction: 'credit' | 'debit';
+    account: Account;
+    amount: number;
+    type: Transaction['type'];
+    reference: string | null;
+    externalId: string | null;
+  }): Transaction => {
+    account.balance += direction === 'credit' ? amount : -amount;
+    account.updatedAt = now();
+    const transaction: Transaction = {
+      id: Math.max(0, ...data.transactions.map((t) => Number(t.id))) + 1,
+      fromAccountId: direction === 'debit' ? account.id : null,
+      toAccountId: direction === 'credit' ? account.id : null,
+      type,
+      currency: account.currency,
+      amount,
+      taxAmount: 0,
+      feeAmount: 0,
+      externalId,
+      reference,
+      caller: 'svc-admin',
+      details: null,
+      createdAt: now(),
+    };
+    data.transactions.push(transaction);
+    return transaction;
+  };
   const corporationSettingsOf = (id: string) => {
     let settings = data.corporationSettings.find((s) => s.corporationId === id);
     if (!settings) {
@@ -287,6 +357,105 @@ export function createEconomieMock(
         .filter((t) => own.has(t.fromAccountId ?? '') || own.has(t.toAccountId ?? ''))
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       return HttpResponse.json(page(rows, new URL(request.url)));
+    }),
+    // Money movements (step O.3, `transactions.service.ts` › `movement`): the account is
+    // created on first use, an `externalId` already recorded is refused, a debit never takes
+    // the balance below zero, a locked account refuses everything.
+    http.post(`${internal}/:holder/:id/wallet/:direction`, async ({ request, params }) => {
+      seen(request);
+      const direction = String(params.direction);
+      if (direction !== 'credit' && direction !== 'debit') return undefined;
+      const body = await bodyOf(request);
+      const holderType = HOLDER_TYPE[String(params.holder) as keyof typeof HOLDER_TYPE];
+      if (!body || !holderType) return badRequest('body: Expected object');
+      const { amount, type, reference, externalId } = body;
+      if (!ceiling(amount) || (amount as number) < 1) return badRequest('amount: Invalid value');
+      if (type !== undefined && !INTERNAL_TYPES.includes(type as Transaction['type'])) {
+        return badRequest('type: Invalid option');
+      }
+      if (reference !== undefined && (typeof reference !== 'string' || reference.length > 128)) {
+        return badRequest('reference: Invalid value');
+      }
+      if (
+        externalId !== undefined &&
+        (typeof externalId !== 'string' || !externalId.length || externalId.length > 128)
+      ) {
+        return badRequest('externalId: Invalid value');
+      }
+      const currency = typeof body.currency === 'string' ? body.currency : 'credits';
+      if (externalId && data.transactions.some((t) => t.externalId === externalId)) {
+        return failure(409, 'DUPLICATE_EXTERNAL_ID', 'Transaction already recorded');
+      }
+      const account = ensureAccount(holderType, String(params.id), currency);
+      if (account.status !== 'active') {
+        return failure(403, 'ACCOUNT_LOCKED', `Account is ${account.status}`);
+      }
+      if (direction === 'debit' && account.balance < (amount as number)) {
+        return failure(409, 'INSUFFICIENT_FUNDS', 'Insufficient funds');
+      }
+      const transaction = record({
+        direction,
+        account,
+        amount: amount as number,
+        type:
+          (type as Transaction['type'] | undefined) ??
+          (direction === 'credit' ? 'deposit' : 'withdrawal'),
+        reference: (reference as string | undefined) ?? null,
+        externalId: (externalId as string | undefined) ?? null,
+      });
+      return HttpResponse.json(
+        {
+          transaction,
+          amount,
+          taxAmount: 0,
+          ...(direction === 'credit'
+            ? { toBalance: account.balance }
+            : { fromBalance: account.balance }),
+        },
+        { status: 201 },
+      );
+    }),
+    // Issuing money (`politics.service.ts` › `issueCurrency`): allowed by the entity's settings,
+    // within its ceiling, an `issuance` credited to its treasury. No idempotency key.
+    http.post(`${internal}/politics/:id/mint`, async ({ request, params }) => {
+      seen(request);
+      const body = await bodyOf(request);
+      const amount = body?.amount;
+      if (!ceiling(amount) || (amount as number) < 1) return badRequest('amount: Invalid value');
+      if (
+        body?.reason !== undefined &&
+        (typeof body.reason !== 'string' || body.reason.length > 128)
+      ) {
+        return badRequest('reason: Invalid value');
+      }
+      const settings = politicalSettingsOf(String(params.id));
+      if (!settings.allowMinting) {
+        return failure(
+          403,
+          'MINTING_DISABLED',
+          'This political entity is not allowed to create currency',
+        );
+      }
+      if (settings.mintCeiling > 0 && (amount as number) > settings.mintCeiling) {
+        return failure(
+          400,
+          'MINT_CEILING_EXCEEDED',
+          `Amount exceeds the mint ceiling (${settings.mintCeiling})`,
+        );
+      }
+      const account = ensureAccount('political', String(params.id), 'credits');
+      const transaction = record({
+        direction: 'credit',
+        account,
+        amount: amount as number,
+        type: 'issuance',
+        reference: (body?.reason as string | undefined) ?? null,
+        externalId: null,
+      });
+      return HttpResponse.json(
+        { transaction, amount, taxAmount: 0, toBalance: account.balance },
+        { status: 201 },
+      );
     }),
     http.get(`${internal}/politics/:id/settings`, ({ request, params }) => {
       seen(request);

@@ -161,6 +161,7 @@ export function PlayerRecordPage({
           holder={player.entityType === 'npc' ? 'npcs' : 'players'}
           id={player.playerId}
           title={t('economy.wallet')}
+          name={player.displayName}
         />
       )}
       {actionable && (

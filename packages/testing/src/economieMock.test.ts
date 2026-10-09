@@ -9,6 +9,8 @@ import {
   zGetApiInternalCorporationsByCorporationIdSettingsResponse,
   zGetApiInternalPoliticsByEntityIdSettingsResponse,
   zPostApiInternalPoliticsByEntityIdTaxesAssessResponse,
+  zPostApiInternalPlayersByPlayerIdWalletCreditResponse,
+  zPostApiInternalPoliticsByEntityIdMintResponse,
   zPutApiInternalPoliticsByEntityIdSettingsResponse,
 } from '@dyingstar-admin/contracts/economie';
 import { createEconomieMock, ECONOMIE_URL } from './economieMock';
@@ -130,6 +132,58 @@ describe('economie mock (ADR 0013)', () => {
       expect(second).toMatchObject({ since: ranAt, booked: 1 });
       expect(second.assessmentId).not.toBe(first.assessmentId);
       expect(own.data.taxDebts).toHaveLength(2);
+    } finally {
+      server.resetHandlers();
+    }
+  });
+
+  it('credits and debits a wallet once per externalId, never below zero', async () => {
+    const own = createEconomieMock();
+    server.use(...own.handlers);
+    const wallet = `/internal/players/${socialIds.griefer}/wallet`;
+    try {
+      const credited = await send('POST', `${wallet}/credit`, {
+        amount: 500,
+        reference: 'Lost cargo',
+        externalId: 'panel-1',
+      });
+      expect(credited.status).toBe(201);
+      expect(
+        zPostApiInternalPlayersByPlayerIdWalletCreditResponse.parse(await credited.json()),
+      ).toMatchObject({ amount: 500, toBalance: 540, transaction: { type: 'deposit' } });
+      expect(
+        (await send('POST', `${wallet}/credit`, { amount: 500, externalId: 'panel-1' })).status,
+      ).toBe(409);
+      expect((await send('POST', `${wallet}/debit`, { amount: 541 })).status).toBe(409);
+      expect((await send('POST', `${wallet}/debit`, { amount: 40, type: 'fee' })).status).toBe(201);
+      expect((await send('POST', `${wallet}/credit`, { amount: 1, type: 'issuance' })).status).toBe(
+        400,
+      );
+      // A holder without an account gets one on its first credit.
+      const npc = '7c0a7e1e-0000-4000-8000-0000000000f1';
+      expect(
+        await (await send('POST', `/internal/npcs/${npc}/wallet/credit`, { amount: 5 })).json(),
+      ).toMatchObject({ toBalance: 5 });
+    } finally {
+      server.resetHandlers();
+    }
+  });
+
+  it('issues money only where allowed, within the ceiling', async () => {
+    const own = createEconomieMock();
+    server.use(...own.handlers);
+    try {
+      const commune = `/internal/politics/${organisationIds.commune}`;
+      expect((await send('POST', `${commune}/mint`, { amount: 10 })).status).toBe(403);
+      await send('PUT', `${commune}/settings`, { allowMinting: true, mintCeiling: 1_000 });
+      expect((await send('POST', `${commune}/mint`, { amount: 1_001 })).status).toBe(400);
+      const minted = await send('POST', `${commune}/mint`, { amount: 1_000, reason: 'Stimulus' });
+      expect(
+        zPostApiInternalPoliticsByEntityIdMintResponse.parse(await minted.json()),
+      ).toMatchObject({
+        toBalance: 1_300,
+        transaction: { type: 'issuance', reference: 'Stimulus' },
+      });
     } finally {
       server.resetHandlers();
     }

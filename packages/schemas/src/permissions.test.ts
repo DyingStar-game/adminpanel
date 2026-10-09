@@ -98,4 +98,13 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     ]);
     expect(permissionsOf(['supervisor'])).not.toContain(Permission.economiePoliticsManage);
   });
+
+  it("opens money movements with economie's capability roles only (step O.3)", () => {
+    expect(permissionsOf(['economie:wallet:credit'])).toEqual([Permission.economieWalletCredit]);
+    expect(permissionsOf(['economie:wallet:debit'])).toEqual([Permission.economieWalletDebit]);
+    expect(permissionsOf(['economie:money:issue'])).toEqual([Permission.economieMoneyIssue]);
+    expect(permissionsOf(['supervisor', 'economie:wallet:read'])).not.toContain(
+      Permission.economieWalletCredit,
+    );
+  });
 });

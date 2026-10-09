@@ -263,12 +263,18 @@ the README changes, this table and `permissions.ts` follow it.
 | Change them; set or remove its fiscal home (`PUT …/corporations/:id/settings`, `PUT …/affiliation`) | `economie:corporation:manage` | `svc-admin` |
 | Change a political entity's tax rates and minting policy (`PUT …/politics/:id/settings`) | `economie:politics:manage` | `svc-admin` |
 | Run its tax assessment (`POST …/politics/:id/taxes/assess`) | `economie:politics:manage` | `svc-admin` |
-| Later: credit, debit, mint | `economie:wallet:credit`, `economie:wallet:debit`, `economie:money:issue` | `svc-admin` |
+| Credit a player's, an NPC's or a corporation's wallet (`POST …/players\|npcs\|corporations/:id/wallet/credit`) | `economie:wallet:credit` | `svc-admin` |
+| Debit one (`…/wallet/debit`) | `economie:wallet:debit` | `svc-admin` |
+| Credit or debit a political treasury (`POST …/politics/:id/wallet/credit\|debit`) | `economie:politics:manage` | `svc-admin` |
+| Issue money into a political treasury (`POST …/politics/:id/mint`) | `economie:money:issue` | `svc-admin` |
 
 Changing a setting needs to read it first: the `:manage` roles open the matching reads too
 (`permissions.ts`). The panel offers money issuing to countries and federations only, as
 `economie`'s README says, since `economie` does not check the level (or to turn it off where
-it is on). Settings, assessments and the fiscal home were added on 2026-10-09 (lot 2 step O.2).
+it is on). Settings, assessments and the fiscal home were added on 2026-10-09 (lot 2 step O.2),
+money movements the same day (O.3): the panel sends them in credits, with a reason and an
+`externalId` drawn per dialog (a resend is refused, 409); money issuing has no such key in
+`economie`, and is offered on countries' and federations' treasuries only.
 
 `GET /api/admin/players` (wallets by pseudonym) goes through `social` from `economie`; the panel
 searches players in `social` itself and reads the wallet from the player sheet.

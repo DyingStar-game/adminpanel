@@ -10,11 +10,15 @@ import {
   zGetApiInternalPoliticsByEntityIdSettingsResponse,
   zGetApiInternalPoliticsByEntityIdWalletResponse,
   zGetApiInternalPoliticsByEntityIdWalletTransactionsResponse,
+  zMovementResult,
   zPostApiInternalPoliticsByEntityIdTaxesAssessResponse,
   zPutApiInternalPoliticsByEntityIdSettingsResponse,
   type CorporationSettingsChange,
+  type PanelMint,
+  type PanelMovement,
   type PoliticalSettingsChange,
 } from '@dyingstar-admin/contracts/economie';
+import type { WalletHolder } from '@dyingstar-admin/schemas';
 import type { ServiceTokenSource } from '../auth/serviceToken';
 import { createUpstream, type Query } from './upstream';
 
@@ -26,8 +30,7 @@ export interface EconomieClientOptions {
   serviceToken?: ServiceTokenSource | undefined;
 }
 
-/** Whose wallet: `economie` keeps players, NPCs, corporations and political entities apart. */
-export type WalletHolder = 'players' | 'npcs' | 'corporations' | 'politics';
+export type { WalletHolder };
 
 const WALLET = {
   players: {
@@ -121,6 +124,19 @@ export function createEconomieClient({ baseUrl, timeoutMs, serviceToken }: Econo
         zCorporationSettingsAsServed,
         { body: { politicalEntityId } },
       ),
+    /**
+     * Credits or debits a holder's wallet in credits (step O.3); its `externalId` makes a second
+     * send a 409, a debit beyond the balance too.
+     */
+    move: (holder: WalletHolder, id: string, direction: 'credit' | 'debit', body: PanelMovement) =>
+      internal('POST', `${walletPath(holder, id)}/${direction}`, zMovementResult, {
+        body: { ...body, currency: 'credits' },
+      }),
+    /** Issues money into a political treasury, within its settings (no idempotency key). */
+    mint: (id: string, body: PanelMint) =>
+      internal('POST', `/politics/${encodeURIComponent(id)}/mint`, zMovementResult, {
+        body: { ...body, currency: 'credits' },
+      }),
     /** Whether the wallets are configured (`svc-admin`'s secret). */
     readsWallets: hasServiceToken,
   };
