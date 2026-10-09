@@ -155,8 +155,9 @@ ni de l'image : `OIDC_CLIENT_SECRET` (le client `dyingstar-admin`) et `SVC_ADMIN
 - [docs/design/](../design/) — la maquette qui structure les vues (leur apparence est celle du premier panneau, ADR 0020)
 - [CLAUDE.md](../../CLAUDE.md) — règles de travail (git, Makefile, conventions, points d'extension)
 - [Documentation anglaise](../../README.md)
-- [deploy/](../../deploy/) date de l'ancien panneau et ne fonctionne pas : le déploiement sur les
-  serveurs de l'équipe est à décider avec l'équipe back.
+- Déploiement sur les serveurs de l'équipe : l'image de `docker/Dockerfile.prod`, installée
+  depuis le dépôt [`kubernetes`](https://github.com/DyingStar-game/kubernetes) de l'équipe back
+  comme les services de jeu (voir [ARCHITECTURE.md](./ARCHITECTURE.md) › Local et production).
 
 L'interface propose l'**anglais** (par défaut) et le **français** via le sélecteur de langue.
 

@@ -32,7 +32,3 @@ Thumbs.db
 
 # Docker (local overrides only)
 docker-compose.override.yml
-
-# Helm local render
-deploy/helm/**/charts/
-deploy/helm/**/Chart.lock

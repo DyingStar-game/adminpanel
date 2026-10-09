@@ -9,7 +9,7 @@ when a step needs a new decision, it is written as a new ADR before coding.
 |------|--------|
 | 1–8 | **Done** (foundation, BFF, design system, explorer, object page, orbit, live, writes) |
 | 9. Bulk import | **Done** ([ADR 0004](./adr/0004-bulk-import-unit-posts.md), [ADR 0019](./adr/0019-bulk-import-validation.md) and its business rules); tried and approved by the maintainer (2026-10-09) |
-| 10. Documentation | **Done** (2026-10-09): `README.md`, `ONBOARDING.md`, `ARCHITECTURE.md` (+ `docs/fr/`) rewritten for the current panel (lots 1 and 2), BFF API in [`bff-api.md`](./bff-api.md); `deploy/` left as is (below) |
+| 10. Documentation | **Done** (2026-10-09): `README.md`, `ONBOARDING.md`, `ARCHITECTURE.md` (+ `docs/fr/`) rewritten for the current panel (lots 1 and 2), BFF API in [`bff-api.md`](./bff-api.md); `deploy/` removed |
 
 ### Delivered beyond the plan
 
@@ -30,10 +30,9 @@ when a step needs a new decision, it is written as a new ADR before coding.
 
 ### Open questions
 
-- `deploy/` (Helm chart, Kubernetes and Skaffold notes) is left from the previous panel and
-  does not work. Not used by local work; how the panel is deployed on the team's servers is to
-  be decided with the back team when it goes online (their services each have their chart in
-  their `kubernetes` repository, deployed by ArgoCD).
+- None. `deploy/` (the previous panel's Helm chart, without templates, and its Kubernetes and
+  Skaffold notes) was removed on 2026-10-09: the panel is installed like the game services, from
+  the back team's `kubernetes` repository (a chart per service, deployed by ArgoCD).
 
 Settled:
 
@@ -185,8 +184,8 @@ Identical concurrent GETs are coalesced with a short-lived cache (ADR 0009).
 ### 10. Documentation — done
 
 - `README.md`, `ONBOARDING.md`, `ARCHITECTURE.md` (and `docs/fr/`) rewritten for the new stack
-  and lot 2 (sign-in, game services); the BFF API in `docs/bff-api.md`. `deploy/` waits for the
-  panel's deployment (Open questions).
+  and lot 2 (sign-in, game services); the BFF API in `docs/bff-api.md`. `deploy/` removed (Open
+  questions).
 
 ## Dependencies
 

@@ -183,8 +183,9 @@ management actions. Locally, `make up K8S=1` reads the secret from minikube
 - [docs/design/](./docs/design/) — the mock-up the views are structured after (their look is the first panel's, ADR 0020)
 - [docker/keycloak/README.md](./docker/keycloak/README.md) — local Keycloak, test users, minikube
 - [CLAUDE.md](./CLAUDE.md) — working rules (git, Makefile, conventions, extension points)
-- [deploy/](./deploy/) is left from the previous panel and does not work: deploying on the team's
-  servers is to be decided with the back team.
+- Deploying on the team's servers: the image of `docker/Dockerfile.prod`, installed from the back
+  team's [`kubernetes`](https://github.com/DyingStar-game/kubernetes) repository like the game
+  services (see [ARCHITECTURE.md](./ARCHITECTURE.md) › Local and production).
 
 ### Translations
 

@@ -66,7 +66,7 @@ reading (O.1), settings (O.2: corporations, political taxes, assessments) and mo
 tried live yet: the plan says what. Lot 1 (persistence items) is done:
 [`docs/lot-1-plan.md`](./docs/lot-1-plan.md).
 Contributor docs: `ONBOARDING.md`, `ARCHITECTURE.md`, `docs/bff-api.md` (keep them in step when
-routes, services or the setup change); `deploy/` is the previous panel's and does not work.
+routes, services or the setup change).
 
 ## Sign-in (Keycloak, ADR 0023)
 

@@ -87,9 +87,6 @@ Every route, with its permission: [docs/bff-api.md](./docs/bff-api.md).
 └── Makefile                  # every command (Docker or Podman, pinned Node and pnpm)
 ```
 
-`deploy/` is left from the previous panel and does not work; how the panel is deployed on the
-team's servers is to be decided with the back team when it goes online.
-
 ## Frontend
 
 - **Stack** (ADR 0010): React, Vite, TypeScript strict, Tailwind, TanStack Router / Query /
@@ -123,3 +120,7 @@ from the pinned copies. `make check` runs everything.
 - **Production image**: `make image` (`docker/Dockerfile.prod`); configured by the variables of
   [`.env.sample`](./.env.sample), its two secrets from a secret store (README › Secrets of a
   deployment).
+- **On the team's servers**: like the game services, the image is pushed to Harbor by the CI and
+  installed from the back team's `kubernetes` repository (a chart per service, deployed by
+  ArgoCD), which holds the panel's settings, secrets and public address. The previous panel's
+  `deploy/` folder was removed (2026-10-09).

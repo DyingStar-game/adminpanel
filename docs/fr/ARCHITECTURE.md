@@ -94,9 +94,6 @@ Toutes les routes, avec leur permission : [docs/bff-api.md](../bff-api.md).
 └── Makefile                  # toutes les commandes (Docker ou Podman, Node et pnpm figés)
 ```
 
-`deploy/` date de l'ancien panneau et ne fonctionne pas ; la façon de déployer le panneau sur les
-serveurs de l'équipe est à décider avec l'équipe back au moment de sa mise en ligne.
-
 ## Frontend
 
 - **Stack** (ADR 0010) : React, Vite, TypeScript strict, Tailwind, TanStack Router / Query /
@@ -133,3 +130,7 @@ tout.
 - **Image de production** : `make image` (`docker/Dockerfile.prod`) ; configurée par les
   variables de [`.env.sample`](../../.env.sample), ses deux secrets venant d'un coffre à secrets
   ([README anglais](../../README.md) › Secrets of a deployment).
+- **Sur les serveurs de l'équipe** : comme les services de jeu, l'image est poussée sur Harbor par
+  la CI et installée depuis le dépôt `kubernetes` de l'équipe back (un chart par service, déployé
+  par ArgoCD), qui porte les réglages, les secrets et l'adresse publique du panneau. Le dossier
+  `deploy/` de l'ancien panneau a été supprimé (2026-10-09).
