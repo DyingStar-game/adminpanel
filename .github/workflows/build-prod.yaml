@@ -1,0 +1,36 @@
+name: 'Build Production Image: dyingstar-admin'
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  extract-version:
+    name: Extract version from tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - name: Extract version
+        id: tag
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+  build:
+    name: Build dyingstar-admin (prod)
+    needs: extract-version
+    uses: ./.github/workflows/_build-push.yaml
+    with:
+      service_name: dyingstar-admin
+      context_path: .
+      dockerfile_path: docker/Dockerfile.prod
+      image_name: harbor.dyingstar-game.space/dyingstar/dyingstar-admin
+      image_tag: ${{ needs.extract-version.outputs.version }}
+      additional_tags: latest
+      chart_name: dyingstar-admin
+      trigger_preprod_deploy: false
+    secrets:
+      HARBOR_USERNAME: ${{ secrets.HARBOR_USERNAME }}
+      HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}

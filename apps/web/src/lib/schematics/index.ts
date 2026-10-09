@@ -1,0 +1,64 @@
+import { SchematicSchema, type Schematic } from './schema';
+import { battery } from './battery';
+import { celestial, star } from './celestial';
+import { truck } from './truck';
+
+export type { Schematic } from './schema';
+
+/** Every schematic, validated at load time: a typo in a file fails early (and in tests). */
+export const SCHEMATICS: Schematic[] = [truck, battery, celestial, star].map((raw) =>
+  SchematicSchema.parse(raw),
+);
+
+const matches = (pattern: string, scenename: string) => {
+  const a = pattern.split('/');
+  const b = scenename.split('/');
+  return (
+    a.length === b.length &&
+    a.every((segment, i) => {
+      const value = b[i] ?? '';
+      if (!segment.includes('*')) return segment === value;
+      const [prefix = '', suffix = ''] = segment.split('*');
+      return value.startsWith(prefix) && value.endsWith(suffix);
+    })
+  );
+};
+
+/** Schematic of a model, if one is declared for its `scenename`. */
+export const schematicFor = (scenename: unknown): Schematic | null =>
+  typeof scenename === 'string'
+    ? (SCHEMATICS.find((s) => matches(s.scenename, scenename)) ?? null)
+    : null;
+
+/** Top-level keys of `object_data` a schematic shows: the page does not repeat them. */
+export function schematicKeys(schematic: Schematic): Set<string> {
+  const paths = [
+    ...schematic.shapes.flatMap((s) => (s.value ? [s.value.path] : [])),
+    ...schematic.lights.map((l) => l.path),
+    ...schematic.readouts.flatMap((r) => ('path' in r ? [r.path] : [])),
+  ];
+  return new Set(paths.filter((path) => !path.includes('.')));
+}
+
+/** Whether a schematic lists the item's contents (a `cargo` shape with `contents`). */
+export const hasContents = (schematic: Schematic) =>
+  schematic.shapes.some((shape) => shape.contents);
+
+/** Reads a dotted path in `object_data` (`seats.seat_driver`). */
+export function valueAt(data: Record<string, unknown>, path: string): unknown {
+  return path.split('.').reduce<unknown>((value, key) => {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return (value as Record<string, unknown>)[key];
+    }
+    return undefined;
+  }, data);
+}
+
+/** Model name from a `scenename`: `scenes/…/engine_t1.tscn` → `engine_t1`. */
+export const sceneModel = (scenename: unknown): string | null =>
+  typeof scenename === 'string'
+    ? (scenename
+        .split('/')
+        .at(-1)
+        ?.replace(/\.tscn$/, '') ?? null)
+    : null;

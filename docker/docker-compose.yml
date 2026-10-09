@@ -1,0 +1,73 @@
+# Node.js version (must match .nvmrc)
+x-node-image: &node-image 'node:24.21.0'
+
+x-node-service: &node-service
+  image: *node-image
+  # Run as the image's `node` user (uid 1000) so files created in the bind mount stay owned by
+  # the host user. pnpm is provided by corepack (pinned through `packageManager`), enabled in
+  # the user's own bin directory since the container does not run as root.
+  user: node
+  working_dir: /app
+  volumes:
+    - ..:/app
+    - pnpm_store:/home/node/.pnpm-store
+  environment:
+    COREPACK_ENABLE_DOWNLOAD_PROMPT: '0'
+    # Vite and tsx watch the bind mount by polling: native file events get lost through it.
+    VITE_WATCH_POLLING: 'true'
+    CHOKIDAR_USEPOLLING: 'true'
+    PATH: /home/node/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+    npm_config_store_dir: /home/node/.pnpm-store
+  env_file:
+    - path: ../.env.local
+      required: false
+
+services:
+  # Local Keycloak (ADR 0023): shared Keycloaks never redirect to localhost, so the panel signs in
+  # here in development. The realm is re-imported from the file at every start (no volume).
+  # The browser reaches it on localhost:8080, the BFF as `keycloak:8080`; the static hostname
+  # keeps one issuer for both, the back channel follows the name used (as in the back team's
+  # dev stack).
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.0
+    command: >
+      start-dev --import-realm --http-port=8080
+      --hostname=http://localhost:8080 --hostname-backchannel-dynamic=true
+    environment:
+      # Admin console http://localhost:8080/admin — local only.
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: devpass
+    volumes:
+      - ./keycloak/dyingstar-realm.json:/opt/keycloak/data/import/dyingstar-realm.json:ro
+    ports:
+      - '8080:8080'
+
+  # Testers profile: install, build and serve the production bundle on :3000.
+  app:
+    <<: *node-service
+    command: >
+      sh -c "
+        mkdir -p /home/node/.local/bin && corepack enable --install-directory /home/node/.local/bin &&
+        pnpm install &&
+        pnpm build &&
+        STATIC_DIR=../web/dist pnpm start
+      "
+    depends_on:
+      - keycloak
+    ports:
+      - '3000:3000'
+
+  # Developers profile: idle container, commands run with `make pnpm <cmd>`.
+  dev:
+    <<: *node-service
+    command: sh -c "mkdir -p /home/node/.local/bin && corepack enable --install-directory /home/node/.local/bin && tail -f /dev/null"
+    depends_on:
+      - keycloak
+    ports:
+      - '5173:5173'
+      - '3000:3000'
+    tty: true
+    stdin_open: true
+
+volumes:
+  pnpm_store:

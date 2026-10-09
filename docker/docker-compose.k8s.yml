@@ -1,0 +1,27 @@
+# Minikube mode (`make up K8S=1`): the panel signs in to the back team's dev Keycloak and reaches
+# their services, running on minikube (`kubernetes` repository, `scripts_linux/start-dev.sh`).
+# The dev container joins minikube's Docker network and reaches Traefik on the node port; the
+# browser keeps going through `minikube tunnel` (`*.dyingstar.local` → 127.0.0.1 in the hosts
+# files). The panel's client must exist in their realm: docker/keycloak/README.md.
+services:
+  dev:
+    networks:
+      - default
+      - minikube
+    extra_hosts:
+      - 'auth.dyingstar.local:${MINIKUBE_IP:-192.168.49.2}'
+      - 'services.dyingstar.local:${MINIKUBE_IP:-192.168.49.2}'
+    environment:
+      # Same issuer as the browser sees; back channel through Traefik's node port.
+      OIDC_ISSUER: http://auth.dyingstar.local/realms/dyingstar
+      OIDC_DISCOVERY_URL: http://auth.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/realms/dyingstar
+      # Their `social`, through Traefik (`/social` prefix stripped), for the moderation (ADR 0024).
+      SOCIAL_URL: http://services.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/social
+      # Their `economie` (ADR 0024 step O), likewise.
+      ECONOMIE_URL: http://services.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/economie
+      # svc-admin, for the services' internal APIs (social, economie): read by the Makefile.
+      SVC_ADMIN_CLIENT_SECRET: ${SVC_ADMIN_CLIENT_SECRET:-}
+
+networks:
+  minikube:
+    external: true

@@ -1,0 +1,234 @@
+# 0018. Planetary map: a 2D view of everything placed on a celestial body
+
+- **Status:** Accepted
+- **Date:** 2026-10-02
+- **Scope:** Manage persistence
+
+## Context
+
+The maintainer wants a 2D map of a planet showing the positions of what it holds (players,
+buildings, vehicles…), with types shown or hidden and a search.
+
+Live data of SandBox (2026-10-02, GET only):
+
+- **896 direct children**, every one with a `position` relative to the planet centre: 592
+  `miningrock`, 188 `spawnbuilding`, 55 `poi_village`, 20 `vehicle`, 18 `cargo_depot`,
+  16 `mining_depot`, 3 `miningzone`, 1 `station`, 1 orphan `vehicle_component`, and 2 moons
+  (`planet`, no `position`: they orbit, with `positions[]` samples).
+- Surface items lie at about **6,361.6 km** from the centre, between −617 m and +2,826 m around
+  it (relief). The `planet` item has **no radius** property.
+- They spread over a region of about **1,500 km** (latitude 10.8° → 24.9°, longitude
+  129.4° → 140.7°, assuming +Y is the pole), while the 20 trucks stand within a few hundred
+  metres: the map must zoom from the region down to a few metres.
+- The `station` is at **394 km** above the surface: in orbit, not on the ground.
+- **Players are not children of the planet**: the 657 players are children of `spawnbuilding`s,
+  their `position` relative to the building (24 distinct apartment slots, `y = 0.071`). Their
+  place on the planet is the building's transform applied to it (Euler YXZ, as checked in
+  ADR 0017). The game does not report player positions yet: today the map shows where players
+  are housed; it will show where they are without change once the game writes them.
+- Below the other surface types, only vehicles have children (their `vehicle_component`s,
+  which have no meaning on a map).
+
+## Decision
+
+### Where
+
+- One map per celestial body (planet or moon), at `/map/$uuid`, opened from a **Map** action on
+  the body's object page and inspector (type profiles flag the types that have one).
+
+### What is shown
+
+- The body's **direct children with a position**, and the **players whose parent is one of
+  them**, placed by composing the parent's position and rotation. Other nested items are left
+  out (none today besides vehicle components).
+- Items more than **50 km** above the surface are **not drawn**: they are listed in an
+  "In orbit" section next to the map (the station today). Moons are not on the map either.
+- Each point carries its UUID, type, label, parent (for players), latitude, longitude and
+  altitude.
+
+### Show / hide and search
+
+- A legend lists the present types with their counts and a toggle each. Defaults come from the
+  type profiles (`map.hidden`): **`miningrock` is hidden by default** (two thirds of the points,
+  little interest), everything else shown. Choices are remembered in the browser.
+- A search box finds items by name, UUID or type among the loaded points, centres the map on the
+  match and highlights it (even when its type is hidden).
+- Players housed in the same building stack at the same place: points close to each other at the
+  current zoom are **grouped** into a counter that splits as the user zooms in.
+
+### Interaction and live
+
+- Hover: label, type, altitude, latitude / longitude. Click: selects the item in the inspector
+  panel next to the map (the same organism as the explorer), with a link to its object page.
+- The map data refreshes with the lists' cadence (5 s, ADR 0009), paused with the live switch.
+
+### Geometry
+
+- **Body frame**: positions are relative to the body centre. **+Y is the pole** (Godot "up"),
+  longitude 0 is the +Z direction; this is an assumption to confirm with the game team, and only
+  changes the labels of the graticule, not distances.
+- **Reference radius**: the body has no radius, so the BFF takes the median distance of its
+  surface children to the centre; altitude = distance − reference radius.
+- **Projection**: azimuthal equidistant centred on the centroid of the drawn items, in metres.
+  Over a regional extent it keeps distances and shapes close to the truth (unlike a whole-planet
+  equirectangular map, where everything would be a single dot). A latitude / longitude graticule
+  and a scale bar are drawn; there is no terrain background (no texture or height map available).
+
+### Computation in the BFF
+
+- `GET /api/bodies/:uuid/map` returns `{ body, referenceRadius, points[], inOrbit[] }`. The BFF
+  pages through the body's children (`parent_id`), pages through the players (`object_type`) and
+  keeps those whose parent is a child, composes the transforms, converts to latitude / longitude
+  / altitude and projects. The response is cached and coalesced like other reads (a few
+  persistence calls per refresh: about 4 today).
+- The cost grows with the number of children and players; above **20,000 points** the BFF
+  answers `MAP_TOO_LARGE` rather than scanning, until a later ADR adds a spatial index or a
+  server-side filter.
+
+### Rendering
+
+- **Leaflet** (with `react-leaflet`) in its non-geographic mode (`CRS.Simple`, coordinates in
+  projected metres), its canvas renderer for the points (thousands without DOM cost) and
+  `Leaflet.markercluster` for grouping. Pan, zoom, fly-to, tooltips and clustering come from the
+  library instead of being written here. Colours per type follow the existing type badges.
+
+### Update (2026-10-02): metric grid
+
+At the maintainer's request, the latitude / longitude graticule is replaced by a **metric grid
+following the zoom**: cells of a 1-2-5 step in metres (1 m … 500 km) about 80 px on screen, a
+thick line every 5 cells, and a caption with the current step next to the scale bar. The
+projection keeps distances (below 0.3 % error at the edge of SandBox's region), so the grid
+measures the map at any zoom. Latitude / longitude stay in the tooltips.
+
+### Update (2026-10-03): a budget instead of a refusal
+
+SandBox now holds about 19 500 mining rocks, and the whole map was refused (`MAP_TOO_LARGE`).
+At the maintainer's request the BFF no longer refuses: it **counts every type** of the body
+(cheap `total` queries) and **loads them within the 20 000-point budget**, the types the viewer
+shows first and the smallest first, the hidden ones last (`GET /api/bodies/:uuid/map?hide=a,b`,
+sent by the web app from the profile defaults and the viewer's choices). A type that does not
+fit is left out and listed in `omitted`; the legend still gives its count, marked "too many to
+draw". Players placed through their building take their share of the budget first. The counts
+come with the map (`counts`), so the legend lists types that are not loaded. Children of a type
+without a definition are counted but not drawn (all live types have one). Drawing every rock
+stays for the spatial index or tiles mentioned above.
+
+### Update (2026-10-04): only the shown types, counts kept a minute
+
+Hidden types are no longer loaded, only counted (`hide`); the selected item of a hidden type is
+added on its own (`include`). Measured on the test server, each filtered persistence query is a
+full scan (1 to 10 s), so the ~30 per-type counts were most of the map's 17 to 20 s. Counts
+(children per type, totals per type) are now cached 60 s in the BFF and served stale while
+refreshed in the background, cleared on any write: a refresh takes the listing of the shown
+types only (about 6 s instead of 17 s). A count route on the persistence side, or an index on
+`parent_id` / `object_type`, is requested from the back team for the first load.
+
+### Update (2026-10-04): a fixed projection frame
+
+The projection centre (mean direction of the drawn items) and reference radius (their median
+distance) were computed on every map: showing or hiding a type, or vehicles moving, shifted
+every point (by more than 100 km on SandBox), and the selected item's move arrow drew these
+shifts as moves. The BFF now computes the frame on a body's first map with points and keeps it
+while it runs; a BFF restart computes it anew.
+
+The selected item now keeps its whole trail (up to 100 moves, earlier ones fainter, each with
+its distance and time), cleared when another item is selected or the selection is cleared.
+
+### Update (2026-10-04): one listing of the body
+
+Counts and per-type lists made about forty filtered queries per map, each a full scan on
+persistence, served one after another (ADR 0021). The BFF now reads all the body's children in
+one plain listing (3 pages for SandBox's 20,470 items, about 4.3 s) and the players, keeps them
+30 s (`SNAPSHOT_TTL_MS`) served stale while refreshed in the background, cleared on any write;
+counts come from that listing. First map 17 s → 5.4 s, showing or hiding a type 6–17 s → under
+0.03 s. Every type on the body is counted and drawn, with or without a definition. This copy
+grows with the body: the lasting answer is on the persistence side (ADR 0021).
+
+### Update (2026-10-04): pole axis confirmed
+
+The game confirms the body frame: +Y is the pole (longitude: see the next update). The map no longer shows
+the "assume +Y is the pole" caption.
+
+### Update (2026-10-04): add an item where the map is right-clicked, first view on the main group
+
+A right click on the map background opens a menu, "Add an item here": the create form comes
+with the body as parent, the clicked place (inverse projection, `azimuthalEquidistantInverse`)
+at the height of the closest item on the ground (the relief is unknown) plus the usual
+spawn height, upright and facing north (`placeOnBody`). The first view is fitted on the main
+group of items: two vehicles driven 3,400 and 14,300 km away zoomed it out to the whole planet.
+Points beyond 3 times the 90th percentile distance from the median point are left out of the
+fit (they stay on the map).
+
+A right click on a marker selects its item and offers its actions: open, edit, duplicate,
+delete (still confirmed: it applies live in the game). After a write made from the map, the map
+stays on screen and is refreshed (the body listing is cleared on writes): a deleted selection is
+cleared, a created or duplicated item becomes the selection. The orbit view does the same for
+its selection and the children of its centre.
+
+With an item selected (standing directly on the body), the background menu also offers "Move
+… here": its editor opens with the new position (ground taken from the closest other item, plus
+its type's spawn height) and its rotation turned with the ground (the rotation taking its old
+vertical onto the new one: upright, same heading, `moveOnBody`); saved like any edit.
+A player, placed in its spawn building, can be moved too: at the maintainer's request it is
+taken out of the building onto the body (`parent_id` becomes the body), placed in the body's
+frame like any item standing on it; the building only tells where and how it stands now. The
+game does not report player positions to persistence yet: such a move may not show in game
+until that is fixed.
+
+### Update (2026-10-06): teleport here
+
+The other way round, at the maintainer's request: the background menu always offers "Teleport
+here…", the place first, then the item. A dialog lists the body's players (their spawn
+building as a hint) and vehicles, in two searchable tabs; the pick becomes the selection and
+its editor opens at that place exactly like "Move … here" (same ground, upright, a player taken
+out of its building). Nothing is written until the editor is saved. Like any move, it goes
+through persistence, with the same limits: a player may not move in game while the game does
+not load player positions from persistence (the dialog says so). A real
+teleport of a connected player would need a command on the game side.
+
+### Update (2026-10-04): body facts from the project wiki
+
+The project wiki documents every body of the Tarsis system (radius, gravity, sidereal day,
+orbital period, moons). The admin keeps those facts in `lib/bodies.ts`, matched on the body's
+scene, and shows them on the body's page (key facts and a link to its wiki page) and in the map
+header. The map's altitudes keep the ground level measured on the items (median ≈ 6,360 km for
+SandBox) as reference: the wiki's radius (6,356 km) would show trucks standing on the ground
+about 4 km up.
+
+### Update (2026-10-04): longitude and altitude as the game shows them
+
+The in-game readout of truck `f22d41bb` ("alt 4.06 km · sol +0 m", "15.0968° N 44.6278° O")
+checked against its saved position settles both:
+
+- **Longitude** is 0 on **+X** and grows towards **+Z** (`atan2(z, x)`), not 0 on +Z: the admin
+  showed 134.63° E for that truck. `latLonOf` / `directionOf` follow the game. The map itself is
+  unchanged (the body seen from above, north up): there the game's longitude grows towards the
+  left, i.e. its "east" is on the left of a north-up view from above — to check with the game
+  team (a mirrored convention, or "O" meaning Ost).
+- **Altitude** is measured above the body's radius from the wiki (6,356 km for SandBox): its
+  ground stands about 4 km above (6,360,058 m from the centre for the truck, 4.06 km in game).
+  The map shows altitudes that way (`gameAltitude`); its orbit limit and the ground taken for
+  "add / move here" still use the ground level measured on the items.
+
+## Consequences
+
+- A body's content becomes visible at a glance; vehicles, buildings and, later, moving players
+  can be found and opened from the map.
+- Three new dependencies in the web app (Leaflet, react-leaflet, markercluster) and a new BFF
+  endpoint with its schema in `packages/schemas`.
+- Labels of latitude / longitude follow the pole convention (+Y), confirmed on 2026-10-04.
+- The map loads the body content at once within a 20 000-point budget; a type that does not fit
+  is counted but not drawn (update of 2026-10-03).
+- Later: click on the map to choose a spawn or duplicate position (ADR 0017), terrain background
+  if the game provides one, other nested types if needed.
+
+## Alternatives considered
+
+- **Whole-planet equirectangular map**: simple, but today's content would cover a few pixels and
+  the projection distorts shapes; kept only as the graticule labels.
+- **SVG with d3-zoom, or React Flow** (already used for the orbit graph): no clustering, no
+  canvas rendering for thousands of points, and fly-to / scale bar to write.
+- **3D globe (three.js / deck.gl)**: heavier, harder to read for a regional cluster, and the
+  request is a 2D map.
+- **Computing positions in the browser**: it would need every parent of every player in the
+  browser and duplicate the scan logic; the BFF already pages and caches persistence reads.

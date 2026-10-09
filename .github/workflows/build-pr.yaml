@@ -1,0 +1,16 @@
+name: 'PR Build Check: dyingstar-admin'
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    name: Build dyingstar-admin (PR check)
+    uses: ./.github/workflows/_build-push.yaml
+    with:
+      service_name: dyingstar-admin
+      context_path: .
+      dockerfile_path: docker/Dockerfile.prod
+      image_name: local/dyingstar-admin
+      image_tag: pr-check
+      push: false

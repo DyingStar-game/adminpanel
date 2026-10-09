@@ -1,0 +1,385 @@
+{
+  "realm": "dyingstar",
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "description": "Moderation (social): above moderator. Not in the back team's realms yet"
+      },
+      {
+        "name": "supervisor",
+        "description": "Moderation (social): above admin. Not in the back team's realms yet"
+      }
+    ],
+    "client": {
+      "dyingstar-admin": [
+        {
+          "name": "persistence:read",
+          "description": "Draft (ADR 0023): browse persistence"
+        },
+        {
+          "name": "persistence:write",
+          "description": "Draft (ADR 0023): create, edit, duplicate, teleport"
+        },
+        {
+          "name": "persistence:delete",
+          "description": "Draft (ADR 0023): delete items"
+        },
+        {
+          "name": "social:corporation:write",
+          "description": "Manage corporations through social's internal API (ADR 0023)"
+        },
+        {
+          "name": "social:politics:write",
+          "description": "Manage political entities through social's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:wallet:read",
+          "description": "Read wallets through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:politics:read",
+          "description": "Read political treasuries and settings through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:corporation:read",
+          "description": "Read corporations' economic settings through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:corporation:manage",
+          "description": "Change corporations' economic settings and fiscal home through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:politics:manage",
+          "description": "Change political tax rates and minting, run tax assessments through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:wallet:credit",
+          "description": "Credit wallets and treasuries through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:wallet:debit",
+          "description": "Debit wallets and treasuries through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:money:issue",
+          "description": "Issue money into political treasuries through economie's internal API (ADR 0023)"
+        }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "dyingstar-admin",
+      "name": "DyingStar admin panel (local development only)",
+      "description": "Confidential client of the panel BFF: authorization code + PKCE (ADR 0023).",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "dyingstar-admin-local",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "rootUrl": "http://localhost:5173",
+      "redirectUris": [
+        "http://localhost:5173/auth/callback",
+        "http://localhost:3000/auth/callback"
+      ],
+      "webOrigins": [],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "http://localhost:5173/##http://localhost:3000/"
+      },
+      "protocolMappers": [
+        {
+          "name": "panel client roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "config": {
+            "usermodel.clientRoleMapping.clientId": "dyingstar-admin",
+            "claim.name": "resource_access.${client_id}.roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "access.token.claim": "true",
+            "id.token.claim": "false",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ],
+      "defaultClientScopes": ["openid", "profile", "email", "roles", "web-origins"],
+      "optionalClientScopes": ["offline_access"]
+    }
+  ],
+  "users": [
+    {
+      "username": "dev-reader",
+      "email": "dev-reader@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Reader",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "dev-reader",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "clientRoles": {
+        "dyingstar-admin": ["persistence:read"]
+      },
+      "groups": ["/staff"]
+    },
+    {
+      "username": "dev-editor",
+      "email": "dev-editor@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Editor",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "dev-editor",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "clientRoles": {
+        "dyingstar-admin": ["persistence:read", "persistence:write"]
+      },
+      "groups": ["/staff"]
+    },
+    {
+      "username": "dev-moderator",
+      "email": "dev-moderator@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Moderator",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "dev-moderator",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player", "moderator"],
+      "clientRoles": {},
+      "groups": ["/staff"]
+    },
+    {
+      "username": "dev-admin",
+      "email": "dev-admin@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dev",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "dev-admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player", "admin"],
+      "clientRoles": {
+        "dyingstar-admin": [
+          "persistence:read",
+          "persistence:write",
+          "persistence:delete",
+          "social:corporation:write",
+          "social:politics:write",
+          "economie:wallet:read",
+          "economie:politics:read",
+          "economie:corporation:manage",
+          "economie:politics:manage",
+          "economie:wallet:credit",
+          "economie:wallet:debit",
+          "economie:money:issue"
+        ]
+      },
+      "groups": ["/staff"]
+    },
+    {
+      "id": "19dd218f-9cbd-484f-9a3b-cff5285eaa93",
+      "username": "ynotna",
+      "email": "ynotna@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Ynot",
+      "lastName": "Na",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "ynotna",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player", "admin"],
+      "clientRoles": {
+        "dyingstar-admin": [
+          "persistence:read",
+          "persistence:write",
+          "persistence:delete",
+          "social:corporation:write",
+          "social:politics:write",
+          "economie:wallet:read",
+          "economie:politics:read",
+          "economie:corporation:manage",
+          "economie:politics:manage",
+          "economie:wallet:credit",
+          "economie:wallet:debit",
+          "economie:money:issue"
+        ]
+      },
+      "groups": ["/staff"]
+    },
+    {
+      "id": "4aa97da7-6ae4-44ef-9727-b0c993c268ea",
+      "username": "player-kira",
+      "email": "player-kira@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Kira",
+      "lastName": "Vance",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-kira",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "b91c2854-3ae4-45b8-b465-9d8cbe89c12a",
+      "username": "player-orin",
+      "email": "player-orin@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Orin",
+      "lastName": "Takeda",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-orin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "c947996d-702d-480a-a08e-5f2bd48a888d",
+      "username": "player-mara",
+      "email": "player-mara@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Mara",
+      "lastName": "Ostrowski",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-mara",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "cc5b9471-e0be-443c-ae22-2df9f6e9c158",
+      "username": "player-silas",
+      "email": "player-silas@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Silas",
+      "lastName": "Ferro",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-silas",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "8ac4ffca-7b3d-49ac-960b-1a705846b73f",
+      "username": "player-juno",
+      "email": "player-juno@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Juno",
+      "lastName": "Okafor",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-juno",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "83a418bc-e342-4bd7-b097-4918c68da3a2",
+      "username": "player-tess",
+      "email": "player-tess@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Tess",
+      "lastName": "Lindqvist",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-tess",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "618dcf6e-7ced-4d6b-aa90-ae8e4e8561ec",
+      "username": "player-dax",
+      "email": "player-dax@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Dax",
+      "lastName": "Moreau",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-dax",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    },
+    {
+      "id": "e5e9ed80-d100-42b4-bb7c-9dc2864df269",
+      "username": "player-pell",
+      "email": "player-pell@dyingstar.local",
+      "emailVerified": true,
+      "enabled": true,
+      "firstName": "Pell",
+      "lastName": "Huxley",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "player-pell",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["player"],
+      "groups": ["/players"]
+    }
+  ]
+}

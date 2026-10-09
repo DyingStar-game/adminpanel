@@ -1,0 +1,36 @@
+# Self-contained production image (ADR 0012): builds inside Docker, then ships the bundled BFF
+# serving the built SPA. Build from the repository root:
+#   docker build -f docker/Dockerfile.prod -t dyingstar-admin .
+FROM node:24.21.0-alpine AS build
+WORKDIR /app
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable
+
+# Dependencies first, for layer caching.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json apps/web/
+COPY apps/bff/package.json apps/bff/
+COPY packages/schemas/package.json packages/schemas/
+COPY packages/contracts/package.json packages/contracts/
+COPY packages/testing/package.json packages/testing/
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+RUN pnpm build
+
+FROM node:24.21.0-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production \
+    PORT=3000 \
+    STATIC_DIR=/app/public
+
+# The BFF is bundled into a single file (dependencies included): no node_modules needed.
+COPY --from=build /app/apps/bff/dist/index.mjs ./index.mjs
+COPY --from=build /app/apps/web/dist ./public
+
+USER node
+EXPOSE 3000
+HEALTHCHECK --interval=15s --timeout=3s --retries=5 \
+  CMD wget -qO- http://localhost:3000/health || exit 1
+
+CMD ["node", "index.mjs"]

@@ -1,0 +1,23 @@
+name: 'Build & Deploy to Preprod: dyingstar-admin'
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build:
+    name: Build dyingstar-admin (preprod)
+    uses: ./.github/workflows/_build-push.yaml
+    with:
+      service_name: dyingstar-admin
+      context_path: .
+      dockerfile_path: docker/Dockerfile.prod
+      image_name: harbor.dyingstar-game.space/dyingstar/dyingstar-admin
+      image_tag: develop
+      chart_name: dyingstar-admin
+      trigger_preprod_deploy: true
+    secrets:
+      HARBOR_USERNAME: ${{ secrets.HARBOR_USERNAME }}
+      HARBOR_PASSWORD: ${{ secrets.HARBOR_PASSWORD }}
+      KUBERNETES_REPO_TOKEN: ${{ secrets.KUBERNETES_REPO_TOKEN }}

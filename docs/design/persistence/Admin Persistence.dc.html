@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#ffffff;--bg2:#fafafa;--bg3:#f4f4f5;--line:#e4e4e7;--line2:#d4d4d8;--fg:#09090b;--fg2:#52525b;--fg3:#71717a;--acc:#4f46e5;--accbg:#eef2ff;--flash:#fef08a;--danger:#dc2626;--ok:#16a34a;--dot:#e4e4e7}
+[data-theme="dark"]{--bg:#09090b;--bg2:#0f0f12;--bg3:#1c1c1f;--line:#27272a;--line2:#3f3f46;--fg:#fafafa;--fg2:#a1a1aa;--fg3:#8b8b94;--acc:#a5b4fc;--accbg:#1e1b4b;--flash:#713f12;--danger:#f87171;--ok:#4ade80;--dot:#1f1f23}
+body{margin:0;background:#e9e9ec;font-family:'Geist',system-ui,sans-serif;-webkit-font-smoothing:antialiased;color:#09090b}
+button,input{font:inherit;color:inherit}
+a{color:#4f46e5}a:hover{color:#3730a3}
+</style>
+</helmet>
+<section id="t1" style="padding:40px 44px 48px;">
+<div style="display:flex;flex-direction:column;gap:14px;max-width:920px;margin:0 0 28px;">
+<div style="display:flex;align-items:center;gap:10px;"><a href="#t1" style="font:600 10px 'Geist Mono',monospace;padding:3px 7px;background:#09090b;color:#fff;border-radius:4px;text-decoration:none;">1</a><span style="font-size:20px;font-weight:600;letter-spacing:-.02em;">Admin persistance : trois façons de naviguer dans les items</span></div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 28px;font-size:13px;line-height:1.55;color:#52525b;text-wrap:pretty;">
+<div>L'API filtre uniquement par <code style="font-family:'Geist Mono',monospace;font-size:12px;color:#09090b;">object_type</code>, <code style="font-family:'Geist Mono',monospace;font-size:12px;color:#09090b;">parent_id</code> et <code style="font-family:'Geist Mono',monospace;font-size:12px;color:#09090b;">scenename</code>, avec pagination. Les compteurs par type sont obtenus avec un appel <code style="font-family:'Geist Mono',monospace;font-size:12px;color:#09090b;">page_size=1</code> par type connu (lu depuis les <code style="font-family:'Geist Mono',monospace;font-size:12px;color:#09090b;">*_def.json</code>), puis en lisant <code style="font-family:'Geist Mono',monospace;font-size:12px;color:#09090b;">total</code>.</div>
+<div>On ne charge jamais tous les enfants d'un coup, seulement des pages : 8 par grappe dans le graphe, 25 par niveau dans l'arbre, 50 par page dans le tableau. Les champs UUID (<code style="font-family:'Geist Mono',monospace;font-size:12px;color:#09090b;">pilot_uuid</code>, <code style="font-family:'Geist Mono',monospace;font-size:12px;color:#09090b;">components[]</code>) deviennent des liens, chacun résolu par un <code style="font-family:'Geist Mono',monospace;font-size:12px;color:#09090b;">GET /items/{uuid}</code>.</div>
+<div>Les propriétés sont regroupées par canal de synchro (zone, distance, fréquence), comme dans les définitions de props. Les clés absentes de la définition sont listées à part.</div>
+<div>Le live est simulé par un polling toutes les 2 s sur l'objet sélectionné, et les champs modifiés clignotent. Toutes les données sont fictives et générées.</div>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start;">
+
+<div id="1a" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px;">
+<div style="display:flex;align-items:baseline;gap:8px;font-size:12px;color:#52525b;"><a href="#1a" style="font:600 10.5px 'Geist Mono',monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#09090b;border-radius:5px;text-decoration:none;">1a</a><span style="font-weight:600;color:#09090b;">Orbite</span><span>Graphe radial : le parent au centre, les enfants regroupés par object_type, chaque grappe paginée.</span></div>
+<div data-theme="{{ thA }}" style="width:1280px;height:800px;background:var(--bg);color:var(--fg);font-family:'Geist',system-ui,sans-serif;display:flex;flex-direction:column;position:relative;overflow:hidden;border-radius:10px;border:1px solid rgba(0,0,0,.08);box-shadow:0 1px 3px rgba(0,0,0,.06),0 12px 32px -16px rgba(0,0,0,.18);">
+<div style="height:48px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px 0 16px;border-bottom:1px solid var(--line);background:var(--bg);">
+<div style="display:flex;align-items:center;gap:8px;min-width:0;"><div style="width:20px;height:20px;border-radius:6px;background:var(--fg);display:grid;place-items:center;flex:none;"><div style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--bg);"></div></div><span style="font-size:13px;font-weight:600;letter-spacing:-.01em;">DyingStar</span><span style="font-size:13px;color:var(--fg3);">/</span><span style="font-size:13px;font-weight:500;">Persistence</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);border:1px solid var(--line);border-radius:4px;padding:2px 6px;margin-left:4px;">localhost:3001</span></div>
+<div style="flex:1;display:flex;justify-content:center;min-width:0;"><label style="width:340px;max-width:100%;height:30px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:var(--bg2);color:var(--fg3);"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"></circle><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg><input onKeyDown="{{ barA.onSearch }}" placeholder="Aller à un UUID ou un nom…" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:12.5px;color:var(--fg);"><span style="font-family:'Geist Mono',monospace;font-size:10px;border:1px solid var(--line);border-radius:4px;padding:1px 5px;">↵</span></label></div>
+<button onClick="{{ barA.onLive }}" style="height:28px;padding:0 10px;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font-size:12px;font-weight:500;cursor:pointer;"><span style="width:7px;height:7px;border-radius:50%;background:{{ barA.liveDot }};"></span>{{ barA.liveText }}</button>
+<button onClick="{{ barA.onTheme }}" title="Thème" style="height:28px;width:30px;padding:0;display:inline-grid;place-items:center;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg2);cursor:pointer;"><sc-if value="{{ barA.isLight }}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg></sc-if><sc-if value="{{ barA.isDark }}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.4"></circle><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg></sc-if></button>
+<button onClick="{{ barA.onCreate }}" style="height:28px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--fg);border-radius:6px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;cursor:pointer;">+ Nouvel objet</button>
+</div>
+<div style="flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 360px;">
+<div style="position:relative;overflow:hidden;background-color:var(--bg2);background-image:radial-gradient(var(--dot) 1px,transparent 1px);background-size:20px 20px;">
+<div style="position:absolute;left:0;top:0;width:920px;height:752px;">
+<div style="position:absolute;left:270px;top:186px;width:380px;height:380px;border:1px dashed var(--line2);border-radius:50%;box-sizing:border-box;"></div>
+<sc-for list="{{ gA.lines }}" as="l" hint-placeholder-count="0"><div style="position:absolute;left:{{ l.x }}px;top:{{ l.y }}px;width:{{ l.w }}px;height:0;border-top:{{ l.border }};transform:rotate({{ l.a }}deg);transform-origin:0 0;opacity:{{ l.op }};"></div></sc-for>
+<sc-for list="{{ gA.kids }}" as="k" hint-placeholder-count="0"><button onClick="{{ k.onClick }}" onDoubleClick="{{ k.onDbl }}" title="{{ k.label }}" style="position:absolute;left:{{ k.x }}px;top:{{ k.y }}px;transform:translate(-50%,-7px);display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:0;padding:0;cursor:pointer;"><span style="width:14px;height:14px;border-radius:50%;background:{{ k.color }};box-shadow:{{ k.ring }};"></span><span style="font-size:11px;line-height:1;font-weight:{{ k.lw }};color:{{ k.lc }};white-space:nowrap;background:var(--bg2);padding:1px 3px;border-radius:3px;">{{ k.label }}</span></button></sc-for>
+<sc-for list="{{ gA.more }}" as="m" hint-placeholder-count="0"><button onClick="{{ m.onClick }}" style="position:absolute;left:{{ m.x }}px;top:{{ m.y }}px;transform:translate(-50%,-50%);height:24px;padding:0 9px;border-radius:12px;border:1px dashed var(--line2);background:var(--bg);color:var(--fg2);font-family:'Geist Mono',monospace;font-size:11px;cursor:pointer;white-space:nowrap;">{{ m.label }}</button></sc-for>
+<sc-for list="{{ gA.ring }}" as="r" hint-placeholder-count="0"><button onClick="{{ r.onClick }}" style="position:absolute;left:{{ r.x }}px;top:{{ r.y }}px;width:{{ r.d }}px;height:{{ r.d }}px;transform:translate(-50%,-50%);border-radius:50%;border:{{ r.border }};background:{{ r.bg }};opacity:{{ r.op }};box-shadow:{{ r.shadow }};display:grid;place-items:center;cursor:pointer;padding:0;box-sizing:border-box;transition:opacity .2s;"><span style="font-family:'Geist Mono',monospace;font-size:13px;font-weight:600;color:var(--fg);">{{ r.count }}</span><span style="position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;white-space:nowrap;font-family:'Geist Mono',monospace;font-size:11px;line-height:1.2;color:{{ r.labelCol }};padding:2px 6px;background:var(--bg);border:1px solid var(--line);border-radius:4px;">{{ r.label }}</span></button></sc-for>
+<button onClick="{{ gA.onCenterSel }}" style="position:absolute;left:460px;top:376px;width:116px;height:116px;transform:translate(-50%,-50%);border-radius:50%;background:var(--bg);border:2px solid {{ gA.color }};box-shadow:0 0 0 8px {{ gA.halo }},0 10px 28px -10px rgba(0,0,0,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;padding:0 10px;box-sizing:border-box;"><span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--fg2);">{{ gA.type }}</span><span style="font-size:14px;font-weight:600;letter-spacing:-.01em;line-height:1.15;text-align:center;">{{ gA.name }}</span><span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--fg3);">{{ gA.uuidShort }}</span></button>
+</div>
+<div style="position:absolute;left:16px;top:14px;display:flex;flex-direction:column;gap:6px;max-width:620px;">
+<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+<sc-for list="{{ gA.crumbs }}" as="c" hint-placeholder-count="2"><button onClick="{{ c.onClick }}" style="height:26px;padding:0 9px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:12px;color:var(--fg2);cursor:pointer;" style-hover="color:var(--fg);border-color:var(--line2)"><span style="width:6px;height:6px;border-radius:50%;background:{{ c.color }};"></span>{{ c.label }}</button><span style="color:var(--fg3);font-size:12px;padding:0 2px;">/</span></sc-for>
+<span style="height:26px;padding:0 9px;display:inline-flex;align-items:center;gap:6px;border-radius:6px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;">{{ gA.name }}</span>
+</div>
+<sc-if value="{{ showApi }}"><span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--fg3);">{{ gA.countsApi }}</span></sc-if>
+</div>
+<sc-if value="{{ gA.hasOpen }}"><div style="position:absolute;left:16px;bottom:14px;display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;max-width:520px;">
+<div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:8px;height:8px;border-radius:50%;background:{{ gA.open.color }};"></span><span style="font-family:'Geist Mono',monospace;font-weight:600;">{{ gA.open.type }}</span><span style="color:var(--fg2);">{{ gA.open.range }}</span><span style="flex:1;min-width:16px;"></span><button onClick="{{ gA.open.onPrev }}" style="height:24px;width:26px;border:1px solid var(--line);border-radius:5px;background:var(--bg);cursor:pointer;opacity:{{ gA.open.prevOp }};">‹</button><button onClick="{{ gA.open.onNext }}" style="height:24px;width:26px;border:1px solid var(--line);border-radius:5px;background:var(--bg);cursor:pointer;opacity:{{ gA.open.nextOp }};">›</button></div>
+<sc-if value="{{ showApi }}"><span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ gA.open.api }}</span></sc-if>
+</div></sc-if>
+<div style="position:absolute;right:16px;bottom:14px;display:flex;flex-direction:column;gap:6px;padding:10px 12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;font-size:11px;color:var(--fg2);">
+<div style="display:flex;align-items:center;gap:8px;"><span style="width:22px;border-top:1.5px solid var(--fg3);"></span><span style="font-family:'Geist Mono',monospace;">parent_id</span></div>
+<div style="display:flex;align-items:center;gap:8px;"><span style="width:22px;border-top:1.5px dashed var(--fg3);"></span>référence uuid</div>
+<div style="color:var(--fg3);">clic : inspecter · double-clic : centrer</div>
+</div>
+</div>
+<div style="border-left:1px solid var(--line);min-height:0;background:var(--bg);">
+<sc-if value="{{ hasInsA }}" hint-placeholder-val="{{ true }}">
+<div style="height:100%;display:flex;flex-direction:column;min-height:0;">
+<div style="padding:16px 18px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line);">
+<div style="display:flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:2px;background:{{ insA.color }};"></span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg2);">{{ insA.type }}</span></div>
+<div style="font-size:18px;font-weight:600;letter-spacing:-.015em;line-height:1.2;">{{ insA.name }}</div>
+<div style="font-family:'Geist Mono',monospace;font-size:11px;line-height:1.55;color:var(--fg3);word-break:break-all;">{{ insA.uuid }}<br>{{ insA.scenename }}</div>
+<sc-if value="{{ insA.showActions }}"><div style="display:flex;gap:6px;margin-top:4px;"><button onClick="{{ insA.onEdit }}" style="height:28px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;">Éditer</button><sc-if value="{{ insA.canCenter }}"><button onClick="{{ insA.onCenter }}" style="height:28px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;">Centrer le graphe</button></sc-if><span style="flex:1;"></span><button onClick="{{ insA.onDelete }}" style="height:28px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--danger);font-size:12px;font-weight:500;cursor:pointer;">Supprimer</button></div></sc-if>
+<sc-if value="{{ insA.editing }}"><div style="display:flex;gap:6px;margin-top:4px;align-items:center;"><button onClick="{{ insA.onSave }}" style="height:28px;padding:0 12px;border:1px solid var(--fg);border-radius:6px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;cursor:pointer;">Enregistrer</button><button onClick="{{ insA.onCancel }}" style="height:28px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;">Annuler</button><span style="flex:1;"></span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">PUT /items/{uuid}</span></div></sc-if>
+<sc-if value="{{ insA.confirming }}"><div style="margin-top:4px;padding:10px 12px;border:1px solid var(--danger);border-radius:8px;display:flex;flex-direction:column;gap:8px;"><div style="font-size:12px;line-height:1.45;">Supprimer définitivement cet objet ? {{ insA.orphanText }}</div><div style="display:flex;gap:6px;"><button onClick="{{ insA.onConfirm }}" style="height:28px;padding:0 12px;border:1px solid var(--danger);border-radius:6px;background:var(--danger);color:#fff;font-size:12px;font-weight:500;cursor:pointer;">Supprimer</button><button onClick="{{ insA.onCancelDel }}" style="height:28px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;">Annuler</button></div></div></sc-if>
+</div>
+<div style="flex:1;min-height:0;overflow:auto;padding-bottom:20px;">
+<div style="padding:16px 18px 6px;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);">Relations</div>
+<sc-for list="{{ insA.refs }}" as="r" hint-placeholder-count="2"><button onClick="{{ r.onClick }}" style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;align-items:center;width:100%;min-height:32px;padding:0 18px;background:none;border:0;text-align:left;cursor:pointer;" style-hover="background:var(--bg3)"><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.key }}</span><span style="display:flex;align-items:center;gap:7px;min-width:0;"><span style="width:7px;height:7px;border-radius:50%;background:{{ r.color }};flex:none;"></span><span style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.label }}</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">{{ r.type }}</span></span></button></sc-for>
+<div style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;align-items:baseline;padding:8px 18px;"><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);">enfants</span><span style="font-size:12px;line-height:1.5;color:var(--fg2);">{{ insA.childSummary }}</span></div>
+<sc-for list="{{ insA.zones }}" as="z" hint-placeholder-count="2">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:18px 18px 6px;"><span style="font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);">{{ z.title }}</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">{{ z.meta }}</span></div>
+<sc-for list="{{ z.fields }}" as="f" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;align-items:center;min-height:30px;padding:0 18px;background:{{ f.bg }};transition:background .8s ease;"><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.key }}</span><sc-if value="{{ f.showRef }}"><button onClick="{{ f.onClick }}" style="text-align:left;background:none;border:0;padding:0;cursor:pointer;color:var(--acc);font-family:'Geist Mono',monospace;font-size:12px;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.text }}</button></sc-if><sc-if value="{{ f.showText }}"><span title="{{ f.full }}" style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ f.col }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.text }}</span></sc-if><sc-if value="{{ f.editing }}"><input value="{{ f.value }}" onChange="{{ f.onChange }}" style="height:26px;border:1px solid var(--line2);border-radius:5px;background:var(--bg);padding:0 8px;font-family:'Geist Mono',monospace;font-size:12px;width:100%;box-sizing:border-box;outline:none;"></sc-if></div></sc-for>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</div>
+</div>
+</div>
+</div>
+
+<div id="1b" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px;">
+<div style="display:flex;align-items:baseline;gap:8px;font-size:12px;color:#52525b;"><a href="#1b" style="font:600 10.5px 'Geist Mono',monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#09090b;border-radius:5px;text-decoration:none;">1b</a><span style="font-weight:600;color:#09090b;">Explorateur</span><span>Arbre chargé à la demande, tableau paginé du groupe sélectionné, inspecteur à droite.</span></div>
+<div data-theme="{{ thB }}" style="width:1280px;height:800px;background:var(--bg);color:var(--fg);font-family:'Geist',system-ui,sans-serif;display:flex;flex-direction:column;position:relative;overflow:hidden;border-radius:10px;border:1px solid rgba(0,0,0,.08);box-shadow:0 1px 3px rgba(0,0,0,.06),0 12px 32px -16px rgba(0,0,0,.18);">
+<div style="height:48px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px 0 16px;border-bottom:1px solid var(--line);background:var(--bg);">
+<div style="display:flex;align-items:center;gap:8px;min-width:0;"><div style="width:20px;height:20px;border-radius:6px;background:var(--fg);display:grid;place-items:center;flex:none;"><div style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--bg);"></div></div><span style="font-size:13px;font-weight:600;letter-spacing:-.01em;">DyingStar</span><span style="font-size:13px;color:var(--fg3);">/</span><span style="font-size:13px;font-weight:500;">Persistence</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);border:1px solid var(--line);border-radius:4px;padding:2px 6px;margin-left:4px;">localhost:3001</span></div>
+<div style="flex:1;display:flex;justify-content:center;min-width:0;"><label style="width:340px;max-width:100%;height:30px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:var(--bg2);color:var(--fg3);"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"></circle><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg><input onKeyDown="{{ barB.onSearch }}" placeholder="Aller à un UUID ou un nom…" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:12.5px;color:var(--fg);"><span style="font-family:'Geist Mono',monospace;font-size:10px;border:1px solid var(--line);border-radius:4px;padding:1px 5px;">↵</span></label></div>
+<button onClick="{{ barB.onLive }}" style="height:28px;padding:0 10px;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font-size:12px;font-weight:500;cursor:pointer;"><span style="width:7px;height:7px;border-radius:50%;background:{{ barB.liveDot }};"></span>{{ barB.liveText }}</button>
+<button onClick="{{ barB.onTheme }}" title="Thème" style="height:28px;width:30px;padding:0;display:inline-grid;place-items:center;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg2);cursor:pointer;"><sc-if value="{{ barB.isLight }}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg></sc-if><sc-if value="{{ barB.isDark }}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.4"></circle><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg></sc-if></button>
+<button onClick="{{ barB.onCreate }}" style="height:28px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--fg);border-radius:6px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;cursor:pointer;">+ Nouvel objet</button>
+</div>
+<div style="flex:1;min-height:0;display:grid;grid-template-columns:280px minmax(0,1fr) 340px;">
+<div style="border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:var(--bg2);">
+<div style="padding:14px 14px 8px;display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);">Hiérarchie</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">parent_id</span></div>
+<div style="flex:1;min-height:0;overflow:auto;padding-bottom:16px;">
+<sc-for list="{{ rowsB }}" as="r" hint-placeholder-count="14"><div onClick="{{ r.onClick }}" style="display:flex;align-items:center;gap:6px;height:28px;padding-left:{{ r.pad }}px;padding-right:12px;background:{{ r.bg }};cursor:pointer;" style-hover="background:var(--bg3)"><button onClick="{{ r.onToggle }}" style="width:16px;height:16px;flex:none;display:grid;place-items:center;border:0;background:none;padding:0;color:var(--fg3);opacity:{{ r.chevOp }};cursor:pointer;"><svg width="10" height="10" viewBox="0 0 10 10" style="transform:rotate({{ r.chevRot }}deg);transition:transform .15s;"><path d="M3.5 2l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><span style="width:7px;height:7px;flex:none;box-sizing:border-box;border-radius:{{ r.dotR }};background:{{ r.dot }};border:{{ r.dotBd }};"></span><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:{{ r.font }};color:{{ r.col }};">{{ r.label }}</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);white-space:nowrap;">{{ r.count }}</span></div></sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;min-width:0;min-height:0;">
+<sc-if value="{{ hasTB }}" hint-placeholder-val="{{ true }}">
+<div style="padding:14px 20px 12px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--line);">
+<div style="display:flex;align-items:center;gap:2px;flex-wrap:wrap;font-size:12px;color:var(--fg3);"><sc-for list="{{ tB.crumbs }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.onClick }}" style="border:0;background:none;padding:2px 5px;border-radius:4px;color:var(--fg2);cursor:pointer;font-size:12px;" style-hover="background:var(--bg3);color:var(--fg)">{{ c.label }}</button><span>/</span></sc-for></div>
+<div style="display:flex;align-items:center;gap:10px;"><span style="width:10px;height:10px;border-radius:50%;background:{{ tB.color }};"></span><span style="font-family:'Geist Mono',monospace;font-size:16px;font-weight:600;">{{ tB.type }}</span><span style="font-size:12px;color:var(--fg3);">{{ tB.total }} objets</span><span style="flex:1;"></span><label style="width:230px;height:28px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg3);"><svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 3.5h12M4.5 8h7M7 12.5h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg><input value="{{ tB.q }}" onChange="{{ tB.onQ }}" placeholder="Filtrer la page (nom, uuid)" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:12px;color:var(--fg);"></label></div>
+<sc-if value="{{ showApi }}"><div style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ tB.api }}</div></sc-if>
+</div>
+<div style="display:grid;grid-template-columns:{{ tB.grid }};gap:12px;padding:0 20px;height:32px;flex:none;align-items:center;border-bottom:1px solid var(--line);font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);background:var(--bg2);"><span>nom</span><span>object_uuid</span><sc-for list="{{ tB.cols }}" as="c"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ c.c }}</span></sc-for><span>position</span></div>
+<div style="flex:1;min-height:0;overflow:auto;">
+<sc-for list="{{ tB.rows }}" as="r" hint-placeholder-count="14"><div onClick="{{ r.onClick }}" style="display:grid;grid-template-columns:{{ tB.grid }};gap:12px;padding:0 20px;height:34px;align-items:center;border-bottom:1px solid var(--line);cursor:pointer;background:{{ r.bg }};font-size:12.5px;" style-hover="background:var(--bg3)"><span style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.label }}</span><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg3);">{{ r.uuid }}</span><sc-for list="{{ r.cells }}" as="c"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ c.col }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ c.text }}</span></sc-for><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.pos }}</span></div></sc-for>
+<sc-if value="{{ tB.empty }}"><div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--fg3);">Aucun objet sur cette page ne correspond au filtre.</div></sc-if>
+</div>
+<div style="height:44px;flex:none;display:flex;align-items:center;gap:8px;padding:0 20px;border-top:1px solid var(--line);font-size:12px;color:var(--fg2);"><span>{{ tB.range }}</span><span style="flex:1;"></span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">{{ tB.pageText }}</span><button onClick="{{ tB.onPrev }}" style="height:26px;width:28px;border:1px solid var(--line);border-radius:5px;background:var(--bg);cursor:pointer;opacity:{{ tB.prevOp }};">‹</button><button onClick="{{ tB.onNext }}" style="height:26px;width:28px;border:1px solid var(--line);border-radius:5px;background:var(--bg);cursor:pointer;opacity:{{ tB.nextOp }};">›</button></div>
+</sc-if>
+</div>
+<div style="border-left:1px solid var(--line);min-height:0;background:var(--bg);">
+<sc-if value="{{ hasInsB }}" hint-placeholder-val="{{ true }}">
+<div style="height:100%;display:flex;flex-direction:column;min-height:0;">
+<div style="padding:16px 18px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--line);">
+<div style="display:flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:2px;background:{{ insB.color }};"></span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg2);">{{ insB.type }}</span></div>
+<div style="font-size:18px;font-weight:600;letter-spacing:-.015em;line-height:1.2;">{{ insB.name }}</div>
+<div style="font-family:'Geist Mono',monospace;font-size:11px;line-height:1.55;color:var(--fg3);word-break:break-all;">{{ insB.uuid }}<br>{{ insB.scenename }}</div>
+<sc-if value="{{ insB.showActions }}"><div style="display:flex;gap:6px;margin-top:4px;"><button onClick="{{ insB.onEdit }}" style="height:28px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;">Éditer</button><span style="flex:1;"></span><button onClick="{{ insB.onDelete }}" style="height:28px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--danger);font-size:12px;font-weight:500;cursor:pointer;">Supprimer</button></div></sc-if>
+<sc-if value="{{ insB.editing }}"><div style="display:flex;gap:6px;margin-top:4px;align-items:center;"><button onClick="{{ insB.onSave }}" style="height:28px;padding:0 12px;border:1px solid var(--fg);border-radius:6px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;cursor:pointer;">Enregistrer</button><button onClick="{{ insB.onCancel }}" style="height:28px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;">Annuler</button><span style="flex:1;"></span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">PUT /items/{uuid}</span></div></sc-if>
+<sc-if value="{{ insB.confirming }}"><div style="margin-top:4px;padding:10px 12px;border:1px solid var(--danger);border-radius:8px;display:flex;flex-direction:column;gap:8px;"><div style="font-size:12px;line-height:1.45;">Supprimer définitivement cet objet ? {{ insB.orphanText }}</div><div style="display:flex;gap:6px;"><button onClick="{{ insB.onConfirm }}" style="height:28px;padding:0 12px;border:1px solid var(--danger);border-radius:6px;background:var(--danger);color:#fff;font-size:12px;font-weight:500;cursor:pointer;">Supprimer</button><button onClick="{{ insB.onCancelDel }}" style="height:28px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;">Annuler</button></div></div></sc-if>
+</div>
+<div style="flex:1;min-height:0;overflow:auto;padding-bottom:20px;">
+<div style="padding:16px 18px 6px;font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);">Relations</div>
+<sc-for list="{{ insB.refs }}" as="r" hint-placeholder-count="2"><button onClick="{{ r.onClick }}" style="display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:center;width:100%;min-height:32px;padding:0 18px;background:none;border:0;text-align:left;cursor:pointer;" style-hover="background:var(--bg3)"><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.key }}</span><span style="display:flex;align-items:center;gap:7px;min-width:0;"><span style="width:7px;height:7px;border-radius:50%;background:{{ r.color }};flex:none;"></span><span style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.label }}</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">{{ r.type }}</span></span></button></sc-for>
+<div style="display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:baseline;padding:8px 18px;"><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);">enfants</span><span style="font-size:12px;line-height:1.5;color:var(--fg2);">{{ insB.childSummary }}</span></div>
+<sc-for list="{{ insB.zones }}" as="z" hint-placeholder-count="2">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:18px 18px 6px;"><span style="font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);">{{ z.title }}</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">{{ z.meta }}</span></div>
+<sc-for list="{{ z.fields }}" as="f" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;align-items:center;min-height:30px;padding:0 18px;background:{{ f.bg }};transition:background .8s ease;"><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.key }}</span><sc-if value="{{ f.showRef }}"><button onClick="{{ f.onClick }}" style="text-align:left;background:none;border:0;padding:0;cursor:pointer;color:var(--acc);font-family:'Geist Mono',monospace;font-size:12px;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.text }}</button></sc-if><sc-if value="{{ f.showText }}"><span title="{{ f.full }}" style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ f.col }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.text }}</span></sc-if><sc-if value="{{ f.editing }}"><input value="{{ f.value }}" onChange="{{ f.onChange }}" style="height:26px;border:1px solid var(--line2);border-radius:5px;background:var(--bg);padding:0 8px;font-family:'Geist Mono',monospace;font-size:12px;width:100%;box-sizing:border-box;outline:none;"></sc-if></div></sc-for>
+</sc-for>
+</div>
+</div>
+</sc-if>
+</div>
+</div>
+</div>
+</div>
+
+<div id="1c" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px;">
+<div style="display:flex;align-items:baseline;gap:8px;font-size:12px;color:#52525b;"><a href="#1c" style="font:600 10.5px 'Geist Mono',monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#09090b;border-radius:5px;text-decoration:none;">1c</a><span style="font-weight:600;color:#09090b;">Fiche</span><span>Page objet : carte des relations, composants résolus, enfants par onglet, propriétés et JSON brut.</span></div>
+<div data-theme="{{ thC }}" style="width:1280px;height:800px;background:var(--bg);color:var(--fg);font-family:'Geist',system-ui,sans-serif;display:flex;flex-direction:column;position:relative;overflow:hidden;border-radius:10px;border:1px solid rgba(0,0,0,.08);box-shadow:0 1px 3px rgba(0,0,0,.06),0 12px 32px -16px rgba(0,0,0,.18);">
+<div style="height:48px;flex:none;display:flex;align-items:center;gap:10px;padding:0 12px 0 16px;border-bottom:1px solid var(--line);background:var(--bg);">
+<div style="display:flex;align-items:center;gap:8px;min-width:0;"><div style="width:20px;height:20px;border-radius:6px;background:var(--fg);display:grid;place-items:center;flex:none;"><div style="width:8px;height:8px;border-radius:50%;border:1.5px solid var(--bg);"></div></div><span style="font-size:13px;font-weight:600;letter-spacing:-.01em;">DyingStar</span><span style="font-size:13px;color:var(--fg3);">/</span><span style="font-size:13px;font-weight:500;">Persistence</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);border:1px solid var(--line);border-radius:4px;padding:2px 6px;margin-left:4px;">localhost:3001</span></div>
+<div style="flex:1;display:flex;justify-content:center;min-width:0;"><label style="width:340px;max-width:100%;height:30px;display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid var(--line);border-radius:7px;background:var(--bg2);color:var(--fg3);"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.4"></circle><path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg><input onKeyDown="{{ barC.onSearch }}" placeholder="Aller à un UUID ou un nom…" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:12.5px;color:var(--fg);"><span style="font-family:'Geist Mono',monospace;font-size:10px;border:1px solid var(--line);border-radius:4px;padding:1px 5px;">↵</span></label></div>
+<button onClick="{{ barC.onLive }}" style="height:28px;padding:0 10px;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font-size:12px;font-weight:500;cursor:pointer;"><span style="width:7px;height:7px;border-radius:50%;background:{{ barC.liveDot }};"></span>{{ barC.liveText }}</button>
+<button onClick="{{ barC.onTheme }}" title="Thème" style="height:28px;width:30px;padding:0;display:inline-grid;place-items:center;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg2);cursor:pointer;"><sc-if value="{{ barC.isLight }}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"></path></svg></sc-if><sc-if value="{{ barC.isDark }}"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="3" stroke="currentColor" stroke-width="1.4"></circle><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg></sc-if></button>
+<button onClick="{{ barC.onCreate }}" style="height:28px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--fg);border-radius:6px;background:var(--fg);color:var(--bg);font-size:12px;font-weight:500;cursor:pointer;">+ Nouvel objet</button>
+</div>
+<div style="flex:1;min-height:0;overflow:auto;background:var(--bg2);">
+<div style="max-width:1160px;margin:0 auto;padding:20px 28px 40px;display:flex;flex-direction:column;gap:18px;">
+<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:12px;">
+<sc-if value="{{ fC.hasBack }}"><button onClick="{{ fC.onBack }}" style="height:26px;padding:0 9px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:12px;cursor:pointer;margin-right:6px;">← Retour</button></sc-if>
+<sc-for list="{{ fC.crumbs }}" as="c" hint-placeholder-count="3"><button onClick="{{ c.onClick }}" style="height:26px;padding:0 8px;display:inline-flex;align-items:center;gap:6px;border:0;border-radius:6px;background:none;font-size:12px;color:var(--fg2);cursor:pointer;" style-hover="background:var(--bg3);color:var(--fg)"><span style="width:6px;height:6px;border-radius:50%;background:{{ c.color }};"></span>{{ c.label }}</button><span style="color:var(--fg3);">/</span></sc-for>
+<span style="padding:0 8px;font-weight:500;">{{ insC.name }}</span>
+</div>
+<div style="display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;">
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;">
+<span style="display:inline-flex;align-items:center;gap:6px;font-family:'Geist Mono',monospace;font-size:12px;color:var(--fg2);"><span style="width:8px;height:8px;border-radius:2px;background:{{ insC.color }};"></span>{{ insC.type }}</span>
+<div style="font-size:28px;font-weight:600;letter-spacing:-.025em;line-height:1.1;">{{ insC.name }}</div>
+<div style="display:flex;gap:16px;flex-wrap:wrap;font-family:'Geist Mono',monospace;font-size:12px;color:var(--fg3);"><span>{{ insC.uuid }}</span><span>{{ insC.scenename }}</span></div>
+</div>
+<sc-if value="{{ insC.showActions }}"><div style="display:flex;gap:6px;"><button onClick="{{ insC.onEdit }}" style="height:32px;padding:0 12px;border:1px solid var(--line);border-radius:7px;background:var(--bg);font-size:12.5px;font-weight:500;cursor:pointer;">Éditer</button><button onClick="{{ insC.onDelete }}" style="height:32px;padding:0 12px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--danger);font-size:12.5px;font-weight:500;cursor:pointer;">Supprimer</button></div></sc-if>
+<sc-if value="{{ insC.editing }}"><div style="display:flex;gap:6px;align-items:center;"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);margin-right:6px;">PUT /items/{uuid}</span><button onClick="{{ insC.onCancel }}" style="height:32px;padding:0 12px;border:1px solid var(--line);border-radius:7px;background:var(--bg);font-size:12.5px;font-weight:500;cursor:pointer;">Annuler</button><button onClick="{{ insC.onSave }}" style="height:32px;padding:0 14px;border:1px solid var(--fg);border-radius:7px;background:var(--fg);color:var(--bg);font-size:12.5px;font-weight:500;cursor:pointer;">Enregistrer</button></div></sc-if>
+<sc-if value="{{ insC.confirming }}"><div style="display:flex;gap:10px;align-items:center;padding:8px 8px 8px 14px;border:1px solid var(--danger);border-radius:8px;background:var(--bg);"><span style="font-size:12.5px;max-width:300px;line-height:1.4;">Supprimer définitivement ? {{ insC.orphanText }}</span><button onClick="{{ insC.onCancelDel }}" style="height:30px;padding:0 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);font-size:12px;font-weight:500;cursor:pointer;">Annuler</button><button onClick="{{ insC.onConfirm }}" style="height:30px;padding:0 12px;border:1px solid var(--danger);border-radius:6px;background:var(--danger);color:#fff;font-size:12px;font-weight:500;cursor:pointer;">Supprimer</button></div></sc-if>
+</div>
+<div style="background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px 20px 20px;display:flex;flex-direction:column;gap:14px;">
+<div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);">Relations</span><span style="display:flex;gap:14px;font-size:11px;color:var(--fg3);"><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:18px;border-top:1.5px solid var(--fg3);"></span>parent_id</span><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:18px;border-top:1.5px dashed var(--fg3);"></span>référence uuid</span></span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 64px minmax(0,1fr) 64px minmax(0,1fr);align-items:center;">
+<div>
+<sc-if value="{{ fC.hasParent }}"><button onClick="{{ fC.parent.onClick }}" style="width:100%;text-align:left;display:flex;flex-direction:column;gap:5px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--bg);cursor:pointer;" style-hover="border-color:var(--line2);background:var(--bg2)"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">parent_id</span><span style="display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:500;"><span style="width:7px;height:7px;border-radius:50%;background:{{ fC.parent.color }};"></span>{{ fC.parent.label }}</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">{{ fC.parent.type }} · {{ fC.parent.uuid }}</span></button></sc-if>
+<sc-if value="{{ fC.noParent }}"><div style="padding:14px;border:1px dashed var(--line2);border-radius:10px;font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg3);">racine · parent_id = null</div></sc-if>
+</div>
+<div style="height:0;border-top:1.5px solid var(--line2);"></div>
+<div style="display:flex;flex-direction:column;gap:5px;padding:12px 14px;border:1.5px solid {{ insC.color }};border-radius:10px;background:{{ insC.halo }};"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg2);">{{ insC.type }}</span><span style="font-size:14px;font-weight:600;">{{ insC.name }}</span><span style="font-size:11.5px;line-height:1.45;color:var(--fg2);">{{ insC.childSummary }}</span></div>
+<div style="height:0;border-top:1.5px dashed var(--line2);"></div>
+<div style="display:flex;flex-direction:column;gap:8px;">
+<sc-for list="{{ insC.refsOnly }}" as="r" hint-placeholder-count="1"><button onClick="{{ r.onClick }}" style="width:100%;text-align:left;display:flex;flex-direction:column;gap:5px;padding:10px 14px;border:1px dashed var(--line2);border-radius:10px;background:var(--bg);cursor:pointer;" style-hover="border-color:var(--fg3);background:var(--bg2)"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">{{ r.key }}</span><span style="display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:500;"><span style="width:7px;height:7px;border-radius:50%;background:{{ r.color }};"></span>{{ r.label }}<span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);font-weight:400;">{{ r.type }}</span></span></button></sc-for>
+<sc-if value="{{ insC.noRefs }}"><div style="padding:14px;border:1px dashed var(--line);border-radius:10px;font-size:12px;color:var(--fg3);">Aucune référence UUID hors hiérarchie</div></sc-if>
+</div>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:18px;align-items:start;">
+<div style="display:flex;flex-direction:column;gap:18px;min-width:0;">
+<sc-if value="{{ fC.hasComps }}"><div style="background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px 18px 18px;display:flex;flex-direction:column;gap:12px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);">Composants</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">components[{{ fC.compCount }}]</span></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">
+<sc-for list="{{ fC.comps }}" as="m" hint-placeholder-count="9"><button onClick="{{ m.onClick }}" style="text-align:left;display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);cursor:pointer;" style-hover="border-color:var(--line2);background:var(--bg2)"><span style="display:flex;align-items:center;gap:7px;font-family:'Geist Mono',monospace;font-size:12px;font-weight:600;"><span style="width:6px;height:6px;border-radius:50%;background:#fb923c;"></span>{{ m.slot }}</span><span style="display:flex;justify-content:space-between;font-size:11.5px;color:var(--fg2);"><span>{{ m.weight }}</span><span style="font-family:'Geist Mono',monospace;color:var(--fg3);">{{ m.uuid }}</span></span></button></sc-for>
+</div>
+</div></sc-if>
+<div style="background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px 18px 10px;display:flex;flex-direction:column;gap:12px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;"><span style="font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);">Enfants</span><sc-if value="{{ showApi }}"><span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--fg3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ fC.tabApi }}</span></sc-if></div>
+<sc-if value="{{ fC.hasKids }}">
+<div style="display:flex;gap:2px;padding:3px;background:var(--bg3);border-radius:8px;align-self:flex-start;flex-wrap:wrap;"><sc-for list="{{ fC.tabs }}" as="t" hint-placeholder-count="2"><button onClick="{{ t.onClick }}" style="height:26px;padding:0 10px;display:inline-flex;align-items:center;gap:6px;border:1px solid {{ t.bd }};border-radius:6px;background:{{ t.bg }};color:{{ t.fg }};box-shadow:{{ t.shadow }};font-family:'Geist Mono',monospace;font-size:11.5px;cursor:pointer;"><span style="width:6px;height:6px;border-radius:50%;background:{{ t.color }};"></span>{{ t.type }}<span style="color:var(--fg3);">{{ t.count }}</span></button></sc-for></div>
+<div style="display:flex;flex-direction:column;">
+<sc-for list="{{ fC.rows }}" as="r" hint-placeholder-count="6"><button onClick="{{ r.onClick }}" style="display:grid;grid-template-columns:14px minmax(0,1fr) auto 80px 12px;gap:10px;align-items:center;height:36px;padding:0 6px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;cursor:pointer;" style-hover="background:var(--bg2)"><span style="width:7px;height:7px;border-radius:50%;background:{{ r.color }};"></span><span style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.label }}</span><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);">{{ r.meta }}</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);text-align:right;">{{ r.uuid }}</span><span style="color:var(--fg3);font-size:12px;">›</span></button></sc-for>
+<sc-if value="{{ fC.hasMore }}"><button onClick="{{ fC.onMore }}" style="height:36px;border:0;background:none;color:var(--acc);font-size:12.5px;font-weight:500;cursor:pointer;text-align:left;padding:0 6px;">{{ fC.moreText }}</button></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ fC.noKids }}"><div style="padding:18px 0 14px;font-size:12.5px;color:var(--fg3);">Aucun enfant ne référence cet objet via parent_id.</div></sc-if>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px;min-width:0;">
+<div style="background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px 0 12px;">
+<sc-for list="{{ insC.zones }}" as="z" hint-placeholder-count="2">
+<div style="display:flex;justify-content:space-between;align-items:baseline;padding:14px 18px 6px;"><span style="font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);">{{ z.title }}</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">{{ z.meta }}</span></div>
+<sc-for list="{{ z.fields }}" as="f" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:140px minmax(0,1fr);gap:10px;align-items:center;min-height:30px;padding:0 18px;background:{{ f.bg }};transition:background .8s ease;"><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.key }}</span><sc-if value="{{ f.showRef }}"><button onClick="{{ f.onClick }}" style="text-align:left;background:none;border:0;padding:0;cursor:pointer;color:var(--acc);font-family:'Geist Mono',monospace;font-size:12px;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.text }}</button></sc-if><sc-if value="{{ f.showText }}"><span title="{{ f.full }}" style="font-family:'Geist Mono',monospace;font-size:12px;color:{{ f.col }};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ f.text }}</span></sc-if><sc-if value="{{ f.editing }}"><input value="{{ f.value }}" onChange="{{ f.onChange }}" style="height:26px;border:1px solid var(--line2);border-radius:5px;background:var(--bg);padding:0 8px;font-family:'Geist Mono',monospace;font-size:12px;width:100%;box-sizing:border-box;outline:none;"></sc-if></div></sc-for>
+</sc-for>
+</div>
+<div style="background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 18px 16px;display:flex;flex-direction:column;gap:10px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--fg3);">JSON brut</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">GET /items/{uuid}</span></div>
+<pre style="margin:0;max-height:260px;overflow:auto;padding:12px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;font-family:'Geist Mono',monospace;font-size:11px;line-height:1.55;color:var(--fg2);">{{ insC.json }}</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+<p style="margin:28px 0 0;font-size:12px;line-height:1.5;color:rgba(0,0,0,.5);">Pistes : « combiner l'arbre de <a href="#1b">1b</a> avec le graphe de <a href="#1a">1a</a> au centre » · « la fiche <a href="#1c">1c</a> en panneau latéral » · « vue liste globale par object_type ».</p>
+</section>
+<sc-if value="{{ hasCreate }}"><div data-theme="{{ cr.theme }}" onClick="{{ cr.onClose }}" style="position:fixed;inset:0;z-index:50;background:rgba(9,9,11,.45);display:grid;place-items:center;font-family:'Geist',system-ui,sans-serif;">
+<div onClick="{{ cr.stop }}" style="width:600px;max-width:calc(100vw - 32px);max-height:calc(100vh - 48px);background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 24px 64px -12px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden;">
+<div style="padding:16px 20px;display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--line);"><span style="font-size:15px;font-weight:600;">Nouvel objet</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">POST /items</span></div>
+<div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px;overflow:auto;">
+<div style="display:flex;flex-direction:column;gap:7px;"><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);">object_type</span><div style="display:flex;flex-wrap:wrap;gap:5px;"><sc-for list="{{ cr.types }}" as="t" hint-placeholder-count="17"><button onClick="{{ t.onClick }}" style="height:26px;padding:0 9px;display:inline-flex;align-items:center;gap:6px;border:1px solid {{ t.bd }};border-radius:6px;background:{{ t.bg }};font-family:'Geist Mono',monospace;font-size:11.5px;cursor:pointer;"><span style="width:6px;height:6px;border-radius:50%;background:{{ t.color }};"></span>{{ t.type }}</button></sc-for></div></div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
+<label style="display:flex;flex-direction:column;gap:6px;"><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);">parent_id</span><input value="{{ cr.parent }}" onChange="{{ cr.onParent }}" placeholder="null (racine)" style="height:32px;border:1px solid var(--line2);border-radius:6px;background:var(--bg);padding:0 10px;font-family:'Geist Mono',monospace;font-size:11.5px;outline:none;"><span style="font-size:11.5px;color:var(--fg3);">{{ cr.parentLabel }}</span></label>
+<label style="display:flex;flex-direction:column;gap:6px;"><span style="display:flex;justify-content:space-between;font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);">object_uuid<button onClick="{{ cr.onRegen }}" style="border:0;background:none;padding:0;color:var(--acc);font-size:11.5px;cursor:pointer;">régénérer</button></span><input value="{{ cr.uuid }}" onChange="{{ cr.onUuid }}" style="height:32px;border:1px solid var(--line2);border-radius:6px;background:var(--bg);padding:0 10px;font-family:'Geist Mono',monospace;font-size:11.5px;outline:none;"><span style="font-size:11.5px;color:var(--fg3);">Attribué par le client</span></label>
+</div>
+<label style="display:flex;flex-direction:column;gap:6px;"><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);">scenename</span><input value="{{ cr.scene }}" onChange="{{ cr.onScene }}" style="height:32px;border:1px solid var(--line2);border-radius:6px;background:var(--bg);padding:0 10px;font-family:'Geist Mono',monospace;font-size:11.5px;outline:none;"></label>
+<div style="display:flex;flex-direction:column;gap:6px;"><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg2);">position</span><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;"><label style="height:32px;display:flex;align-items:center;gap:8px;border:1px solid var(--line2);border-radius:6px;padding:0 10px;"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">x</span><input value="{{ cr.x }}" onChange="{{ cr.onX }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-family:'Geist Mono',monospace;font-size:12px;"></label><label style="height:32px;display:flex;align-items:center;gap:8px;border:1px solid var(--line2);border-radius:6px;padding:0 10px;"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">y</span><input value="{{ cr.y }}" onChange="{{ cr.onY }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-family:'Geist Mono',monospace;font-size:12px;"></label><label style="height:32px;display:flex;align-items:center;gap:8px;border:1px solid var(--line2);border-radius:6px;padding:0 10px;"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--fg3);">z</span><input value="{{ cr.z }}" onChange="{{ cr.onZ }}" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-family:'Geist Mono',monospace;font-size:12px;"></label></div></div>
+<div style="font-size:12px;line-height:1.5;color:var(--fg2);">Propriétés de la définition, initialisées à <code style="font-family:'Geist Mono',monospace;">null</code> : <span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--fg3);">{{ cr.propsList }}</span></div>
+<pre style="margin:0;max-height:180px;overflow:auto;padding:12px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;font-family:'Geist Mono',monospace;font-size:11px;line-height:1.55;color:var(--fg2);">{{ cr.preview }}</pre>
+</div>
+<div style="padding:12px 20px;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line);"><button onClick="{{ cr.onClose }}" style="height:32px;padding:0 12px;border:1px solid var(--line);border-radius:7px;background:var(--bg);font-size:12.5px;font-weight:500;cursor:pointer;">Annuler</button><button onClick="{{ cr.onSubmit }}" style="height:32px;padding:0 14px;border:1px solid var(--fg);border-radius:7px;background:var(--fg);color:var(--bg);font-size:12.5px;font-weight:500;cursor:pointer;">Créer l'objet</button></div>
+</div>
+</div></sc-if>
+<sc-if value="{{ hasToast }}"><div style="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;background:#09090b;color:#fafafa;font-family:'Geist Mono',monospace;font-size:12px;padding:9px 14px;border-radius:8px;box-shadow:0 10px 30px -10px rgba(0,0,0,.4);display:flex;align-items:center;gap:8px;"><span style="width:6px;height:6px;border-radius:50%;background:#22c55e;"></span>{{ toast }}</div></sc-if>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;mixte&quot;,&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;mixte&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;clusterSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:4,&quot;max&quot;:14,&quot;step&quot;:1,&quot;default&quot;:8,&quot;tsType&quot;:&quot;number&quot;},&quot;showApi&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const TYPES={star:'#f59e0b',planet:'#0ea5e9',station:'#8b5cf6',city:'#6366f1',building:'#64748b',spawnbuilding:'#14b8a6',cargo_depot:'#f97316',storagewarehouse:'#a16207',mining_depot:'#ca8a04',miningzone:'#eab308',miningrock:'#78716c',shelf:'#94a3b8',crate_container:'#84cc16',box:'#ec4899',vehicle:'#e11d48',vehicle_component:'#fb923c',player:'#10b981'};
+const DEFS={
+star:[[0,4e11,1,'name positions rotations from_timestamp parent_id'],[6,4e11,1,'scenename']],
+planet:[[0,2e9,1,'name positions rotations from_timestamp parent_id state'],[6,2e9,1,'scenename']],
+station:[[0,200000,30,'position rotation parent_id'],[6,200001,3,'scenename']],
+city:[[0,200000,30,'position rotation parent_id'],[6,200001,3,'scenename']],
+building:[[0,10000,5,'position rotation parent_id apartments'],[6,10001,3,'scenename']],
+spawnbuilding:[[0,10000,5,'position rotation parent_id x_spacing z_spacing y_spacing total available cols rows floors spawn_point apartments'],[6,10001,3,'scenename name']],
+cargo_depot:[[0,400,30,'position rotation parent_id reception_players reception_owner storage_shelves pnj_reception_deposited_item pnj_box_temp_zones'],[6,403,1,'scenename max_distance_to_reception pnj_zones is_pnj_workplace']],
+storagewarehouse:[[0,10000,5,'position rotation parent_id'],[6,10001,3,'scenename']],
+mining_depot:[[0,300,30,'position rotation scenename parent_id'],[6,301,5,'scenename data']],
+miningzone:[[6,1203,1,'position rotation scenename parent_id zone_size rock_count min_spacing weight_small weight_medium weight_large richness richness_spread mineral_id generated last_generation_datetime']],
+miningrock:[[0,200,30,'position rotation parent_id can_be_breakable inert_density'],[6,203,3,'scenename fractures kick mineral_id host_rock_id weight blocs ore_seed']],
+shelf:[[0,150,30,'position rotation shelf_slots_occupied parent_id'],[6,153,3,'scenename']],
+crate_container:[[0,150,30,'position rotation scenename parent_id'],[6,150,3,'scenename content']],
+box:[[0,150,30,'position rotation opened parent_id'],[1,151,15,'led_state'],[3,152,2,'qrcode symbol parcel_number weight'],[6,153,3,'scenename']],
+vehicle:[[0,200,30,'position rotation pilot_uuid steering speed handbrake headlights engine doors seats components limiter_on limiter_kmh'],[1,100,1,'horn horn_special mass cargo_mass suspension odometer_km'],[6,200,1,'scenename parent_id']],
+vehicle_component:[[0,150,30,'position rotation scenename parent_id slot_id weight'],[6,150,3,'scenename slot_id']],
+player:[[0,200,30,'position rotation velocity action tools head head_yaw stance floating seat perforating carrying flashlight carry_prompt scenename name parent_id spawn_appartment_id is_npc conversation npc_arrived']]};
+const KIDS={star:[['planet',4],['station',2]],planet:[['city',3],['station',1],['miningzone',18],['vehicle',64],['player',212]],station:[['cargo_depot',2],['storagewarehouse',1],['vehicle',12],['player',38]],city:[['building',146],['spawnbuilding',4],['cargo_depot',3],['storagewarehouse',6],['mining_depot',2],['vehicle',340],['player',1204]],building:[['box',7]],spawnbuilding:[['player',40]],cargo_depot:[['shelf',24],['crate_container',12],['box',380]],storagewarehouse:[['shelf',60],['crate_container',40]],mining_depot:[['crate_container',8],['miningrock',30]],miningzone:[['miningrock',200]],shelf:[['box',16]],crate_container:[['box',6]],vehicle:[['vehicle_component',9],['box',3]]};
+const NAMES={star:['Helion','Tauvane'],planet:['Kerys','Vaal','Ostra','Nym'],city:['Port-Adrar','Lumen','Basse-Ferre'],station:['Relais Orin','Anneau Sel']};
+const PSEUDO=['kaelen','nox','vrax','mira','tobias','sel','orrin','juno','dax','ilya','reko','sanna','brann','lys'];
+const SLOTS=['wheel_fl','wheel_fr','wheel_rl','wheel_rr','engine','battery','seat_driver','seat_passenger','cargo_bay'];
+const BOOLS=new Set('handbrake headlights engine limiter_on horn horn_special opened floating flashlight is_npc npc_arrived generated can_be_breakable is_pnj_workplace perforating carry_prompt'.split(' '));
+const COLS={vehicle:['pilot_uuid','speed','engine'],player:['action','is_npc','stance'],box:['parcel_number','weight','opened'],vehicle_component:['slot_id','weight'],miningrock:['mineral_id','weight','can_be_breakable'],miningzone:['mineral_id','rock_count','generated'],building:['apartments'],spawnbuilding:['available','total','floors'],cargo_depot:['is_pnj_workplace','storage_shelves'],shelf:['shelf_slots_occupied'],crate_container:['content'],planet:['state','from_timestamp'],star:['from_timestamp'],mining_depot:['data'],city:[],station:[],storagewarehouse:[]};
+const hash=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0};
+const rng=a=>()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+const mkUuid=r=>{const x='0123456789abcdef';let s='';for(let i=0;i<32;i++)s+=x[Math.floor(r()*16)];return `${s.slice(0,8)}-${s.slice(8,12)}-4${s.slice(13,16)}-${'89ab'[Math.floor(r()*4)]}${s.slice(17,20)}-${s.slice(20)}`};
+const UU=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const S={nodes:{},groups:{},changed:{},pilotOf:{},roots:[]};
+const isRef=v=>typeof v==='string'&&UU.test(v)&&!!S.nodes[v];
+const fmt=v=>Number(v).toLocaleString('fr-FR');
+const fmtShort=v=>v>=1000?(v/1000).toFixed(1).replace('.0','').replace('.',',')+'k':String(v);
+const fmtDist=d=>d>=1000?fmt(Math.round(d/1000))+' km':d+' m';
+const props=t=>{const o=[];(DEFS[t]||[]).forEach(c=>c[3].split(' ').forEach(p=>{if(!o.includes(p))o.push(p)}));return o};
+function labelFor(t,i){if(NAMES[t]&&NAMES[t][i])return NAMES[t][i];if(t==='player')return PSEUDO[i%PSEUDO.length]+'_'+(100+(i*37)%900);if(t==='vehicle')return 'Rover '+['MX','TR','KV'][i%3]+'-'+(101+i);if(t==='vehicle_component')return SLOTS[i%9];if(t==='box')return 'PX-'+(40210+i*13);if(t==='miningrock')return 'rock_'+String(i+1).padStart(3,'0');return t+' #'+(i+1)}
+function gen(p,t,r,i,label){
+const f=(a,b,dp=2)=>+(a+r()*(b-a)).toFixed(dp);const pick=a=>a[Math.floor(r()*a.length)];const V=()=>({x:f(-1e4,1e4),y:f(0,400),z:f(-1e4,1e4)});
+switch(p){
+case 'name':return label;case 'position':case 'spawn_point':return V();case 'rotation':return{x:0,y:f(0,360,1),z:0};
+case 'velocity':return{x:f(-2,2),y:0,z:f(-2,2)};case 'positions':return[V(),V(),V()];case 'rotations':return[{x:0,y:f(0,360,1),z:0}];
+case 'from_timestamp':return 1790800000+Math.floor(r()*80000);case 'state':return pick(['orbiting','stable']);
+case 'pilot_uuid':case 'seat':case 'carrying':case 'conversation':case 'spawn_appartment_id':case 'reception_owner':case 'pnj_reception_deposited_item':return null;
+case 'steering':return f(-1,1);case 'speed':return f(0,70,1);case 'limiter_kmh':return 90;case 'doors':return[false,false,r()>.8,false];case 'seats':return[null,null];case 'components':return[];
+case 'mass':return 1840;case 'cargo_mass':return Math.round(r()*600);case 'suspension':return{stiffness:42000,damping:3800};case 'odometer_km':return Math.round(r()*24000);
+case 'slot_id':return SLOTS[i%9];case 'weight':return f(1,40,1);case 'action':return pick(['idle','walking','mining','carrying']);case 'stance':return pick(['standing','crouching']);
+case 'head':return{pitch:f(-30,30,1)};case 'tools':return pick([['drill'],['scanner'],['drill','scanner'],[]]);case 'mineral_id':return pick(['ferrite','cobaltine','quartzite','helium3']);
+case 'host_rock_id':return pick(['basalt','regolith']);case 'parcel_number':return label;case 'qrcode':return 'ds://box/'+Math.floor(r()*1e8).toString(16);case 'symbol':return pick(['A','B','C','D']);
+case 'led_state':return pick(['off','green','amber']);case 'last_generation_datetime':return '2026-09-'+String(1+Math.floor(r()*29)).padStart(2,'0')+'T0'+Math.floor(r()*9)+':12:00Z';
+case 'apartments':return Array.from({length:Math.floor(r()*4)},(_,k)=>k+1);
+case 'content':case 'storage_shelves':case 'reception_players':case 'pnj_zones':case 'pnj_box_temp_zones':case 'fractures':case 'shelf_slots_occupied':return[];
+case 'data':return{};}
+if(BOOLS.has(p))return r()>.5;
+if(/count|total|available|cols|rows|floors|blocs/.test(p))return Math.round(r()*120);
+return f(0,100,1);}
+function grp(pid,t){const k=pid+'|'+t;if(!S.groups[k]){const pn=S.nodes[pid];const b=pn?(KIDS[pn.object_type]||[]).find(x=>x[0]===t):null;S.groups[k]={total:b?b[1]:0,rm:new Set(),added:[],items:[]}}return S.groups[k]}
+const cnt=g=>g.total-g.rm.size+g.added.length;
+function childAt(p,t,i){const g=grp(p.object_uuid,t);if(!g.items[i])g.items[i]=mk(t,p,i,p.object_uuid+'/'+t+'/'+i);return g.items[i]}
+function list(p,t,off,lim){const g=grp(p.object_uuid,t);const out=[];let idx=0;for(const n of g.added){if(!S.nodes[n.object_uuid])continue;if(idx>=off&&out.length<lim)out.push(n);idx++}for(let i=0;i<g.total&&out.length<lim;i++){if(g.rm.has(i))continue;if(idx>=off)out.push(childAt(p,t,i));idx++}return out}
+function groups(n){const id=n.object_uuid;const base=(KIDS[n.object_type]||[]).map(x=>x[0]);Object.keys(S.groups).forEach(k=>{const [pid,tt]=k.split('|');if(pid===id&&!base.includes(tt))base.push(tt)});return base.map(tt=>({type:tt,total:cnt(grp(id,tt))})).filter(g=>g.total>0)}
+function ancestors(n){const o=[];let p=n.object_data.parent_id,g=0;while(p&&S.nodes[p]&&g++<20){o.unshift(S.nodes[p]);p=S.nodes[p].object_data.parent_id}return o}
+function mk(t,parent,i,seed){
+const r=rng(hash(seed));const id=mkUuid(r);const label=labelFor(t,i);
+const d={parent_id:parent?parent.object_uuid:null,scenename:`scenes/props/${t}/${t}.tscn`};
+const n={object_type:t,object_uuid:id,object_data:d,_label:label,_idx:i};S.nodes[id]=n;
+props(t).forEach(p=>{if(!(p in d))d[p]=gen(p,t,r,i,label)});
+if(t==='vehicle'){
+if(!d.engine)d.speed=0;
+for(let k=0;k<9;k++)d.components.push(childAt(n,'vehicle_component',k).object_uuid);
+if(parent){const pg=grp(parent.object_uuid,'player');if(pg.total&&r()<.7){const pl=childAt(parent,'player',Math.floor(r()*Math.min(pg.total,60)));if(!S.pilotOf[pl.object_uuid]){d.pilot_uuid=pl.object_uuid;S.pilotOf[pl.object_uuid]=id;d.seats=[pl.object_uuid,null];d.engine=true;if(!d.speed)d.speed=+(10+r()*50).toFixed(1);pl.object_data.action='driving'}}}}
+return n}
+function del(n){const d=n.object_data;if(d.parent_id&&S.nodes[d.parent_id]){const g=grp(d.parent_id,n.object_type);const ai=g.added.indexOf(n);if(ai>=0)g.added.splice(ai,1);else if(n._idx!=null)g.rm.add(n._idx)}else S.roots=S.roots.filter(x=>x!==n.object_uuid);delete S.nodes[n.object_uuid]}
+function fmtVal(v){
+if(v===null||v===undefined)return{text:'null',col:'var(--fg3)'};
+if(isRef(v))return{text:S.nodes[v]._label,col:'var(--acc)',ref:v};
+if(typeof v==='boolean')return{text:String(v),col:v?'var(--ok)':'var(--fg3)'};
+if(typeof v==='number')return{text:Number.isInteger(v)&&Math.abs(v)>=10000?fmt(v):String(v),col:'var(--fg)'};
+if(typeof v==='string')return{text:v,col:'var(--fg)'};
+if(Array.isArray(v)){if(v.length&&v.every(isRef))return{text:`[${v.length}] → ${S.nodes[v[0]].object_type}`,col:'var(--fg2)'};return{text:v.length?JSON.stringify(v):'[]',col:v.length?'var(--fg)':'var(--fg3)'}}
+if('x' in v&&'y' in v&&'z' in v)return{text:`${v.x}, ${v.y}, ${v.z}`,col:'var(--fg)'};
+return{text:JSON.stringify(v),col:'var(--fg)'}}
+
+class Component extends DCLogic {
+  state = this.init0();
+  init0(){
+    if(!S.roots.length){for(let i=0;i<2;i++)S.roots.push(mk('star',null,i,'root/'+i).object_uuid)}
+    const helion=S.nodes[S.roots[0]],kerys=childAt(helion,'planet',0),adrar=childAt(kerys,'city',0);
+    const va=list(kerys,'vehicle',0,8);const vA=va.find(v=>v.object_data.pilot_uuid)||va[0];
+    const vc=list(adrar,'vehicle',0,30).filter(v=>v.object_data.pilot_uuid);const vC=vc[2]||vc[0]||list(adrar,'vehicle',0,1)[0];
+    const vB=list(adrar,'vehicle',0,2)[1];
+    const H=helion.object_uuid,K=kerys.object_uuid,A=adrar.object_uuid;
+    return {th:{},live:true,edit:null,del:null,toast:null,create:null,
+      a:{center:K,open:'vehicle',off:0,sel:vA.object_uuid},
+      b:{exp:{[H]:1,[H+'|planet']:1,[K]:1,[K+'|city']:1,[A]:1},lim:{},grp:{pid:A,type:'vehicle'},page:0,sel:vB.object_uuid,q:''},
+      c:{id:vC.object_uuid,tab:'vehicle_component',lim:10,hist:[]}};
+  }
+  componentDidMount(){
+    this.iv=setInterval(()=>{
+      if(!this.state.live)return;const now=Date.now();
+      [this.state.a.sel,this.state.b.sel,this.state.c.id].forEach(id=>{const n=S.nodes[id];if(!n)return;const d=n.object_data;
+        if(n.object_type!=='vehicle'&&n.object_type!=='player')return;
+        if(n.object_type==='vehicle'&&!d.engine)return;
+        if(d.position&&typeof d.position==='object'){d.position={x:+(d.position.x+(Math.random()*8-4)).toFixed(2),y:d.position.y,z:+(d.position.z+(Math.random()*8-4)).toFixed(2)};S.changed[id+'.position']=now}
+        if(typeof d.speed==='number'){d.speed=+Math.max(0,d.speed+Math.random()*8-4).toFixed(1);S.changed[id+'.speed']=now}
+        if(n.object_type==='vehicle'&&typeof d.steering==='number'){d.steering=+Math.max(-1,Math.min(1,d.steering+Math.random()*.4-.2)).toFixed(2);S.changed[id+'.steering']=now}
+      });
+      this.forceUpdate();clearTimeout(this.ft);this.ft=setTimeout(()=>this.forceUpdate(),1000);
+    },2000);
+  }
+  componentWillUnmount(){clearInterval(this.iv);clearTimeout(this.ft);clearTimeout(this.tt)}
+  up(dir,patch){this.setState(s=>({[dir]:{...s[dir],...(typeof patch==='function'?patch(s[dir]):patch)}}))}
+  theme(dir){const f=this.props.theme;const d={a:'light',b:'dark',c:'light'};return this.state.th[dir]||(f==='light'||f==='dark'?f:d[dir])}
+  toast(msg){clearTimeout(this.tt);this.setState({toast:msg});this.tt=setTimeout(()=>this.setState({toast:null}),2800)}
+  go(dir,id){if(!S.nodes[id])return;this.setState({edit:null,del:null});if(dir==='c')this.up('c',c=>({hist:[...c.hist,c.id],id,tab:null,lim:10}));else this.up(dir,{sel:id})}
+  centerA(id){if(!S.nodes[id])return;this.setState({edit:null,del:null});this.up('a',{center:id,open:null,off:0,sel:id})}
+  bar(dir){const th=this.theme(dir);return{isDark:th==='dark',isLight:th!=='dark',
+    onTheme:()=>this.setState(s=>({th:{...s.th,[dir]:th==='dark'?'light':'dark'}})),
+    liveText:this.state.live?'Live · 2 s':'En pause',liveDot:this.state.live?'#22c55e':'var(--fg3)',
+    onLive:()=>this.setState(s=>({live:!s.live})),onCreate:()=>this.openCreate(dir),
+    onSearch:e=>{if(e.key!=='Enter')return;const q=e.target.value.trim().toLowerCase();if(!q)return;
+      const n=Object.values(S.nodes).find(n=>n.object_uuid.startsWith(q)||n._label.toLowerCase().includes(q));
+      if(!n){this.toast(`Absent du cache · GET /items/${q} → 404`);return}
+      if(dir==='a')this.centerA(n.object_uuid);else this.go(dir,n.object_uuid)}}}
+  field(dir,n,k,ed){const v=n.object_data[k];const fv=fmtVal(v);const ch=Date.now()-(S.changed[n.object_uuid+'.'+k]||0)<1500;
+    return{key:k,text:fv.text,full:fv.text,col:fv.col,showRef:!ed&&!!fv.ref,showText:!ed&&!fv.ref,editing:ed,value:ed?(this.state.edit.vals[k]??''):'',
+      onChange:e=>{const val=e.target.value;this.setState(s=>({edit:{...s.edit,vals:{...s.edit.vals,[k]:val}}}))},
+      onClick:()=>{if(fv.ref)this.go(dir,fv.ref)},bg:ch?'var(--flash)':'transparent'}}
+  inspect(dir,id){
+    const n=S.nodes[id];if(!n)return null;const d=n.object_data,t=n.object_type,col=TYPES[t]||'#71717a';
+    const E=this.state.edit,ed=!!(E&&E.dir===dir&&E.uuid===id);const D=this.state.del,conf=!!(D&&D.dir===dir&&D.uuid===id);
+    const rv=(k,m)=>({key:k,label:m._label,type:m.object_type,color:TYPES[m.object_type]||'#71717a',onClick:()=>this.go(dir,m.object_uuid)});
+    const parent=d.parent_id&&S.nodes[d.parent_id];const refs=[];
+    Object.keys(d).forEach(k=>{if(k!=='parent_id'&&isRef(d[k]))refs.push(rv(k,S.nodes[d[k]]))});
+    const pv=S.pilotOf[id];if(pv&&S.nodes[pv]&&S.nodes[pv].object_data.pilot_uuid===id)refs.push(rv('← vehicle.pilot_uuid',S.nodes[pv]));
+    const seen=new Set(['parent_id','scenename']),zones=[];const fv=k=>this.field(dir,n,k,ed);
+    (DEFS[t]||[]).forEach(([z,dist,fq,ps])=>{const ks=ps.split(' ').filter(k=>!seen.has(k)&&seen.add(k));if(ks.length)zones.push({title:'Zone '+z,meta:fmtDist(dist)+' · '+fq+' Hz',fields:ks.map(fv)})});
+    const extra=Object.keys(d).filter(k=>!seen.has(k));if(extra.length)zones.push({title:'Hors définition',meta:'clés additionnelles',fields:extra.map(fv)});
+    const gs=groups(n);const orph=gs.reduce((a,g)=>a+g.total,0);
+    return{name:n._label,type:t,color:col,halo:col+'14',uuid:id,uuidShort:id.slice(0,8),scenename:d.scenename||'—',
+      refs:parent?[rv('parent_id',parent),...refs]:refs,refsOnly:refs,noRefs:!refs.length,
+      childSummary:gs.length?gs.map(g=>fmt(g.total)+' '+g.type).join(' · '):'aucun enfant',
+      zones,editing:ed,confirming:conf,showActions:!ed&&!conf,canCenter:dir==='a'&&id!==this.state.a.center,
+      onCenter:()=>this.centerA(id),
+      onEdit:()=>{const vals={};Object.keys(d).forEach(k=>{const v=d[k];vals[k]=typeof v==='string'?v:JSON.stringify(v)});props(t).forEach(k=>{if(!(k in vals))vals[k]='null'});this.setState({edit:{dir,uuid:id,vals},del:null})},
+      onSave:()=>{const vals=this.state.edit.vals;Object.keys(vals).forEach(k=>{let v=vals[k];try{v=JSON.parse(v)}catch(e){}d[k]=v});this.setState({edit:null});this.toast(`PUT /items/${id.slice(0,8)}… · 200 OK`)},
+      onCancel:()=>this.setState({edit:null}),onDelete:()=>this.setState({del:{dir,uuid:id},edit:null}),
+      onCancelDel:()=>this.setState({del:null}),onConfirm:()=>this.remove(dir,n),
+      orphanText:orph?`${fmt(orph)} enfants garderont un parent_id orphelin.`:'Aucun enfant.',
+      json:JSON.stringify({object_type:t,object_uuid:id,object_data:d},null,2)};
+  }
+  remove(dir,n){const id=n.object_uuid,pid=n.object_data.parent_id;del(n);this.setState({del:null,edit:null});this.toast(`DELETE /items/${id.slice(0,8)}… · 204`);
+    const s=this.state,fb=(pid&&S.nodes[pid])?pid:S.roots[0];
+    if(dir==='a'){if(s.a.center===id)this.up('a',{center:fb,open:null,sel:fb});else this.up('a',{sel:s.a.center})}
+    if(dir==='b')this.up('b',{sel:fb});if(dir==='c')this.up('c',{id:fb,hist:[]})}
+  openCreate(dir){const s=this.state;let pid,type;
+    if(dir==='a'){pid=s.a.center;type=s.a.open}if(dir==='b'){pid=s.b.grp.pid;type=s.b.grp.type}if(dir==='c'){pid=s.c.id;type=s.c.tab}
+    const p=S.nodes[pid];if(!type&&p){const g=groups(p)[0];type=g?g.type:null}type=type||'box';
+    this.setState({create:{dir,parent:pid||'',type,uuid:mkUuid(Math.random),scene:`scenes/props/${type}/${type}.tscn`,sceneAuto:true,x:'0',y:'0',z:'0'}})}
+  createData(c){const d={parent_id:c.parent||null,scenename:c.scene,position:{x:+c.x||0,y:+c.y||0,z:+c.z||0},rotation:{x:0,y:0,z:0}};props(c.type).forEach(k=>{if(!(k in d))d[k]=null});return d}
+  createVM(){const c=this.state.create;if(!c)return null;const set=p=>this.setState(s=>({create:{...s.create,...p}}));const pn=S.nodes[c.parent];
+    return{theme:this.theme(c.dir),parent:c.parent,uuid:c.uuid,scene:c.scene,x:c.x,y:c.y,z:c.z,
+      parentLabel:pn?'→ '+pn._label+' ('+pn.object_type+')':(c.parent?'Parent absent du cache':'Racine (parent_id = null)'),
+      types:Object.keys(TYPES).map(t=>({type:t,color:TYPES[t],bg:t===c.type?'var(--bg3)':'transparent',bd:t===c.type?'var(--fg)':'var(--line)',onClick:()=>set({type:t,...(c.sceneAuto?{scene:`scenes/props/${t}/${t}.tscn`}:{})})})),
+      propsList:props(c.type).filter(k=>!['position','rotation','parent_id','scenename'].includes(k)).join(', ')||'—',
+      preview:JSON.stringify({object_type:c.type,object_uuid:c.uuid,object_data:this.createData(c)},null,2),
+      onParent:e=>set({parent:e.target.value}),onUuid:e=>set({uuid:e.target.value}),onScene:e=>set({scene:e.target.value,sceneAuto:false}),
+      onX:e=>set({x:e.target.value}),onY:e=>set({y:e.target.value}),onZ:e=>set({z:e.target.value}),onRegen:e=>{e.preventDefault();set({uuid:mkUuid(Math.random)})},
+      onClose:()=>this.setState({create:null}),stop:e=>e.stopPropagation(),onSubmit:()=>this.doCreate()}}
+  doCreate(){const c=this.state.create;if(!UU.test(c.uuid)){this.toast('object_uuid invalide · 400 Bad Request');return}
+    if(S.nodes[c.uuid]){this.toast('object_uuid déjà utilisé');return}
+    const n={object_type:c.type,object_uuid:c.uuid,object_data:this.createData(c),_label:c.type+' · '+c.uuid.slice(0,4)};
+    const p=S.nodes[c.parent];S.nodes[c.uuid]=n;
+    if(p)grp(p.object_uuid,c.type).added.unshift(n);else{n.object_data.parent_id=c.parent||null;S.roots.push(c.uuid)}
+    this.setState({create:null});this.toast('POST /items · 201 Created');const id=c.uuid,pid=p&&p.object_uuid;
+    if(c.dir==='a'){if(pid===this.state.a.center)this.up('a',{open:c.type,off:0,sel:id});else this.up('a',{sel:id})}
+    if(c.dir==='b'){if(pid)this.up('b',b=>({grp:{pid,type:c.type},page:0,sel:id,exp:{...b.exp,[pid]:1}}));else this.up('b',{sel:id})}
+    if(c.dir==='c')this.go('c',id)}
+  graphA(){
+    const s=this.state.a;const c=S.nodes[s.center]||S.nodes[S.roots[0]];const cid=c.object_uuid;
+    const cx=460,cy=376,R=190,N=this.props.clusterSize??8;
+    const gs=groups(c);const items=gs.map(g=>({kind:'g',type:g.type,total:g.total}));const d=c.object_data;
+    Object.keys(d).forEach(k=>{if(k!=='parent_id'&&isRef(d[k]))items.push({kind:'r',key:k,node:S.nodes[d[k]]})});
+    const pv=S.pilotOf[cid];if(pv&&S.nodes[pv]&&S.nodes[pv].object_data.pilot_uuid===cid)items.push({kind:'r',key:'← pilot_uuid',node:S.nodes[pv]});
+    const n=items.length,step=360/Math.max(n,1);const ring=[],lines=[],kids=[],more=[];let open=null;
+    const L=(x1,y1,x2,y2,border,op)=>({x:x1,y:y1,w:Math.hypot(x2-x1,y2-y1),a:Math.atan2(y2-y1,x2-x1)*180/Math.PI,border,op});
+    items.forEach((it,i)=>{
+      const deg=-90+step/2+i*step,ang=deg*Math.PI/180,x=cx+R*Math.cos(ang),y=cy+R*Math.sin(ang);
+      if(it.kind==='g'){
+        const col=TYPES[it.type]||'#71717a',isOpen=s.open===it.type,dim=!!s.open&&!isOpen;const dd=Math.round(40+15*Math.log10(it.total+1));
+        lines.push(L(cx,cy,x,y,`1.5px solid ${isOpen?col:'var(--line2)'}`,dim?.4:1));
+        ring.push({x,y,d:dd,count:fmtShort(it.total),label:it.type,labelCol:isOpen?'var(--fg)':'var(--fg2)',border:`1.5px solid ${col}`,bg:isOpen?col+'2e':'var(--bg)',op:dim?.45:1,shadow:isOpen?`0 0 0 6px ${col}1f`:'none',onClick:()=>this.up('a',{open:isOpen?null:it.type,off:0})});
+        if(isOpen){
+          const off=Math.min(s.off,Math.max(0,it.total-1)),ks=list(c,it.type,off,N),rest=it.total-off-ks.length;
+          const arr=[...ks,...(rest>0?[null]:[])],m=arr.length,spread=Math.min(11,110/Math.max(m,1));
+          arr.forEach((k,j)=>{const a2=(deg+(j-(m-1)/2)*spread)*Math.PI/180,rr=j%2?338:298;
+            const kx=Math.max(44,Math.min(876,cx+rr*Math.cos(a2))),ky=Math.max(70,Math.min(700,cy+rr*Math.sin(a2)));
+            lines.push(L(x,y,kx,ky,`1px solid ${col}88`,1));
+            if(k){const sel=k.object_uuid===s.sel;kids.push({x:kx,y:ky,color:col,label:k._label,ring:sel?'0 0 0 3px var(--bg2), 0 0 0 5px var(--acc)':'0 0 0 3px var(--bg2)',lc:sel?'var(--fg)':'var(--fg2)',lw:sel?600:500,onClick:()=>this.go('a',k.object_uuid),onDbl:()=>this.centerA(k.object_uuid)})}
+            else more.push({x:kx,y:ky,label:'+'+fmt(rest),onClick:()=>this.up('a',{off:off+N})})});
+          open={type:it.type,color:col,range:`${fmt(off+1)}–${fmt(off+ks.length)} sur ${fmt(it.total)}`,onPrev:()=>this.up('a',{off:Math.max(0,off-N)}),onNext:()=>{if(rest>0)this.up('a',{off:off+N})},prevOp:off>0?1:.35,nextOp:rest>0?1:.35,
+            api:`GET /items?parent_id=${cid}&object_type=${it.type}&page=${Math.floor(off/N)+1}&page_size=${N}`};
+        }
+      }else{
+        const m2=it.node,col=TYPES[m2.object_type]||'#71717a',sel=m2.object_uuid===s.sel,dim=!!s.open;
+        lines.push(L(cx,cy,x,y,`1.5px dashed ${col}`,dim?.4:1));
+        ring.push({x,y,d:46,count:m2._label.slice(0,2).toUpperCase(),label:`${it.key} → ${m2._label}`,labelCol:'var(--fg)',border:`1.5px dashed ${col}`,bg:'var(--bg)',op:dim?.55:1,shadow:sel?'0 0 0 3px var(--bg2), 0 0 0 5px var(--acc)':'none',onClick:()=>this.go('a',m2.object_uuid)});
+      }
+    });
+    return{lines,ring,kids,more,hasOpen:!!open,open:open||{},crumbs:ancestors(c).map(a=>({label:a._label,color:TYPES[a.object_type]||'#71717a',onClick:()=>this.centerA(a.object_uuid)})),
+      name:c._label,type:c.object_type,color:TYPES[c.object_type]||'#71717a',halo:(TYPES[c.object_type]||'#71717a')+'22',uuidShort:cid.slice(0,8),onCenterSel:()=>this.go('a',cid),
+      countsApi:gs.length?`${gs.length} × GET /items?parent_id=${cid.slice(0,8)}…&object_type=<type>&page_size=1 → total`:'Aucun enfant'};
+  }
+  treeB(){const b=this.state.b,rows=[];const tog=k=>this.up('b',x=>({exp:{...x.exp,[k]:x.exp[k]?0:1}}));
+    const walk=(n,dep)=>{const id=n.object_uuid,ex=!!b.exp[id],gs=groups(n),sel=b.sel===id,col=TYPES[n.object_type]||'#71717a';
+      rows.push({pad:8+dep*14,label:n._label,count:'',dot:col,dotBd:'0',dotR:'2px',font:"500 13px/1 'Geist', sans-serif",col:'var(--fg)',bg:sel?'var(--bg3)':'transparent',chevRot:ex?90:0,chevOp:gs.length?1:0,onToggle:e=>{e.stopPropagation();if(gs.length)tog(id)},onClick:()=>{this.go('b',id);if(!ex&&gs.length)tog(id)}});
+      if(!ex)return;
+      gs.forEach(g=>{const k=id+'|'+g.type,gx=!!b.exp[k],act=b.grp.pid===id&&b.grp.type===g.type,gc=TYPES[g.type]||'#71717a';
+        rows.push({pad:8+(dep+1)*14,label:g.type,count:fmt(g.total),dot:'transparent',dotBd:`1.5px solid ${gc}`,dotR:'50%',font:"12px/1 'Geist Mono', monospace",col:act?'var(--acc)':'var(--fg2)',bg:act?'var(--accbg)':'transparent',chevRot:gx?90:0,chevOp:1,onToggle:e=>{e.stopPropagation();tog(k)},onClick:()=>this.up('b',{grp:{pid:id,type:g.type},page:0,q:''})});
+        if(gx){const lim=b.lim[k]||25;list(n,g.type,0,lim).forEach(c=>walk(c,dep+2));
+          if(g.total>lim)rows.push({pad:8+(dep+2)*14,label:'Charger 25 de plus',count:fmt(g.total-lim)+' restants',dot:'transparent',dotBd:'0',dotR:'0',font:"500 12px/1 'Geist', sans-serif",col:'var(--acc)',bg:'transparent',chevRot:0,chevOp:0,onToggle:e=>e.stopPropagation(),onClick:()=>this.up('b',x=>({lim:{...x.lim,[k]:lim+25}}))})}});
+    };S.roots.forEach(r=>S.nodes[r]&&walk(S.nodes[r],0));return rows}
+  tableB(){const b=this.state.b,p=S.nodes[b.grp.pid];if(!p)return null;const t=b.grp.type,g=grp(p.object_uuid,t),total=cnt(g),size=50,pages=Math.max(1,Math.ceil(total/size)),page=Math.min(b.page,pages-1);
+    let items=list(p,t,page*size,size);const q=(b.q||'').toLowerCase();if(q)items=items.filter(n=>n._label.toLowerCase().includes(q)||n.object_uuid.startsWith(q));
+    const cols=COLS[t]||props(t).filter(k=>!['position','rotation','parent_id','scenename'].includes(k)).slice(0,3);
+    return{type:t,color:TYPES[t]||'#71717a',total:fmt(total),crumbs:[...ancestors(p),p].map(a=>({label:a._label,onClick:()=>this.go('b',a.object_uuid)})),
+      api:`GET /items?parent_id=${p.object_uuid}&object_type=${t}&page=${page+1}&page_size=${size}`,
+      cols:cols.map(c=>({c})),grid:`minmax(0,1.3fr) 84px ${cols.map(()=>'minmax(0,1fr)').join(' ')} minmax(0,1.3fr)`,
+      rows:items.map(n=>({label:n._label,uuid:n.object_uuid.slice(0,8),cells:cols.map(c=>{const v=fmtVal(n.object_data[c]);return{text:v.text,col:v.col}}),pos:fmtVal(n.object_data.position).text,bg:n.object_uuid===b.sel?'var(--accbg)':'transparent',onClick:()=>this.go('b',n.object_uuid)})),
+      empty:items.length===0,range:total?`${fmt(page*size+1)}–${fmt(Math.min(total,(page+1)*size))} sur ${fmt(total)}`:'0 objet',pageText:`page ${page+1} / ${pages}`,
+      onPrev:()=>{if(page>0)this.up('b',{page:page-1})},onNext:()=>{if(page<pages-1)this.up('b',{page:page+1})},prevOp:page>0?1:.35,nextOp:page<pages-1?1:.35,
+      q:b.q,onQ:e=>this.up('b',{q:e.target.value})}}
+  ficheC(id){const n=S.nodes[id],c=this.state.c,d=n.object_data,gs=groups(n);const tab=gs.find(g=>g.type===c.tab)?c.tab:(gs[0]&&gs[0].type);
+    const tabs=gs.map(g=>{const a=g.type===tab;return{type:g.type,count:fmt(g.total),color:TYPES[g.type]||'#71717a',bg:a?'var(--bg)':'transparent',bd:a?'var(--line)':'transparent',fg:a?'var(--fg)':'var(--fg2)',shadow:a?'0 1px 2px rgba(0,0,0,.06)':'none',onClick:()=>this.up('c',{tab:g.type,lim:10})}});
+    const tg=tab?gs.find(g=>g.type===tab):null,kids=tab?list(n,tab,0,c.lim):[],col1=tab&&COLS[tab]?COLS[tab][0]:null;
+    const rows=kids.map(k=>({label:k._label,uuid:k.object_uuid.slice(0,8),meta:col1?col1+' '+fmtVal(k.object_data[col1]).text:'',color:TYPES[k.object_type]||'#71717a',onClick:()=>this.go('c',k.object_uuid)}));
+    const rest=tg?tg.total-kids.length:0;
+    const comps=(Array.isArray(d.components)?d.components:[]).filter(isRef).map(u=>{const m=S.nodes[u];return{slot:m.object_data.slot_id||m._label,weight:(m.object_data.weight??'—')+' kg',uuid:u.slice(0,8),onClick:()=>this.go('c',u)}});
+    const p=d.parent_id&&S.nodes[d.parent_id];
+    return{crumbs:ancestors(n).map(a=>({label:a._label,color:TYPES[a.object_type]||'#71717a',onClick:()=>this.go('c',a.object_uuid)})),
+      hasBack:c.hist.length>0,onBack:()=>this.up('c',x=>({id:x.hist[x.hist.length-1],hist:x.hist.slice(0,-1),tab:null,lim:10})),
+      parent:p?{label:p._label,type:p.object_type,color:TYPES[p.object_type]||'#71717a',uuid:p.object_uuid.slice(0,8),onClick:()=>this.go('c',p.object_uuid)}:{},hasParent:!!p,noParent:!p,
+      tabs,hasKids:gs.length>0,noKids:!gs.length,rows,hasMore:rest>0,moreText:`Afficher ${Math.min(10,rest)} de plus · ${fmt(rest)} restants`,onMore:()=>this.up('c',x=>({lim:x.lim+10})),
+      tabApi:tab?`GET /items?parent_id=${id.slice(0,8)}…&object_type=${tab}&page=1&page_size=${c.lim}`:'',comps,hasComps:comps.length>0,compCount:comps.length}}
+  renderVals(){
+    const s=this.state;const insA=this.inspect('a',s.a.sel),insB=this.inspect('b',s.b.sel);
+    const cid=S.nodes[s.c.id]?s.c.id:S.roots[0];const insC=this.inspect('c',cid);const cr=this.createVM();const tB=this.tableB();
+    return{thA:this.theme('a'),thB:this.theme('b'),thC:this.theme('c'),barA:this.bar('a'),barB:this.bar('b'),barC:this.bar('c'),
+      gA:this.graphA(),insA:insA||{},hasInsA:!!insA,insB:insB||{},hasInsB:!!insB,rowsB:this.treeB(),tB:tB||{},hasTB:!!tB,
+      fC:this.ficheC(cid),insC:insC||{},hasCreate:!!cr,cr:cr||{},toast:s.toast,hasToast:!!s.toast,showApi:this.props.showApi??true};
+  }
+}
+</script>
+</body>
+</html>
