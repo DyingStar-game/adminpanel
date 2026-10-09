@@ -1,13 +1,26 @@
 import { z } from 'zod';
 import type { zTransaction } from '@dyingstar-admin/contracts/economie';
 import type { PoliticalEntityType } from '@dyingstar-admin/contracts/social';
+import { i18n } from '@/i18n';
 
 /** A movement as the SPA reads it: its `int64` id is a `bigint` (`z.coerce.bigint()`). */
 export type Transaction = z.infer<typeof zTransaction>;
 
-/** An amount of a currency, as `economie` keeps it (integer units), grouped by thousands. */
+/**
+ * An amount of a currency, as `economie` keeps it (integer units), grouped by thousands, the
+ * currency named in the reader's language with its plural (`economy.currencies.*`: 1 credit,
+ * 2 credits; 0 or 1 crédit in French). A currency the panel does not know keeps its code.
+ */
 export const formatAmount = (amount: number, currency: string, locale: string) =>
-  `${new Intl.NumberFormat(locale).format(amount)} ${currency}`;
+  `${new Intl.NumberFormat(locale).format(amount)} ${currencyName(currency, locale, amount)}`;
+
+/** A currency's name in the reader's language, for `count` of it (plural by default). */
+export const currencyName = (currency: string, locale: string, count = 2) =>
+  i18n.t(`economy.currencies.${currency}` as never, {
+    count: Math.abs(count),
+    lng: locale,
+    defaultValue: currency,
+  });
 
 /** A tax rate kept in basis points (500 = 5 %). */
 export const formatBps = (bps: number, locale: string) =>

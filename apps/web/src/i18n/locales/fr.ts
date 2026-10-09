@@ -540,6 +540,7 @@ export const fr: Translations = {
     mintCeiling: 'Au plus {{amount}} à la fois',
     lastAssessed: 'Dernière assiette',
     never: 'Jamais',
+    currencies: { credits_one: 'crédit', credits_other: 'crédits' },
     actions: { credit: 'Créditer', debit: 'Débiter', mint: 'Créer de la monnaie' },
     movement: {
       title: { credit: 'Créditer {{name}}', debit: 'Débiter {{name}}' },

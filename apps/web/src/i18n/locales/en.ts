@@ -533,6 +533,7 @@ export const en = {
     mintCeiling: 'At most {{amount}} at once',
     lastAssessed: 'Last assessment',
     never: 'Never',
+    currencies: { credits_one: 'credit', credits_other: 'credits' },
     actions: { credit: 'Credit', debit: 'Debit', mint: 'Issue money' },
     movement: {
       title: { credit: 'Credit {{name}}', debit: 'Debit {{name}}' },

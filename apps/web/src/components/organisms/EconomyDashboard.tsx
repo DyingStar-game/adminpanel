@@ -6,7 +6,7 @@ import { FactTiles } from '@/components/molecules/FactTiles';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { useCorporationNames, useEconomyStats } from '@/hooks/useEconomie';
 import { usePlayerNames } from '@/hooks/useModeration';
-import { formatAmount } from '@/lib/economy';
+import { currencyName, formatAmount } from '@/lib/economy';
 import { shortId } from '@/lib/format';
 import { moderationErrorKey } from '@/lib/moderationErrors';
 
@@ -79,7 +79,7 @@ export function EconomyDashboard({ days, onOpenPlayer, onOpenCorporation }: Econ
       <FactTiles
         facts={[
           ...data.moneySupply.map((m) => ({
-            label: t('economy.moneySupply', { currency: m.currency }),
+            label: t('economy.moneySupply', { currency: currencyName(m.currency, i18n.language) }),
             value: amount(m.total, m.currency),
             hint: t('economy.accounts', { count: m.accounts }),
           })),

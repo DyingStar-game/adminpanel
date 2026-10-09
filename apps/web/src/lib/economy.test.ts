@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { accountIds, createEconomieDataset } from '@dyingstar-admin/testing';
 import {
   bpsToPercent,
+  currencyName,
   formatAmount,
   formatBps,
   ledgerNote,
@@ -17,6 +18,16 @@ const [reward, salary, transfer] = createEconomieDataset().transactions;
 describe('economy formats', () => {
   it('writes amounts and rates in the reader’s language', () => {
     expect(formatAmount(1250, 'credits', 'en')).toBe('1,250 credits');
+    // Plural forms of the reader's language, the sign set aside.
+    expect(formatAmount(1, 'credits', 'en')).toBe('1 credit');
+    expect(formatAmount(-1, 'credits', 'en')).toBe('-1 credit');
+    expect(formatAmount(0, 'credits', 'en')).toBe('0 credits');
+    expect(formatAmount(1, 'credits', 'fr')).toBe('1 crédit');
+    expect(formatAmount(0, 'credits', 'fr')).toBe('0 crédit');
+    expect(formatAmount(2500, 'credits', 'fr')).toMatch(/^2\s?500 crédits$/);
+    // A currency the panel does not know keeps its code.
+    expect(formatAmount(3, 'gold', 'en')).toBe('3 gold');
+    expect(currencyName('credits', 'fr')).toBe('crédits');
     expect(formatBps(500, 'en')).toBe('5%');
     expect(formatBps(250, 'fr')).toMatch(/^2,5\s?%$/);
   });
