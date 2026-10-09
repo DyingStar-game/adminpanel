@@ -3,13 +3,13 @@
 Scope and decisions: [ADR 0001 → 0018](./adr/README.md). This plan only orders the work;
 when a step needs a new decision, it is written as a new ADR before coding.
 
-## Status (2026-10-02, end of day)
+## Status (2026-10-09, lot 1 done)
 
 | Step | Status |
 |------|--------|
 | 1–8 | **Done** (foundation, BFF, design system, explorer, object page, orbit, live, writes) |
-| 9. Bulk import | **Done** ([ADR 0004](./adr/0004-bulk-import-unit-posts.md), [ADR 0019](./adr/0019-bulk-import-validation.md) and its business rules); not yet tried for real on the test server |
-| 10. Documentation | **Partly done**: `README.md` (+ `docs/fr/`) rewritten; `ONBOARDING.md`, `ARCHITECTURE.md`, BFF API doc and `deploy/` still to do |
+| 9. Bulk import | **Done** ([ADR 0004](./adr/0004-bulk-import-unit-posts.md), [ADR 0019](./adr/0019-bulk-import-validation.md) and its business rules); tried and approved by the maintainer (2026-10-09) |
+| 10. Documentation | **Done** (2026-10-09): `README.md`, `ONBOARDING.md`, `ARCHITECTURE.md` (+ `docs/fr/`) rewritten for the current panel (lots 1 and 2), BFF API in [`bff-api.md`](./bff-api.md); `deploy/` left as is (below) |
 
 ### Delivered beyond the plan
 
@@ -30,8 +30,10 @@ when a step needs a new decision, it is written as a new ADR before coding.
 
 ### Open questions
 
-- None left for lot 1. Step 10 docs wait for the next lots (Keycloak authentication, a new
-  game service), which will change the architecture.
+- `deploy/` (Helm chart, Kubernetes and Skaffold notes) is left from the previous panel and
+  does not work. Not used by local work; how the panel is deployed on the team's servers is to
+  be decided with the back team when it goes online (their services each have their chart in
+  their `kubernetes` repository, deployed by ArgoCD).
 
 Settled:
 
@@ -76,7 +78,8 @@ Settled:
 
 ## BFF API draft (refined in step 2)
 
-All item routes take the target game server from the `X-Server-Id` header.
+Kept as written then; the current API is [`bff-api.md`](./bff-api.md) (no more `X-Server-Id`
+since lot 2). All item routes take the target game server from the `X-Server-Id` header.
 
 | Method | Route | Notes |
 |--------|-------|-------|
@@ -179,10 +182,11 @@ Identical concurrent GETs are coalesced with a short-lived cache (ADR 0009).
   limited concurrency, progress, cancel, downloadable report, retry failed rows.
 - **Done when** the ADR 0004 scenarios are covered by tests.
 
-### 10. Documentation — partly done
+### 10. Documentation — done
 
-- Rewrite `README.md`, `ONBOARDING.md`, `ARCHITECTURE.md` (and `docs/fr/`) for the new stack;
-  document the BFF API; decide what happens to `deploy/` with the deployment ADR.
+- `README.md`, `ONBOARDING.md`, `ARCHITECTURE.md` (and `docs/fr/`) rewritten for the new stack
+  and lot 2 (sign-in, game services); the BFF API in `docs/bff-api.md`. `deploy/` waits for the
+  panel's deployment (Open questions).
 
 ## Dependencies
 

@@ -65,7 +65,8 @@ reading (O.1), settings (O.2: corporations, political taxes, assessments) and mo
 (O.3: credit, debit, mint). **Next: `inventory`**, same pattern. Much was not
 tried live yet: the plan says what. Lot 1 (persistence items) is done:
 [`docs/lot-1-plan.md`](./docs/lot-1-plan.md).
-`ONBOARDING.md` and `ARCHITECTURE.md` still describe the previous panel (step 10).
+Contributor docs: `ONBOARDING.md`, `ARCHITECTURE.md`, `docs/bff-api.md` (keep them in step when
+routes, services or the setup change); `deploy/` is the previous panel's and does not work.
 
 ## Sign-in (Keycloak, ADR 0023)
 
