@@ -80,6 +80,12 @@ export function membershipsOf(
   return { corporations, politics };
 }
 
+/**
+ * Ends far enough away to stay in force whatever day the tests run (the mute ended on
+ * 2026-10-09 10:40 before, and every test reading it failed from then on).
+ */
+const MUTE_END_MINUTES = 60 * 24 * 365 * 10;
+
 const at = (minutes: number) =>
   new Date(Date.UTC(2026, 9, 8, 10, 0) + minutes * 60_000).toISOString();
 
@@ -359,7 +365,7 @@ export function createSocialDataset(): SocialDataset {
         reason: 'Reputation below -25',
         automatic: true,
         issuedBy: null,
-        expiresAt: at(60 * 24 + 40),
+        expiresAt: at(MUTE_END_MINUTES),
         revokedAt: null,
         revokedBy: null,
         createdAt: at(40),
@@ -409,7 +415,7 @@ export function createSocialDataset(): SocialDataset {
         id: 3,
         playerId: griefer,
         type: 'sanction_received',
-        details: { sanctionId: 2, type: 'mute', expiresAt: at(60 * 24 + 40) },
+        details: { sanctionId: 2, type: 'mute', expiresAt: at(MUTE_END_MINUTES) },
         createdAt: at(40),
       },
       {

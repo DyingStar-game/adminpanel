@@ -29,7 +29,7 @@ afterEach(() => vi.useRealTimers());
 
 describe('PlayerRecordPage (ADR 0024)', () => {
   it('shows the sanction in force, presence, identity and organisations', async () => {
-    // The fixtures' mute ends on 2026-10-09 10:40 UTC.
+    // The fixtures' mute ends in 2036.
     vi.useFakeTimers({ now: Date.parse('2026-10-08T12:00:00.000Z'), shouldAdvanceTime: true });
     useInProcessBff();
     renderPage(socialIds.griefer);
