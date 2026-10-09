@@ -134,3 +134,11 @@ tout.
   la CI et installée depuis le dépôt `kubernetes` de l'équipe back (un chart par service, déployé
   par ArgoCD), qui porte les réglages, les secrets et l'adresse publique du panneau. Le dossier
   `deploy/` de l'ancien panneau a été supprimé (2026-10-09).
+  - **CI** (`.github/workflows/`, même `_build-push.yaml` réutilisable que les services) : une
+    pull request builde l'image sans la pousser ; un push sur `develop` pousse
+    `harbor.dyingstar-game.space/dyingstar/dyingstar-admin:develop` et redémarre le déploiement
+    de préproduction ; un tag `vX.Y.Z` pousse `:vX.Y.Z` et `:latest`. Secrets du dépôt :
+    `HARBOR_USERNAME`, `HARBOR_PASSWORD`, `KUBERNETES_REPO_TOKEN`.
+  - **Chart** `dyingstar-admin` dans `kubernetes` : préproduction sur
+    `https://admin-preprod.dyingstar-game.space`, minikube sur `http://admin.dyingstar.local` ;
+    le client Keycloak `dyingstar-admin` et ses rôles sont dans son `keycloak-managed/`.

@@ -60,11 +60,14 @@ additions above.
 
 ## Adding the panel to the back team's minikube Keycloak
 
-`k8s-partial-import.json` holds only the additions above (client `dyingstar-admin` and its roles,
-realm roles `admin` and `supervisor`, the `dev-*` users), for the back team's dev-local Keycloak
-(`http://auth.dyingstar.local/admin`, realm `dyingstar`): Realm settings › Action › Partial
-import, "Skip" if a resource exists. It lives in that Keycloak's database only: lost when the
-back team's stack recreates it, until the additions land in their `kubernetes` repository.
+The client `dyingstar-admin` (with the redirect URIs of `localhost:5173`, `localhost:3000` and
+`admin.dyingstar.local`), its client roles and the realm roles `admin` and `supervisor` are in the
+back team's `kubernetes` repository (`keycloak-managed/dev/`, 2026-10-09): their Keycloak has
+them after a sync. `k8s-partial-import.json` still brings the test users (`dev-*`, `player-*`)
+and, for a Keycloak synced before that, the same client and roles, to the back team's dev-local
+Keycloak (`http://auth.dyingstar.local/admin`, realm `dyingstar`): Realm settings › Action ›
+Partial import, "Skip" if a resource exists. Imported users live in that Keycloak's database
+only: lost when the back team's stack recreates it.
 Regenerate it whenever `dyingstar-realm.json` changes.
 
 Then `make up K8S=1` (their stack running, `minikube tunnel` on) recreates the dev container on

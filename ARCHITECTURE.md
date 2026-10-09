@@ -124,3 +124,11 @@ from the pinned copies. `make check` runs everything.
   installed from the back team's `kubernetes` repository (a chart per service, deployed by
   ArgoCD), which holds the panel's settings, secrets and public address. The previous panel's
   `deploy/` folder was removed (2026-10-09).
+  - **CI** (`.github/workflows/`, same reusable `_build-push.yaml` as the services): a pull
+    request builds the image without pushing; a push on `develop` pushes
+    `harbor.dyingstar-game.space/dyingstar/dyingstar-admin:develop` and restarts the
+    pre-production deployment; a `vX.Y.Z` tag pushes `:vX.Y.Z` and `:latest`. Repository secrets:
+    `HARBOR_USERNAME`, `HARBOR_PASSWORD`, `KUBERNETES_REPO_TOKEN`.
+  - **Chart** `dyingstar-admin` in `kubernetes`: pre-production on
+    `https://admin-preprod.dyingstar-game.space`, minikube on `http://admin.dyingstar.local`;
+    the Keycloak client `dyingstar-admin` and its roles live in its `keycloak-managed/`.

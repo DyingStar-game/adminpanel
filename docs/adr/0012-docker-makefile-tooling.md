@@ -39,7 +39,7 @@ Reuse the same structure and conventions, adapted to a Vite SPA + Hono BFF
 | Persistence target in dev | Set by env (`SERVERS` / persistence URL). No local database container in lot 1. |
 | `docker/Dockerfile.prod` | **Self-contained multi-stage build** for now (install + build inside Docker). One image: BFF serving the built SPA, port 3000, Alpine, non-root, healthcheck `/health`. |
 | Makefile fixes | Add the missing `install` target (shown in `help`); the catch-all `%:` only swallows the extra arguments of `make pnpm …` and fails with an explicit message on an unknown target. |
-| CI | **None for now.** |
+| CI | GitHub Actions, on the model of the game services (`DyingStar-game/services`, 2026-10-09): `_build-push.yaml` builds `docker/Dockerfile.prod` and pushes `harbor.dyingstar-game.space/dyingstar/dyingstar-admin` — `:develop` on `develop` (then restarts the pre-production deployment through the `kubernetes` repository), `:vX.Y.Z` + `:latest` on `v*` tags; pull requests build without pushing. |
 | Versions | `.nvmrc` = Node 24 (same as website), pnpm pinned via `packageManager`, `x-node-image` matching `.nvmrc`. Answers the runtime question of ADR 0011. |
 | Monorepo | pnpm workspaces ([ADR 0011](./0011-bff-hono.md)). |
 
@@ -47,8 +47,9 @@ Reuse the same structure and conventions, adapted to a Vite SPA + Hono BFF
 
 - Production build pattern: keep self-contained, or switch to the website pattern (CI builds
   the artifact, the Dockerfile only copies it).
-- Deployment target: Kubernetes namespace (Helm / Skaffold) or compose over SSH.
-- CI workflow (the website one is the reference).
+- ~~Deployment target~~: the back team's `kubernetes` repository (chart `dyingstar-admin`, ArgoCD),
+  like the game services (2026-10-09).
+- ~~CI workflow~~: see the CI row above (2026-10-09).
 
 ## Consequences
 
