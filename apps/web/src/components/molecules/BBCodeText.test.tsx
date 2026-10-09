@@ -20,6 +20,12 @@ describe('BBCodeText', () => {
     expect(screen.getByText('Salut').tagName).toBe('STRONG');
   });
 
+  it('draws a horizontal rule between the paragraphs', () => {
+    render(<BBCodeText text={'Scythia\n[hr]\nStory'} labels={labels} />);
+    expect(screen.getByRole('separator')).toBeInTheDocument();
+    expect(screen.queryByText(/\[hr\]/)).toBeNull();
+  });
+
   it('offers no switch for a plain text', () => {
     render(<BBCodeText text="Hauls ore." labels={labels} />);
     expect(screen.getByText('Hauls ore.')).toBeInTheDocument();

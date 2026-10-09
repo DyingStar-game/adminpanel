@@ -3,13 +3,16 @@ import { parse } from '@bbob/parser';
 /**
  * What the game shows of a player's biography and RP story: Godot's `RichTextLabel` with BBCode
  * on (`DyingStar` › `ui/services/profile_panel.gd`), whose editor offers `[b]`, `[i]`, `[u]` and
- * `[color=#…]`. The panel interprets those, and `[s]`; any other tag stays as typed, so a
- * moderator reads exactly what the player wrote.
+ * `[color=#…]`. The panel interprets those, `[s]` and Godot's horizontal rule `[hr]` (its
+ * options ignored); any other tag stays as typed, so a moderator reads exactly what the player
+ * wrote. Godot itself shows a tag it does not know as typed: forum tags like `[size=150]` stay
+ * raw in game too (Godot's is `[font_size=…]`).
  */
 export type BBCodeNode =
   | string
   | { tag: 'b' | 'i' | 'u' | 's'; children: BBCodeNode[] }
-  | { tag: 'color'; color: string; children: BBCodeNode[] };
+  | { tag: 'color'; color: string; children: BBCodeNode[] }
+  | { tag: 'hr' };
 
 const STYLE_TAGS = new Set(['b', 'i', 'u', 's']);
 
@@ -48,6 +51,8 @@ export function parseBBCode(source: string): BBCodeNode[] {
         if (!isTag(node)) return [String(node)];
         const children = walk(node.content ?? []);
         const tag = node.tag.toLowerCase();
+        // Self-closing in Godot: a closing `[/hr]` is not one of its tags.
+        if (tag === 'hr') return [{ tag: 'hr' }, ...children, raw(node.end)];
         // Unclosed, or not one of the editor's: shown as typed.
         if (!node.end) return [raw(node.start), ...children];
         if (STYLE_TAGS.has(tag)) {

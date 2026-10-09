@@ -14,6 +14,10 @@ interface BBCodeTextProps {
 function render(nodes: BBCodeNode[]): ReactNode[] {
   return nodes.map((node, i) => {
     if (typeof node === 'string') return node;
+    // A block inside the paragraph: `<hr>` cannot sit in a `<p>`.
+    if (node.tag === 'hr') {
+      return <span key={i} role="separator" className="my-2 block border-t border-border" />;
+    }
     const children = render(node.children);
     switch (node.tag) {
       case 'b':

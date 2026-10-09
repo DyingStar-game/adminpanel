@@ -17,6 +17,17 @@ describe('parseBBCode', () => {
     ]);
   });
 
+  it("draws Godot's horizontal rule, whatever its options", () => {
+    expect(parseBBCode('a\n[hr]\nb [hr width=50% color=red]c')).toEqual([
+      'a\n',
+      { tag: 'hr' },
+      '\nb ',
+      { tag: 'hr' },
+      'c',
+    ]);
+    expect(hasBBCode('[hr]')).toBe(true);
+  });
+
   it('keeps any other tag, an unclosed one or an odd colour as typed', () => {
     expect(parseBBCode('[url=https://x.test]site[/url]')).toEqual([
       '[url=https://x.test]site[/url]',
@@ -24,6 +35,8 @@ describe('parseBBCode', () => {
     expect(parseBBCode('a [b]b\n[i]c')).toEqual(['a [b]b\n[i]c']);
     expect(parseBBCode('[color=url(x)]d[/color]')).toEqual(['[color=url(x)]d[/color]']);
     expect(parseBBCode('[son: oui] plain')).toEqual(['[son: oui] plain']);
+    // A forum tag Godot does not know either: raw in game too.
+    expect(parseBBCode('[size=150]Scythia[/size]')).toEqual(['[size=150]Scythia[/size]']);
   });
 
   it('says whether there is anything to interpret', () => {
