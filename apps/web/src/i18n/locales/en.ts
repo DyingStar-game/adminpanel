@@ -896,6 +896,7 @@ export const en = {
       until: 'until {{date}}',
       permanent: 'permanent',
       identity: 'Identity',
+      bbcode: { code: 'Show the code', formatted: 'Show as in game' },
       faction: 'Faction',
       role: 'Role',
       rp: { characterName: 'Character', alignment: 'Alignment', story: 'Story' },

@@ -1,8 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import type { PlayerProfile } from '@dyingstar-admin/contracts/social';
 import { formatDateTime } from '@/lib/format';
+import { BBCodeText } from './BBCodeText';
 
-/** What a player says of themselves: faction, role, biography, RP sheet. */
+/**
+ * What a player says of themselves: faction, role, biography, RP sheet; the biography and the
+ * story with their BBCode, as the game shows them.
+ */
 export function PlayerIdentity({ player }: { player: PlayerProfile }) {
   const { t, i18n } = useTranslation();
   const facts = [
@@ -12,6 +16,10 @@ export function PlayerIdentity({ player }: { player: PlayerProfile }) {
     [t('moderation.player.rp.alignment'), player.rpSheet?.alignment],
   ].filter((entry): entry is [string, string] => !!entry[1]);
   const story = player.rpSheet?.story;
+  const bbcode = {
+    code: t('moderation.player.bbcode.code'),
+    formatted: t('moderation.player.bbcode.formatted'),
+  };
 
   return (
     <section className="flex flex-col gap-2">
@@ -26,11 +34,11 @@ export function PlayerIdentity({ player }: { player: PlayerProfile }) {
           ))}
         </dl>
       )}
-      {player.biography && <p className="text-sm whitespace-pre-wrap">{player.biography}</p>}
+      {player.biography && <BBCodeText text={player.biography} labels={bbcode} />}
       {story && (
         <div className="flex flex-col gap-1">
           <span className="text-xs text-fg-3">{t('moderation.player.rp.story')}</span>
-          <p className="text-sm whitespace-pre-wrap">{story}</p>
+          <BBCodeText text={story} labels={bbcode} />
         </div>
       )}
       {facts.length === 0 && !player.biography && !story && (

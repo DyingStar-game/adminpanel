@@ -911,6 +911,7 @@ export const fr: Translations = {
       until: 'jusqu’au {{date}}',
       permanent: 'définitif',
       identity: 'Identité',
+      bbcode: { code: 'Voir le code', formatted: 'Voir comme en jeu' },
       faction: 'Faction',
       role: 'Rôle',
       rp: { characterName: 'Personnage', alignment: 'Alignement', story: 'Histoire' },

@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@bbob/parser": "4.4.1",
     "@dyingstar-admin/contracts": "workspace:*",
     "@dyingstar-admin/schemas": "workspace:*",
     "@fontsource/jetbrains-mono": "^5.3.0",

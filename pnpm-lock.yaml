@@ -260,6 +260,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@bbob/parser':
+        specifier: 4.4.1
+        version: 4.4.1
       '@dyingstar-admin/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
@@ -598,6 +601,15 @@ packages:
   '@babel/types@7.29.8':
     resolution: {integrity: sha512-Vj1jF3cPfxg7OAfoI7QnVKLoILlm2JF9pnVHrX8qx7AHMiYWT+NDAA7jChlNgRS4WTLc/fD1lXLmPixluj+3Gg==}
     engines: {node: '>=6.9.0'}
+
+  '@bbob/parser@4.4.1':
+    resolution: {integrity: sha512-Hs6caDSsY5zJdZZpj7ohTz4hQZGKPL+ZgZy+qbgDtfD9WV2YGxFGtXQf7PBu/aIRKOrkGgbCQxDYWlCEyONi9w==}
+
+  '@bbob/plugin-helper@4.4.1':
+    resolution: {integrity: sha512-vTjwNiiIHhihyD41DuxrUFVCuGPr1EB1fXvy5+HHnmcvWmOH5BzPSgSEs+KCdpWF+hIDMAho2toAHiDmYurCJQ==}
+
+  '@bbob/types@4.4.1':
+    resolution: {integrity: sha512-IDu7H3J9yMQG0U//0X4Akbbm3SOIKfeLmgPHO4s3s+WPsl+AeGb6dy4XBFLEDcDIN/N3f8WPibhIjLr0gFQ7Fg==}
 
   '@bcoe/v8-coverage@1.0.2':
     resolution: {integrity: sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA==}
@@ -5117,6 +5129,17 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.29.7
       '@babel/helper-validator-identifier': 7.29.7
+
+  '@bbob/parser@4.4.1':
+    dependencies:
+      '@bbob/plugin-helper': 4.4.1
+      '@bbob/types': 4.4.1
+
+  '@bbob/plugin-helper@4.4.1':
+    dependencies:
+      '@bbob/types': 4.4.1
+
+  '@bbob/types@4.4.1': {}
 
   '@bcoe/v8-coverage@1.0.2': {}
 
