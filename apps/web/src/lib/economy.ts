@@ -64,3 +64,12 @@ export const MINTING_LEVELS: readonly PoliticalEntityType[] = ['country', 'feder
  * 128 characters): drawn once per dialog, so a resend of the same form is recorded once.
  */
 export const movementKey = () => `admin-panel:${crypto.randomUUID()}`;
+
+/**
+ * Why a movement was made, as `economie` keeps it: its `reference` (the reason the panel sends,
+ * up to 128 characters), else a donation's or a transfer's `memo` in its details.
+ */
+export function ledgerNote(transaction: Pick<Transaction, 'reference' | 'details'>): string | null {
+  const memo = transaction.details?.memo;
+  return transaction.reference || (typeof memo === 'string' && memo) || null;
+}

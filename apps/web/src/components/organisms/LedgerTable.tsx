@@ -3,7 +3,7 @@ import { MonoText } from '@/components/atoms/MonoText';
 import { DataTable } from '@/components/molecules/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/cn';
-import { formatAmount, signedAmount, type Transaction } from '@/lib/economy';
+import { formatAmount, ledgerNote, signedAmount, type Transaction } from '@/lib/economy';
 import { formatDateTime } from '@/lib/format';
 
 interface LedgerTableProps {
@@ -65,6 +65,21 @@ export function LedgerTable({ transactions, own }: LedgerTableProps) {
               <span className="text-fg-3">—</span>
             ),
           className: 'text-right',
+        },
+        {
+          key: 'reference',
+          header: t('economy.reference'),
+          // Why: the reason given (the panel's movements, a mission…), or a donation's memo.
+          cell: (tx) => {
+            const note = ledgerNote(tx);
+            return note ? (
+              <span className="line-clamp-2 max-w-64 text-fg-2" title={note}>
+                {note}
+              </span>
+            ) : (
+              <span className="text-fg-3">—</span>
+            );
+          },
         },
         {
           key: 'by',

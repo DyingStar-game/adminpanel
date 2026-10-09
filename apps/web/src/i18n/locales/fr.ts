@@ -510,6 +510,7 @@ export const fr: Translations = {
     balance: 'Solde',
     amount: 'Montant',
     by: 'Par',
+    reference: 'Motif',
     byPlayer: 'joueur',
     ledger: 'Mouvements',
     wallet: 'Portefeuille',

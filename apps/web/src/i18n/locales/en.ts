@@ -503,6 +503,7 @@ export const en = {
     balance: 'Balance',
     amount: 'Amount',
     by: 'By',
+    reference: 'Reason',
     byPlayer: 'player',
     ledger: 'Movements',
     wallet: 'Wallet',

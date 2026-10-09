@@ -4,6 +4,7 @@ import {
   bpsToPercent,
   formatAmount,
   formatBps,
+  ledgerNote,
   movementKey,
   percentToBps,
   signedAmount,
@@ -54,5 +55,15 @@ describe('movementKey', () => {
     const key = movementKey();
     expect(key).toMatch(/^admin-panel:[0-9a-f-]{36}$/);
     expect(movementKey()).not.toBe(key);
+  });
+});
+
+describe('ledgerNote', () => {
+  it('reads the reason of a movement, else its memo', () => {
+    expect(ledgerNote({ reference: 'Refund', details: { memo: 'x' } })).toBe('Refund');
+    expect(ledgerNote({ reference: null, details: { memo: 'For the hangar' } })).toBe(
+      'For the hangar',
+    );
+    expect(ledgerNote({ reference: null, details: { taxTo: 'system' } })).toBeNull();
   });
 });
