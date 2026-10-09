@@ -26,11 +26,13 @@ describe('PoliticalSettingsDialog', () => {
     expect(within(dialog).queryByLabelText('May issue money')).toBeNull();
     expect(within(dialog).getByRole('button', { name: 'Continue' })).toBeDisabled();
     const income = within(dialog).getByLabelText('Income tax (%)');
+    expect(income).toHaveAttribute('type', 'number');
+    expect(income).toHaveAttribute('step', '0.01');
     await userEvent.clear(income);
     await userEvent.type(income, '101');
     expect(within(dialog).getByRole('button', { name: 'Continue' })).toBeDisabled();
     await userEvent.clear(income);
-    await userEvent.type(income, '3,5');
+    await userEvent.type(income, '3.5');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Continue' }));
     expect(within(dialog).getByRole('alert')).toHaveTextContent('Income tax: 2% → 3.5%');
     await userEvent.click(within(dialog).getByRole('button', { name: 'Confirm' }));

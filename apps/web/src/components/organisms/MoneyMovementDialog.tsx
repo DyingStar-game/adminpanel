@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMoveMoney } from '@/hooks/useEconomieActions';
 import { ApiError } from '@/lib/api';
-import { formatAmount, movementKey, zAmountField } from '@/lib/economy';
+import { formatAmount, MAX_AMOUNT, movementKey, zAmount } from '@/lib/economy';
 
 const REFERENCE_MAX = 128;
 
@@ -45,11 +45,9 @@ export function MoneyMovementDialog({
   const schema = useMemo(
     () =>
       z.object({
-        amount: zAmountField
-          .refine((text) => Number(text) >= 1)
-          .refine((text) => direction === 'credit' || Number(text) <= balance, {
-            message: 'overdraft',
-          }),
+        amount: zAmount.min(1).refine((amount) => direction === 'credit' || amount <= balance, {
+          message: 'overdraft',
+        }),
         type: z.enum(MOVEMENT_TYPES[direction]),
         reference: z.string().trim().min(1).max(REFERENCE_MAX),
       }),
@@ -58,7 +56,6 @@ export function MoneyMovementDialog({
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
-      amount: '',
       type: direction === 'credit' ? 'deposit' : 'withdrawal',
       reference: '',
     },
@@ -69,13 +66,13 @@ export function MoneyMovementDialog({
     name: ['amount', 'type', 'reference'],
   });
   const [confirming, setConfirming] = useState(false);
-  const value = Number(amount) || 0;
+  const value = Number.isFinite(amount) ? amount : 0;
   const money = (n: number) => formatAmount(n, 'credits', i18n.language);
   const overdraft = form.formState.errors.amount?.message === 'overdraft';
 
   const submit = form.handleSubmit(async (values) => {
     try {
-      await move.mutateAsync({ ...values, amount: Number(values.amount), externalId });
+      await move.mutateAsync({ ...values, externalId });
       toast.success(
         t(`economy.movement.done.${direction}`, { amount: money(value), name: target.name }),
       );
@@ -125,7 +122,14 @@ export function MoneyMovementDialog({
       <div className="flex flex-wrap gap-3">
         <div className="flex w-48 flex-col gap-1.5">
           <Label htmlFor="movement-amount">{t('economy.movement.amount')}</Label>
-          <Input id="movement-amount" inputMode="numeric" {...form.register('amount')} />
+          <Input
+            id="movement-amount"
+            type="number"
+            min={1}
+            max={direction === 'debit' ? balance : MAX_AMOUNT}
+            step={1}
+            {...form.register('amount', { valueAsNumber: true })}
+          />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label>{t('economy.movement.type')}</Label>

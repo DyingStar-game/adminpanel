@@ -8,8 +8,8 @@ import {
   movementKey,
   percentToBps,
   signedAmount,
-  zAmountField,
-  zPercentField,
+  zAmount,
+  zPercent,
 } from './economy';
 
 const [reward, salary, transfer] = createEconomieDataset().transactions;
@@ -33,20 +33,23 @@ describe('economy formats', () => {
 });
 
 describe('economy form fields', () => {
-  it('reads rates typed in percent as basis points, within 0 to 100 %', () => {
-    expect(percentToBps('2,5')).toBe(250);
-    expect(percentToBps('12.34')).toBe(1234);
-    expect(bpsToPercent(250)).toBe('2.5');
-    expect(zPercentField.safeParse('100').success).toBe(true);
-    for (const wrong of ['100.01', '-1', '1.234', 'abc', '']) {
-      expect(zPercentField.safeParse(wrong).success, wrong).toBe(false);
+  it('reads rates in percent as basis points, within 0 to 100 %, two decimals at most', () => {
+    expect(percentToBps(2.5)).toBe(250);
+    expect(percentToBps(12.34)).toBe(1234);
+    expect(percentToBps(0.07)).toBe(7);
+    expect(bpsToPercent(250)).toBe(2.5);
+    expect(zPercent.safeParse(100).success).toBe(true);
+    expect(zPercent.safeParse(0.07).success).toBe(true);
+    for (const wrong of [100.01, -1, 1.234, Number.NaN]) {
+      expect(zPercent.safeParse(wrong).success, String(wrong)).toBe(false);
     }
   });
 
-  it('takes whole amounts up to 10¹³', () => {
-    expect(zAmountField.safeParse('10000000000000').success).toBe(true);
-    expect(zAmountField.safeParse('10000000000001').success).toBe(false);
-    expect(zAmountField.safeParse('1.5').success).toBe(false);
+  it('takes whole amounts up to 10¹³, an empty field (NaN) being none', () => {
+    expect(zAmount.safeParse(10_000_000_000_000).success).toBe(true);
+    for (const wrong of [10_000_000_000_001, 1.5, -1, Number.NaN]) {
+      expect(zAmount.safeParse(wrong).success, String(wrong)).toBe(false);
+    }
   });
 });
 

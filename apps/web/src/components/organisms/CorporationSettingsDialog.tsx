@@ -15,12 +15,12 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useUpdateCorporationSettings } from '@/hooks/useEconomieActions';
 import { ApiError } from '@/lib/api';
-import { bpsToPercent, formatBps, percentToBps, zPercentField } from '@/lib/economy';
+import { bpsToPercent, formatBps, percentToBps, zPercent } from '@/lib/economy';
 import { PoliticalEntityPicker } from './PoliticalEntityPicker';
 
 /** The form: the rate in percent (`economie`'s `corporationSettingsBody`), the fiscal home. */
 const CorporationSettingsFormSchema = z.object({
-  taxRate: zPercentField,
+  taxRate: zPercent,
   allowDonations: z.boolean(),
   /** The political entity, or none. */
   home: z.object({ id: z.uuid(), name: z.string() }).nullable(),
@@ -139,7 +139,14 @@ export function CorporationSettingsDialog({
         <Label htmlFor="corporation-donation-tax">
           {t('economy.settings.percent', { label: t('economy.settings.donationTax') })}
         </Label>
-        <Input id="corporation-donation-tax" inputMode="decimal" {...form.register('taxRate')} />
+        <Input
+          id="corporation-donation-tax"
+          type="number"
+          min={0}
+          max={100}
+          step={0.01}
+          {...form.register('taxRate', { valueAsNumber: true })}
+        />
       </div>
       <div className="flex items-center gap-2">
         <Controller

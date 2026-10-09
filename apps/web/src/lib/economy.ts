@@ -29,29 +29,27 @@ export function signedAmount(
   return transaction.amount;
 }
 
+/** Largest amount `economie` takes (`routes/schemas.ts`: 10¹³ units). */
+export const MAX_AMOUNT = 10_000_000_000_000;
+
+/** A whole amount of credits typed in a number field (`valueAsNumber`), 0 to 10¹³. */
+export const zAmount = z.number().int().min(0).max(MAX_AMOUNT);
+
 /**
- * A rate typed in percent, up to two decimals, `.` or `,` (`2,5` → 250 bps); `economie` keeps
- * whole basis points from 0 to 10,000.
+ * A rate typed in percent in a number field, 0 to 100, two decimals at most (2.5 = 250 basis
+ * points); `economie` keeps whole basis points from 0 to 10,000.
  */
-export const zPercentField = z
-  .string()
-  .trim()
-  .regex(/^\d{1,3}([.,]\d{1,2})?$/)
-  .refine((text) => percentToBps(text) <= 10_000);
+export const zPercent = z
+  .number()
+  .min(0)
+  .max(100)
+  .refine((percent) => Math.abs(percent * 100 - Math.round(percent * 100)) < 1e-6);
 
-/** The basis points of a rate typed in percent (`zPercentField`). */
-export const percentToBps = (text: string) =>
-  Math.round(Number.parseFloat(text.trim().replace(',', '.')) * 100);
+/** The basis points of a rate in percent (`2.5` → 250). */
+export const percentToBps = (percent: number) => Math.round(percent * 100);
 
-/** A rate in basis points, as typed back in the form (`250` → `2.5`). */
-export const bpsToPercent = (bps: number) => String(bps / 100);
-
-/** A whole amount of credits typed in a form, up to `economie`'s 10¹³. */
-export const zAmountField = z
-  .string()
-  .trim()
-  .regex(/^\d{1,14}$/)
-  .refine((text) => Number(text) <= 10_000_000_000_000);
+/** A rate in basis points, in percent for the form (`250` → 2.5). */
+export const bpsToPercent = (bps: number) => bps / 100;
 
 /**
  * Levels that may issue money: `economie`'s README reserves it to countries and federations

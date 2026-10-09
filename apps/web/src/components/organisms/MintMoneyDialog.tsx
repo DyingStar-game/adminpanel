@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useMintMoney } from '@/hooks/useEconomieActions';
 import { ApiError } from '@/lib/api';
-import { formatAmount, zAmountField } from '@/lib/economy';
+import { formatAmount, MAX_AMOUNT, zAmount } from '@/lib/economy';
 
 const REASON_MAX = 128;
 
@@ -34,16 +34,14 @@ export function MintMoneyDialog({ entity, settings, onClose }: MintMoneyDialogPr
   const schema = useMemo(
     () =>
       z.object({
-        amount: zAmountField.refine(
-          (text) => Number(text) >= 1 && (ceiling === 0 || Number(text) <= ceiling),
-        ),
+        amount: zAmount.min(1).refine((amount) => ceiling === 0 || amount <= ceiling),
         reason: z.string().trim().min(1).max(REASON_MAX),
       }),
     [ceiling],
   );
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
-    defaultValues: { amount: '', reason: '' },
+    defaultValues: { reason: '' },
     mode: 'onChange',
   });
   const [amount, reason] = useWatch({ control: form.control, name: ['amount', 'reason'] });
@@ -52,10 +50,8 @@ export function MintMoneyDialog({ entity, settings, onClose }: MintMoneyDialogPr
 
   const submit = form.handleSubmit(async (values) => {
     try {
-      await mint.mutateAsync({ amount: Number(values.amount), reason: values.reason });
-      toast.success(
-        t('economy.mint.done', { amount: money(Number(values.amount)), name: entity.name }),
-      );
+      await mint.mutateAsync(values);
+      toast.success(t('economy.mint.done', { amount: money(values.amount), name: entity.name }));
       onClose();
     } catch (error) {
       toast.error(error instanceof ApiError ? error.message : t('moderation.unavailable'));
@@ -71,7 +67,10 @@ export function MintMoneyDialog({ entity, settings, onClose }: MintMoneyDialogPr
       summary={
         <div className="flex flex-col gap-1">
           <p>
-            {t('economy.mint.summary', { amount: money(Number(amount) || 0), name: entity.name })}
+            {t('economy.mint.summary', {
+              amount: money(Number.isFinite(amount) ? amount : 0),
+              name: entity.name,
+            })}
           </p>
           <p>{t('economy.movement.reason', { reference: reason.trim() })}</p>
         </div>
@@ -93,7 +92,14 @@ export function MintMoneyDialog({ entity, settings, onClose }: MintMoneyDialogPr
         <>
           <div className="flex w-56 flex-col gap-1.5">
             <Label htmlFor="mint-amount">{t('economy.movement.amount')}</Label>
-            <Input id="mint-amount" inputMode="numeric" {...form.register('amount')} />
+            <Input
+              id="mint-amount"
+              type="number"
+              min={1}
+              max={ceiling > 0 ? ceiling : MAX_AMOUNT}
+              step={1}
+              {...form.register('amount', { valueAsNumber: true })}
+            />
           </div>
           <p className="text-xs text-fg-3">
             {ceiling > 0

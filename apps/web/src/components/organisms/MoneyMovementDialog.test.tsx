@@ -21,6 +21,8 @@ describe('MoneyMovementDialog', () => {
     );
     const dialog = screen.getByRole('dialog', { name: 'Credit griefer42' });
 
+    // A number field, its value a number up to the API.
+    expect(within(dialog).getByLabelText('Amount (credits)')).toHaveAttribute('type', 'number');
     await userEvent.type(within(dialog).getByLabelText('Amount (credits)'), '500');
     expect(within(dialog).getByRole('button', { name: 'Continue' })).toBeDisabled();
     await userEvent.type(within(dialog).getByLabelText(/Why/), 'Cargo lost in a server crash');

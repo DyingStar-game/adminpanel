@@ -20,17 +20,21 @@ import {
   formatAmount,
   formatBps,
   MINTING_LEVELS,
+  MAX_AMOUNT,
   percentToBps,
-  zAmountField,
-  zPercentField,
+  zAmount,
+  zPercent,
 } from '@/lib/economy';
+
+/** A rate's number field: percent, two decimals. */
+const PERCENT_FIELD = { type: 'number', min: 0, max: 100, step: 0.01 } as const;
 
 /** The form: rates in percent, the ceiling in credits (`economie`'s `politicalSettingsBody`). */
 const PoliticalSettingsFormSchema = z.object({
-  corporateTax: zPercentField,
-  incomeTax: zPercentField,
+  corporateTax: zPercent,
+  incomeTax: zPercent,
   allowMinting: z.boolean(),
-  mintCeiling: zAmountField,
+  mintCeiling: zAmount,
 });
 type PoliticalSettingsForm = z.infer<typeof PoliticalSettingsFormSchema>;
 
@@ -60,7 +64,7 @@ export function PoliticalSettingsDialog({
       corporateTax: bpsToPercent(settings.corporateTaxBps),
       incomeTax: bpsToPercent(settings.incomeTaxBps),
       allowMinting: settings.allowMinting,
-      mintCeiling: String(settings.mintCeiling),
+      mintCeiling: settings.mintCeiling,
     },
     mode: 'onChange',
   });
@@ -71,7 +75,7 @@ export function PoliticalSettingsDialog({
   if (form.formState.isValid) {
     const corporateTaxBps = percentToBps(values.corporateTax);
     const incomeTaxBps = percentToBps(values.incomeTax);
-    const mintCeiling = Number(values.mintCeiling);
+    const { mintCeiling } = values;
     if (corporateTaxBps !== settings.corporateTaxBps) change.corporateTaxBps = corporateTaxBps;
     if (incomeTaxBps !== settings.incomeTaxBps) change.incomeTaxBps = incomeTaxBps;
     if (minting && values.allowMinting !== settings.allowMinting) {
@@ -149,15 +153,19 @@ export function PoliticalSettingsDialog({
           </Label>
           <Input
             id="political-corporate-tax"
-            inputMode="decimal"
-            {...form.register('corporateTax')}
+            {...PERCENT_FIELD}
+            {...form.register('corporateTax', { valueAsNumber: true })}
           />
         </div>
         <div className="flex w-40 flex-col gap-1.5">
           <Label htmlFor="political-income-tax">
             {t('economy.settings.percent', { label: t('economy.incomeTax') })}
           </Label>
-          <Input id="political-income-tax" inputMode="decimal" {...form.register('incomeTax')} />
+          <Input
+            id="political-income-tax"
+            {...PERCENT_FIELD}
+            {...form.register('incomeTax', { valueAsNumber: true })}
+          />
         </div>
       </div>
       <p className="text-xs text-fg-3">{t('economy.settings.ratesHint')}</p>
@@ -183,9 +191,12 @@ export function PoliticalSettingsDialog({
             <Label htmlFor="political-mint-ceiling">{t('economy.settings.ceilingField')}</Label>
             <Input
               id="political-mint-ceiling"
-              inputMode="numeric"
+              type="number"
+              min={0}
+              max={MAX_AMOUNT}
+              step={1}
               className="w-56"
-              {...form.register('mintCeiling')}
+              {...form.register('mintCeiling', { valueAsNumber: true })}
             />
           </div>
         </>
