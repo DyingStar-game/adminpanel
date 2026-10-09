@@ -45,7 +45,15 @@ describe('CorporationPage (ADR 0024 step 2)', () => {
     const members = await screen.findByRole('table', { name: 'Members' });
     expect(await within(members).findByText('griefer42')).toBeInTheDocument();
 
-    await userEvent.click(await screen.findByRole('button', { name: 'Port Gaea' }));
+    // Its political home in social, and its fiscal home in economie: the same commune here.
+    const homes = await screen.findAllByRole('button', { name: 'Port Gaea' });
+    expect(homes).toHaveLength(2);
+    expect(
+      within(screen.getByRole('region', { name: 'Economic settings' })).getByRole('button', {
+        name: 'Port Gaea',
+      }),
+    ).toBeInTheDocument();
+    await userEvent.click(homes[0] as HTMLElement);
     expect(props.onOpenPoliticalEntity).toHaveBeenCalledWith(organisationIds.commune);
     await userEvent.click(screen.getByRole('button', { name: 'griefer42' }));
     expect(props.onOpenPlayer).toHaveBeenCalledWith(socialIds.griefer);
@@ -69,6 +77,23 @@ describe('CorporationPage (ADR 0024 step 2)', () => {
     expect(
       await screen.findByText(/No organisation 7c0a7e1e-0000-4000-8000-000000000000/),
     ).toBeInTheDocument();
+  });
+
+  it('shows its economic settings, read only with the read role', async () => {
+    useInProcessBff();
+    renderPage(organisationIds.mining, ['social.moderate', 'economie.corporationRead']);
+
+    const settings = await screen.findByRole('region', { name: 'Economic settings' });
+    expect(await within(settings).findByText('2.5%')).toBeInTheDocument();
+    expect(within(settings).queryByRole('button', { name: 'Edit the settings' })).toBeNull();
+  });
+
+  it('leaves the economic settings out without their capability role', async () => {
+    useInProcessBff();
+    renderPage(organisationIds.mining, ['social.moderate', 'economie.walletRead']);
+
+    await screen.findByRole('region', { name: 'Treasury' });
+    expect(screen.queryByRole('region', { name: 'Economic settings' })).toBeNull();
   });
 
   describe('managing it (step N, as svc-admin)', () => {

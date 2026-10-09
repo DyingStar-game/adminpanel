@@ -12,6 +12,7 @@ import {
 } from '@dyingstar-admin/testing';
 import type { Item } from '@dyingstar-admin/schemas';
 import { createApp, type AppOptions } from '../app';
+import type { AuditEntry } from '../lib/audit';
 import { createEconomieClient } from '../clients/economie';
 import { createSocialClient } from '../clients/social';
 import { createDefinitionsService } from '../services/definitions';
@@ -43,7 +44,10 @@ export const githubDefinitionsHandlers = [
   ),
 ];
 
-/** Builds an app wired to fresh persistence and `social` mocks; returns them. */
+/**
+ * Builds an app wired to fresh persistence, `social` and `economie` mocks; returns them, with
+ * the record of writes to the game services.
+ */
 export function buildApp(
   options: { dataset?: Item[]; socialData?: SocialDataset } & Partial<
     Omit<AppOptions, 'definitions'>
@@ -52,6 +56,7 @@ export function buildApp(
   const persistence = createPersistenceMock(options.dataset ?? createDataset());
   const social = createSocialMock(options.socialData);
   const economie = createEconomieMock();
+  const audited: AuditEntry[] = [];
   mswServer.use(
     ...persistence.handlers,
     ...social.handlers,
@@ -80,6 +85,7 @@ export function buildApp(
       timeoutMs: 1000,
       serviceToken: () => Promise.resolve('svc-admin-token'),
     }),
+    audit: (entry) => audited.push(entry),
     ...options,
   });
 
@@ -89,5 +95,5 @@ export function buildApp(
       headers: { 'Content-Type': 'application/json', ...init.headers },
     });
 
-  return { app, persistence, social, economie, request };
+  return { app, persistence, social, economie, audited, request };
 }

@@ -98,6 +98,11 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
     if (id === 'economy') return services.includes('economie') && can('economie.dashboard');
     return true;
   };
+  // A group left without any entry the account may see is hidden altogether.
+  const groups = SECTIONS.map((section) => ({
+    ...section,
+    items: section.items.filter(({ id }) => visible(id)),
+  })).filter((section) => section.items.length > 0);
   const collapsed = usePreferences((s) => s.sidebarCollapsed);
   const setCollapsed = usePreferences((s) => s.setSidebarCollapsed);
 
@@ -145,41 +150,39 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-2">
-        {SECTIONS.map((section) => (
+        {groups.map((section) => (
           <div key={section.title} className={collapsed ? 'mb-2 border-b pb-2' : 'mb-4'}>
             {!collapsed && (
               <div className="px-5 py-2 text-3xs font-semibold tracking-[0.15em] text-fg-3 uppercase">
                 {t(`nav.sections.${section.title}`)}
               </div>
             )}
-            {section.items
-              .filter(({ id }) => visible(id))
-              .map(({ id, icon: Icon, soon }) => (
-                <button
-                  key={id}
-                  type="button"
-                  disabled={soon}
-                  aria-current={active === id ? 'page' : undefined}
-                  title={collapsed ? t(`nav.items.${id}`) : undefined}
-                  onClick={() => onNavigate(id)}
-                  className={cn(
-                    'flex w-full items-center gap-3 border-l-2 py-2.5 text-left text-sm transition-all duration-150',
-                    collapsed ? 'justify-center px-0' : 'px-5',
-                    active === id
-                      ? 'border-link bg-link-bg text-link'
-                      : 'border-transparent text-fg-3 hover:bg-white/5 hover:text-foreground',
-                    soon && 'cursor-not-allowed opacity-50 hover:bg-transparent hover:text-fg-3',
-                  )}
-                >
-                  <Icon size={16} strokeWidth={1.5} />
-                  <span className={collapsed ? 'sr-only' : 'flex-1'}>{t(`nav.items.${id}`)}</span>
-                  {soon && !collapsed && (
-                    <span className="text-3xs tracking-wider text-fg-3 uppercase">
-                      {t('nav.soon')}
-                    </span>
-                  )}
-                </button>
-              ))}
+            {section.items.map(({ id, icon: Icon, soon }) => (
+              <button
+                key={id}
+                type="button"
+                disabled={soon}
+                aria-current={active === id ? 'page' : undefined}
+                title={collapsed ? t(`nav.items.${id}`) : undefined}
+                onClick={() => onNavigate(id)}
+                className={cn(
+                  'flex w-full items-center gap-3 border-l-2 py-2.5 text-left text-sm transition-all duration-150',
+                  collapsed ? 'justify-center px-0' : 'px-5',
+                  active === id
+                    ? 'border-link bg-link-bg text-link'
+                    : 'border-transparent text-fg-3 hover:bg-white/5 hover:text-foreground',
+                  soon && 'cursor-not-allowed opacity-50 hover:bg-transparent hover:text-fg-3',
+                )}
+              >
+                <Icon size={16} strokeWidth={1.5} />
+                <span className={collapsed ? 'sr-only' : 'flex-1'}>{t(`nav.items.${id}`)}</span>
+                {soon && !collapsed && (
+                  <span className="text-3xs tracking-wider text-fg-3 uppercase">
+                    {t('nav.soon')}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
         ))}
       </nav>

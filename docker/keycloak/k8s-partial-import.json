@@ -40,6 +40,18 @@
         {
           "name": "economie:politics:read",
           "description": "Read political treasuries and settings through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:corporation:read",
+          "description": "Read corporations' economic settings through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:corporation:manage",
+          "description": "Change corporations' economic settings and fiscal home through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "economie:politics:manage",
+          "description": "Change political tax rates and minting, run tax assessments through economie's internal API (ADR 0023)"
         }
       ]
     }
@@ -169,7 +181,9 @@
           "social:corporation:write",
           "social:politics:write",
           "economie:wallet:read",
-          "economie:politics:read"
+          "economie:politics:read",
+          "economie:corporation:manage",
+          "economie:politics:manage"
         ]
       },
       "groups": ["/staff"]
@@ -198,7 +212,9 @@
           "social:corporation:write",
           "social:politics:write",
           "economie:wallet:read",
-          "economie:politics:read"
+          "economie:politics:read",
+          "economie:corporation:manage",
+          "economie:politics:manage"
         ]
       },
       "groups": ["/staff"]

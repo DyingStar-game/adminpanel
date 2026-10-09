@@ -460,6 +460,27 @@ if (ECONOMIE_URL && SVC_ADMIN_SECRET) {
     });
     expect('Free Colonies minting', set.status, set.data, [200]);
   }
+  // economie keeps its own fiscal homes and political members, which the game server sets
+  // (step O.2): mirrored from social, so that an assessment finds taxpayers (upserts).
+  for (const [, corporation, , links] of CORPORATIONS) {
+    const corporationId = corporations.get(corporation.name);
+    const home = links.politics ? politics.get(links.politics) : undefined;
+    if (!corporationId || !home) continue;
+    const set = await economie('PUT', `/corporations/${corporationId}/affiliation`, {
+      politicalEntityId: home,
+    });
+    expect(`${corporation.name} fiscal home ${links.politics}`, set.status, set.data, [200]);
+  }
+  for (const [head, entity, members] of POLITICS) {
+    const entityId = politics.get(entity.name);
+    if (!entityId) continue;
+    for (const [member, role] of [[head, 'head'], ...members.map((m) => [m, 'member'])]) {
+      const set = await economie('PUT', `/politics/${entityId}/members/${id(member ?? '')}`, {
+        role,
+      });
+      expect(`${entity.name} ${role} ${member} (economie)`, set.status, set.data, [200]);
+    }
+  }
 } else {
   console.log('Economie: skipped (ECONOMIE_URL or SVC_ADMIN_CLIENT_SECRET unset: make up K8S=1)');
 }

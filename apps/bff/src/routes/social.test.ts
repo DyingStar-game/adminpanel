@@ -280,7 +280,7 @@ describe('social moderation routes (ADR 0024)', () => {
     });
 
     it('creates a corporation, edits it, changes a rank, transfers it, then disbands it', async () => {
-      const { request, social } = buildApp();
+      const { request, social, audited } = buildApp();
       const send = (path: string, method: string, body?: unknown) =>
         request(`/api/social${path}`, { method, ...(body === undefined ? {} : json(body)) });
 
@@ -307,6 +307,15 @@ describe('social moderation routes (ADR 0024)', () => {
       expect(social.data.corporations.some((c) => c.id === id)).toBe(false);
       // Every call went out with svc-admin's token, never the user's.
       expect(social.tokens.slice(-5).every((t) => t === 'Bearer svc-admin-token')).toBe(true);
+      // And the BFF recorded each write, social not knowing who acted.
+      expect(audited.map((e) => `${e.method} ${e.status}`)).toEqual([
+        'POST 201',
+        'PATCH 200',
+        'DELETE 403',
+        'POST 404',
+        'DELETE 204',
+      ]);
+      expect(audited[0]).toMatchObject({ service: 'social', path: '/api/social/corporations' });
     });
 
     it('transfers a political entity to a member, the former head taking the office below', async () => {

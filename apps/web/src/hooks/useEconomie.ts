@@ -1,5 +1,6 @@
 import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
 import {
+  zCorporationSettingsAsServed,
   zGetApiAdminStatsResponse,
   zGetApiInternalPlayersByPlayerIdWalletResponse,
   zGetApiInternalPlayersByPlayerIdWalletTransactionsResponse,
@@ -52,6 +53,18 @@ export const usePoliticalSettings = (id: string, enabled = true) =>
       apiGet(
         `/api/economie/politics/${encodeURIComponent(id)}/settings`,
         zGetApiInternalPoliticsByEntityIdSettingsResponse,
+      ),
+    enabled,
+  });
+
+/** A corporation's internal tax on donations, donation policy and fiscal home. */
+export const useCorporationSettings = (id: string, enabled = true) =>
+  useQuery({
+    queryKey: ['economie', 'corporation-settings', id],
+    queryFn: () =>
+      apiGet(
+        `/api/economie/corporations/${encodeURIComponent(id)}/settings`,
+        zCorporationSettingsAsServed,
       ),
     enabled,
   });

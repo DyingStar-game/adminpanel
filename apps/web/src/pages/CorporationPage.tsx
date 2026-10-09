@@ -7,6 +7,7 @@ import { FactTiles } from '@/components/molecules/FactTiles';
 import { Pagination } from '@/components/molecules/Pagination';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { CorporationDialog } from '@/components/organisms/CorporationDialog';
+import { CorporationEconomySettings } from '@/components/organisms/CorporationEconomySettings';
 import { CorporationsTable } from '@/components/organisms/CorporationsTable';
 import { DisbandOrganisationDialog } from '@/components/organisms/DisbandOrganisationDialog';
 import { MemberRankDialog } from '@/components/organisms/MemberRankDialog';
@@ -74,6 +75,8 @@ export function CorporationPage({
   const manages = services.includes('social-management') && can('social.corporationWrite');
   // The treasury in `economie`, for its capability role (ADR 0023 › Economie).
   const treasury = services.includes('economie-wallets') && can('economie.walletRead');
+  // Its economic settings and fiscal home in `economie` (step O.2).
+  const economySettings = services.includes('economie-wallets') && can('economie.corporationRead');
   const [dialog, setDialog] = useState<Dialog | null>(null);
   const corporation = useCorporation(corporationId);
   const members = useCorporationMembers(corporationId, search.members);
@@ -173,6 +176,13 @@ export function CorporationPage({
             {home.data?.name ?? shortId(c.politicalEntityId)}
           </Chip>
         </p>
+      )}
+      {economySettings && (
+        <CorporationEconomySettings
+          corporation={c}
+          manages={can('economie.corporationManage')}
+          onOpenPoliticalEntity={onOpenPoliticalEntity}
+        />
       )}
       {treasury && <WalletCard holder="corporations" id={c.id} title={t('economy.treasury')} />}
       <section className="flex flex-col gap-2">

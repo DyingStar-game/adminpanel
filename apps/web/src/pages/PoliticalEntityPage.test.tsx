@@ -2,11 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { organisationIds, socialIds } from '@dyingstar-admin/testing';
+import { PermissionsContext } from '@/hooks/useCan';
 import { useInProcessBff } from '@/test/bff';
 import { renderWithProviders } from '@/test/render';
 import { PoliticalEntityPage } from './PoliticalEntityPage';
 
-const renderPage = (entityId: string) => {
+const renderPage = (entityId: string, permissions?: string[]) => {
   const props = {
     onSearchChange: vi.fn(),
     onBack: vi.fn(),
@@ -14,8 +15,15 @@ const renderPage = (entityId: string) => {
     onOpenPoliticalEntity: vi.fn(),
     onDisbanded: vi.fn(),
   };
+  const page = (
+    <PoliticalEntityPage entityId={entityId} search={{ members: 1, children: 1 }} {...props} />
+  );
   renderWithProviders(
-    <PoliticalEntityPage entityId={entityId} search={{ members: 1, children: 1 }} {...props} />,
+    permissions ? (
+      <PermissionsContext.Provider value={permissions}>{page}</PermissionsContext.Provider>
+    ) : (
+      page
+    ),
   );
   return props;
 };
@@ -44,6 +52,15 @@ describe('PoliticalEntityPage (ADR 0024 step 2)', () => {
     expect(await screen.findByText('Independent')).toBeInTheDocument();
     const children = await screen.findByRole('table', { name: 'Lower levels' });
     expect(await within(children).findByText('Port Gaea')).toBeInTheDocument();
+  });
+
+  it('offers its tax settings and assessments to economie:politics:manage only (step O.2)', async () => {
+    useInProcessBff();
+    renderPage(organisationIds.commune, ['social.moderate', 'economie.politicsRead']);
+
+    const taxes = await screen.findByRole('region', { name: 'Taxes and money issuing' });
+    expect(await within(taxes).findByText('5%')).toBeInTheDocument();
+    expect(within(taxes).queryByRole('button', { name: 'Run a tax assessment' })).toBeNull();
   });
 
   it('transfers the head office to a member (step N)', async () => {

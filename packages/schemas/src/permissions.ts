@@ -27,6 +27,12 @@ export const Permission = {
   economieWalletRead: 'economie.walletRead',
   /** Political treasuries and their settings, likewise. */
   economiePoliticsRead: 'economie.politicsRead',
+  /** A political entity's tax rates, minting policy and tax assessments, likewise. */
+  economiePoliticsManage: 'economie.politicsManage',
+  /** A corporation's economic settings (internal tax, donations, fiscal home), likewise. */
+  economieCorporationRead: 'economie.corporationRead',
+  /** Changing them, likewise. */
+  economieCorporationManage: 'economie.corporationManage',
 } as const;
 export type Permission = (typeof Permission)[keyof typeof Permission];
 
@@ -59,7 +65,14 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
   // Interne API is opened by the capability roles of its README held by the person.
   [Permission.economieDashboard]: ['moderator', 'admin', 'supervisor'],
   [Permission.economieWalletRead]: ['economie:wallet:read'],
-  [Permission.economiePoliticsRead]: ['economie:politics:read'],
+  // Changing a setting needs to read it first: `:manage` opens the matching reads too.
+  [Permission.economiePoliticsRead]: ['economie:politics:read', 'economie:politics:manage'],
+  [Permission.economiePoliticsManage]: ['economie:politics:manage'],
+  [Permission.economieCorporationRead]: [
+    'economie:corporation:read',
+    'economie:corporation:manage',
+  ],
+  [Permission.economieCorporationManage]: ['economie:corporation:manage'],
 };
 
 /** Permission needed to change the status of, or escalate, a report at each escalation level. */

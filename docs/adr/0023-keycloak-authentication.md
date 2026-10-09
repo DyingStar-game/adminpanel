@@ -129,7 +129,10 @@ Mutating routes also check the `Origin` header against the panel's own origin (C
   (`client_credentials`, cached until it expires), **only after the BFF has checked the
   person's permission** for that action. `svc-admin` holds every capability: the panel's
   matrix is what restricts it, so the BFF records who did what (`preferred_username`, action,
-  target) since the service will not.
+  target) since the service will not. Built on 2026-10-09 (`apps/bff/src/lib/audit.ts`): every
+  write to a game service, `social`'s and `economie`'s, refused ones included, is one JSON line
+  on the BFF's stdout (`audit: "service-write"`, time, service, user and id, method, the panel's
+  route, status), without bodies; the deployment's log collection keeps it.
 - **Persistence**: no token, as today, until it requires one.
 - The `svc-admin` secret lives only in the BFF (Kubernetes Secret), never in the browser.
 
@@ -242,14 +245,30 @@ opened in the panel by **the capability role of the README held by the person** 
 `dyingstar-admin`. Player, corporation and political routes are for players and members: not
 used.
 
+**Source of every role below: `economie`'s README**,
+[`DyingStar-game/services` › `economie`](https://github.com/DyingStar-game/services/tree/develop/economie)
+(section Interne, column « Rôle requis »; Admin section for the moderation roles), checked against
+its code (`src/middleware/auth.ts` › `SERVICE_ROLES`, `src/routes/internal.routes.ts`) at
+`develop` `75eb1ce` (2026-10-09). The role names are copied from it, never made up; the panel's
+permission names (`economie.corporationRead`…, `permissions.ts`) are only its own mapping. When
+the README changes, this table and `permissions.ts` follow it.
+
 | Action (route of `economie`) | The person needs | Sent as |
 |---|---|---|
 | Dashboard: money supply, volume, taxes, richest, daily series (`GET /api/admin/stats`) | `moderator` (realm) | their token |
 | A player's or NPC's wallet and ledger (`GET /api/internal/players|npcs/:id/wallet…`) | `economie:wallet:read` | `svc-admin` |
 | A corporation's treasury and ledger (`GET /api/internal/corporations/:id/wallet…`) | `economie:wallet:read` | `svc-admin` |
-| A political entity's treasury, ledger and settings (`GET /api/internal/politics/:id/…`) | `economie:politics:read` | `svc-admin` |
-| Later: corporation settings, political settings and assessment | `economie:corporation:manage`, `economie:politics:manage` | `svc-admin` |
+| A political entity's treasury, ledger and settings (`GET /api/internal/politics/:id/…`) | `economie:politics:read` (or `:manage`) | `svc-admin` |
+| A corporation's settings: internal tax on donations, donation policy, fiscal home (`GET /api/internal/corporations/:id/settings`) | `economie:corporation:read` (or `:manage`) | `svc-admin` |
+| Change them; set or remove its fiscal home (`PUT …/corporations/:id/settings`, `PUT …/affiliation`) | `economie:corporation:manage` | `svc-admin` |
+| Change a political entity's tax rates and minting policy (`PUT …/politics/:id/settings`) | `economie:politics:manage` | `svc-admin` |
+| Run its tax assessment (`POST …/politics/:id/taxes/assess`) | `economie:politics:manage` | `svc-admin` |
 | Later: credit, debit, mint | `economie:wallet:credit`, `economie:wallet:debit`, `economie:money:issue` | `svc-admin` |
+
+Changing a setting needs to read it first: the `:manage` roles open the matching reads too
+(`permissions.ts`). The panel offers money issuing to countries and federations only, as
+`economie`'s README says, since `economie` does not check the level (or to turn it off where
+it is on). Settings, assessments and the fiscal home were added on 2026-10-09 (lot 2 step O.2).
 
 `GET /api/admin/players` (wallets by pseudonym) goes through `social` from `economie`; the panel
 searches players in `social` itself and reads the wallet from the player sheet.

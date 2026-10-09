@@ -1,4 +1,5 @@
 import {
+  zCorporationSettingsAsServed,
   zGetApiAdminStatsResponse,
   zGetApiInternalCorporationsByCorporationIdWalletResponse,
   zGetApiInternalCorporationsByCorporationIdWalletTransactionsResponse,
@@ -9,6 +10,10 @@ import {
   zGetApiInternalPoliticsByEntityIdSettingsResponse,
   zGetApiInternalPoliticsByEntityIdWalletResponse,
   zGetApiInternalPoliticsByEntityIdWalletTransactionsResponse,
+  zPostApiInternalPoliticsByEntityIdTaxesAssessResponse,
+  zPutApiInternalPoliticsByEntityIdSettingsResponse,
+  type CorporationSettingsChange,
+  type PoliticalSettingsChange,
 } from '@dyingstar-admin/contracts/economie';
 import type { ServiceTokenSource } from '../auth/serviceToken';
 import { createUpstream, type Query } from './upstream';
@@ -74,6 +79,47 @@ export function createEconomieClient({ baseUrl, timeoutMs, serviceToken }: Econo
         'GET',
         `/politics/${encodeURIComponent(id)}/settings`,
         zGetApiInternalPoliticsByEntityIdSettingsResponse,
+      ),
+    /** Changes a political entity's tax rates or minting policy (fields given only). */
+    updatePoliticalSettings: (id: string, body: PoliticalSettingsChange) =>
+      internal(
+        'PUT',
+        `/politics/${encodeURIComponent(id)}/settings`,
+        zPutApiInternalPoliticsByEntityIdSettingsResponse,
+        { body },
+      ),
+    /** Books the tax debts of an entity's taxpayers, in credits; each call books new ones. */
+    assessTaxes: (id: string) =>
+      internal(
+        'POST',
+        `/politics/${encodeURIComponent(id)}/taxes/assess`,
+        zPostApiInternalPoliticsByEntityIdTaxesAssessResponse,
+        { body: { currency: 'credits' } },
+      ),
+    /** A corporation's internal tax on donations, donation policy and fiscal home. */
+    corporationSettings: (id: string) =>
+      internal(
+        'GET',
+        `/corporations/${encodeURIComponent(id)}/settings`,
+        zCorporationSettingsAsServed,
+      ),
+    /** Changes its internal tax or donation policy (fields given only). */
+    updateCorporationSettings: (id: string, body: CorporationSettingsChange) =>
+      internal(
+        'PUT',
+        `/corporations/${encodeURIComponent(id)}/settings`,
+        zCorporationSettingsAsServed,
+        {
+          body,
+        },
+      ),
+    /** Attaches it to a political entity for the corporate tax, or detaches it (`null`). */
+    setCorporationAffiliation: (id: string, politicalEntityId: string | null) =>
+      internal(
+        'PUT',
+        `/corporations/${encodeURIComponent(id)}/affiliation`,
+        zCorporationSettingsAsServed,
+        { body: { politicalEntityId } },
       ),
     /** Whether the wallets are configured (`svc-admin`'s secret). */
     readsWallets: hasServiceToken,

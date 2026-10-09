@@ -6,7 +6,7 @@ permissions, one panel per environment) and [ADR 0024](./adr/0024-game-services-
 step needs a new decision, it goes into an ADR before coding. **Read this file first when
 starting a session on lot 2.**
 
-## Status (2026-10-08, end of the second session)
+## Status (2026-10-09, O.2 done)
 
 | Step | Status | Commit |
 |------|--------|--------|
@@ -24,12 +24,32 @@ starting a session on lot 2.**
 | L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | **Done** | `cd2a70d` |
 | M. Final roles × actions matrix (ADR 0023): `social` and `economie` decided (their READMEs' roles); persistence's 🟡 cells left | Persistence: the maintainer's call | — |
 | N. Organisation management (`/api/internal/*` through `svc-admin`; rights decided, ADR 0023) | **Done** on minikube (to try live); pre-production waits for `svc-admin` | `96506c7` |
-| O. Next services, one by one with the ADR 0024 pattern: `economie` first (1. reading, 2. settings, 3. money movements), then `inventory`, `mission`, `market` | **O.1 done** (to try live), `ca9b4b0`; **O.2 next** | — |
+| O. Next services, one by one with the ADR 0024 pattern: `economie` first (1. reading, 2. settings, 3. money movements), then `inventory`, `mission`, `market` | **O.1** (`ca9b4b0`) **and O.2 done** (to try live); **O.3 next** | — |
 
 Order agreed with the maintainer on 2026-10-08: I (acting on players) before K (organisations),
 since the player sheet is where moderators look first.
 
-### End of session 2026-10-08 (second) — where to resume
+### 2026-10-09 — O.2 done, where to resume
+
+- **O.2 built** (below): a corporation's economic settings and fiscal home, a political
+  entity's tax rates and minting, its tax assessment; the BFF's record of writes to the game
+  services (ADR 0023); empty sidebar groups hidden. Not tried live.
+- **To try on minikube**: give `ynotna` the client roles `economie:corporation:manage` and
+  `economie:politics:manage` on `dyingstar-admin` (by hand: the partial import's "Skip" does
+  not update existing users), `make seed-social` (it now sets the fiscal homes of Vance Freight
+  and Okafor Trading to New Haven and mirrors the political members in `economie`), then on New
+  Haven: change its rates, run an assessment (corporate tax on both treasuries; the first one
+  taxes no income), edit a corporation's settings and fiscal home. The treasuries do not move:
+  debts are paid by their debtor (`POST /api/corporations/:id/taxes/pay`, a member route the
+  panel does not use).
+- `make check` under load (minikube, `make pnpm dev`): Vitest is capped at 8 workers
+  (`vitest.config.ts`, `bc46487`), which also fixed a fixture mute that expired on 2026-10-09.
+- **Next: O.3**, money movements (as `svc-admin`): credit / debit a player, an NPC, a corporation
+  (`economie:wallet:credit`, `economie:wallet:debit`) or a political treasury
+  (`economie:politics:manage`), mint money (`economie:money:issue`); each confirmed
+  (`TwoStepDialog`) with an idempotent `externalId`. `economie` has no Admin route for them.
+
+### End of session 2026-10-08 (second)
 
 - Branch `feature/manage-persistence`: pushed up to `ca9b4b0`; the handoff commits after it are
   not (push only when the maintainer asks). Since the first session's handoff: seed and reset
@@ -192,6 +212,48 @@ ADR 0023 › Economie: its Admin API with the person's token (`moderator`+), its
   `social`, and minikube's `economie` has no `SOCIAL_SERVICE_CLIENT_SECRET` (to tell the back
   team). Amounts are shown as `economie` keeps them (integer units).
 
+### O.2 Economie, settings — done, to try live on minikube
+
+Through `economie`'s Interne API as `svc-admin`, for the capability roles of its README held by
+the person (ADR 0023 › Economie); `economie`'s code read on 2026-10-09 (`develop` `75eb1ce`,
+`internal.routes.ts`, `routes/schemas.ts`, `politics.service.ts`, `corporations.service.ts`,
+`taxation.service.ts`).
+
+| Action | `economie` route | Panel permission ← role |
+|---|---|---|
+| Read a corporation's internal tax on donations, donation policy, fiscal home | `GET /internal/corporations/:id/settings` | `economie.corporationRead` ← `economie:corporation:read` or `:manage` |
+| Change them | `PUT …/settings` `{taxRateBps?, allowDonations?}`, `PUT …/affiliation` `{politicalEntityId \| null}` | `economie.corporationManage` ← `economie:corporation:manage` |
+| Change a political entity's tax rates and minting | `PUT /internal/politics/:id/settings` `{corporateTaxBps?, incomeTaxBps?, allowMinting?, mintCeiling?}` | `economie.politicsManage` ← `economie:politics:manage` |
+| Run its tax assessment | `POST /internal/politics/:id/taxes/assess` `{currency: 'credits'}` | same |
+
+- BFF: `GET` / `PUT /api/economie/corporations/:id/settings`, `PUT …/affiliation`,
+  `PUT /api/economie/politics/:id/settings`, `POST …/taxes/assess`; inputs validated as
+  `economie`'s code reads them (`packages/contracts/src/economie/code.ts`: at least one field,
+  a ceiling up to 10¹³, a nullable fiscal home, the fiscal home in the answer). `:manage` opens
+  the matching reads (`economie.politicsRead` too).
+- **The BFF's record of writes** (ADR 0023 › Calling the services, `lib/audit.ts`): each write
+  to `social` or `economie`, refused ones included, is a JSON line on stdout (who, route,
+  status), since calls as `svc-admin` carry no identity.
+- SPA: on a corporation page, "Economic settings" (internal tax, donations, fiscal home linked)
+  with "Edit the settings"; on a political page, the taxes card gains "Edit the settings" and
+  "Run a tax assessment". Forms (React Hook Form + Zod) take rates in percent, send only what
+  changed, and confirm the changes as before → after (`TwoStepDialog`); the assessment is a
+  confirmation saying its bases, since when income is taxed, and that each run books new debts
+  (twice = the same treasuries taxed twice), then a toast with the debts booked.
+- Money issuing is offered to countries and federations only (`economie`'s README; `economie`
+  does not check it), or to turn it off where it is on.
+- `economie`'s behaviour, followed by the mock: settings rows created with the defaults on first
+  read or write (an unknown id is never a 404); a change needs one field at least (400
+  otherwise); the corporate tax is a share of each **attached** corporation's treasury balance
+  (`economie`'s fiscal home, apart from `social`'s political home); the income tax a share of
+  the salaries, bonuses and mission rewards of the members **mirrored in `economie`** since the
+  previous assessment (none on the first one, which opens the period); each run books new debts
+  under a new `assessmentId`, paid later by their debtor.
+- Sidebar: a group left without any entry the account may see is hidden (the "coming soon"
+  ones stay).
+- Not built: an entity's tax debts (`economie` lists them per NPC only on its Interne API, per
+  player or corporation on member routes); question 14.
+
 ### L. Panel settings instead of `SERVERS` — done
 
 - BFF: `GAME_SERVER_NAME` and `PERSISTENCE_URL` replace `SERVERS` (`config/servers.ts` removed);
@@ -291,3 +353,14 @@ Ready to post (a Discord message was drafted on 2026-10-08). Still open:
 12. Access token lifetime (24 h in pre-production) for the panel's client.
 13. Minikube's `economie` has no `SOCIAL_SERVICE_CLIENT_SECRET`: its `GET /api/admin/players`
    (wallets by pseudonym) and the names of its rankings cannot reach `social`.
+14. `economie`'s OpenAPI differs from its code (the panel follows the code): `CorporationSettings`
+   lacks `politicalEntityId`; the settings bodies' "one field at least" and `mintCeiling`'s
+   10¹³ maximum are not written; the affiliation body's `nullable` is lost by generators
+   (`nullable: true` beside `format: uuid`). No Interne route lists a political entity's tax
+   debts (only an NPC's): could the panel get one, to show what an assessment booked?
+15. `economie` lets any political entity issue money (`allowMinting`), its README reserving it to
+   countries and federations: should `economie` refuse the other levels? The panel offers it to
+   those two only.
+16. Fiscal homes and political members are `economie`'s own copies, set by the game server: who
+   keeps them in step with `social` (a corporation changing its political home, a member
+   leaving)? Until then an assessment may tax according to stale data.

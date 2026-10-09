@@ -83,4 +83,19 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     expect(permissionsOf(['economie:politics:read'])).toEqual([Permission.economiePoliticsRead]);
     expect(permissionsOf(['admin'])).not.toContain(Permission.economieWalletRead);
   });
+
+  it("opens economie's settings with its capability roles, managing implying reading", () => {
+    expect(permissionsOf(['economie:corporation:read'])).toEqual([
+      Permission.economieCorporationRead,
+    ]);
+    expect(permissionsOf(['economie:corporation:manage'])).toEqual([
+      Permission.economieCorporationRead,
+      Permission.economieCorporationManage,
+    ]);
+    expect(permissionsOf(['economie:politics:manage'])).toEqual([
+      Permission.economiePoliticsRead,
+      Permission.economiePoliticsManage,
+    ]);
+    expect(permissionsOf(['supervisor'])).not.toContain(Permission.economiePoliticsManage);
+  });
 });

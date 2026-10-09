@@ -1,5 +1,6 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import type { zTransaction } from '@dyingstar-admin/contracts/economie';
+import type { PoliticalEntityType } from '@dyingstar-admin/contracts/social';
 
 /** A movement as the SPA reads it: its `int64` id is a `bigint` (`z.coerce.bigint()`). */
 export type Transaction = z.infer<typeof zTransaction>;
@@ -27,3 +28,33 @@ export function signedAmount(
   if (paid && !received) return -(transaction.amount + transaction.taxAmount);
   return transaction.amount;
 }
+
+/**
+ * A rate typed in percent, up to two decimals, `.` or `,` (`2,5` → 250 bps); `economie` keeps
+ * whole basis points from 0 to 10,000.
+ */
+export const zPercentField = z
+  .string()
+  .trim()
+  .regex(/^\d{1,3}([.,]\d{1,2})?$/)
+  .refine((text) => percentToBps(text) <= 10_000);
+
+/** The basis points of a rate typed in percent (`zPercentField`). */
+export const percentToBps = (text: string) =>
+  Math.round(Number.parseFloat(text.trim().replace(',', '.')) * 100);
+
+/** A rate in basis points, as typed back in the form (`250` → `2.5`). */
+export const bpsToPercent = (bps: number) => String(bps / 100);
+
+/** A whole amount of credits typed in a form, up to `economie`'s 10¹³. */
+export const zAmountField = z
+  .string()
+  .trim()
+  .regex(/^\d{1,14}$/)
+  .refine((text) => Number(text) <= 10_000_000_000_000);
+
+/**
+ * Levels that may issue money: `economie`'s README reserves it to countries and federations
+ * without checking it (the panel's rule, ADR 0023 › Economie).
+ */
+export const MINTING_LEVELS: readonly PoliticalEntityType[] = ['country', 'federation'];

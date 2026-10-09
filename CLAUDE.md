@@ -61,7 +61,8 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 [`docs/lot-2-plan.md`](./docs/lot-2-plan.md) first** (status, "where to resume", local setup,
 open questions for the back team), then the ADR index. Done: sign-in, `social` (moderation,
 players, report actions, organisations read and managed), one game server per panel, `economie`
-reading (O.1). **Next: O.2, `economie`'s settings**, then O.3 (money movements). Much was not
+reading (O.1) and settings (O.2: corporations, political taxes, assessments). **Next: O.3,
+money movements** (credit, debit, mint). Much was not
 tried live yet: the plan says what. Lot 1 (persistence items) is done:
 [`docs/lot-1-plan.md`](./docs/lot-1-plan.md).
 `ONBOARDING.md` and `ARCHITECTURE.md` still describe the previous panel (step 10).
@@ -179,6 +180,11 @@ wire.
   - player and member routes are not used. Never send through `svc-admin` an action the
     README gives an Admin route; add the new client roles to `docker/keycloak/*.json` and the
     rights table of ADR 0023.
+  - **Role names come from the README, never invented**: copy them from its « Rôle requis »
+    column and check them in the service's `src/middleware/auth.ts`. `economie`'s reference:
+    <https://github.com/DyingStar-game/services/tree/develop/economie> (its README, section by
+    section); `social`'s: the same repository's `social/`. Cite the README (and its commit) in
+    ADR 0023 when adding rights.
 
 ## Checking in a browser
 

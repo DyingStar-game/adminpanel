@@ -21,8 +21,8 @@ The password is the user name.
 | `dev-reader` | `persistence:read` | opens, read only |
 | `dev-editor` | `persistence:read`, `persistence:write` | opens |
 | `dev-moderator` | `moderator` (realm) | "access denied" until the `social` moderation is built |
-| `dev-admin` | `admin` (realm), `persistence:*`, `social:corporation:write`, `social:politics:write`, `economie:wallet:read`, `economie:politics:read` | opens; manages organisations, reads wallets |
-| `ynotna` | `admin` (realm), `persistence:*`, `social:*:write`, `economie:*:read` | opens, manages organisations, reads wallets; its id `19dd218f-9cbd-484f-9a3b-cff5285eaa93` is the maintainer's `player` in pre-production persistence, so its sheet links to a real item |
+| `dev-admin` | `admin` (realm), `persistence:*`, `social:corporation:write`, `social:politics:write`, `economie:wallet:read`, `economie:politics:read`, `economie:corporation:manage`, `economie:politics:manage` | opens; manages organisations, reads wallets, sets economic settings and runs tax assessments |
+| `ynotna` | `admin` (realm), `persistence:*`, `social:*:write`, `economie:*:read`, `economie:corporation:manage`, `economie:politics:manage` | opens, manages organisations, reads wallets, sets economic settings; its id `19dd218f-9cbd-484f-9a3b-cff5285eaa93` is the maintainer's `player` in pre-production persistence, so its sheet links to a real item |
 | `player-kira`, `-orin`, `-mara`, `-silas`, `-juno`, `-tess`, `-dax`, `-pell` | `player` | "access denied"; test players for `social`, fixed ids (see below) |
 
 What each role allows is the interim matrix of `packages/schemas/src/permissions.ts` (ADR 0023,
@@ -42,7 +42,8 @@ moderation roles open nothing of it.
   (`resource_access.dyingstar-admin.roles`: the realm's `roles` scope only maps realm roles);
 - its client roles `persistence:read`, `persistence:write`, `persistence:delete` (draft names),
   and `social:corporation:write`, `social:politics:write`, `economie:wallet:read`,
-  `economie:politics:read` (the capability roles of the services' READMEs, held by people,
+  `economie:politics:read`, `economie:corporation:read`, `economie:corporation:manage`,
+  `economie:politics:manage` (the capability roles of the services' READMEs, held by people,
   ADR 0023);
 - the realm roles `admin` and `supervisor`, checked by `social` but missing from the back
   team's realms;

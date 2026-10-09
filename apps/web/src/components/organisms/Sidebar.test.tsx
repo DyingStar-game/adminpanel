@@ -96,6 +96,10 @@ describe('Sidebar', () => {
     expect(
       within(nav).queryByRole('button', { name: 'Persistence — Items' }),
     ).not.toBeInTheDocument();
+    // Nothing left in the game world: the group goes too; the ones coming soon stay.
+    expect(within(nav).queryByText('Game world')).not.toBeInTheDocument();
+    expect(within(nav).getByText('Administration')).toBeInTheDocument();
+    expect(within(nav).getByText('Supervision')).toBeInTheDocument();
   });
 
   it('hides moderation from an account that may not moderate', async () => {
@@ -109,5 +113,6 @@ describe('Sidebar', () => {
     await within(nav).findByRole('button', { name: 'Persistence — Items' });
 
     expect(within(nav).queryByRole('button', { name: 'Moderation' })).not.toBeInTheDocument();
+    expect(within(nav).queryByText('Administration')).not.toBeInTheDocument();
   });
 });

@@ -61,6 +61,8 @@ export function createInProcessBff({
       timeoutMs: 1000,
       serviceToken: () => Promise.resolve('svc-admin-token'),
     }),
+    // The record of writes stays out of the test output.
+    audit: () => undefined,
   });
   const forward = async ({ request }: { request: Request }) => {
     const res = await app.fetch(request);

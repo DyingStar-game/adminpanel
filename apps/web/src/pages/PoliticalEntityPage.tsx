@@ -61,6 +61,8 @@ export function PoliticalEntityPage({
   const manages = services.includes('social-management') && can('social.politicsWrite');
   // Its treasury and taxes in `economie`, for its capability role (ADR 0023 › Economie).
   const treasury = services.includes('economie-wallets') && can('economie.politicsRead');
+  // Its tax rates, minting and assessments (step O.2).
+  const managesTaxes = treasury && can('economie.politicsManage');
   const [dialog, setDialog] = useState<'edit' | 'transfer' | 'disband' | null>(null);
   const entity = usePoliticalEntity(entityId);
   const members = usePoliticalMembers(entityId, search.members);
@@ -148,7 +150,7 @@ export function PoliticalEntityPage({
       />
       {treasury && (
         <>
-          <TaxSettings entityId={e.id} />
+          <TaxSettings entity={e} manages={managesTaxes} />
           <WalletCard holder="politics" id={e.id} title={t('economy.treasury')} />
         </>
       )}

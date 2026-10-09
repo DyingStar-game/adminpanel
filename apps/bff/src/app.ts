@@ -19,6 +19,7 @@ import { createPersistenceClient } from './clients/persistence';
 import { ApiError } from './lib/errors';
 import { withPersistence } from './middleware/persistence';
 import { bodiesRoutes } from './routes/bodies';
+import { auditWrites, type AuditEntry } from './lib/audit';
 import { economieRoutes } from './routes/economie';
 import { itemsRoutes } from './routes/items';
 import { socialRoutes } from './routes/social';
@@ -59,6 +60,8 @@ export interface AppOptions {
   readCacheTtlMs?: number;
   /** When set, the built SPA is served from this directory with an `index.html` fallback. */
   staticDir?: string | undefined;
+  /** Where the record of writes to the game services goes (tests); stdout by default. */
+  audit?: ((entry: AuditEntry) => void) | undefined;
 }
 
 /** Builds the BFF application. Kept separate from the server so tests can call `app.request()`. */
@@ -73,6 +76,7 @@ export function createApp({
   persistenceTimeoutMs = 5000,
   readCacheTtlMs = 500,
   staticDir,
+  audit,
 }: AppOptions) {
   const items =
     persistenceUrl &&
@@ -132,10 +136,13 @@ export function createApp({
     api.route('/bodies', bodiesRoutes);
   }
   if (social) {
-    api.use('/social/*', requirePermission('social.moderate'));
+    api.use('/social/*', auditWrites('social', audit), requirePermission('social.moderate'));
     api.route('/social', socialRoutes(social));
   }
-  if (economie) api.route('/economie', economieRoutes(economie));
+  if (economie) {
+    api.use('/economie/*', auditWrites('economie', audit));
+    api.route('/economie', economieRoutes(economie));
+  }
   app.route('/api', api);
   // Registered after the API routes and before the SPA fallback, so unknown API paths never
   // return index.html.
