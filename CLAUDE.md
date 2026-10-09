@@ -24,7 +24,8 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 | Install dependencies | `make install` |
 | Any pnpm command | `make pnpm <cmd>` — flags go through `ARGS`, e.g. `make pnpm add zod ARGS="--filter @dyingstar-admin/web"` |
 | Dev servers (Vite :5173 + BFF :3000) | `make pnpm dev` |
-| Test players, reports, sanctions in minikube's `social` (after each reset) | `make seed-social` (`make up K8S=1`, Keycloak import done); `make reset-social` empties `social` first |
+| Test data in minikube's `social` and `economie` (after each reset) | `make seed-social` (`make up K8S=1`, Keycloak import done; replays skipped); `make reset-social` empties `social` first |
+| Re-pin the game services' OpenAPI, regenerate their Zod schemas | `make contracts-update` |
 | Checks before committing | `make check` (format, lint, typecheck, test, format check); commit only when it passes |
 | Testers profile (build + serve on :3000) | `make start` / `make stop` |
 | Production image | `make image` |
@@ -39,7 +40,10 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
   shadcn/ui). Components follow atomic design in `src/components/{ui,atoms,molecules,organisms,templates}`
   and `src/pages`; import rules are enforced by ESLint (ADR 0014).
 - `apps/bff` — Hono BFF; the only component holding internal URLs. Serves the built SPA in production.
-- `packages/schemas` — shared Zod schemas (persistence contract, BFF API).
+- `packages/schemas` — shared Zod schemas (persistence contract, BFF API, permissions).
+- `packages/contracts` — the game services' pinned OpenAPI (`social`, `economie`) and their
+  generated Zod schemas; `packages/testing` — fixtures and MSW mocks (persistence, `social`,
+  `economie`).
 - `docker/` — compose file (`app`, `dev` services) and `Dockerfile.prod`.
 
 ## Conventions
@@ -53,9 +57,12 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 
 ## Where we are
 
-**Lot 2 (sign-in, game services — `social` first) is in progress: read
-[`docs/lot-2-plan.md`](./docs/lot-2-plan.md) first** (status, next steps, local setup, open
-questions), then the ADR index. Lot 1 (persistence items) is done:
+**Lot 2 (sign-in, game services) is in progress: read
+[`docs/lot-2-plan.md`](./docs/lot-2-plan.md) first** (status, "where to resume", local setup,
+open questions for the back team), then the ADR index. Done: sign-in, `social` (moderation,
+players, report actions, organisations read and managed), one game server per panel, `economie`
+reading (O.1). **Next: O.2, `economie`'s settings**, then O.3 (money movements). Much was not
+tried live yet: the plan says what. Lot 1 (persistence items) is done:
 [`docs/lot-1-plan.md`](./docs/lot-1-plan.md).
 `ONBOARDING.md` and `ARCHITECTURE.md` still describe the previous panel (step 10).
 
@@ -100,6 +107,12 @@ Check shapes against live data rather than guessing (**GET only**, never POST / 
   the admin keeps those facts in `apps/web/src/lib/bodies.ts`, matched on the body's scene
   (`tarsis_3.tscn` → `tarsis_III/`, `tarsis_3_1.tscn` → its first moon, linked to its section
   anchor); persistence has none.
+- **Game services** (`social`, `economie`…): their README in
+  [`DyingStar-game/services`](https://github.com/DyingStar-game/services/tree/develop) is the
+  reference, **section by section** (see Extension points › Game service); their OpenAPI
+  sometimes differs from their code (`social` twice): read `src/services/` and
+  `src/routes/` before writing a mock, and follow the code. On minikube they answer on
+  `http://services.dyingstar.local/<service>` (`/api/health` without a token).
 - **Through the BFF** (dev servers running, with a session cookie):
   `curl -b "ds_admin_session=…" localhost:3000/api/items?page=1&page_size=5` — also GET only.
 
@@ -148,13 +161,24 @@ The generic organism `SchematicCard` draws any schematic on the object page; not
 wire.
 
 - **Game service — per service** ([ADR 0024](./docs/adr/0024-game-services-social-first.md)),
-  `social` being the model: pin its OpenAPI in `packages/contracts` (`SERVICES` in
-  `src/services.ts`, `make contracts-update` generates its Zod schemas, a GitHub sync test
-  alerts on drift), a client in `apps/bff/src/clients/<service>.ts`, curated routes
-  `/api/<service>/…` guarded by a permission (`packages/schemas/src/permissions.ts`), its URL
-  (`<SERVICE>_URL`, listed in `GET /api/panel` › `services`), an MSW mock in
-  `packages/testing` checked against the contract, then its SPA section (sidebar entry shown
-  when configured and allowed).
+  `social` and `economie` being the models: pin its OpenAPI in `packages/contracts`
+  (`SERVICES` in `src/services.ts`, its entry in `openapi-ts.config.ts` and `package.json`
+  exports, `make contracts-update`; a GitHub sync test alerts on drift), a client in
+  `apps/bff/src/clients/<service>.ts` on the shared `clients/upstream.ts` (timeouts, errors,
+  `svc-admin`), curated routes `/api/<service>/…` guarded by a permission
+  (`packages/schemas/src/permissions.ts`), its URL (`<SERVICE>_URL`, listed in `GET /api/panel`
+  › `services`), an MSW mock in `packages/testing` checked against the contract and following
+  the service's code, then its SPA section (shown when configured and allowed).
+  **Rights follow the service's README, section by section** (ADR 0023, maintainer's rule):
+  - *Admin* sections (`/api/admin/*`): the person's token, with a moderation role
+    (`moderator` < `admin` < `supervisor`), which the service checks itself;
+  - *Interne* sections (`/api/internal/*`): service accounts only, so the BFF calls as
+    `svc-admin` (one token for every service, `SVC_ADMIN_CLIENT_SECRET`), and the panel opens
+    the action to **the person holding the README's "Rôle requis"** as a client role on
+    `dyingstar-admin` (`social:corporation:write`, `economie:wallet:read`…);
+  - player and member routes are not used. Never send through `svc-admin` an action the
+    README gives an Admin route; add the new client roles to `docker/keycloak/*.json` and the
+    rights table of ADR 0023.
 
 ## Checking in a browser
 

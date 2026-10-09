@@ -6,7 +6,7 @@ permissions, one panel per environment) and [ADR 0024](./adr/0024-game-services-
 step needs a new decision, it goes into an ADR before coding. **Read this file first when
 starting a session on lot 2.**
 
-## Status (2026-10-08, end of day)
+## Status (2026-10-08, end of the second session)
 
 | Step | Status | Commit |
 |------|--------|--------|
@@ -20,40 +20,56 @@ starting a session on lot 2.**
 | H. Player sheet → persistence item and map (same id everywhere) | **Done** | `cd404bc` |
 | I. Acting on players: sanction (warn, mute; suspend, ban for `admin`+), lift, reputation | **Done** | `c1c3a05` |
 | J. Report actions: claim, then confirm, dismiss or escalate (rules of ADR 0024 › Update) | **Done** (to try live) | `bcb6bb2` |
-| K. Organisations, reading: corporations, political entities | **Done** (to try live) | — |
-| L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | **Done** | see below |
-| M. Decide the final roles × actions matrix with the back team (ADR 0023) | Waiting for the back team | — |
-| N. Organisation management (`/api/internal/*` through `svc-admin`; rights decided, ADR 0023) | **Done** on minikube; pre-production waits for `svc-admin` (question 11) | — |
-| O. Next services, one by one with the ADR 0024 pattern: `economie` first (1. reading, 2. settings, 3. money movements), then `inventory`, `mission`, `market` | **O.1 done** (to try live); O.2 next | — |
+| K. Organisations, reading: corporations, political entities | **Done** (to try live) | `3f577f6` |
+| L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | **Done** | `cd2a70d` |
+| M. Final roles × actions matrix (ADR 0023): `social` and `economie` decided (their READMEs' roles); persistence's 🟡 cells left | Persistence: the maintainer's call | — |
+| N. Organisation management (`/api/internal/*` through `svc-admin`; rights decided, ADR 0023) | **Done** on minikube (to try live); pre-production waits for `svc-admin` | `96506c7` |
+| O. Next services, one by one with the ADR 0024 pattern: `economie` first (1. reading, 2. settings, 3. money movements), then `inventory`, `mission`, `market` | **O.1 done** (to try live), `ca9b4b0`; **O.2 next** | — |
 
 Order agreed with the maintainer on 2026-10-08: I (acting on players) before K (organisations),
 since the player sheet is where moderators look first.
 
-### End of session 2026-10-08 — where to resume
+### End of session 2026-10-08 (second) — where to resume
 
-- Everything is committed and pushed (last commit `d9fee50` on `feature/manage-persistence`).
-  After step I: readable moderation log (`e82086b`), warnings as one-off records (`f940e6c`),
-  readable player activity (`889d78a`), ADR conformity + `conventions.test.ts` (`dc2cc6f`),
-  table alignment and shared event colours (`d9fee50`).
-- **Step J** (report actions) is done on the pattern of step I (see its section), with the
-  maintainer's rules (claim first, role ≥ escalation level, staff registered at sign-in);
-  `make reset-social` then the walkthrough of its section remain to be tried live. Test data:
-  `6185dc4`.
-- **Step K** (organisations, reading) is done, without the activity (members only in `social`,
-  question 10).
-- **Step L** (panel settings) is done: `.env.local` needs the migration of the README.
-- **Step N** (organisation management) is done on minikube: `make up K8S=1`, then give
-  `social:*:write` to your user on `dyingstar-admin` if the partial import skipped it.
-  **Next: step M** (the persistence cells of the matrix, the maintainer's call) and the back
-  team's answers (questions below).
-- Not built, for lack of data in `social`: "claimed by X" on a report (its log has no filter;
-  `social` stores no claimer).
-- Check `social`'s real behaviour on minikube before trusting its OpenAPI (it differed twice:
-  lifting twice answers 404, warnings expire at once). Read its code in
-  `DyingStar-game/services` › `social/src/services/reports.service.ts` for J.
-- Not to build without the maintainer's go: lifting from the moderation sanctions tab (asked
-  as a question only), deleting a sanction (`social` cannot; would need a back-team route).
-- Storybook: discussed, not wanted for now (ADR 0014 says "not for now").
+- Branch `feature/manage-persistence`, last commit on top of `ca9b4b0` (this handoff); **10
+  commits not pushed** (push only when the maintainer asks). Since the first session's handoff:
+  seed and reset of minikube's `social` (`6185dc4`, `f13ed78`), J (`bcb6bb2`), K (`3f577f6`), L
+  (`cd2a70d`), management rights (`0f47d54`), N (`96506c7`), deployment secrets (`85a88fe`),
+  O.1 (`ca9b4b0`).
+- **The rule of every game service** (ADR 0023, maintainer, 2026-10-08): follow the service's
+  README section by section. *Admin* sections take the person's token with a moderation role
+  (`moderator` < `admin` < `supervisor`, checked by the service); *Interne* sections take
+  `svc-admin` only, opened in the panel by **the capability role of the README held by the
+  person** on `dyingstar-admin` (`social:corporation:write`, `economie:wallet:read`…).
+  Player / member routes are not used. Never route a person's action through `svc-admin` when
+  the README gives it an Admin route.
+- **To try live** (nothing was tried on minikube in this session, sign-in was not allowed to
+  the assistant): J (claim, then confirm / dismiss / escalate; a moderator on an `admin`-level
+  report is read only), K and N (organisations, read and managed), O.1 (Economy page, wallets,
+  treasuries, political taxes). Setup: `make up K8S=1` (it reads `svc-admin`'s secret and sets
+  `SOCIAL_URL`, `ECONOMIE_URL`), give `ynotna` the client roles `social:corporation:write`,
+  `social:politics:write`, `economie:wallet:read`, `economie:politics:read` on
+  `dyingstar-admin` (the partial import's "Skip" does not update existing users), `make
+  seed-social` (or `make reset-social`), `make pnpm dev`.
+- **`.env.local`**: `SERVERS` is refused since L: `GAME_SERVER_NAME`, `PERSISTENCE_URL`
+  (README › Migrating from `SERVERS`); add `ECONOMIE_URL=` (empty outside minikube).
+- **Next: O.2, economie's settings** (as `svc-admin`, ADR 0023 › Economie): a corporation's
+  internal tax and donations (`PUT /api/internal/corporations/:id/settings`,
+  `economie:corporation:manage`), a political entity's tax rates and minting policy (`PUT
+  /api/internal/politics/:id/settings`, `economie:politics:manage`), a tax assessment (`POST
+  /api/internal/politics/:id/taxes/assess`, `economie:politics:manage`). Then **O.3**: credit /
+  debit a player, an NPC, a corporation or a political treasury (`economie:wallet:credit`,
+  `economie:wallet:debit`, `economie:politics:manage`), mint money (`economie:money:issue`).
+  Each confirmed (`TwoStepDialog`), with an idempotent `externalId`. Read `economie`'s code
+  (`DyingStar-game/services` › `economie/src/services/`) before writing the mock.
+- Not built, with the reason: "claimed by X" on a report (`social` stores no claimer, its log
+  has no filter); the organisations' activity (members only, question 10); NPC memberships in
+  an organisation (an NPC picker first); `economie`'s wallets by pseudonym (`GET
+  /api/admin/players`, broken in minikube, question 13).
+- Not to build without the maintainer's go: lifting from the moderation sanctions tab,
+  deleting a sanction (`social` cannot). Storybook: not for now (ADR 0014).
+- The services' OpenAPI differs from their code at times: read the code (`social` twice,
+  questions 9); the mocks follow the code.
 
 ## The steps to come
 
@@ -112,7 +128,7 @@ Claim first is the maintainer's rule (2026-10-08), enforced by the BFF (409 othe
   `make reset-social` empties minikube's `social` and seeds it again (back to the start).
 - Staff accounts are registered in `social` at sign-in (`GET /api/me` with their token, when
   they hold `social.moderate`): without a profile, `social` refuses their reputation changes
-  (open question 7). Tried on 2026-10-08 before this: dismissing report 5 as `ynotna` failed.
+  (open question 6). Tried on 2026-10-08 before this: dismissing report 5 as `ynotna` failed.
 
 ### K. Organisations, reading — done, to try live on minikube
 
@@ -150,7 +166,7 @@ it from minikube), for people holding the capability roles of its README on `dyi
 - `GET /api/panel` lists `social-management` when `svc-admin` is configured; the buttons show
   only then, and only to the capability role of the organisation's kind.
 - Not built: NPC memberships (add / remove an NPC), to come with an NPC picker; `social`
-  records the CEO or head as the actor, not the person (question 11).
+  records the CEO or head as the actor, not the person (question 8).
 
 ### O.1 Economie, reading — done, to try live on minikube
 
@@ -195,25 +211,32 @@ The rules lint cannot check are now enforced by `apps/web/src/conventions.test.t
 
 ## Working locally
 
-- `make up` → our compose Keycloak (`localhost:8080`), persistence of pre-production, no
-  `social` (moderation hidden). `make up K8S=1` → the back team's minikube: their Keycloak
-  (`auth.dyingstar.local`) and `social` (`services.dyingstar.local/social`). After changing
-  mode or `docker/docker-compose*.yml`, recreate the container (`make up …`) then `make pnpm dev`.
+- `make up` → our compose Keycloak (`localhost:8080`), persistence of pre-production, no game
+  service (moderation, organisations, economy hidden). `make up K8S=1` → the back team's
+  minikube: their Keycloak (`auth.dyingstar.local`), `social` and `economie`
+  (`services.dyingstar.local/social`, `/economie`) and `svc-admin`'s secret read from the
+  cluster. After changing mode or `docker/docker-compose*.yml`, recreate the container (`make up
+  …`) then `make pnpm dev`.
 - Minikube stack: `~/www/kubernetes`, `./scripts_linux/start-dev.sh`, `minikube tunnel`;
   `*.dyingstar.local` → `127.0.0.1` in WSL's `/etc/hosts` **and** Windows' hosts file.
 - Test users (password = user name): `devplayer`, `dev-reader`, `dev-editor`,
   `dev-moderator`, `dev-admin`, `ynotna` (`admin`, id `19dd218f-9cbd-484f-9a3b-cff5285eaa93`,
-  the maintainer's real pre-production player). List and roles: `docker/keycloak/README.md`.
+  the maintainer's real pre-production player), test players `player-*`. List and roles:
+  `docker/keycloak/README.md`.
 - Minikube Keycloak loses our client and users when its database is recreated: re-import
-  `docker/keycloak/k8s-partial-import.json` (Realm settings › Action › Partial import).
-- Test data in minikube's `social` (players `player-*`, friendships, open reports, sanctions):
-  `make seed-social` after that import, again after each reset (`docker/keycloak/README.md`).
+  `docker/keycloak/k8s-partial-import.json` (Realm settings › Action › Partial import); with
+  "Skip", existing users keep their roles (give new ones by hand).
+- Test data: `make seed-social` (players, friendships, organisations, reports, sanctions in
+  `social`; wallets, treasuries, taxes and minting in `economie`; replays skipped);
+  `make reset-social` empties `social` first (not `economie`, whose seeded credits are
+  idempotent).
 - Services rejecting every token (`401 Invalid token`) in minikube: CoreDNS workaround in
   `docker/keycloak/README.md` until the back team sets `OIDC_JWKS_URL` (reported 2026-10-08).
-- `social` only knows players who went through it (the game registers them at login): a
-  Keycloak-only account is absent from Players until it calls `social` once (`GET /api/me`).
-- `make contracts-update` re-pins the services' OpenAPI and regenerates their Zod schemas;
-  `packages/contracts/src/github-sync.test.ts` fails when `social`'s OpenAPI changed upstream.
+- Staff accounts are registered in `social` at sign-in (its reputation changes need a profile).
+- `make contracts-update` re-pins every service's OpenAPI (`social`, `economie`) and
+  regenerates their Zod schemas; `packages/contracts/src/github-sync.test.ts` fails when one
+  changed upstream. `economie`'s `int64` ids are `BigInt` in the generated schemas: the BFF
+  sends them back with `jsonSafe`.
 
 ## Decisions taken during the lot (2026-10-08)
 
@@ -228,37 +251,40 @@ The rules lint cannot check are now enforced by `apps/web/src/conventions.test.t
 - A player's Keycloak `sub` = their `social` `playerId` = their persistence `player` UUID.
 - The BFF calls `/api/admin/*` and player routes with the user's token (`social` checks the
   role and logs the actor); `svc-admin` only for `/api/internal/*`, behind the panel's checks.
+- Every game service follows its README section by section (ADR 0023): Admin = the person's
+  token and moderation role; Interne = `svc-admin`, for the capability role of the README held
+  by the person on `dyingstar-admin`. One `svc-admin` token serves every service.
+- Reports: claimed first, then confirmed, dismissed or escalated; handled at their escalation
+  level or above (panel rules, stricter than `social`; ADR 0024 › Update).
+- `SERVERS` and `X-Server-Id` gave way to `GAME_SERVER_NAME`, `PERSISTENCE_URL`,
+  `<SERVICE>_URL`; `GET /api/panel` (environment, game server, services).
 
 ## Open questions (back team)
 
-From ADR 0023 and 0024, still open:
+Ready to post (a Discord message was drafted on 2026-10-08). Still open:
 
-1. Pre-production client `dyingstar-admin` (redirect URI on the panel's URL only), its client
-   roles, who assigns them; the panel's pre-production URL.
-2. Realm roles `admin` and `supervisor` (checked by `social`, missing from their realms).
-3. `svc-admin`'s use by the panel and how its pre-production secret is handed over.
-4. The final roles × actions matrix, including organisation management.
-5. `OIDC_AUDIENCE` on pre-production `social` (would need an audience mapper).
-6. Services' `OIDC_JWKS_URL` in dev-local (the `401 Invalid token` bug).
-7. `social` refuses the reputation changes of a staff account without a profile
-   (`reputation_events.actor_id` → `player_profiles`): accepting or dismissing a report,
-   adjusting reputation fail with a 500 until the account called `GET /api/me` once. And
-   `updateReportStatus` is not atomic: the report is closed and logged before the reputation
-   change fails (seen 2026-10-08 on report 5: dismissed, refund missing).
-8. `social` does not check the escalation level against the role: a `moderator` may act on a
-   report escalated to `admin` or `supervisor`, which its README's "instances supérieures" and
-   the system reports opened at `admin` suggest it should not. The panel enforces it meanwhile.
+1. Pre-production client `dyingstar-admin` (redirect URI on the panel's URL only, client-role
+   mapper), its client roles (`persistence:*`, `social:*:write`, `economie:*`), who assigns
+   them; the panel's pre-production URL.
+2. Realm roles `admin` and `supervisor` (checked by `social` and `economie`, missing from their
+   realms); does `supervisor` have rights of its own beyond `admin`?
+3. `svc-admin`'s secret for each deployment of the panel (README › Secrets of a deployment),
+   with its capability roles kept (`social:*:write`, `economie:*`) and its audiences
+   (`social-api`, `economie-api`).
+4. `OIDC_AUDIENCE` on pre-production `social` (would need an audience mapper).
+5. Services' `OIDC_JWKS_URL` in dev-local (the `401 Invalid token` bug).
+6. `social` refuses the reputation changes of a staff account without a profile
+   (`reputation_events.actor_id` → `player_profiles`); `updateReportStatus` is not atomic (the
+   report is closed and logged before the reputation change fails: report 5, 2026-10-08).
+7. `social` does not check the escalation level against the role (the panel enforces it).
+8. `social` records the CEO or the head as the actor of the internal API's management, not the
+   person: an "actual author" field, or the panel keeps its own log.
 9. `social`'s OpenAPI differs from its code (the panel follows the code): lifting an already
    lifted sanction answers 404 (documented 409); escalating above `supervisor` answers 403
    (documented 409).
-10. The organisations' activity (`GET /api/corporations/{id}/activity`,
-   `/api/politics/{id}/activity`) is for members only: should moderators read it (a role
-   bypass in `social`, or an internal route)? Until then the panel does not show it.
-11. Managing organisations (step N): the rights are decided (ADR 0023 › Social — management:
-   the person holds `social:corporation:write` / `social:politics:write` on
-   `dyingstar-admin`). Open: the panel's use of `svc-admin` and its pre-production secret;
-   the person acting is unknown to `social` (an "actual author" field, or the panel's log).
-7. Persistence requiring a token one day (then `svc-admin` needs its audience).
-8. Access token lifetime (24 h in pre-production) for the panel's client.
-9. `social`'s OpenAPI says `DELETE /api/admin/sanctions/{id}` answers 409 when already lifted;
-   the service answers 404.
+10. The organisations' activity is for members only: should moderators read it (a role bypass,
+   or an internal route)? Until then the panel does not show it.
+11. Persistence requiring a token one day (then `svc-admin` needs its audience).
+12. Access token lifetime (24 h in pre-production) for the panel's client.
+13. Minikube's `economie` has no `SOCIAL_SERVICE_CLIENT_SECRET`: its `GET /api/admin/players`
+   (wallets by pseudonym) and the names of its rankings cannot reach `social`.
