@@ -31,11 +31,14 @@ since the player sheet is where moderators look first.
 
 ### End of session 2026-10-08 (second) — where to resume
 
-- Branch `feature/manage-persistence`, last commit on top of `ca9b4b0` (this handoff); **10
-  commits not pushed** (push only when the maintainer asks). Since the first session's handoff:
-  seed and reset of minikube's `social` (`6185dc4`, `f13ed78`), J (`bcb6bb2`), K (`3f577f6`), L
-  (`cd2a70d`), management rights (`0f47d54`), N (`96506c7`), deployment secrets (`85a88fe`),
-  O.1 (`ca9b4b0`).
+- Branch `feature/manage-persistence`: pushed up to `ca9b4b0`; the handoff commits after it are
+  not (push only when the maintainer asks). Since the first session's handoff: seed and reset
+  of minikube's `social` (`6185dc4`, `f13ed78`), J (`bcb6bb2`), K (`3f577f6`), L (`cd2a70d`),
+  management rights (`0f47d54`), N (`96506c7`), deployment secrets (`85a88fe`), O.1
+  (`ca9b4b0`).
+- One `make check` of the handoff failed one test once (533 tests, not reproduced in three full
+  runs since): an intermittent test, probably a timeout under load. If it comes back, note which
+  test and look at its waits.
 - **The rule of every game service** (ADR 0023, maintainer, 2026-10-08): follow the service's
   README section by section. *Admin* sections take the person's token with a moderation role
   (`moderator` < `admin` < `supervisor`, checked by the service); *Interne* sections take
