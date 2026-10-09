@@ -138,6 +138,7 @@ export function MoneyMovementDialog({
             name="type"
             render={({ field }) => (
               <OptionSelect<InternalMovementType>
+                size="default"
                 label={t('economy.movement.type')}
                 value={field.value}
                 options={MOVEMENT_TYPES[direction].map((option) => ({

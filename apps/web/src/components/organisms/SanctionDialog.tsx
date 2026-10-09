@@ -114,6 +114,7 @@ export function SanctionDialog({ playerId, playerName, onClose }: SanctionDialog
                     name="type"
                     render={({ field }) => (
                       <OptionSelect<SanctionType>
+                        size="default"
                         label={t('moderation.columns.type')}
                         value={field.value}
                         options={types.map((v) => ({
@@ -134,6 +135,7 @@ export function SanctionDialog({ playerId, playerName, onClose }: SanctionDialog
                       name="duration"
                       render={({ field }) => (
                         <OptionSelect<Duration>
+                          size="default"
                           label={t('moderation.actions.duration')}
                           value={field.value}
                           options={DURATIONS.map((d) => ({ value: d, label: durationLabel(d) }))}

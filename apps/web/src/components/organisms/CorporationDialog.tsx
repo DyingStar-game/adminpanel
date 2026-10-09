@@ -133,6 +133,7 @@ export function CorporationDialog({ corporation, onClose, onCreated }: Corporati
           name="recruitment"
           render={({ field }) => (
             <OptionSelect<CorporationRecruitmentMode>
+              size="default"
               label={t('organisations.columns.recruitment')}
               value={field.value}
               options={RECRUITMENT.map((r) => ({

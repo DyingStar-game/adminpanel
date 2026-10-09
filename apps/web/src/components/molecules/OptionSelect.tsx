@@ -1,3 +1,4 @@
+import { cva, type VariantProps } from 'class-variance-authority';
 import {
   Select,
   SelectContent,
@@ -7,7 +8,16 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/cn';
 
-interface OptionSelectProps<T extends string> {
+/**
+ * Sizes: `sm` (compact) in the top bar and the filters, `default` in forms, the height and text
+ * of an `Input` beside it.
+ */
+const optionSelectVariants = cva('', {
+  variants: { size: { sm: 'h-7 text-xs', default: 'h-8 text-sm' } },
+  defaultVariants: { size: 'sm' },
+});
+
+interface OptionSelectProps<T extends string> extends VariantProps<typeof optionSelectVariants> {
   label: string;
   value: T | undefined;
   options: { value: T; label: string }[];
@@ -16,7 +26,7 @@ interface OptionSelectProps<T extends string> {
   className?: string;
 }
 
-/** Compact labelled select used in the top bar (game server, language). */
+/** Labelled select: compact in the top bar and filters, full size in forms (`size`). */
 export function OptionSelect<T extends string>({
   label,
   value,
@@ -24,19 +34,25 @@ export function OptionSelect<T extends string>({
   onChange,
   placeholder,
   className,
+  size,
 }: OptionSelectProps<T>) {
+  const item = size === 'default' ? 'text-sm' : 'text-xs';
   return (
     <Select
       value={value ?? ''}
       onValueChange={(v) => onChange(v as T)}
       disabled={options.length === 0}
     >
-      <SelectTrigger size="sm" aria-label={label} className={cn('h-7 text-xs', className)}>
+      <SelectTrigger
+        size={size === 'default' ? 'default' : 'sm'}
+        aria-label={label}
+        className={cn(optionSelectVariants({ size }), className)}
+      >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent>
         {options.map((option) => (
-          <SelectItem key={option.value} value={option.value} className="text-xs">
+          <SelectItem key={option.value} value={option.value} className={item}>
             {option.label}
           </SelectItem>
         ))}

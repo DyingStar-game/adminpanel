@@ -175,6 +175,7 @@ export function ItemCreateSheet({
               name="objectType"
               render={({ field }) => (
                 <OptionSelect
+                  size="default"
                   label="object_type"
                   value={field.value || undefined}
                   placeholder={t('editor.pickType')}
@@ -183,7 +184,7 @@ export function ItemCreateSheet({
                     label: d.type,
                   }))}
                   onChange={field.onChange}
-                  className="h-8 w-full font-mono"
+                  className="w-full font-mono"
                 />
               )}
             />

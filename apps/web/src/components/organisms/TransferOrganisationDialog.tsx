@@ -86,6 +86,7 @@ export function TransferOrganisationDialog({
             name="playerId"
             render={({ field }) => (
               <OptionSelect<string>
+                size="default"
                 label={t('organisations.manage.newLeader', { role })}
                 value={field.value}
                 options={candidates.map((c) => ({ value: c.playerId, label: c.displayName }))}

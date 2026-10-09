@@ -76,6 +76,7 @@ export function MemberRankDialog({ corporationId, member, ranks, onClose }: Memb
           name="rankId"
           render={({ field }) => (
             <OptionSelect<string>
+              size="default"
               label={t('organisations.columns.rank')}
               value={field.value}
               options={ranks.map((r) => ({ value: String(r.id), label: r.name }))}

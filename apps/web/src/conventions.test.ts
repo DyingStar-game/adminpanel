@@ -39,7 +39,6 @@ const UNTESTED_DEBT = new Set([
   'components/molecules/JsonDropField.tsx',
   'components/molecules/LiveToggle.tsx',
   'components/molecules/MapLegend.tsx',
-  'components/molecules/OptionSelect.tsx',
   'components/molecules/PageHeading.tsx',
   'components/molecules/PropertyRow.tsx',
   'components/molecules/RawJson.tsx',

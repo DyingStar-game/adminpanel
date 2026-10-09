@@ -118,6 +118,7 @@ export function PoliticalEntityDialog({ entity, onClose, onCreated }: PoliticalE
             name="type"
             render={({ field }) => (
               <OptionSelect<PoliticalEntityType>
+                size="default"
                 label={t('organisations.columns.level')}
                 value={field.value}
                 options={levels.map((l) => ({
