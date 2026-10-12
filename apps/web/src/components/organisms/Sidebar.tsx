@@ -4,6 +4,7 @@ import {
   Building2Icon,
   CoinsIcon,
   LayoutDashboardIcon,
+  NetworkIcon,
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
   ServerIcon,
@@ -30,6 +31,7 @@ export type NavId =
   | 'moderation'
   | 'organisations'
   | 'economy'
+  | 'simulation'
   | 'settings';
 
 interface SidebarProps {
@@ -64,6 +66,7 @@ const SECTIONS: {
     items: [
       { id: 'explorer', icon: BoxesIcon },
       { id: 'import', icon: UploadIcon },
+      { id: 'simulation', icon: NetworkIcon },
     ],
   },
   {
@@ -96,6 +99,9 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
       return services.includes('social') && can('social.moderate');
     }
     if (id === 'economy') return services.includes('economie') && can('economie.dashboard');
+    if (id === 'simulation') {
+      return services.includes('universesimulator') && can('simulation.view');
+    }
     return true;
   };
   // A group left without any entry the account may see is hidden altogether.

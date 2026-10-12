@@ -28,6 +28,8 @@ const EnvSchema = z.object({
     .or(z.literal('').transform(() => undefined)),
   SOCIAL_URL: optionalString,
   ECONOMIE_URL: optionalString,
+  /** `universesimulator` without `/api` (ADR 0025): the Simulation section. */
+  UNIVERSESIMULATOR_URL: optionalString,
   /**
    * Service account of the panel for `social`'s internal API (ADR 0023 › Social — management).
    * Without its secret, organisation management is off; reading and moderation keep working.

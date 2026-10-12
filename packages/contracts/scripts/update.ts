@@ -3,8 +3,8 @@
  * writes `src/<service>/openapi.yaml` and `src/<service>/source.json` (the commit it comes from).
  * `make contracts-update` then regenerates the Zod schemas (`openapi-ts`).
  */
-import { writeFile } from 'node:fs/promises';
-import { SERVICES, SOURCE_REPO, SOURCE_REF } from '../src/services';
+import { readFile, writeFile } from 'node:fs/promises';
+import { SERVICES, SOURCE_REPO, SOURCE_REF, type ContractSource } from '../src/services';
 
 const headers: Record<string, string> = { Accept: 'application/vnd.github+json' };
 if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
@@ -20,11 +20,21 @@ for (const service of SERVICES) {
     sha: string;
     commit: { committer: { date: string } };
   }[];
-  if (!last) throw new Error(`No commit found for ${path} on ${SOURCE_REF}`);
+  const dir = new URL(`../src/${service}/`, import.meta.url);
+  if (!last) {
+    // A contract pinned before it was pushed (`commit: null`) keeps its local copy until then.
+    const pinned = JSON.parse(
+      await readFile(new URL('source.json', dir), 'utf8'),
+    ) as ContractSource;
+    if (pinned.commit === null) {
+      console.warn(`${service}: ${path} not on ${SOURCE_REF} yet, pinned copy kept`);
+      continue;
+    }
+    throw new Error(`No commit found for ${path} on ${SOURCE_REF}`);
+  }
   const raw = await fetch(`https://raw.githubusercontent.com/${SOURCE_REPO}/${last.sha}/${path}`);
   if (!raw.ok) throw new Error(`GitHub answered ${raw.status} for ${path}@${last.sha}`);
 
-  const dir = new URL(`../src/${service}/`, import.meta.url);
   await writeFile(new URL('openapi.yaml', dir), await raw.text());
   await writeFile(
     new URL('source.json', dir),

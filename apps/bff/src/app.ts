@@ -15,6 +15,7 @@ import {
 } from './auth/auth';
 import type { EconomieClient } from './clients/economie';
 import type { SocialClient } from './clients/social';
+import type { UniversesimulatorClient } from './clients/universesimulator';
 import { createPersistenceClient } from './clients/persistence';
 import { ApiError } from './lib/errors';
 import { withPersistence } from './middleware/persistence';
@@ -23,6 +24,7 @@ import { auditWrites, type AuditEntry } from './lib/audit';
 import { economieRoutes } from './routes/economie';
 import { itemsRoutes } from './routes/items';
 import { socialRoutes } from './routes/social';
+import { universesimulatorRoutes } from './routes/universesimulator';
 import type { DefinitionsService } from './services/definitions';
 import { createItemsService } from './services/items';
 
@@ -55,6 +57,11 @@ export interface AppOptions {
   social?: SocialClient | undefined;
   /** `economie` of this environment (ADR 0024); unset, its routes answer 404 and the SPA hides it. */
   economie?: EconomieClient | undefined;
+  /**
+   * `universesimulator` of this environment (ADR 0025); unset, its routes answer 404 and the SPA
+   * hides the simulation.
+   */
+  universesimulator?: UniversesimulatorClient | undefined;
   definitions: DefinitionsService;
   persistenceTimeoutMs?: number;
   readCacheTtlMs?: number;
@@ -72,6 +79,7 @@ export function createApp({
   persistenceUrl,
   social,
   economie,
+  universesimulator,
   definitions,
   persistenceTimeoutMs = 5000,
   readCacheTtlMs = 500,
@@ -116,6 +124,7 @@ export function createApp({
           ...(economie ? ['economie'] : []),
           // Wallets, through `svc-admin` (ADR 0023 › Economie).
           ...(economie?.readsWallets ? ['economie-wallets'] : []),
+          ...(universesimulator ? ['universesimulator'] : []),
         ],
       }),
     )
@@ -142,6 +151,15 @@ export function createApp({
   if (economie) {
     api.use('/economie/*', auditWrites('economie', audit));
     api.route('/economie', economieRoutes(economie));
+  }
+  if (universesimulator) {
+    // The user's token on its Admin API; persistence (when set) places the warehouses on the map.
+    api.use(
+      '/simulation/*',
+      auditWrites('universesimulator', audit),
+      requirePermission('simulation.view'),
+    );
+    api.route('/simulation', universesimulatorRoutes(universesimulator, items || undefined));
   }
   app.route('/api', api);
   // Registered after the API routes and before the SPA fallback, so unknown API paths never

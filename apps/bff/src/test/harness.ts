@@ -5,15 +5,18 @@ import {
   createPersistenceMock,
   createEconomieMock,
   createSocialMock,
+  createUniversesimulatorMock,
   ECONOMIE_URL,
   PERSISTENCE_URL,
   SOCIAL_URL,
+  UNIVERSESIMULATOR_URL,
   type SocialDataset,
 } from '@dyingstar-admin/testing';
 import type { Item } from '@dyingstar-admin/schemas';
 import { createApp, type AppOptions } from '../app';
 import type { AuditEntry } from '../lib/audit';
 import { createEconomieClient } from '../clients/economie';
+import { createUniversesimulatorClient } from '../clients/universesimulator';
 import { createSocialClient } from '../clients/social';
 import { createDefinitionsService } from '../services/definitions';
 
@@ -45,7 +48,7 @@ export const githubDefinitionsHandlers = [
 ];
 
 /**
- * Builds an app wired to fresh persistence, `social` and `economie` mocks; returns them, with
+ * Builds an app wired to fresh persistence, `social`, `economie` and `universesimulator` mocks; returns them, with
  * the record of writes to the game services.
  */
 export function buildApp(
@@ -56,11 +59,13 @@ export function buildApp(
   const persistence = createPersistenceMock(options.dataset ?? createDataset());
   const social = createSocialMock(options.socialData);
   const economie = createEconomieMock();
+  const universesimulator = createUniversesimulatorMock();
   const audited: AuditEntry[] = [];
   mswServer.use(
     ...persistence.handlers,
     ...social.handlers,
     ...economie.handlers,
+    ...universesimulator.handlers,
     ...githubDefinitionsHandlers,
   );
   const app = createApp({
@@ -85,6 +90,10 @@ export function buildApp(
       timeoutMs: 1000,
       serviceToken: () => Promise.resolve('svc-admin-token'),
     }),
+    universesimulator: createUniversesimulatorClient({
+      baseUrl: UNIVERSESIMULATOR_URL,
+      timeoutMs: 1000,
+    }),
     audit: (entry) => audited.push(entry),
     ...options,
   });
@@ -95,5 +104,5 @@ export function buildApp(
       headers: { 'Content-Type': 'application/json', ...init.headers },
     });
 
-  return { app, persistence, social, economie, audited, request };
+  return { app, persistence, social, economie, universesimulator, audited, request };
 }

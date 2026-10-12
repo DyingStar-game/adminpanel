@@ -14,22 +14,38 @@ describe('social moderation routes (ADR 0024)', () => {
   it('lists the services this panel manages', async () => {
     const res = await buildApp().request('/api/panel');
     expect(await res.json()).toMatchObject({
-      services: ['persistence', 'social', 'social-management', 'economie', 'economie-wallets'],
+      services: [
+        'persistence',
+        'social',
+        'social-management',
+        'economie',
+        'economie-wallets',
+        'universesimulator',
+      ],
     });
     // Without svc-admin's secret, organisations stay readable but not managed.
     const reading = await buildApp({
       social: createSocialClient({ baseUrl: SOCIAL_URL, timeoutMs: 1000 }),
       economie: undefined,
+      universesimulator: undefined,
     }).request('/api/panel');
     expect(await reading.json()).toMatchObject({ services: ['persistence', 'social'] });
 
-    const without = await buildApp({ social: undefined, economie: undefined }).request(
-      '/api/panel',
-    );
+    const without = await buildApp({
+      social: undefined,
+      economie: undefined,
+      universesimulator: undefined,
+    }).request('/api/panel');
     expect(await without.json()).toMatchObject({ services: ['persistence'] });
     const alone = await buildApp({ persistenceUrl: undefined }).request('/api/panel');
     expect(await alone.json()).toMatchObject({
-      services: ['social', 'social-management', 'economie', 'economie-wallets'],
+      services: [
+        'social',
+        'social-management',
+        'economie',
+        'economie-wallets',
+        'universesimulator',
+      ],
     });
   });
 

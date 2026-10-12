@@ -326,3 +326,10 @@ export function fitPoints<P extends { x: number; y: number }>(points: P[]): P[] 
   const kept = points.filter((_, i) => (distances[i] ?? 0) <= FIT_OUTLIER_FACTOR * p90);
   return kept.length > 0 ? kept : points;
 }
+
+/** Names come from the game data: escaped before going into a map icon's HTML. */
+export const escapeHtml = (text: string) =>
+  text.replace(
+    /[&<>"']/g,
+    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
+  );

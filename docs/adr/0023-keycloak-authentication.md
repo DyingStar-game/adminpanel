@@ -279,6 +279,40 @@ money movements the same day (O.3): the panel sends them in credits, with a reas
 `GET /api/admin/players` (wallets by pseudonym) goes through `social` from `economie`; the panel
 searches players in `social` itself and reads the wallet from the player sheet.
 
+#### Universesimulator (proposed 2026-10-11, ADR 0025)
+
+`universesimulator` is not one of the services planned in ADR 0024; ADR 0025 adds it. The panel
+uses its **Admin API only** (`/api/admin/*`), **with the person's token**: `universesimulator`
+checks the moderation realm roles itself (`moderator` < `admin` < `supervisor`), reads for any of
+them, every write for `admin` or `supervisor`. Its Interne API (`/api/internal/*`, roles
+`usim:read`, `usim:write`, `usim:deliver`) is for the game server and services: not used (`svc-admin`'s roles listed above include
+none of them).
+
+**Source: `universesimulator`'s README** (§ API: "`/api/admin/*` · moderation role (writes:
+`admin`/`supervisor`)") and its code, `src/auth/mod.rs` (`MODERATION`, `Caller::require_admin`)
+and `src/routes/mod.rs`, read 2026-10-11 from the back team's working copy (not on GitHub yet,
+no commit to cite: to be added when it is pushed). No role is invented: the panel's permissions
+(`simulation.view`, `simulation.manage`, `permissions.ts`) only mirror these.
+
+| Action (route of `universesimulator`) | Panel permission | `moderator` | `admin` ¹ | `supervisor` ¹ | Sent as |
+|---|---|---|---|---|---|
+| Dashboard, network, villages and a village, a warehouse, orders, prices, price history, local prices, stock history, incoming legs, mint events, resources, entities, simulation settings (`GET /api/admin/dashboard`, `/network`, `/villages…`, `/warehouses/:id`, `/orders…`, `/prices`, `/price-history`, `/local-prices`, `/stock-history`, `/incoming`, `/mint-events`, `/resources`, `/entities`, `/simulation`) | `simulation.view` | ✅ | ✅ | ✅ | their token |
+| Pause, resume, force a tick (`POST /api/admin/simulation/pause\|resume\|tick`) | `simulation.manage` | ❌ | ✅ | ✅ | their token |
+| Cancel an open supply order (`POST /api/admin/orders/:id/cancel`) | `simulation.manage` | ❌ | ✅ | ✅ | their token |
+| A village's thresholds, a warehouse's capacities (`GET /api/admin/village-policies`, `/warehouse-capacities`) | `simulation.view` | ✅ | ✅ | ✅ | their token |
+| Add or change a village's threshold, delete one (`PUT /api/admin/village-policies`, `DELETE …/village-policies/:village/:resource`) | `simulation.manage` | ❌ | ✅ | ✅ | their token |
+| Set a warehouse's capacity for a resource, remove it (`PUT /api/admin/warehouse-capacities`, `DELETE …/warehouse-capacities/:warehouse/:resource`) | `simulation.manage` | ❌ | ✅ | ✅ | their token |
+| Change a village's main warehouse (`PUT /api/admin/villages/:id`) | `simulation.manage` | ❌ | ✅ | ✅ | their token |
+| Add a flow to a village, change its rate or label, delete one (`POST /api/admin/flows`, `PUT …/flows/:id`, `DELETE …/flows/:id`) | `simulation.manage` | ❌ | ✅ | ✅ | their token |
+
+The other configuration writes (resources, warehouses' activation and POI refresh, routes,
+mineral sources, federations, manual orders, `POST /import`) are not used by the panel yet (ADR
+0025): ❓. Configuration rows added on 2026-10-12, then moved to villages the same day (the
+service's ADR 0013: thresholds and flows per village, capacities per warehouse; its stock
+policies are gone), from `src/routes/admin.rs` (`require_admin` on every write). The persistence
+roles open nothing here; the BFF reads persistence itself only to place the villages on the
+planet's map.
+
 #### Inventory, mission, market — later lots (sent as `svc-admin`)
 
 One table per service, written when the service is integrated, from its OpenAPI and its

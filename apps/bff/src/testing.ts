@@ -11,13 +11,16 @@ import {
   createPersistenceMock,
   createEconomieMock,
   createSocialMock,
+  createUniversesimulatorMock,
   ECONOMIE_URL,
   PERSISTENCE_URL,
   SOCIAL_URL,
+  UNIVERSESIMULATOR_URL,
   type SocialDataset,
 } from '@dyingstar-admin/testing';
 import { createApp } from './app';
 import { createEconomieClient } from './clients/economie';
+import { createUniversesimulatorClient } from './clients/universesimulator';
 import { createSocialClient } from './clients/social';
 import fallback from './definitions/fallback.json';
 import type { DefinitionsService } from './services/definitions';
@@ -44,6 +47,7 @@ export function createInProcessBff({
   const persistence = createPersistenceMock(dataset);
   const social = createSocialMock(socialData);
   const economie = createEconomieMock();
+  const universesimulator = createUniversesimulatorMock();
   const app = createApp({
     auth: false,
     gameServerName: 'Universe Testing',
@@ -61,6 +65,10 @@ export function createInProcessBff({
       timeoutMs: 1000,
       serviceToken: () => Promise.resolve('svc-admin-token'),
     }),
+    universesimulator: createUniversesimulatorClient({
+      baseUrl: UNIVERSESIMULATOR_URL,
+      timeoutMs: 1000,
+    }),
     // The record of writes stays out of the test output.
     audit: () => undefined,
   });
@@ -73,10 +81,12 @@ export function createInProcessBff({
     persistence,
     social,
     economie,
+    universesimulator,
     handlers: [
       ...persistence.handlers,
       ...social.handlers,
       ...economie.handlers,
+      ...universesimulator.handlers,
       http.all('*/api/*', forward),
       http.get('*/health', forward),
     ],

@@ -26,7 +26,14 @@ describe('BFF app', () => {
     expect(body).toEqual({
       environment: 'testing',
       gameServerName: 'Universe Testing',
-      services: ['persistence', 'social', 'social-management', 'economie', 'economie-wallets'],
+      services: [
+        'persistence',
+        'social',
+        'social-management',
+        'economie',
+        'economie-wallets',
+        'universesimulator',
+      ],
     });
     expect(JSON.stringify(body)).not.toContain('http');
   });
