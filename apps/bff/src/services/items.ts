@@ -275,7 +275,7 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
     return item;
   }
 
-  return {
+  const service = {
     /** A page of a level, or of the matches of a search in it (`q`). */
     list({ q, ...query }: ListItemsQuery & { q?: string | undefined }): Promise<PaginatedItems> {
       return q ? searchLevel(query, q) : list(query);
@@ -595,7 +595,21 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
       snapshots.clear();
       typeSamples.clear();
     },
+
+    /**
+     * A body and the frame of its map (ADR 0018), for placing other things on it the way the map
+     * places its points (`universesimulator`'s warehouses, ADR 0025): the frame kept since the
+     * body's first map, or computed now by building that map. Null when the body has no item to
+     * set a frame from.
+     */
+    async bodyFrame(uuid: string): Promise<{ body: Item; frame: BodyFrame } | null> {
+      const body = await getOrThrow(uuid);
+      if (!frames.has(uuid)) await service.bodyMap(uuid);
+      const frame = frames.get(uuid);
+      return frame ? { body, frame } : null;
+    },
   };
+  return service;
 }
 
 export type ItemsService = ReturnType<typeof createItemsService>;

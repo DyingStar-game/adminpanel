@@ -12,4 +12,9 @@ export default defineConfig([
     output: { path: './src/economie/generated', postProcess: ['prettier'] },
     plugins: ['@hey-api/typescript', 'zod'],
   },
+  {
+    input: './src/universesimulator/openapi.yaml',
+    output: { path: './src/universesimulator/generated', postProcess: ['prettier'] },
+    plugins: ['@hey-api/typescript', 'zod'],
+  },
 ]);

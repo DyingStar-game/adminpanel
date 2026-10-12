@@ -13,10 +13,18 @@ describe('economie routes (ADR 0024 step O, reading)', () => {
   it('lists economie and its wallets among the services', async () => {
     const res = await buildApp().request('/api/panel');
     expect(await res.json()).toMatchObject({
-      services: ['persistence', 'social', 'social-management', 'economie', 'economie-wallets'],
+      services: [
+        'persistence',
+        'social',
+        'social-management',
+        'economie',
+        'economie-wallets',
+        'universesimulator',
+      ],
     });
     const without = await buildApp({
       economie: undefined,
+      universesimulator: undefined,
       social: createSocialClient({ baseUrl: 'http://social.test', timeoutMs: 1000 }),
     }).request('/api/panel');
     expect(await without.json()).toMatchObject({ services: ['persistence', 'social'] });

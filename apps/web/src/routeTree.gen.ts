@@ -20,6 +20,7 @@ import { Route as OrbitUuidRouteImport } from './routes/orbit.$uuid'
 import { Route as OrganisationsIndexRouteImport } from './routes/organisations.index'
 import { Route as PlayersIndexRouteImport } from './routes/players.index'
 import { Route as PlayersPlayerIdRouteImport } from './routes/players.$playerId'
+import { Route as SimulationIndexRouteImport } from './routes/simulation.index'
 import { Route as OrganisationsCorporationsCorporationIdRouteImport } from './routes/organisations.corporations.$corporationId'
 import { Route as OrganisationsPoliticsEntityIdRouteImport } from './routes/organisations.politics.$entityId'
 
@@ -78,6 +79,11 @@ const PlayersPlayerIdRoute = PlayersPlayerIdRouteImport.update({
   path: '/players/$playerId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SimulationIndexRoute = SimulationIndexRouteImport.update({
+  id: '/simulation/',
+  path: '/simulation/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrganisationsCorporationsCorporationIdRoute =
   OrganisationsCorporationsCorporationIdRouteImport.update({
     id: '/organisations/corporations/$corporationId',
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/moderation/': typeof ModerationIndexRoute
   '/organisations/': typeof OrganisationsIndexRoute
   '/players/': typeof PlayersIndexRoute
+  '/simulation/': typeof SimulationIndexRoute
   '/organisations/corporations/$corporationId': typeof OrganisationsCorporationsCorporationIdRoute
   '/organisations/politics/$entityId': typeof OrganisationsPoliticsEntityIdRoute
 }
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/moderation': typeof ModerationIndexRoute
   '/organisations': typeof OrganisationsIndexRoute
   '/players': typeof PlayersIndexRoute
+  '/simulation': typeof SimulationIndexRoute
   '/organisations/corporations/$corporationId': typeof OrganisationsCorporationsCorporationIdRoute
   '/organisations/politics/$entityId': typeof OrganisationsPoliticsEntityIdRoute
 }
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/moderation/': typeof ModerationIndexRoute
   '/organisations/': typeof OrganisationsIndexRoute
   '/players/': typeof PlayersIndexRoute
+  '/simulation/': typeof SimulationIndexRoute
   '/organisations/corporations/$corporationId': typeof OrganisationsCorporationsCorporationIdRoute
   '/organisations/politics/$entityId': typeof OrganisationsPoliticsEntityIdRoute
 }
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/moderation/'
     | '/organisations/'
     | '/players/'
+    | '/simulation/'
     | '/organisations/corporations/$corporationId'
     | '/organisations/politics/$entityId'
   fileRoutesByTo: FileRoutesByTo
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/moderation'
     | '/organisations'
     | '/players'
+    | '/simulation'
     | '/organisations/corporations/$corporationId'
     | '/organisations/politics/$entityId'
   id:
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/moderation/'
     | '/organisations/'
     | '/players/'
+    | '/simulation/'
     | '/organisations/corporations/$corporationId'
     | '/organisations/politics/$entityId'
   fileRoutesById: FileRoutesById
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   ModerationIndexRoute: typeof ModerationIndexRoute
   OrganisationsIndexRoute: typeof OrganisationsIndexRoute
   PlayersIndexRoute: typeof PlayersIndexRoute
+  SimulationIndexRoute: typeof SimulationIndexRoute
   OrganisationsCorporationsCorporationIdRoute: typeof OrganisationsCorporationsCorporationIdRoute
   OrganisationsPoliticsEntityIdRoute: typeof OrganisationsPoliticsEntityIdRoute
 }
@@ -280,6 +293,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayersPlayerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/simulation/': {
+      id: '/simulation/'
+      path: '/simulation'
+      fullPath: '/simulation/'
+      preLoaderRoute: typeof SimulationIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/organisations/corporations/$corporationId': {
       id: '/organisations/corporations/$corporationId'
       path: '/organisations/corporations/$corporationId'
@@ -309,6 +329,7 @@ const rootRouteChildren: RootRouteChildren = {
   ModerationIndexRoute: ModerationIndexRoute,
   OrganisationsIndexRoute: OrganisationsIndexRoute,
   PlayersIndexRoute: PlayersIndexRoute,
+  SimulationIndexRoute: SimulationIndexRoute,
   OrganisationsCorporationsCorporationIdRoute:
     OrganisationsCorporationsCorporationIdRoute,
   OrganisationsPoliticsEntityIdRoute: OrganisationsPoliticsEntityIdRoute,

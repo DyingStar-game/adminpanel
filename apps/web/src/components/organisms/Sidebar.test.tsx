@@ -115,4 +115,42 @@ describe('Sidebar', () => {
     expect(within(nav).queryByRole('button', { name: 'Moderation' })).not.toBeInTheDocument();
     expect(within(nav).queryByText('Administration')).not.toBeInTheDocument();
   });
+
+  it('shows the simulation in the game world to a moderator when universesimulator is configured', async () => {
+    useInProcessBff();
+    renderWithProviders(
+      <PermissionsContext.Provider value={['simulation.view']}>
+        <Sidebar active="simulation" onNavigate={vi.fn()} onHome={vi.fn()} version="0.1.0" />
+      </PermissionsContext.Provider>,
+    );
+    const nav = screen.getByRole('complementary', { name: 'Navigation' });
+
+    const entry = await within(nav).findByRole('button', { name: 'Simulation' });
+    expect(entry).toHaveAttribute('aria-current', 'page');
+    expect(within(nav).getByText('Game world')).toBeInTheDocument();
+    expect(
+      within(nav).queryByRole('button', { name: 'Persistence — Items' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('hides the simulation without its permission, or when universesimulator is not configured', async () => {
+    useInProcessBff();
+    const { unmount } = renderWithProviders(
+      <PermissionsContext.Provider value={['persistence.read', 'social.moderate']}>
+        <Sidebar active="explorer" onNavigate={vi.fn()} onHome={vi.fn()} version="0.1.0" />
+      </PermissionsContext.Provider>,
+    );
+    let nav = screen.getByRole('complementary', { name: 'Navigation' });
+    await within(nav).findByRole('button', { name: 'Moderation' });
+    expect(within(nav).queryByRole('button', { name: 'Simulation' })).not.toBeInTheDocument();
+    unmount();
+
+    servesPersistence();
+    renderWithProviders(
+      <Sidebar active="explorer" onNavigate={vi.fn()} onHome={vi.fn()} version="0.1.0" />,
+    );
+    nav = screen.getByRole('complementary', { name: 'Navigation' });
+    await within(nav).findByRole('button', { name: 'Persistence — Items' });
+    expect(within(nav).queryByRole('button', { name: 'Simulation' })).not.toBeInTheDocument();
+  });
 });

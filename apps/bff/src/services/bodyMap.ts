@@ -127,3 +127,25 @@ export function buildBodyMap(
     frame: frame ?? (mean ? { center, referenceRadius } : null),
   };
 }
+
+/**
+ * A position relative to the body centre placed on its map frame (ADR 0018), as the map places
+ * its points: latitude / longitude, altitude above the frame's ground, projected metres. Null for
+ * the centre itself (no direction). Used for `universesimulator`'s warehouses (ADR 0025).
+ */
+export function projectOnFrame(
+  frame: BodyFrame,
+  position: V,
+): { lat: number; lon: number; altitude: number; x: number; y: number } | null {
+  const direction = normalize(position);
+  if (!direction) return null;
+  const { lat, lon } = latLonOf(direction);
+  const { x, y } = azimuthalEquidistant(frame.center, frame.referenceRadius)(direction);
+  return {
+    lat: round(lat, 6),
+    lon: round(lon, 6),
+    altitude: round(Math.hypot(...position) - frame.referenceRadius, 1),
+    x: round(x, 2),
+    y: round(y, 2),
+  };
+}

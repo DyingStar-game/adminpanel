@@ -39,6 +39,10 @@ export const Permission = {
   economieWalletDebit: 'economie.walletDebit',
   /** Issuing money into a political treasury, likewise. */
   economieMoneyIssue: 'economie.moneyIssue',
+  /** `universesimulator`'s views: dashboard, network, stocks, orders, prices (ADR 0025). */
+  simulationView: 'simulation.view',
+  /** Pausing, resuming or ticking the simulation, cancelling an order (its Admin writes). */
+  simulationManage: 'simulation.manage',
 } as const;
 export type Permission = (typeof Permission)[keyof typeof Permission];
 
@@ -83,6 +87,11 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
   [Permission.economieWalletCredit]: ['economie:wallet:credit'],
   [Permission.economieWalletDebit]: ['economie:wallet:debit'],
   [Permission.economieMoneyIssue]: ['economie:money:issue'],
+  // Mirror of `universesimulator`'s Admin API (ADR 0025): its reads need a moderation role, its
+  // writes `admin` or `supervisor` (`src/auth/mod.rs` › `MODERATION`, `require_admin`); it checks
+  // them itself on the person's token.
+  [Permission.simulationView]: ['moderator', 'admin', 'supervisor'],
+  [Permission.simulationManage]: ['admin', 'supervisor'],
 };
 
 /** Permission needed to change the status of, or escalate, a report at each escalation level. */

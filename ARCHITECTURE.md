@@ -15,6 +15,7 @@ repository:
 | `persistence` | Items of the universe (planets, buildings, vehicles, players…): browse, edit, create, duplicate, delete, import | `PERSISTENCE_URL` |
 | `social` | Moderation (reports, sanctions, reputation), players, organisations | `SOCIAL_URL` |
 | `economie` | Economy dashboard, wallets and treasuries, settings and taxes, money movements | `ECONOMIE_URL` |
+| `universesimulator` | Simulation of a federation's economy by village: overview and controls, network map, village stocks and warehouses, thresholds, capacities and flows, supply orders and missions, prices, treasury (ADR 0025) | `UNIVERSESIMULATOR_URL` |
 | Keycloak | Sign-in and roles; the `svc-admin` service account for the services' internal APIs | `OIDC_*`, `SVC_ADMIN_*` |
 | GitHub | Object type definitions (`*_def.json` of `horizonserver`), with a bundled fallback | `DEFINITIONS_*` |
 
@@ -35,7 +36,7 @@ serves the built SPA, so the panel is **one image, one port** (3000).
                                   │      │      │      │
                       persistence ◄┘      │      │      └► Keycloak (OIDC, svc-admin)
                       (REST /items)       │      │
-                                 social ◄─┘      └─► economie
+                                 social ◄─┘      └─► economie, universesimulator
                        person's token: Admin API · svc-admin: Interne API
 ```
 
@@ -74,14 +75,14 @@ Every route, with its permission: [docs/bff-api.md](./docs/bff-api.md).
 │   └── bff/                  # Hono BFF
 │       └── src/
 │           ├── auth/         # OIDC, sessions, permission guards, svc-admin token
-│           ├── clients/      # persistence, social, economie (upstream.ts: timeouts, errors)
+│           ├── clients/      # persistence, social, economie, universesimulator (upstream.ts)
 │           ├── services/     # items (merge, checks, duplicate, map), definitions
-│           ├── routes/       # items, bodies, social, economie
+│           ├── routes/       # items, bodies, social, economie, universesimulator (/api/simulation)
 │           └── definitions/  # fallback.json (definitions snapshot)
 ├── packages/
 │   ├── schemas/              # Zod: persistence contract, BFF API, permissions, geometry
 │   ├── contracts/            # game services' pinned OpenAPI and generated Zod
-│   └── testing/              # fixtures and MSW mocks (persistence, social, economie)
+│   └── testing/              # fixtures and MSW mocks (persistence, social, economie, universesimulator)
 ├── docker/                   # compose (dev, app, keycloak), Dockerfile.prod, keycloak/
 ├── docs/                     # adr/, design/, fr/, lot plans, bff-api.md
 └── Makefile                  # every command (Docker or Podman, pinned Node and pnpm)

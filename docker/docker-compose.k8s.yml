@@ -19,6 +19,8 @@ services:
       SOCIAL_URL: http://services.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/social
       # Their `economie` (ADR 0024 step O), likewise.
       ECONOMIE_URL: http://services.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/economie
+      # Their `universesimulator` (ADR 0025), likewise; the person's token only.
+      UNIVERSESIMULATOR_URL: http://services.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/universesimulator
       # svc-admin, for the services' internal APIs (social, economie): read by the Makefile.
       SVC_ADMIN_CLIENT_SECRET: ${SVC_ADMIN_CLIENT_SECRET:-}
 

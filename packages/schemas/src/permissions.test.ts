@@ -40,6 +40,7 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     expect(permissionsOf(['moderator'])).toEqual([
       Permission.socialModerate,
       Permission.economieDashboard,
+      Permission.simulationView,
     ]);
     expect(permissionsOf(['admin'])).toEqual([
       Permission.socialModerate,
@@ -47,6 +48,8 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
       Permission.socialReputation,
       Permission.socialReportsAdmin,
       Permission.economieDashboard,
+      Permission.simulationView,
+      Permission.simulationManage,
     ]);
     expect(permissionsOf(['supervisor'])).toEqual([
       Permission.socialModerate,
@@ -55,7 +58,18 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
       Permission.socialReportsAdmin,
       Permission.socialReportsSupervisor,
       Permission.economieDashboard,
+      Permission.simulationView,
+      Permission.simulationManage,
     ]);
+  });
+
+  it("mirrors universesimulator's Admin API: reads moderator+, writes admin+ (ADR 0025)", () => {
+    const simulation = (roles: string[]) =>
+      permissionsOf(roles).filter((p) => p.startsWith('simulation.'));
+    expect(simulation(['moderator'])).toEqual([Permission.simulationView]);
+    expect(simulation(['admin'])).toEqual([Permission.simulationView, Permission.simulationManage]);
+    expect(simulation(['supervisor'])).toEqual(simulation(['admin']));
+    expect(simulation(['player', 'persistence:write', 'economie:money:issue'])).toEqual([]);
   });
 
   it('handles a report at its escalation level, or above', () => {

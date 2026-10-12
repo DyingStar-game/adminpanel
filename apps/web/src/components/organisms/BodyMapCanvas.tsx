@@ -1,26 +1,14 @@
 /// <reference types="leaflet.markercluster" />
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef } from 'react';
 import L from 'leaflet';
-import {
-  CircleMarker,
-  MapContainer,
-  Marker,
-  Polyline,
-  ScaleControl,
-  Tooltip,
-  useMap,
-  useMapEvents,
-} from 'react-leaflet';
+import { CircleMarker, Marker, Polyline, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
-import 'leaflet/dist/leaflet.css';
 import 'react-leaflet-cluster/dist/assets/MarkerCluster.css';
 import type { MapPoint } from '@dyingstar-admin/schemas';
+import { MetricMap } from '@/components/molecules/MetricMap';
 import {
+  escapeHtml,
   fitPoints,
-  formatDistance,
-  gridLines,
-  gridStep,
-  GRID_MAJOR_EVERY,
   markerShape,
   movementHeading,
   type Movement,
@@ -29,9 +17,6 @@ import {
 } from '@/lib/bodyMap';
 import { typeColor } from '@/lib/objectTypes';
 
-/** Zoom levels of `CRS.Simple`: 1 m = 2^zoom px; from a whole region down to a few metres. */
-const MIN_ZOOM = -14;
-const MAX_ZOOM = 5;
 /** From this zoom on (1 m ≈ 2 px), every point is drawn: a building's players split. */
 const UNCLUSTER_ZOOM = 1;
 const FLY_SECONDS = 1.2;
@@ -84,13 +69,6 @@ const toLatLng = (point: MapPoint): MapLatLng => [point.y, point.x];
 const icons = new Map<string, L.DivIcon>();
 /** Type of each marker icon, read back by clusters to colour their ring. */
 const iconTypes = new WeakMap<L.Icon | L.DivIcon, string>();
-
-/** Names come from the game data: escaped before going into the icon's HTML. */
-const escapeHtml = (text: string) =>
-  text.replace(
-    /[&<>"']/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
-  );
 
 /**
  * Coloured marker of a type (square for structures, round otherwise); selected points get a
@@ -278,54 +256,6 @@ function FlyTo({ focus }: { focus: MapFocus | null | undefined }) {
   return null;
 }
 
-/**
- * Metric grid following the zoom (ADR 0018): cells of a 1-2-5 step in metres, about 80 px on
- * screen, a thick line every 5 cells, and a caption with the current step.
- */
-function MetricGrid({ caption }: { caption: (step: string, major: string) => string }) {
-  const map = useMap();
-  const measure = useCallback(() => {
-    const bounds = map.getBounds().pad(0.25);
-    // CRS.Simple: 1 unit (metre) = 2^zoom pixels.
-    const step = gridStep(1 / 2 ** map.getZoom());
-    return {
-      step,
-      ...gridLines(
-        {
-          south: bounds.getSouth(),
-          west: bounds.getWest(),
-          north: bounds.getNorth(),
-          east: bounds.getEast(),
-        },
-        step,
-      ),
-    };
-  }, [map]);
-  const [grid, setGrid] = useState(measure);
-  useMapEvents({ moveend: () => setGrid(measure()), zoomend: () => setGrid(measure()) });
-
-  // Neutral grey (white at low opacity): the palette's lines lean towards blue. The colour is
-  // given to Leaflet itself, not through a CSS class: without it Leaflet draws its default blue
-  // whenever the class does not apply (e.g. while the dev server reloads the styles).
-  return (
-    <>
-      <Polyline
-        positions={grid.minor}
-        interactive={false}
-        pathOptions={{ weight: 1, color: '#ffffff', opacity: 0.1 }}
-      />
-      <Polyline
-        positions={grid.major}
-        interactive={false}
-        pathOptions={{ weight: 1.5, color: '#ffffff', opacity: 0.22 }}
-      />
-      <div className="pointer-events-none absolute right-2.5 bottom-7 z-[1000] rounded border bg-background/90 px-1.5 py-0.5 font-mono text-2xs text-fg-2">
-        {caption(formatDistance(grid.step), formatDistance(grid.step * GRID_MAJOR_EVERY))}
-      </div>
-    </>
-  );
-}
-
 const Points = memo(function Points({
   points,
   selected,
@@ -433,8 +363,9 @@ function PointMarker({
 }
 
 /**
- * 2D map of a celestial body (ADR 0018): Leaflet in its non-geographic mode, coordinates in
- * projected metres (azimuthal equidistant, computed by the BFF), points clustered by proximity.
+ * 2D map of a celestial body (ADR 0018), in the panel's metric map frame (`MetricMap`: Leaflet's
+ * non-geographic mode, coordinates in projected metres, azimuthal equidistant computed by the
+ * BFF), points clustered by proximity.
  */
 export function BodyMapCanvas({
   points,
@@ -452,19 +383,7 @@ export function BodyMapCanvas({
   movement,
 }: BodyMapCanvasProps) {
   return (
-    <MapContainer
-      crs={L.CRS.Simple}
-      center={[0, 0]}
-      zoom={-10}
-      minZoom={MIN_ZOOM}
-      maxZoom={MAX_ZOOM}
-      zoomSnap={0.25}
-      zoomDelta={0.5}
-      wheelPxPerZoomLevel={90}
-      attributionControl={false}
-      className="size-full bg-surface-2! font-sans"
-    >
-      <MetricGrid caption={labels.grid} />
+    <MetricMap gridCaption={labels.grid}>
       <Points
         points={points}
         selected={selected}
@@ -475,13 +394,12 @@ export function BodyMapCanvas({
         named={named}
         nameOf={nameOf}
       />
-      <ScaleControl position="bottomright" imperial={false} />
       <FitOnce points={points} />
       {movement && <MoveTrail {...movement} />}
       <FlyTo focus={focus} />
       <DeclutterNames />
       {onDeselect && <BackgroundClick onClick={onDeselect} />}
       <BackgroundMenu onContextMenu={onContextMenu} onViewChange={onViewChange} />
-    </MapContainer>
+    </MetricMap>
   );
 }

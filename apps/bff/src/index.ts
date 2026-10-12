@@ -5,6 +5,7 @@ import { createOidcProvider } from './auth/oidc';
 import { createServiceTokenSource } from './auth/serviceToken';
 import { createEconomieClient } from './clients/economie';
 import { createSocialClient, registerStaffInSocial } from './clients/social';
+import { createUniversesimulatorClient } from './clients/universesimulator';
 import { authEnv, loadEnv } from './env';
 import { createDefinitionsService } from './services/definitions';
 
@@ -29,12 +30,19 @@ const economie = env.ECONOMIE_URL
       serviceToken,
     })
   : undefined;
+const universesimulator = env.UNIVERSESIMULATOR_URL
+  ? createUniversesimulatorClient({
+      baseUrl: env.UNIVERSESIMULATOR_URL,
+      timeoutMs: env.SERVICE_TIMEOUT_MS,
+    })
+  : undefined;
 const app = createApp({
   environment: env.ENVIRONMENT,
   gameServerName: env.GAME_SERVER_NAME,
   persistenceUrl: env.PERSISTENCE_URL,
   social,
   economie,
+  universesimulator,
   auth: createAuth({
     provider: createOidcProvider({ issuer, discoveryUrl, clientId, clientSecret }),
     clientId,
@@ -60,6 +68,9 @@ serve({ fetch: app.fetch, port: env.PORT }, (info) => {
   console.log(`Persistence: ${env.PERSISTENCE_URL ?? 'not configured (items hidden)'}`);
   console.log(`Social: ${env.SOCIAL_URL ?? 'not configured (moderation hidden)'}`);
   console.log(`Economie: ${env.ECONOMIE_URL ?? 'not configured (economy hidden)'}`);
+  console.log(
+    `Universesimulator: ${env.UNIVERSESIMULATOR_URL ?? 'not configured (simulation hidden)'}`,
+  );
   console.log(
     `Organisation management: ${social?.manages ? env.SVC_ADMIN_CLIENT_ID : 'off (no SVC_ADMIN_CLIENT_SECRET)'}`,
   );
