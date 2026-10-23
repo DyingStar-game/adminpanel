@@ -16,7 +16,7 @@ was not planned in ADR 0024's list (`social`, `economie`, `inventory`, `mission`
 simulates the physical economy of a federation by orchestrating the other services: the first
 federation, **ARES**, governs planet `tarsis_3` (SandBox). Its own README and ADRs
 (`DyingStar-game/services` › `universesimulator/`, read 2026-10-11 and 2026-10-12 from the back
-team's working copy: the service is **not on GitHub yet**) describe, since its **ADR 0013**
+team's working copy, on `develop` since commit `a863c00`, 2026-10-12) describe, since its **ADR 0013**
 ("Villages are the simulation nodes; they aggregate their warehouses", 2026-10-12):
 
 - **villages**, the nodes of the simulation: persistence `poi_village` objects (`Mxxxx` mining
@@ -78,7 +78,7 @@ inside their village**.
 | Piece | `universesimulator` |
 |---|---|
 | Configuration | `UNIVERSESIMULATOR_URL` (minikube: `http://services.dyingstar.local:<port>/universesimulator`); unset, hidden |
-| Contract | `packages/contracts/src/universesimulator/openapi.yaml`, pinned **from the back team's working copy** (`source.json` › `commit: null` and the copy's sha256 until it is pushed to `develop`; the GitHub sync test skips it while GitHub answers 404, `make contracts-update` keeps the copy and records the commit once it is there). Ids follow the contract's hex pattern (persistence UUIDs have no RFC version bits) |
+| Contract | `packages/contracts/src/universesimulator/openapi.yaml`, pinned from `develop` (`source.json` › commit `a863c00`; first pinned from the back team's working copy, the same file, recorded on 2026-10-23). Ids follow the contract's hex pattern (persistence UUIDs have no RFC version bits) |
 | BFF | `clients/universesimulator.ts` on `clients/upstream.ts`; curated routes `/api/simulation/…` (`docs/bff-api.md`), **all with the person's token** on the Admin API; writes recorded by `auditWrites` |
 | Permissions | `simulation.view` (`moderator`, `admin`, `supervisor`) and `simulation.manage` (`admin`, `supervisor`), mirroring the service's own checks (ADR 0023 › Universesimulator) |
 | Tests | `createUniversesimulatorMock` in `packages/testing`, typed by the generated types, following the service's code (`views.rs`, `reads.rs`, `admin.rs`, `reconciler.rs`): ARES with four villages (the city C0001, the factory towns F0001 and F0003, the mining village M0002), six warehouses, routes between villages, active legs, prices and history |
@@ -186,8 +186,6 @@ same figures as text.
 
 - One more contract, client, route group, permission pair, mock and SPA section, following ADR
   0024's checklist; no new dependency (charts in SVG, the map on the existing Leaflet).
-- The contract pin has no commit until the back team pushes `universesimulator` to `develop`:
-  the GitHub sync test skips it (404) and must be run again then (`make contracts-update`).
 - The service's model may still move (its ADR 0013 is Proposed, its migration rewritten rather
   than added): the panel follows the pinned contract and is re-pinned with it.
 - The BFF reads persistence (the planet and its children) to place villages for people who may
@@ -201,7 +199,8 @@ same figures as text.
 
 ### Open questions
 
-1. The back team: push `universesimulator` (and its OpenAPI) to `develop`, then re-pin.
+1. ~~The back team: push `universesimulator` (and its OpenAPI) to `develop`, then re-pin.~~
+   Done: on `develop` since `a863c00` (2026-10-12), re-pinned on 2026-10-23 (same file).
 2. The realms: `admin` and `supervisor` still exist in our local realm only (ADR 0023): until the
    back team creates them, nobody can pause, tick, cancel or configure on minikube or
    pre-production.
@@ -222,3 +221,4 @@ same figures as text.
 - 2026-10-12: villages as the nodes, after the service's ADR 0013 — thresholds and flows per
   village, capacities and the main warehouse per warehouse; the stock policies of the first
   model are gone from the service and from the panel.
+- 2026-10-23: the contract pinned from `develop` (`a863c00`), open question 1 closed.
