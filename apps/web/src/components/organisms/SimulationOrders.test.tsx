@@ -23,7 +23,13 @@ describe('SimulationOrders', () => {
     expect(hops[1]).toHaveTextContent('On offer');
     expect(hops[1]).toHaveTextContent('600 l · 15 km');
     expect(hops[1]).toHaveTextContent('F0001 — Cargo depot → M0002 — Cargo depot');
-    expect(hops[1]).toHaveTextContent(simulationIds.waterMission.slice(0, 8));
+    // The mission on offer by its title and status from `mission` (ADR 0028).
+    const mission = within(hops[1] as HTMLElement);
+    expect(mission.getByTitle(simulationIds.waterMission)).toBeInTheDocument();
+    expect(await mission.findByText('Transport 600 l Water → M0002')).toBeInTheDocument();
+    expect(mission.getByText('Available')).toBeInTheDocument();
+    // A leg whose mission is done keeps its id.
+    expect(hops[0]).toHaveTextContent('a7e50000');
     const copper = screen.getByRole('listitem', { name: '660 Copper ore for C0001' });
     expect(within(copper).getAllByRole('listitem')[0]).toHaveTextContent('reward not set yet');
   });

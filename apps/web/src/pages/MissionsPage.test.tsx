@@ -26,7 +26,7 @@ describe('MissionsPage (ADR 0024 step O)', () => {
     const table = await screen.findByRole('table', { name: 'Missions' });
     expect(await within(table).findByText('Buy my spare battery')).toBeInTheDocument();
     expect(within(table).getByText('The first survey')).toBeInTheDocument();
-    expect(screen.getByText('1–5 of 5')).toBeInTheDocument();
+    expect(screen.getByText('1–6 of 6')).toBeInTheDocument();
   });
 
   it('filters by status from the URL, and goes back to the first page on a change', async () => {

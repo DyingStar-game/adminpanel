@@ -135,9 +135,13 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     );
   });
 
-  it("opens missions with mission's capability role only (ADR 0023 › Mission)", () => {
+  it("opens missions with mission's capability roles only, writing implying reading", () => {
     expect(permissionsOf(['mission:read'])).toEqual([Permission.missionRead]);
-    expect(permissionsOf(['supervisor', 'mission:write'])).not.toContain(Permission.missionRead);
+    expect(permissionsOf(['mission:write'])).toEqual([
+      Permission.missionRead,
+      Permission.missionWrite,
+    ]);
+    expect(permissionsOf(['supervisor', 'mission:read'])).not.toContain(Permission.missionWrite);
   });
 
   it("names the POIs with inventory's capability role only (ADR 0026)", () => {

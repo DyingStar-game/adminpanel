@@ -6,6 +6,7 @@ import { LegTimeline } from '@/components/molecules/LegTimeline';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { WriteConfirm } from '@/components/molecules/WriteConfirm';
+import { LegMission } from './LegMission';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCan } from '@/hooks/useCan';
@@ -163,6 +164,12 @@ export function SimulationOrders({
                 statusLabel={(s) => t(`simulation.orders.legStatuses.${s}`)}
                 missionLabel={t('simulation.orders.mission')}
                 onOpenMission={opensMissions ? onOpenMission : undefined}
+                // The missions on offer by their title and status; the others by their id.
+                mission={(leg) =>
+                  opensMissions && leg.status === 'published' && leg.missionId ? (
+                    <LegMission missionId={leg.missionId} onOpenMission={onOpenMission} />
+                  ) : undefined
+                }
                 facts={(leg) =>
                   t('simulation.orders.facts', {
                     quantity: `${formatQuantity(leg.quantity, locale)} ${r?.unit ?? ''}`.trim(),

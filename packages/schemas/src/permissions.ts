@@ -49,6 +49,8 @@ export const Permission = {
   npcManage: 'npc.manage',
   /** `mission`'s catalogue and a mission's page (its Interne API, as `svc-admin`). */
   missionRead: 'mission.read',
+  /** Cancelling a mission that is not the simulation's, likewise (ADR 0028). */
+  missionWrite: 'mission.write',
   /** `inventory`'s POIs, named on a mission's objectives (its Interne API, as `svc-admin`). */
   inventoryRead: 'inventory.read',
 } as const;
@@ -106,7 +108,9 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
   [Permission.npcManage]: ['admin', 'supervisor'],
   // `mission`, same rule (ADR 0023 › Mission): its README has no Admin section; its Interne API
   // is opened by the capability role of its README held by the person.
-  [Permission.missionRead]: ['mission:read'],
+  // Cancelling needs the page: `mission:write` opens the reads too (ADR 0028).
+  [Permission.missionRead]: ['mission:read', 'mission:write'],
+  [Permission.missionWrite]: ['mission:write'],
   // `inventory`, same rule (ADR 0023 › Inventory, ADR 0026).
   [Permission.inventoryRead]: ['inventory:read'],
 };

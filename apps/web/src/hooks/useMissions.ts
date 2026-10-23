@@ -1,6 +1,10 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { zMissionCatalogue, zMissionPage } from '@dyingstar-admin/contracts/mission';
-import { apiGet } from '@/lib/api';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  zMissionAsServed,
+  zMissionCatalogue,
+  zMissionPage,
+} from '@dyingstar-admin/contracts/mission';
+import { apiGet, apiSend } from '@/lib/api';
 import { MISSIONS_PAGE_SIZE, type MissionsSearch } from '@/lib/missionsSearch';
 
 /** `mission`'s catalogue, any status, newest first, by pages (ADR 0024 step O). */
@@ -29,3 +33,18 @@ export const useMission = (id: string) =>
     queryKey: ['mission', 'missions', 'detail', id],
     queryFn: () => apiGet(`/api/mission/missions/${encodeURIComponent(id)}`, zMissionPage),
   });
+
+/**
+ * Cancels a mission that is not the simulation's (`mission.write`, ADR 0028): its active
+ * assignments abandoned, its escrow refunded. The catalogue and the page are read again.
+ */
+export function useCancelMission() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiSend('POST', `/api/mission/missions/${encodeURIComponent(id)}/cancel`, {
+        schema: zMissionAsServed,
+      }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['mission'] }),
+  });
+}

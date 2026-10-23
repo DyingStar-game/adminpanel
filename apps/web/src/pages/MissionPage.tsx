@@ -5,6 +5,7 @@ import { FactTiles } from '@/components/molecules/FactTiles';
 import { MissionReward } from '@/components/molecules/MissionReward';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { MissionAssignmentsTable } from '@/components/organisms/MissionAssignmentsTable';
+import { MissionCancel } from '@/components/organisms/MissionCancel';
 import { MissionObjectives } from '@/components/organisms/MissionObjectives';
 import { MissionPlacesMap } from '@/components/organisms/MissionPlacesMap';
 import { MissionSimulationOrigin } from '@/components/organisms/MissionSimulationOrigin';
@@ -29,8 +30,8 @@ interface MissionPageProps extends Required<MissionLinks> {
 }
 
 /**
- * A mission, read only, from `mission`'s internal detail (ADR 0023 › Mission): its terms, its
- * objectives and who took it, whatever its visibility in game.
+ * A mission from `mission`'s internal detail (ADR 0023 › Mission): its terms, its objectives and
+ * who took it, whatever its visibility in game; cancelled from here (ADR 0028).
  */
 export function MissionPage({
   missionId,
@@ -76,7 +77,12 @@ export function MissionPage({
   return (
     <ServicePageLayout
       title={m.title}
-      actions={back}
+      actions={
+        <div className="flex flex-wrap items-center gap-2">
+          <MissionCancel mission={m} objectives={d.objectives} />
+          {back}
+        </div>
+      }
       meta={
         <div className="flex flex-wrap items-center gap-2 text-sm text-fg-3">
           <Badge variant="outline">{t(`missions.status.${m.status}`)}</Badge>
@@ -121,7 +127,11 @@ export function MissionPage({
           },
         ]}
       />
-      <MissionSimulationOrigin missionId={m.id} onOpenOrders={onOpenSimulationOrders} />
+      <MissionSimulationOrigin
+        missionId={m.id}
+        objectives={d.objectives}
+        onOpenOrders={onOpenSimulationOrders}
+      />
       <MissionTerms
         detail={d}
         onOpenMission={onOpenMission}

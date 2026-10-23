@@ -27,14 +27,14 @@ describe('mission mock (ADR 0013)', () => {
 
   it('lists every status newest first, filtered and paged', async () => {
     const all = zMissionCatalogue.parse(await (await read('/internal/missions')).json());
-    expect(all.total).toBe(5);
+    expect(all.total).toBe(6);
     expect(all.missions[0]?.id).toBe(missionIds.delivery);
     expect(all.missions.map((m) => m.status)).toContain('cancelled');
 
     const page = zMissionCatalogue.parse(
       await (await read('/internal/missions?status=available&limit=1&offset=0')).json(),
     );
-    expect(page).toMatchObject({ total: 2, limit: 1, offset: 0 });
+    expect(page).toMatchObject({ total: 3, limit: 1, offset: 0 });
     expect(page.missions).toHaveLength(1);
     expect((await read('/internal/missions?limit=101')).status).toBe(400);
     expect((await read('/internal/missions?category=lost')).status).toBe(400);

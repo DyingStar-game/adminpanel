@@ -21,8 +21,8 @@ The password is the user name.
 | `dev-reader` | `persistence:read` | opens, read only |
 | `dev-editor` | `persistence:read`, `persistence:write` | opens |
 | `dev-moderator` | `moderator` (realm) | "access denied" until the `social` moderation is built |
-| `dev-admin` | `admin` (realm), `persistence:*`, `social:corporation:write`, `social:politics:write`, `economie:wallet:read`, `economie:politics:read`, `economie:corporation:manage`, `economie:politics:manage`, `economie:wallet:credit`, `economie:wallet:debit`, `economie:money:issue`, `mission:read`, `inventory:read` | opens; manages organisations, reads wallets, sets economic settings, runs tax assessments, moves and issues money, reads missions and names their places |
-| `ynotna` | `admin` (realm), `persistence:*`, `social:*:write`, `economie:*:read`, `economie:corporation:manage`, `economie:politics:manage`, `economie:wallet:credit`, `economie:wallet:debit`, `economie:money:issue`, `mission:read`, `inventory:read` | opens, manages organisations, reads wallets, sets economic settings, moves and issues money, reads missions and names their places; its id `19dd218f-9cbd-484f-9a3b-cff5285eaa93` is the maintainer's `player` in pre-production persistence, so its sheet links to a real item |
+| `dev-admin` | `admin` (realm), `persistence:*`, `social:corporation:write`, `social:politics:write`, `economie:wallet:read`, `economie:politics:read`, `economie:corporation:manage`, `economie:politics:manage`, `economie:wallet:credit`, `economie:wallet:debit`, `economie:money:issue`, `mission:read`, `mission:write`, `inventory:read` | opens; manages organisations, reads wallets, sets economic settings, runs tax assessments, moves and issues money, reads and cancels missions and names their places |
+| `ynotna` | `admin` (realm), `persistence:*`, `social:*:write`, `economie:*:read`, `economie:corporation:manage`, `economie:politics:manage`, `economie:wallet:credit`, `economie:wallet:debit`, `economie:money:issue`, `mission:read`, `mission:write`, `inventory:read` | opens, manages organisations, reads wallets, sets economic settings, moves and issues money, reads and cancels missions and names their places; its id `19dd218f-9cbd-484f-9a3b-cff5285eaa93` is the maintainer's `player` in pre-production persistence, so its sheet links to a real item |
 | `player-kira`, `-orin`, `-mara`, `-silas`, `-juno`, `-tess`, `-dax`, `-pell` | `player` | "access denied"; test players for `social`, fixed ids (see below) |
 
 What each role allows is the interim matrix of `packages/schemas/src/permissions.ts` (ADR 0023,
@@ -44,7 +44,7 @@ moderation roles open nothing of it.
   and `social:corporation:write`, `social:politics:write`, `economie:wallet:read`,
   `economie:politics:read`, `economie:corporation:read`, `economie:corporation:manage`,
   `economie:politics:manage`, `economie:wallet:credit`, `economie:wallet:debit`,
-  `economie:money:issue`, `mission:read`, `inventory:read` (the capability roles of the services' READMEs, held by people,
+  `economie:money:issue`, `mission:read`, `mission:write`, `inventory:read` (the capability roles of the services' READMEs, held by people,
   ADR 0023);
 - the realm roles `admin` and `supervisor`, checked by `social` but missing from the back
   team's realms;

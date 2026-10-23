@@ -195,6 +195,7 @@ export function createApp({
     api.route('/npc', npcRoutes(npc));
   }
   if (mission?.readsCatalogue) {
+    api.use('/mission/*', auditWrites('mission', audit));
     api.route('/mission', missionRoutes(mission, inventory));
   }
   app.route('/api', api);

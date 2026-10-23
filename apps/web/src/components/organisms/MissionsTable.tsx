@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import type { MissionAsServed } from '@dyingstar-admin/contracts/mission';
+import { isSimulationMission, type MissionAsServed } from '@dyingstar-admin/contracts/mission';
 import { DataTable } from '@/components/molecules/DataTable';
 import { MissionReward } from '@/components/molecules/MissionReward';
 import { Badge } from '@/components/ui/badge';
@@ -48,7 +48,9 @@ export function MissionsTable({ missions, onOpen }: MissionsTableProps) {
         {
           key: 'issuer',
           header: t('missions.columns.issuer'),
-          cell: (m) => t(`missions.issuers.${m.issuerType}`),
+          // `universesimulator`'s missions apart from other political ones (ADR 0028).
+          cell: (m) =>
+            t(`missions.issuers.${isSimulationMission(m) ? 'simulation' : m.issuerType}`),
         },
         {
           key: 'status',

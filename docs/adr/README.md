@@ -47,3 +47,4 @@ using lightweight ADRs ([Michael Nygard format](https://cognitect.com/blog/2011/
 | [0026](./0026-npc-section.md) | NPCs section: the `npc` service in the panel | Proposed | 2026-10-25 |
 | [0026](./0026-mission-objective-schematics.md) | Mission objective schematics: a declarative view per objective kind | Accepted | 2026-10-23 |
 | [0027](./0027-mission-places-map.md) | A mission's places on a map | Accepted | 2026-10-23 |
+| [0028](./0028-cancelling-a-mission.md) | Cancelling a mission, and the simulation's missions in the mission views | Accepted | 2026-10-23 |

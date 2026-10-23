@@ -22,8 +22,8 @@ are in `apps/bff/src/app.ts` and `apps/bff/src/routes/`.
   (`packages/schemas/src/common.ts`): `VALIDATION_ERROR` (400, with the Zod issues),
   `NOT_FOUND`, `ALREADY_EXISTS`, `EDIT_CONFLICT`, `UNKNOWN_OBJECT_TYPE`, `UPSTREAM_REJECTED`
   (the service refused: its status and message are passed on), `UPSTREAM_ERROR`,
-  `UPSTREAM_TIMEOUT`, `UPSTREAM_UNREACHABLE`…
-- **Writes to the game services** (`social`, `economie`, `universesimulator`, `npc`) are each recorded as a JSON line on
+  `UPSTREAM_TIMEOUT`, `UPSTREAM_UNREACHABLE`, `SIMULATION_MISSION`…
+- **Writes to the game services** (`social`, `economie`, `universesimulator`, `npc`, `mission`) are each recorded as a JSON line on
   stdout, refused ones included: who, route, status (`lib/audit.ts`).
 
 ## Health and sign-in
@@ -218,9 +218,11 @@ report (`/health/keycloak`) are not used by the panel.
 
 Shown when `MISSION_URL` and `svc-admin`'s secret are set (listed as `mission`): its README has
 no Admin section, so its catalogue is read through its Interne API **as `svc-admin`**, for the
-capability role of its README held by the person (ADR 0023 › Mission). Read only.
+capability role of its README held by the person (ADR 0023 › Mission). One write: cancelling a
+mission (ADR 0028).
 
 | Method | Route | Permission | Notes |
 |--------|-------|------------|-------|
 | GET | `/api/mission/missions` | `mission.read` | Every mission, any status, newest first: `status`, `category`, `kind`, `limit` (1–100), `offset` → `{ missions, total, limit, offset }` |
 | GET | `/api/mission/missions/:id` | `mission.read` | One mission whatever its visibility → `{ mission, objectives, assignments, players, group, chain, summary, places? }`; 404 if unknown. `places`: its objectives' POIs from `inventory` by id (`null`: unknown to `inventory`), for `inventory.read` (ADR 0026); left out without it, when `INVENTORY_URL` is unset or when `inventory` does not answer |
+| POST | `/api/mission/missions/:id/cancel` | `mission.write` | Cancels a mission and its active assignments, its escrow refunded → the mission; 404 if unknown, 409 (passed on) when completed. **409 `SIMULATION_MISSION`** for a mission of `universesimulator` (`scriptId` `usim:leg:…`), cancelled through its order (`POST /api/simulation/orders/:id/cancel`), never here |

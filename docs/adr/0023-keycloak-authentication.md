@@ -290,8 +290,8 @@ none of them).
 
 **Source: `universesimulator`'s README** (§ API: "`/api/admin/*` · moderation role (writes:
 `admin`/`supervisor`)") and its code, `src/auth/mod.rs` (`MODERATION`, `Caller::require_admin`)
-and `src/routes/mod.rs`, read 2026-10-11 from the back team's working copy (not on GitHub yet,
-no commit to cite: to be added when it is pushed). No role is invented: the panel's permissions
+and `src/routes/mod.rs`, read 2026-10-11 from the back team's working copy, checked again at `develop`
+`0c14db4` (2026-10-22; the service's last change `b37d81a`). No role is invented: the panel's permissions
 (`simulation.view`, `simulation.manage`, `permissions.ts`) only mirror these.
 
 | Action (route of `universesimulator`) | Panel permission | `moderator` | `admin` ¹ | `supervisor` ¹ | Sent as |
@@ -353,12 +353,16 @@ opened by **the capability role of its README held by the person** on `dyingstar
 [`DyingStar-game/services` › `mission`](https://github.com/DyingStar-game/services/tree/develop/mission)
 (section Interne, column « Rôle requis »), checked against its code (`src/middleware/auth.ts` ›
 `SERVICE_ROLES`, `src/routes/internal.routes.ts`) at `develop` `4df4e0a` (2026-10-06); the detail
-route at `develop` `0c14db4` (2026-10-22, PR #37 merging `5725d56`).
+route at `develop` `0c14db4` (2026-10-22, PR #37 merging `5725d56`); the cancel at `develop`
+`0c14db4` (README › Interne, `internal.routes.ts`, `SERVICE_ROLES.missionWrite`, 2026-10-23).
+A mission of `universesimulator` is never cancelled there: through its order
+(`simulation.manage`, ADR 0028).
 
 | Action (route of `mission`) | The person needs | Sent as |
 |---|---|---|
 | The catalogue: every mission, any status, without the players' zone, group and free-place filters (`GET /api/internal/missions`) | `mission:read` | `svc-admin` |
 | A mission's page: its objectives, every assignment, assignees' names and its group from `social`, the missions to finish first, whatever its visibility (`GET /api/internal/missions/:missionId`) | `mission:read` | `svc-admin` |
+| Cancel a mission that is not the simulation's: its active assignments abandoned, its escrow refunded (`POST /api/internal/missions/:missionId/cancel`), ADR 0028 | `mission:write` (which opens the two reads above too) | `svc-admin` |
 
 The player route `GET /api/missions/:id` is not used: it hides a mission shared with a group from
 anyone outside it and would make the panel act as a player. The internal detail route the

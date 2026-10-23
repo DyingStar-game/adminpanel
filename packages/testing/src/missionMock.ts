@@ -6,6 +6,7 @@ import type {
 } from '@dyingstar-admin/contracts/mission';
 import { poiIds } from './inventoryMock';
 import { organisationIds, socialIds } from './socialMock';
+import { simulationIds } from './universesimulatorMock';
 
 /** Base URL used by tests for the mocked `mission` service (ADR 0024). */
 export const MISSION_URL = 'http://mission.test';
@@ -35,7 +36,15 @@ export const missionIds = {
   grouped: '3a55105e-0000-4000-8000-000000000004',
   /** A player's mission, cancelled and refunded. */
   cancelled: '3a55105e-0000-4000-8000-000000000005',
+  /**
+   * Published by `universesimulator` for the water order's second leg (its mock's
+   * `waterMission`), escrowed on ARES's treasury: cancelled through its order (ADR 0028).
+   */
+  simulation: simulationIds.waterMission,
 } as const;
+
+/** The water order's second leg (`universesimulatorMock` › `leg`: order id's end, then seq). */
+const waterLegId = 'a7e50000-0000-4000-8000-000000000b12';
 
 /** A group of `social` none of the fixtures' staff belongs to. */
 export const missionGroupId = '9e0a7e1e-0000-4000-8000-0000000000f1';
@@ -136,7 +145,7 @@ const assignment = (
  * their objectives and who took them.
  */
 export function createMissionDataset(): MissionDataset {
-  const { delivery, transport, scenario, grouped, cancelled } = missionIds;
+  const { delivery, transport, scenario, grouped, cancelled, simulation } = missionIds;
   return {
     missions: [
       mission({
@@ -219,8 +228,46 @@ export function createMissionDataset(): MissionDataset {
         createdBy: socialIds.griefer,
         createdAt: at(20),
       }),
+      // As `universesimulator`'s publisher builds it (`src/simulation/publisher.rs` ›
+      // `build_mission`), second attempt of its leg; its objective in the shape `mission`'s
+      // `transport` kind takes.
+      mission({
+        id: simulation,
+        title: 'Transport 600 l Water → M0002',
+        description: 'Supply order of ARES (auto_shortage).',
+        category: 'transport',
+        issuerType: 'politics',
+        issuerId: simulationIds.ares,
+        rewards: [{ type: 'credits', currency: 'credits', amount: 1_640 }],
+        escrowStatus: 'held',
+        escrowAmount: 1_640,
+        escrowCurrency: 'credits',
+        escrowPayerId: simulationIds.ares,
+        escrowPayerType: 'politics',
+        scriptId: `usim:leg:${waterLegId}:1`,
+        createdBy: 'svc-universesimulator',
+        createdAt: at(5),
+      }),
     ],
     objectives: [
+      objective(simulation, 1, {
+        type: 'transport',
+        title: 'Deliver 600 l of Water from F0001 to M0002',
+        targetQuantity: 600,
+        unit: 'l',
+        params: {
+          goodType: 'water',
+          source: { kind: 'poi', poiId: poiIds.depot },
+          zone: { kind: 'poi', poiId: poiIds.drillSite },
+        },
+        payload: {
+          source: 'universesimulator',
+          orderId: simulationIds.waterOrder,
+          legId: waterLegId,
+          seq: 2,
+          resource: 'water',
+        },
+      }),
       objective(delivery, 1, {
         type: 'deliver_material',
         title: 'Deliver 10 t of iron ore',
@@ -335,6 +382,8 @@ export interface MissionMock {
   data: MissionDataset;
   /** Authorization headers received, newest last. */
   tokens: (string | null)[];
+  /** Writes received (`POST /missions/:id/cancel`), oldest first. */
+  writes: string[];
 }
 
 const STATUSES = ['available', 'active', 'completed', 'cancelled', 'expired'];
@@ -358,13 +407,16 @@ function requiredProgressBp(objectives: MissionObjective[]): number {
  * MSW handlers reproducing the part of `mission` the panel uses, from its code
  * (`internal.routes.ts`, `missions.service.ts`, `detail.service.ts`, `lib/pagination.ts`): the
  * internal catalogue, any status, newest first, `limit` 1–100; a mission's detail, whatever its
- * visibility, with names from `social`. Tokens are recorded, not checked.
+ * visibility, with names from `social`; a mission's cancel (`cancelMission`: refused once
+ * completed, its active assignments abandoned, its escrow refunded). Tokens are recorded, not
+ * checked.
  */
 export function createMissionMock(
   data: MissionDataset = createMissionDataset(),
   baseUrl: string = MISSION_URL,
 ): MissionMock {
   const tokens: (string | null)[] = [];
+  const writes: string[] = [];
   const failure = (status: number, error: string, message: string) =>
     HttpResponse.json({ error, message, status }, { status });
   /** Express's `validate(…, 'query')` with the route's zod schema. */
@@ -448,7 +500,31 @@ export function createMissionMock(
         },
       });
     }),
+    http.post(`${baseUrl}/api/internal/missions/:missionId/cancel`, ({ request, params }) => {
+      tokens.push(request.headers.get('Authorization'));
+      const id = String(params.missionId);
+      if (!UUID.test(id)) return failure(400, 'VALIDATION_ERROR', 'missionId: Invalid UUID');
+      writes.push(`cancel ${id}`);
+      const found = data.missions.find((m) => m.id === id);
+      if (!found) return failure(404, 'NOT_FOUND', 'Mission not found');
+      if (found.status === 'completed') {
+        return failure(409, 'MISSION_COMPLETED', 'A completed mission cannot be cancelled');
+      }
+      const now = new Date().toISOString();
+      Object.assign(found, { status: 'cancelled', updatedAt: now });
+      for (const a of data.assignments) {
+        if (a.missionId === id && a.status === 'active') {
+          Object.assign(a, { status: 'abandoned', updatedAt: now });
+        }
+      }
+      // `refundEscrow`: what is held goes back to its payer.
+      if (found.escrowStatus === 'held') found.escrowStatus = 'refunded';
+      if (found.escrowItemStatus === 'held') {
+        Object.assign(found, { escrowItemStatus: 'released', escrowItemHoldIds: null });
+      }
+      return HttpResponse.json(found);
+    }),
   ];
 
-  return { handlers, data, tokens };
+  return { handlers, data, tokens, writes };
 }

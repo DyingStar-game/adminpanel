@@ -70,6 +70,10 @@
           "description": "Read missions through mission's internal API (ADR 0023)"
         },
         {
+          "name": "mission:write",
+          "description": "Cancel missions that are not the simulation's through mission's internal API (ADR 0028)"
+        },
+        {
           "name": "inventory:read",
           "description": "Name the POIs of mission objectives through inventory's internal API (ADR 0026)"
         }
@@ -208,6 +212,7 @@
           "economie:wallet:debit",
           "economie:money:issue",
           "mission:read",
+          "mission:write",
           "inventory:read"
         ]
       },
@@ -244,6 +249,7 @@
           "economie:wallet:debit",
           "economie:money:issue",
           "mission:read",
+          "mission:write",
           "inventory:read"
         ]
       },

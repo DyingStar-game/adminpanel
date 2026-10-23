@@ -221,3 +221,33 @@ export const zCreateMissionAsAccepted = zCreateMission.extend({
   assignmentDeadlineHours: z.int().gte(1).lte(8_760).nullish(),
 });
 export type CreateMissionAsAccepted = z.input<typeof zCreateMissionAsAccepted>;
+
+/**
+ * Prefix of the `scriptId` of a mission published by `universesimulator` for a leg of a supply
+ * order (`src/simulation/publisher.rs` › `script_id`: `usim:leg:<leg id>:<attempt>`). Such a
+ * mission is cancelled through its order, never directly: the simulation would publish it
+ * again (ADR 0028).
+ */
+export const SIMULATION_SCRIPT_PREFIX = 'usim:leg:';
+
+/** Whether `universesimulator` published this mission (ADR 0028, its `scriptId`). */
+export const isSimulationMission = (mission: Pick<MissionAsServed, 'scriptId'>): boolean =>
+  mission.scriptId?.startsWith(SIMULATION_SCRIPT_PREFIX) ?? false;
+
+/** What `universesimulator` writes in the `payload` of each objective it publishes. */
+const zSimulationPayload = z.object({
+  source: z.literal('universesimulator'),
+  orderId: z.guid(),
+  legId: z.guid(),
+});
+
+/** The supply order and leg a simulation mission carries, from its objectives' `payload`. */
+export function simulationLegOf(
+  objectives: readonly Pick<MissionObjective, 'payload'>[],
+): { orderId: string; legId: string } | undefined {
+  for (const objective of objectives) {
+    const payload = zSimulationPayload.safeParse(objective.payload);
+    if (payload.success) return { orderId: payload.data.orderId, legId: payload.data.legId };
+  }
+  return undefined;
+}

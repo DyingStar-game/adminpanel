@@ -623,6 +623,18 @@ export const en = {
     standingIn: '{{amount}} standing in {{domain}}',
     back: 'Back',
     notFound: 'No mission {{id}} in the mission service.',
+    cancel: {
+      action: 'Cancel the mission',
+      title: 'Cancel this mission?',
+      text: 'The mission service cancels it now, in the live game: whoever took it loses it and is told, and what its issuer set aside for the reward goes back to them. It cannot be undone.',
+      done: 'Mission cancelled',
+      orderAction: 'Cancel its supply order',
+      orderTitle: 'Cancel the supply order of this mission?',
+      orderText:
+        "This mission belongs to the simulation: cancelled alone, it would be published again at the next tick. Its supply order is cancelled instead: the mission is cancelled, its reward refunded to the federation's treasury, the goods held for it released, and no new mission is published for the order. It cannot be undone.",
+      orderDone: 'Supply order cancelled',
+      throughOrder: 'A mission of the simulation: cancelled through its supply order',
+    },
     detail: {
       progress: 'Progress',
       progressHint: 'Required objectives, weighted',
@@ -824,6 +836,7 @@ export const en = {
       corporation: 'Corporation',
       city: 'City',
       politics: 'Political entity',
+      simulation: 'Simulation',
       player: 'Player',
       npc: 'NPC',
     },

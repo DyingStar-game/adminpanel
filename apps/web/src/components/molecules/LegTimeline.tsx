@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { ArrowRightIcon } from 'lucide-react';
 import type { Leg } from '@dyingstar-admin/contracts/universesimulator';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,11 @@ interface LegTimelineProps {
   missionLabel: string;
   /** Opens the leg's mission (ADR 0026); unset, its id only. */
   onOpenMission?: ((missionId: string) => void) | undefined;
+  /**
+   * The leg's mission as the caller draws it (its title and status, ADR 0028); unset, or
+   * `undefined` for a leg, its id.
+   */
+  mission?: ((leg: Leg) => ReactNode) | undefined;
 }
 
 /**
@@ -41,6 +47,7 @@ export function LegTimeline({
   facts,
   missionLabel,
   onOpenMission,
+  mission,
 }: LegTimelineProps) {
   return (
     <ol className="flex flex-col gap-0">
@@ -81,7 +88,7 @@ export function LegTimeline({
                 {leg.missionId && (
                   <span className="inline-flex items-center gap-1.5">
                     {missionLabel}
-                    <EntityLink id={leg.missionId} onOpen={onOpenMission} />
+                    {mission?.(leg) ?? <EntityLink id={leg.missionId} onOpen={onOpenMission} />}
                   </span>
                 )}
               </div>

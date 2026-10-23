@@ -26,6 +26,15 @@ describe('MissionsTable', () => {
     ).toBeInTheDocument();
   });
 
+  it('names the simulation as the issuer of its missions (ADR 0028)', () => {
+    renderWithProviders(<MissionsTable missions={missions} onOpen={vi.fn()} />);
+    const table = screen.getByRole('table', { name: 'Missions' });
+
+    const row = within(table).getByText('Transport 600 l Water → M0002').closest('tr');
+    expect(row).toHaveTextContent('Simulation');
+    expect(row).not.toHaveTextContent('Political entity');
+  });
+
   it('shows a category mission no longer offers as stored, and opens a mission', async () => {
     const onOpen = vi.fn();
     renderWithProviders(<MissionsTable missions={missions} onOpen={onOpen} />);

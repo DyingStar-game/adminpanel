@@ -3,7 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { INVENTORY_URL, MISSION_URL, missionIds, poiIds } from '@dyingstar-admin/testing';
 import { createInventoryClient } from '../clients/inventory';
 import { createMissionClient } from '../clients/mission';
-import { fakeProvider, setup, signIn, tokens } from '../test/auth';
+import { fakeProvider, ORIGIN, setup, signIn, tokens } from '../test/auth';
 import { buildApp, mswServer } from '../test/harness';
 
 describe('mission routes (ADR 0024 step O, reading)', () => {
@@ -24,7 +24,7 @@ describe('mission routes (ADR 0024 step O, reading)', () => {
     const { request, mission } = buildApp();
 
     const list = await (await request('/api/mission/missions?status=available&limit=5')).json();
-    expect(list).toMatchObject({ total: 2, limit: 5, offset: 0 });
+    expect(list).toMatchObject({ total: 3, limit: 5, offset: 0 });
     expect(mission.tokens).toEqual(['Bearer svc-admin-token']);
   });
 
@@ -127,5 +127,88 @@ describe('mission routes (ADR 0024 step O, reading)', () => {
 
     expect(await as(['mission:read'])).toBe(false);
     expect(await as(['mission:read', 'inventory:read'])).toBe(true);
+  });
+
+  describe('cancelling a mission (ADR 0028)', () => {
+    const cancel = (request: ReturnType<typeof buildApp>['request'], id: string) =>
+      request(`/api/mission/missions/${id}/cancel`, { method: 'POST' });
+
+    it('cancels as svc-admin: active assignments abandoned, escrow refunded', async () => {
+      const { request, mission } = buildApp();
+
+      const res = await cancel(request, missionIds.transport);
+      expect(res.status).toBe(200);
+      expect(await res.json()).toMatchObject({
+        id: missionIds.transport,
+        status: 'cancelled',
+        escrowStatus: 'refunded',
+        escrowItemStatus: 'released',
+      });
+      expect(mission.writes).toEqual([`cancel ${missionIds.transport}`]);
+      // The detail read first, to tell a simulation mission apart, then the cancel.
+      expect(mission.tokens).toEqual(['Bearer svc-admin-token', 'Bearer svc-admin-token']);
+      expect(
+        mission.data.assignments.filter((a) => a.missionId === missionIds.transport),
+      ).not.toContainEqual(expect.objectContaining({ status: 'active' }));
+    });
+
+    it("passes on mission's refusal of a completed mission", async () => {
+      const { request } = buildApp();
+
+      const res = await cancel(request, missionIds.scenario);
+      expect(res.status).toBe(409);
+      expect(await res.json()).toMatchObject({
+        message: 'A completed mission cannot be cancelled',
+      });
+    });
+
+    it("refuses a simulation mission without calling mission's cancel", async () => {
+      const { request, mission } = buildApp();
+
+      const res = await cancel(request, missionIds.simulation);
+      expect(res.status).toBe(409);
+      expect(await res.json()).toMatchObject({ error: 'SIMULATION_MISSION' });
+      expect(mission.writes).toEqual([]);
+      expect(mission.data.missions.find((m) => m.id === missionIds.simulation)?.status).toBe(
+        'available',
+      );
+    });
+
+    it('answers 404 for an unknown mission, 400 for an id that is not a UUID', async () => {
+      const { request, mission } = buildApp();
+
+      expect((await cancel(request, '3a55105e-0000-4000-8000-0000000000ff')).status).toBe(404);
+      expect((await cancel(request, 'expire')).status).toBe(400);
+      expect(mission.writes).toEqual([]);
+    });
+
+    it("opens it with mission's write role only, and records every attempt", async () => {
+      const as = async (realmRoles: string[], clientRoles: string[]) => {
+        const ctx = setup(
+          fakeProvider(() =>
+            tokens({ realmRoles, clientRoles: { 'dyingstar-admin': clientRoles } }),
+          ),
+        );
+        const { cookie } = await signIn(ctx);
+        const res = await ctx.call(`/api/mission/missions/${missionIds.delivery}/cancel`, {
+          method: 'POST',
+          cookie,
+          headers: { Origin: ORIGIN },
+        });
+        return { status: res.status, writes: ctx.mission.writes.length, audited: ctx.audited };
+      };
+
+      expect((await as(['supervisor'], ['mission:read'])).status).toBe(403);
+      const allowed = await as([], ['mission:write']);
+      expect(allowed).toMatchObject({ status: 200, writes: 1 });
+      expect(allowed.audited).toEqual([
+        expect.objectContaining({
+          service: 'mission',
+          method: 'POST',
+          path: `/api/mission/missions/${missionIds.delivery}/cancel`,
+          status: 200,
+        }),
+      ]);
+    });
   });
 });

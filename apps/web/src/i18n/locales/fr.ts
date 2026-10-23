@@ -632,6 +632,19 @@ export const fr: Translations = {
     standingIn: '{{amount}} de standing en {{domain}}',
     back: 'Retour',
     notFound: 'Aucune mission {{id}} dans le service mission.',
+    cancel: {
+      action: 'Annuler la mission',
+      title: 'Annuler cette mission ?',
+      text: 'Le service mission l’annule tout de suite, dans le jeu : qui l’a prise la perd et en est averti, et ce que son émetteur avait mis de côté pour la récompense lui revient. C’est sans retour.',
+      done: 'Mission annulée',
+      orderAction: 'Annuler son ordre d’approvisionnement',
+      orderTitle: 'Annuler l’ordre d’approvisionnement de cette mission ?',
+      orderText:
+        'Cette mission appartient à la simulation : annulée seule, elle serait republiée au tick suivant. C’est son ordre d’approvisionnement qui est annulé : la mission est annulée, sa récompense remboursée au trésor de la fédération, les marchandises réservées pour elle libérées, et aucune nouvelle mission n’est publiée pour cet ordre. C’est sans retour.',
+      orderDone: 'Ordre d’approvisionnement annulé',
+      throughOrder:
+        'Une mission de la simulation : elle s’annule par son ordre d’approvisionnement',
+    },
     detail: {
       progress: 'Avancement',
       progressHint: 'Objectifs requis, pondérés',
@@ -835,6 +848,7 @@ export const fr: Translations = {
       corporation: 'Corporation',
       city: 'Ville',
       politics: 'Entité politique',
+      simulation: 'Simulation',
       player: 'Joueur',
       npc: 'PNJ',
     },
