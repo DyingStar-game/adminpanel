@@ -66,7 +66,10 @@ describe('MissionObjectives (ADR 0026)', () => {
       screen.getAllByRole('button', { name: 'Relay station' })[0] as HTMLElement,
     );
     expect(await screen.findByText('Open space')).toBeInTheDocument();
-    expect(screen.getByText('What they own now: it can go down')).toBeInTheDocument();
+    expect(screen.getByText('What they hold now: it can go down.')).toBeInTheDocument();
+    expect(
+      screen.getAllByText('Never goes down: the best measure is kept.').length,
+    ).toBeGreaterThan(0);
   });
 
   it('shows a kind it does not draw with its parameters, and a weight other than 1', () => {

@@ -732,8 +732,8 @@ export const en = {
       copy: 'Copy the POI id',
     },
     objectiveProgress: {
-      quantity: 'Kept at its highest',
-      owned: 'What they own now: it can go down',
+      quantity: 'Never goes down: the best measure is kept.',
+      owned: 'What they hold now: it can go down.',
       reached: 'Reached',
       notReached: 'Not reached yet',
       confirmed: 'Confirmed',

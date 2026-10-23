@@ -741,8 +741,8 @@ export const fr: Translations = {
       copy: "Copier l'id du POI",
     },
     objectiveProgress: {
-      quantity: 'Retenue à son plus haut',
-      owned: "Ce qu'ils possèdent maintenant : peut baisser",
+      quantity: 'Ne redescend jamais : la meilleure mesure est gardée.',
+      owned: "Ce qu'ils possèdent maintenant : peut baisser.",
       reached: 'Atteint',
       notReached: 'Pas encore atteint',
       confirmed: 'Confirmé',

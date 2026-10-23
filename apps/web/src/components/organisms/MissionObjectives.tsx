@@ -197,20 +197,23 @@ function ObjectiveProgress({
   const number = new Intl.NumberFormat(i18n.language);
   const value = `${number.format(o.currentProgress)} / ${number.format(o.targetQuantity)}${o.unit ? ` ${o.unit}` : ''}`;
   return (
-    <div className="flex items-center gap-3 text-xs">
-      <span className="shrink-0 text-fg-3">{t(`missions.objectiveProgress.${mode}`)}</span>
-      <div
-        role="progressbar"
-        aria-label={o.title}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={percent}
-        aria-valuetext={value}
-        className="h-1.5 flex-1 overflow-hidden rounded-full bg-fg-3/25"
-      >
-        <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
+    <div className="flex flex-col gap-1 text-xs">
+      <div className="flex items-center gap-3">
+        <div
+          role="progressbar"
+          aria-label={o.title}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={percent}
+          aria-valuetext={value}
+          className="h-1.5 flex-1 overflow-hidden rounded-full bg-fg-3/25"
+        >
+          <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
+        </div>
+        <span className="shrink-0 tabular-nums">{value}</span>
       </div>
-      <span className="shrink-0 tabular-nums">{value}</span>
+      {/* How it counts, as a hint: kept at its best, or what is held now. */}
+      <span className="text-2xs text-fg-3">{t(`missions.objectiveProgress.${mode}`)}</span>
     </div>
   );
 }
