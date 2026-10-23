@@ -694,12 +694,12 @@ export const en = {
     objectiveKinds: {
       deliver_material: {
         instruction:
-          'Bring <goods>{{goods}}</goods> to <to>{{to}}</to> and stay inside: where they come from is not checked.',
+          'Bring <goods>{{amount}} × <good>{{good}}</good></goods> to <to>{{to}}</to> and stay inside: where they come from is not checked.',
         pooled: 'What every assignee inside carries adds up.',
       },
       transport: {
         instruction:
-          'Pick up <goods>{{goods}}</goods> at <from>{{from}}</from>, then deliver them to <to>{{to}}</to>.',
+          'Pick up <goods>{{amount}} × <good>{{good}}</good></goods> at <from>{{from}}</from>, then deliver them to <to>{{to}}</to>.',
       },
       transport_passenger: {
         instruction:
@@ -708,7 +708,7 @@ export const en = {
       visit: { instruction: 'Go to <reach>{{to}}</reach>: the first visit counts.' },
       owns_items: {
         instruction:
-          'Hold <goods>{{goods}}</goods> in the inventory: selling or using some lowers the progress.',
+          'Hold <goods>{{amount}} × <good>{{good}}</good></goods> in the inventory: selling or using some lowers the progress.',
       },
       manual: { instruction: "Done when the mission's issuer confirms it." },
     },

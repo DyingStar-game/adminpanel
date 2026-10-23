@@ -19,6 +19,8 @@ const mark = (color: string): ReactElement => (
 export function ObjectiveInstruction({ parts }: { parts: InstructionParts }) {
   const components = {
     goods: mark(GOODS_COLOR),
+    // The good's type as `mission` stores it: a technical value.
+    good: <code className="font-mono text-xs" />,
     from: mark(ROLE_COLORS.pickup),
     to: mark(ROLE_COLORS.dropoff),
     reach: mark(ROLE_COLORS.target),

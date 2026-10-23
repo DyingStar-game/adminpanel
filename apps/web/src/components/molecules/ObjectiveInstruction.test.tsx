@@ -10,7 +10,8 @@ describe('ObjectiveInstruction (ADR 0026)', () => {
           key: 'missions.objectiveKinds.transport.instruction',
           pooledKey: null,
           values: {
-            goods: '1 × Drill parts',
+            amount: '1',
+            good: 'drill_parts',
             from: 'Mining depot of M0066',
             to: 'Drill site near M0066',
             player: '',
@@ -20,11 +21,11 @@ describe('ObjectiveInstruction (ADR 0026)', () => {
     );
 
     expect(document.querySelector('p')).toHaveTextContent(
-      'Pick up 1 × Drill parts at Mining depot of M0066, then deliver them to Drill site near M0066.',
+      'Pick up 1 × drill_parts at Mining depot of M0066, then deliver them to Drill site near M0066.',
     );
     const marks = document.querySelectorAll('mark');
     expect([...marks].map((m) => m.textContent)).toEqual([
-      '1 × Drill parts',
+      '1 × drill_parts',
       'Mining depot of M0066',
       'Drill site near M0066',
     ]);

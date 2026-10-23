@@ -16,28 +16,12 @@ export function placeName(t: TFunction, place: PlaceView | undefined): string {
 }
 
 /**
- * A good as people read it: `drill_parts` → `Drill parts` (`inventory` holds no names for its
- * good types).
+ * How much of the goods, one way for every objective: the quantity, then the objective's unit when
+ * it has one (`1`, `20 barrels`); the goods follow as `mission` stores them (`× drill_parts`).
  */
-export const goodName = (goodType: string) => {
-  const words = goodType.replace(/[_-]+/g, ' ').trim();
-  return words.charAt(0).toUpperCase() + words.slice(1);
-};
-
-/**
- * What is carried or owned, with its quantity, one way for every objective: the quantity, the
- * objective's unit when it has one, then `×` and the goods (`1 × Drill parts`,
- * `20 barrels × Water barrel`).
- */
-export function objectiveGoods(
-  objective: MissionObjective,
-  good: string | null,
-  language: string,
-  fallback: string,
-): string {
+export function objectiveAmount(objective: MissionObjective, language: string): string {
   const quantity = new Intl.NumberFormat(language).format(objective.targetQuantity);
-  const name = good ? goodName(good) : fallback;
-  return `${quantity}${objective.unit ? ` ${objective.unit}` : ''} × ${name}`;
+  return `${quantity}${objective.unit ? ` ${objective.unit}` : ''}`;
 }
 
 /** The sentence of an objective: its kind's keys and the values filling them. */
@@ -45,12 +29,12 @@ export interface InstructionParts {
   key: string;
   /** For a delivery every assignee adds up to. */
   pooledKey: string | null;
-  values: { goods: string; from: string; to: string; player: string };
+  values: { amount: string; good: string; from: string; to: string; player: string };
 }
 
 /**
  * What the player has to do (ADR 0026), as keys and values: the sentence marks the goods
- * (`<goods>`), the places by role (`<from>`, `<to>`, `<reach>`) and the passenger (`<player>`), so the page
+ * (`<goods>`, their type in `<good>`), the places by role (`<from>`, `<to>`, `<reach>`) and the passenger (`<player>`), so the page
  * can highlight them.
  */
 export function instructionParts(
@@ -65,7 +49,9 @@ export function instructionParts(
     key: `missions.objectiveKinds.${kind}.instruction`,
     pooledKey: view.pooled ? `missions.objectiveKinds.${kind}.pooled` : null,
     values: {
-      goods: objectiveGoods(objective, view.good, language, t('missions.objectivePlaces.goods')),
+      amount: objectiveAmount(objective, language),
+      // A technical value of the service, shown as stored (no names exist for good types).
+      good: view.good ?? t('missions.objectivePlaces.goods'),
       from: placeName(t, by('pickup')),
       to: placeName(t, by('dropoff') ?? by('target')),
       player: view.playerId

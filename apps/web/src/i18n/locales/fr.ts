@@ -703,12 +703,12 @@ export const fr: Translations = {
     objectiveKinds: {
       deliver_material: {
         instruction:
-          "Apporter <goods>{{goods}}</goods> à <to>{{to}}</to> et y rester : leur provenance n'est pas vérifiée.",
+          "Apporter <goods>{{amount}} × <good>{{good}}</good></goods> à <to>{{to}}</to> et y rester : leur provenance n'est pas vérifiée.",
         pooled: "Ce que porte chaque preneur présent s'additionne.",
       },
       transport: {
         instruction:
-          'Récupérer <goods>{{goods}}</goods> à <from>{{from}}</from>, puis les livrer à <to>{{to}}</to>.',
+          'Récupérer <goods>{{amount}} × <good>{{good}}</good></goods> à <from>{{from}}</from>, puis les livrer à <to>{{to}}</to>.',
       },
       transport_passenger: {
         instruction:
@@ -717,7 +717,7 @@ export const fr: Translations = {
       visit: { instruction: 'Se rendre à <reach>{{to}}</reach> : le premier passage compte.' },
       owns_items: {
         instruction:
-          "Posséder <goods>{{goods}}</goods> dans l'inventaire : en vendre ou en utiliser fait baisser la progression.",
+          "Posséder <goods>{{amount}} × <good>{{good}}</good></goods> dans l'inventaire : en vendre ou en utiliser fait baisser la progression.",
       },
       manual: { instruction: "Atteint quand l'émetteur de la mission le confirme." },
     },

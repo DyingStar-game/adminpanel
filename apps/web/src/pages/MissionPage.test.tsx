@@ -51,7 +51,7 @@ describe('MissionPage (ADR 0024 step O)', () => {
         (_, el) =>
           el?.tagName === 'P' &&
           el.textContent ===
-            'Bring 10 t × Iron ore to Foundry loading bay and stay inside: where they come from is not checked. What every assignee inside carries adds up.',
+            'Bring 10 t × iron_ore to Foundry loading bay and stay inside: where they come from is not checked. What every assignee inside carries adds up.',
       ),
     ).toBeInTheDocument();
     expect(screen.getByText('Unknown place')).toBeInTheDocument();
