@@ -720,7 +720,7 @@ export const en = {
       goods: 'goods',
       passenger: 'the passenger',
       space: 'Open space',
-      distance: '{{distance}} along the surface',
+      distance: '{{distance}}',
       altitude: 'Altitude {{altitude}}',
       radius: 'Zone of {{radius}}',
       loaded: 'Loaded, on the way',

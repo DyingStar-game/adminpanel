@@ -732,7 +732,7 @@ export const fr: Translations = {
       goods: 'marchandises',
       passenger: 'le passager',
       space: 'Espace ouvert',
-      distance: '{{distance}} par la surface',
+      distance: '{{distance}}',
       altitude: 'Altitude {{altitude}}',
       radius: 'Zone de {{radius}}',
       loaded: 'Chargé, en route',

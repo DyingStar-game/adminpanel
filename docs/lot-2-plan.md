@@ -29,6 +29,19 @@ starting a session on lot 2.**
 Order agreed with the maintainer on 2026-10-08: I (acting on players) before K (organisations),
 since the player sheet is where moderators look first.
 
+### Parked (maintainer, 2026-10-23): `mission` and `inventory` from pre-production
+
+Instead of minikube's test data, the local panel could read pre-production's `mission` and
+`inventory`, as it reads pre-production's persistence: both are called as `svc-admin` only (a
+`client_credentials` token, no redirect, so the "no localhost redirect" rule does not stop it),
+the person still signing in locally. Needed: their public URLs, pre-production's `svc-admin`
+secret (ADR 0023, open question), a BFF setting taking `svc-admin`'s token from
+`auth-preprod…` while sign-in stays local (one issuer for both today), and a guard so the seed
+never runs against pre-production. `social`, `economie` and `universesimulator`'s Admin routes
+take the person's token: they cannot follow. Gain: the real missions published by
+pre-production's simulation. E.g. `make up PREPROD_SERVICES=1`. Not started: waiting for the
+maintainer.
+
 ### 2026-10-23 — ADR 0027, a mission's places on a map, where to resume
 
 - **Branch `feature/missions`** (on `origin/develop`, with the simulation section of PR #2; the

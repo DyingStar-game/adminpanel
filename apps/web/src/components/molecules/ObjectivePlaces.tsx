@@ -14,7 +14,7 @@ interface ObjectivePlacesProps {
 
 /**
  * An objective's places in a column (ADR 0027; the map draws them): each one's role bubble and
- * name, the bubbles joined by a dotted line with the distance along the surface beside it, then
+ * name, the bubbles joined by a dotted line with the distance (along the surface) beside it, then
  * whether the goods are loaded. A place's name opens its details (body, latitude / longitude,
  * altitude, zone, id); a place `inventory` does not know, or did not give, shows its id.
  */
@@ -24,42 +24,39 @@ export function ObjectivePlaces({ places, loaded }: ObjectivePlacesProps) {
 
   return (
     <div className="flex flex-col gap-1">
-      <ol className="flex flex-col text-sm" aria-label={t('missions.objectiveDetail.places')}>
+      {/* Three rows of one height: a place, the distance to the next, the next place. */}
+      <ol
+        className="grid grid-cols-[0.75rem_4rem_minmax(0,1fr)] items-center gap-x-3 text-sm"
+        aria-label={t('missions.objectiveDetail.places')}
+      >
         {places.map((place, i) => {
           const next = places[i + 1];
           const distance = next?.poi && place.poi ? surfaceDistance(place.poi, next.poi) : null;
           return (
-            <li key={`${place.role}:${i}`} className="flex gap-3">
-              {/* The bubble, and the dotted line down to the next place. */}
-              <span className="flex w-3 shrink-0 flex-col items-center">
+            <li key={`${place.role}:${i}`} className="contents">
+              <span className="flex h-7 items-center justify-center">
                 <span
                   aria-hidden
-                  className="mt-1 size-3 shrink-0 rounded-full border-2 border-background"
+                  className="size-3 rounded-full border-2 border-background"
                   style={{ background: ROLE_COLORS[place.role] }}
                 />
-                {next && (
-                  <span
-                    aria-hidden
-                    className="my-1 min-h-6 w-0 flex-1 border-l-2 border-dotted border-fg-3"
-                  />
-                )}
               </span>
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="flex min-w-0 items-baseline gap-2">
-                  <span className="w-16 shrink-0 text-xs text-fg-3">
-                    {t(`missions.objectivePlaces.${place.role}`)}
-                  </span>
-                  <PlaceName place={place} language={i18n.language} />
-                </span>
-                {next && (
-                  <span className="flex min-h-6 items-center text-xs text-fg-3">
-                    {distance !== null &&
-                      t('missions.objectivePlaces.distance', {
-                        distance: formatDistance(distance, i18n.language),
-                      })}
-                  </span>
-                )}
+              <span className="text-xs text-fg-3">
+                {t(`missions.objectivePlaces.${place.role}`)}
               </span>
+              <span className="flex min-w-0">
+                <PlaceName place={place} language={i18n.language} />
+              </span>
+              {next && (
+                <>
+                  <span aria-hidden className="flex h-7 justify-center">
+                    <span className="h-full border-l-2 border-dotted border-fg-3" />
+                  </span>
+                  <span className="col-span-2 text-xs text-fg-3">
+                    {distance !== null && formatDistance(distance, i18n.language)}
+                  </span>
+                </>
+              )}
             </li>
           );
         })}
