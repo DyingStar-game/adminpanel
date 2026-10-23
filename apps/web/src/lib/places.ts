@@ -86,6 +86,30 @@ export interface MapRoute {
   distance: number | null;
 }
 
+/** A map frame: the projection's centre (unit direction) and sphere radius in metres. */
+export interface PlacesFrame {
+  center: V;
+  radius: number;
+}
+
+/**
+ * Fixed objects that help find one's way around the places (ADR 0027 update): villages, depots,
+ * mining zones, buildings, storage areas. Not what moves or is picked up (vehicles, players,
+ * rocks, crates).
+ */
+export const LANDMARK_TYPES: readonly string[] = [
+  'poi_village',
+  'city',
+  'cargo_depot',
+  'mining_depot',
+  'miningzone',
+  'spawnbuilding',
+  'building',
+  'simple_building',
+  'storagewarehouse',
+  'storage_area',
+];
+
 /** The places of one body, in a frame of their own (ADR 0027). */
 export interface BodyPlaces {
   model: string;
@@ -115,6 +139,7 @@ export interface MissionPlaces {
  */
 export function missionPlaces(
   objectives: { objective: MissionObjective; view: ObjectiveView | null }[],
+  frames: ReadonlyMap<string, PlacesFrame> = new Map(),
 ): MissionPlaces {
   const drawn = new Map<string, { poi: Poi; uses: PlaceUse[] }>();
   const undrawn = new Map<string, UndrawnPlace>();
@@ -147,8 +172,12 @@ export function missionPlaces(
   const bodies = [...byBody.entries()].map(([model, entries]): BodyPlaces => {
     const directions = entries.map((e) => normalize(position(e.poi)) as V);
     const sum = directions.reduce<V>((s, d) => [s[0] + d[0], s[1] + d[1], s[2] + d[2]], [0, 0, 0]);
-    const center = normalize(sum) ?? directions[0] ?? ([1, 0, 0] as V);
-    const radius = entries.reduce((s, e) => s + Math.hypot(...position(e.poi)), 0) / entries.length;
+    // The planet map's frame when given (its landmarks drawn around), else the places' own.
+    const frame = frames.get(model);
+    const center = frame?.center ?? normalize(sum) ?? directions[0] ?? ([1, 0, 0] as V);
+    const radius =
+      frame?.radius ??
+      entries.reduce((s, e) => s + Math.hypot(...position(e.poi)), 0) / entries.length;
     const project = azimuthalEquidistant(center, radius);
     const at = new Map(
       entries.map((e, i) => {

@@ -753,6 +753,9 @@ export const en = {
       unread:
         'The places were not read from the inventory (inventory:read): the objectives give their POI ids.',
       showOnMap: 'On the map',
+      onPlanetMap: "On {{name}}, in its planet map's frame, among its landmarks",
+      noLandmarks: 'landmarks need persistence:read',
+      landmarks: 'Landmarks',
     },
     objectiveStatus: {
       pending: 'To do',

@@ -63,6 +63,30 @@ Option 2, drawn like the network map.
 - The map's code follows the network map's: an organism drawing in `MetricMap`, pure helpers in
   `lib/places.ts` (projection, layers), tested.
 
+### Update (2026-10-23): the planet's landmarks, shown or hidden by type
+
+Asked by the maintainer the same day: show and hide the planet's objects around the places as on
+the persistence map, **only the fixed ones that help find one's way**, not vehicles, players or
+mining rocks. For who reads persistence (`persistence:read`):
+
+- the body is found in persistence by its scene model (the planet whose `scenename` ends in the
+  POIs' `scene`, `tarsis_3` → `…/tarsis_3.tscn`; one on 2026-10-23, the duplicate seen earlier
+  was not one), and its map (`/api/bodies/:uuid/map`, ADR 0018) is read with every type but the
+  landmarks left out (`hide`);
+- **landmarks** (`lib/places.ts` › `LANDMARK_TYPES`): villages, cities, cargo and mining depots,
+  mining zones, spawn buildings, buildings, simple buildings, storage warehouses and areas; not
+  crates, vehicles, lifts, players, rocks, stations. Each is a small square of its type's colour;
+  a legend beside the map (the persistence map's `MapLegend`) shows or hides each type and its
+  names (villages and cities named by default; no names below 1 px = 64 m, they would pile up);
+- the places are then projected **in the planet map's frame** (its centre and reference radius),
+  so they stand among the landmarks exactly where `/map/$uuid` draws them. Without
+  `persistence:read`, the map keeps the places' own frame and says landmarks need it.
+
+The seed's POIs stand on SandBox's real objects since (a village's cargo depot, the village, a
+mining depot and its nearest mining zone, the farthest mining zones, the orbital station), the
+object noted in the POI's `metadata` (`inventory`'s `parentId` is a parent POI in its code: lot 2
+plan, question 22).
+
 ## Consequences
 
 - No persistence read and no new right: the map works for anyone reading missions with

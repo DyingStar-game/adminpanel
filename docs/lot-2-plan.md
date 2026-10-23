@@ -44,6 +44,14 @@ since the player sheet is where moderators look first.
   chosen from either side. The objective cards list their places as text.
 - **Checked live on minikube** (GET only, as `ynotna`): the transport's two places 196 km apart,
   the foundry's 40 m zone, the relay station listed in open space.
+- **Update, landmarks** (maintainer, same day): the planet's fixed objects around the places,
+  shown or hidden by type as on the persistence map (ADR 0027 › Update), in the planet map's
+  frame for `persistence:read`. **Seed on real data**: its POIs stand on SandBox's objects read
+  from persistence (GET only): M0066's cargo depot and clinic, its mining depot → the nearest
+  mining zone (132 km), survey sites near M0051 (1,640 km), F0015's main square, the station
+  Palaka-Pital; mission titles name them. `make reset-mission` run again for it (2026-10-23);
+  the eight previous POIs deleted by the seed. Checked in a browser: the transport among 780
+  landmarks, by type.
 
 ### 2026-10-23 — ADR 0026, objective schematics
 
@@ -572,3 +580,7 @@ Ready to post (a Discord message was drafted on 2026-10-08). Still open:
    `description: Internal-only: geometry fields …` holds `: ` in an unquoted value. Nothing can
    be generated from it; the panel pins it (the sync test alerts once it changes) and writes the
    POI it reads from `inventory`'s code (`contracts/inventory/code.ts`). Could it be quoted?
+22. `inventory`'s POI `parentId`: its README and `db/schema/pois.ts` call it "an opaque persistence
+   object UUID (no FK)", but its code checks it is another POI (`assertParentValid`:
+   `POI_PARENT_NOT_FOUND`, `POI_PARENT_CYCLE`). Which one is meant? The seed notes the
+   persistence object in `metadata.persistence` meanwhile.

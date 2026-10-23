@@ -508,54 +508,143 @@ type Step =
 
 /**
  * POIs the objectives point at (`kinds/objectives/`: a `{ kind: 'poi', poiId }` zone), created in
- * `inventory` as the game's (`system` owner) through its internal API (`inventory:poi:manage`,
- * held by `svc-admin`) and found again by name on a rerun. On SandBox (Tarsis III), metres from
- * its centre about 4 km above its wiki radius; the relay station in open space. A mission's own
- * zones are checked against `inventory`: none uses a POI.
+ * `inventory` as the game's (`system` owner, `inventory:poi:manage`, held by `svc-admin`) on real
+ * objects of SandBox (Tarsis III) in persistence, read GET only: each POI stands where its object
+ * stands, the object noted in its `metadata` (`parentId` is a parent POI in `inventory`'s code,
+ * question 22 of the lot 2 plan). Found again by name on a rerun. A mission's own zones are
+ * checked against `inventory`: none uses a POI.
  */
-const SEED_POIS = {
-  foundryBay: {
-    name: 'Foundry loading bay',
-    scene: 'tarsis_3/new-haven',
-    at: [-3_828_872.1, 2_444_118.3, 4_451_474.4],
-    radiusM: 40,
-  },
-  clinic: {
-    name: 'Ostrowski clinic',
-    scene: 'tarsis_3/new-haven',
-    at: [-3_830_410.2, 2_443_201.7, 4_450_655.9],
-  },
-  depot: { name: 'Vance depot', scene: 'tarsis_3', at: [-3_874_453.7, 2_474_828.3, 4_394_705.1] },
-  drillSite: {
-    name: 'Drill site 7',
-    scene: 'tarsis_3',
-    at: [-3_787_869.0, 2_361_899.4, 4_530_240.5],
-    radiusM: 120,
-  },
-  craterRim: {
-    name: 'Crater rim',
-    scene: 'tarsis_3',
-    at: [4_372_129.0, 1_656_808.7, -4_311_504.8],
-  },
-  craterFloor: {
-    name: 'Crater floor',
-    scene: 'tarsis_3',
-    at: [4_370_805.6, 1_655_301.2, -4_310_498.3],
-  },
-  relayStation: { name: 'Relay station', scene: 'space', at: [12_000_000, 0, 3_000_000] },
-  mainSquare: {
-    name: 'New Haven main square',
-    scene: 'tarsis_3/new-haven',
-    at: [-3_829_640.8, 2_443_660.0, 4_451_070.1],
-    radiusM: 60,
-  },
-} satisfies Record<
-  string,
-  { name: string; scene: string; at: [number, number, number]; radiusM?: number }
->;
-type SeedPoi = keyof typeof SEED_POIS;
+const SEED_POI_KEYS = [
+  'foundryBay',
+  'clinic',
+  'depot',
+  'drillSite',
+  'craterRim',
+  'craterFloor',
+  'relayStation',
+  'mainSquare',
+] as const;
+type SeedPoi = (typeof SEED_POI_KEYS)[number];
 /** The game's owner of the seed's POIs in `inventory` (any UUID: `system` holders are opaque). */
 const POI_OWNER = '5eed0000-0000-4000-8000-000000000001';
+
+interface SeedPlace {
+  name: string;
+  at: [number, number, number];
+  radiusM?: number;
+  /** The persistence object it stands on. */
+  object: { uuid: string; type: string };
+}
+/** The names the missions' texts use. */
+interface SeedWhere {
+  home: string;
+  neighbour: string;
+  far: string;
+  station: string;
+}
+
+const PERSISTENCE_URL = process.env.PERSISTENCE_URL;
+interface PersistenceItem {
+  object_type: string;
+  object_uuid: string;
+  object_data: {
+    name?: string;
+    scenename?: string;
+    position?: { x: number; y: number; z: number };
+  };
+}
+
+/**
+ * The seed's places chosen on SandBox's real objects, the same each run while the data stays: the
+ * village with a cargo depot and a mining depot within 3 km (home: its cargo depot receives the
+ * ore, the village has the clinic), the nearest other village (its main square), the nearest
+ * mining depot (where the drill parts are loaded) and the mining zone nearest to it (the drill
+ * site), the mining zone farthest from home and the one nearest to it (the survey), the orbital
+ * station (the relay). Null without persistence or such objects.
+ */
+async function placesFromPersistence(): Promise<{
+  places: Record<SeedPoi, SeedPlace>;
+  where: SeedWhere;
+} | null> {
+  if (!PERSISTENCE_URL) return null;
+  const get = async (path: string) => {
+    const res = await fetch(`${PERSISTENCE_URL}${path}`);
+    if (!res.ok) throw new Error(`persistence answered ${res.status} for ${path}`);
+    return ((await res.json()) as { items: PersistenceItem[] }).items;
+  };
+  const planet = (await get('/items?object_type=planet&page=1&page_size=100')).find((p) =>
+    p.object_data.scenename?.endsWith('/tarsis_3.tscn'),
+  );
+  if (!planet) return null;
+  const children = (await get(`/items?parent_id=${planet.object_uuid}&page=1&page_size=10000`))
+    .filter((i) => i.object_data.position)
+    .sort((a, b) => a.object_uuid.localeCompare(b.object_uuid));
+  const of = (type: string) => children.filter((i) => i.object_type === type);
+  const at = (i: PersistenceItem): [number, number, number] => {
+    const { x, y, z } = i.object_data.position as { x: number; y: number; z: number };
+    return [x, y, z];
+  };
+  const distance = (a: PersistenceItem, b: PersistenceItem) => {
+    const [p, q] = [at(a), at(b)];
+    return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
+  };
+  const nearest = (to: PersistenceItem, among: PersistenceItem[]) =>
+    [...among].filter((i) => i !== to).sort((a, b) => distance(to, a) - distance(to, b))[0];
+  const name = (i: PersistenceItem) => i.object_data.name ?? i.object_type;
+
+  const villages = of('poi_village');
+  const cargo = of('cargo_depot');
+  const mining = of('mining_depot');
+  const zones = of('miningzone');
+  const home = villages.find((v) =>
+    [cargo, mining].every((list) => list.some((d) => distance(v, d) < 3_000)),
+  );
+  if (!home) return null;
+  const cargoDepot = nearest(home, cargo);
+  const neighbour = nearest(home, villages);
+  const miningDepot = nearest(home, mining);
+  const drillZone = miningDepot && nearest(miningDepot, zones);
+  const farZone = [...zones].sort((a, b) => distance(home, b) - distance(home, a))[0];
+  const deepZone = farZone && nearest(farZone, zones);
+  const station = of('station')[0];
+  if (
+    !cargoDepot ||
+    !neighbour ||
+    !miningDepot ||
+    !drillZone ||
+    !farZone ||
+    !deepZone ||
+    !station
+  ) {
+    return null;
+  }
+  const farVillage = nearest(farZone, villages) ?? farZone;
+  const place = (i: PersistenceItem, label: string, radiusM?: number): SeedPlace => ({
+    name: label,
+    at: at(i),
+    object: { uuid: i.object_uuid, type: i.object_type },
+    ...(radiusM ? { radiusM } : {}),
+  });
+  const miningVillage = nearest(miningDepot, villages) ?? miningDepot;
+  return {
+    places: {
+      foundryBay: place(cargoDepot, `Cargo depot of ${name(home)}`, 40),
+      clinic: place(home, `Clinic of ${name(home)}`, 60),
+      depot: place(miningDepot, `Mining depot of ${name(miningVillage)}`, 40),
+      drillSite: place(drillZone, `Drill site near ${name(miningVillage)}`, 150),
+      craterRim: place(farZone, `Survey site near ${name(farVillage)}`, 150),
+      craterFloor: place(deepZone, `Deep survey site near ${name(farVillage)}`, 150),
+      relayStation: place(station, name(station), 200),
+      mainSquare: place(neighbour, `Main square of ${name(neighbour)}`, 80),
+    },
+    where: {
+      home: name(home),
+      neighbour: name(neighbour),
+      far: name(farVillage),
+      station: name(station),
+    },
+  };
+}
 
 /** A mission's body; `requires` names the seed missions to complete first (their `scriptId`). */
 type SeedMission = Omit<CreateMissionAsAccepted, 'scriptId' | 'requiresMissionIds'> & {
@@ -569,12 +658,13 @@ type SeedMission = Omit<CreateMissionAsAccepted, 'scriptId' | 'requiresMissionId
  */
 const missions = (
   poi: (key: SeedPoi) => { kind: 'poi'; poiId: string },
+  where: SeedWhere,
 ): [string, SeedMission, Step[]][] => [
   [
     'seed.ore-delivery',
     {
-      title: 'Iron ore for New Haven',
-      description: 'The foundry runs short: bring ore to its loading bay.',
+      title: `Iron ore for ${where.home}`,
+      description: `The foundry of ${where.home} runs short: bring ore to its cargo depot.`,
       category: 'delivery',
       rewards: [{ type: 'credits', currency: 'credits', amount: 1_500 }],
       zones: [{ kind: 'system', system: 'tarsis' }],
@@ -601,7 +691,7 @@ const missions = (
   [
     'seed.water-run',
     {
-      title: 'Water for the clinic',
+      title: `Water for the clinic of ${where.home}`,
       description: 'Mara needs clean water before the next shift.',
       category: 'delivery',
       rewards: [{ type: 'credits', currency: 'credits', amount: 800 }],
@@ -651,7 +741,7 @@ const missions = (
         { type: 'manual', title: 'Meet the surveyor', order: 0 },
         {
           type: 'visit',
-          title: 'Reach the crater rim',
+          title: `Reach the survey site near ${where.far}`,
           order: 1,
           weight: 2,
           params: { zone: poi('craterRim') },
@@ -663,7 +753,7 @@ const missions = (
   [
     'seed.crater-depths',
     {
-      title: "The crater's depths",
+      title: `Deeper near ${where.far}`,
       kind: 'scenario',
       category: 'exploration',
       requires: ['seed.first-survey'],
@@ -672,7 +762,11 @@ const missions = (
         { type: 'standing', domain: 'exploration', amount: 10 },
       ],
       objectives: [
-        { type: 'visit', title: 'Reach the crater floor', params: { zone: poi('craterFloor') } },
+        {
+          type: 'visit',
+          title: `Reach the deep survey site near ${where.far}`,
+          params: { zone: poi('craterFloor') },
+        },
       ],
     },
     [],
@@ -705,14 +799,14 @@ const missions = (
   [
     'seed.relay-station',
     {
-      title: 'Clear the relay station',
+      title: `Clear ${where.station}`,
       category: 'exploration',
       groupClaimable: true,
       maxAssignees: 4,
       objectives: [
         {
           type: 'visit',
-          title: 'Enter the relay station',
+          title: `Board ${where.station}`,
           params: { zone: poi('relayStation') },
         },
       ],
@@ -723,7 +817,7 @@ const missions = (
     'seed.founders-day',
     {
       title: "Founders' Day parade",
-      description: 'Everyone is welcome on the main square.',
+      description: `Everyone is welcome on the main square of ${where.neighbour}.`,
       category: 'exploration',
       rewards: [{ type: 'credits', currency: 'credits', amount: 50 }],
       objectives: [
@@ -746,20 +840,36 @@ const missions = (
 
 const INVENTORY_URL = process.env.INVENTORY_URL;
 
+/** Placeholders when persistence or `inventory` is not there: `inventory` holds none of them. */
+const placeholderPois = () =>
+  Object.fromEntries(
+    SEED_POI_KEYS.map((key, i) => [
+      key,
+      `a1f0c3d2-${String(i + 1).padStart(4, '0')}-4c5e-9a7b-5e3d0c0f0000`,
+    ]),
+  ) as Record<SeedPoi, string>;
+const PLACEHOLDER_WHERE: SeedWhere = {
+  home: 'the village',
+  neighbour: 'the next village',
+  far: 'the far zone',
+  station: 'the relay station',
+};
+
 /**
- * The seed's POIs in `inventory`, created once (found again by name among the `system` owner's):
- * their ids by key. Without `INVENTORY_URL`, placeholders `inventory` does not hold.
+ * The seed's POIs in `inventory`, on SandBox's real objects (`placesFromPersistence`), created
+ * once (found again by name among the `system` owner's; the owner's POIs the seed no longer
+ * places are deleted): their ids by key, and the names the missions use.
  */
-async function seedPois(bearer: string): Promise<Record<SeedPoi, string>> {
-  const keys = Object.keys(SEED_POIS) as SeedPoi[];
-  if (!INVENTORY_URL) {
-    console.log('  · POIs: placeholders (INVENTORY_URL unset: make up K8S=1)');
-    return Object.fromEntries(
-      keys.map((key, i) => [
-        key,
-        `a1f0c3d2-${String(i + 1).padStart(4, '0')}-4c5e-9a7b-5e3d0c0f0000`,
-      ]),
-    ) as Record<SeedPoi, string>;
+async function seedPois(
+  bearer: string,
+): Promise<{ ids: Record<SeedPoi, string>; where: SeedWhere }> {
+  const chosen = await placesFromPersistence().catch((error: unknown) => {
+    console.log(`  · persistence: ${error instanceof Error ? error.message : String(error)}`);
+    return null;
+  });
+  if (!INVENTORY_URL || !chosen) {
+    console.log('  · POIs: placeholders (INVENTORY_URL or PERSISTENCE_URL unset, or no SandBox)');
+    return { ids: placeholderPois(), where: PLACEHOLDER_WHERE };
   }
   const call = async (method: string, path: string, body?: unknown) => {
     const res = await fetch(`${INVENTORY_URL}/api/internal${path}`, {
@@ -778,9 +888,15 @@ async function seedPois(bearer: string): Promise<Record<SeedPoi, string>> {
   const byName = new Map(
     (owned.data as { items: { id: string; name: string }[] }).items.map((p) => [p.name, p.id]),
   );
+  const wanted = new Set(SEED_POI_KEYS.map((key) => chosen.places[key].name));
+  for (const [name, id] of byName) {
+    if (wanted.has(name)) continue;
+    const gone = await call('DELETE', `/pois/${id}`);
+    expect(`POI ${name}: no longer placed, deleted`, gone.status, gone.data, [204], [400, 409]);
+  }
   const ids: Partial<Record<SeedPoi, string>> = {};
-  for (const key of keys) {
-    const { name, scene, at, ...rest } = SEED_POIS[key];
+  for (const key of SEED_POI_KEYS) {
+    const { name, at, object, radiusM } = chosen.places[key];
     const known = byName.get(name);
     if (known) {
       console.log(`  · POI ${name}: already there`);
@@ -791,18 +907,19 @@ async function seedPois(bearer: string): Promise<Record<SeedPoi, string>> {
       owner: { type: 'system', id: POI_OWNER },
       name,
       system: 'tarsis',
-      scene,
+      scene: 'tarsis_3',
       x: at[0],
       y: at[1],
       z: at[2],
       visibility: 'public',
-      ...rest,
+      ...(radiusM ? { radiusM } : {}),
+      metadata: { persistence: object },
     });
     const created = await call('POST', '/pois', body);
     expect(`POI ${name}`, created.status, created.data, [201]);
     ids[key] = (created.data as { id: string }).id;
   }
-  return ids as Record<SeedPoi, string>;
+  return { ids: ids as Record<SeedPoi, string>, where: chosen.where };
 }
 
 if (MISSION_URL && SVC_ADMIN_SECRET) {
@@ -832,9 +949,9 @@ if (MISSION_URL && SVC_ADMIN_SECRET) {
     for (const row of missions) if (row.scriptId) seeded.set(row.scriptId, row.id);
     if (offset + 100 >= total) break;
   }
-  const poiIds = await seedPois(bearer);
+  const { ids: poiIds, where } = await seedPois(bearer);
   const place = (key: SeedPoi) => ({ kind: 'poi' as const, poiId: poiIds[key] });
-  for (const [scriptId, { requires = [], ...spec }, steps] of missions(place)) {
+  for (const [scriptId, { requires = [], ...spec }, steps] of missions(place, where)) {
     // The corporation's mission is issued by Vance Freight (`social`'s id).
     const issuerId =
       spec.issuerType === 'corporation' ? corporations.get('Vance Freight') : undefined;

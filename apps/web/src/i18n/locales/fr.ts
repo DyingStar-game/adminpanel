@@ -767,6 +767,9 @@ export const fr: Translations = {
       unread:
         "Les lieux n'ont pas été lus dans l'inventaire (inventory:read) : les objectifs donnent les ids de leurs POI.",
       showOnMap: 'Sur la carte',
+      onPlanetMap: 'Sur {{name}}, dans le repère de la carte de la planète, parmi ses repères',
+      noLandmarks: 'les repères demandent persistence:read',
+      landmarks: 'Repères',
     },
     objectiveStatus: {
       pending: 'À faire',

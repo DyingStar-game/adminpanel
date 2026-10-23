@@ -33,7 +33,11 @@ export const zPoi = z.object({
   system: z.string().nullable(),
   /** Body or sub-scene (`tarsis_3`, `tarsis_3/new-haven`): the frame of x / y / z. */
   scene: z.string().nullable(),
-  /** A persistence object, opaque to `inventory`. */
+  /**
+   * Its parent POI: its code checks that POI exists and walks the chain (`POI_PARENT_NOT_FOUND`,
+   * `POI_PARENT_CYCLE`), although its README and table call it a persistence object (lot 2 plan,
+   * question 22).
+   */
   parentId: z.guid().nullable(),
   x: z.number(),
   y: z.number(),
@@ -76,5 +80,7 @@ export const zCreatePoi = z.object({
   z: z.number(),
   radiusM: z.number().min(0).max(1_000_000).optional(),
   visibility: z.enum(['private', 'public']).optional(),
+  /** Free data (the seed notes the persistence object a POI stands on). */
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 export type CreatePoi = z.infer<typeof zCreatePoi>;

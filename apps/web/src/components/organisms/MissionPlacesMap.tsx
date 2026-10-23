@@ -2,15 +2,26 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
 import type { Poi } from '@dyingstar-admin/contracts/inventory';
 import type { MissionObjective } from '@dyingstar-admin/contracts/mission';
-import { Circle, Marker, Polyline, Tooltip, useMap } from 'react-leaflet';
+import { directionOf } from '@dyingstar-admin/schemas';
+import { Circle, Marker, Polyline, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import { useTranslation } from 'react-i18next';
+import { MapLegend } from '@/components/molecules/MapLegend';
 import { MetricMap } from '@/components/molecules/MetricMap';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
-import { escapeHtml, movementHeading } from '@/lib/bodyMap';
+import { useMissionLandmarks } from '@/hooks/useMissionLandmarks';
+import { escapeHtml, movementHeading, pointLabel } from '@/lib/bodyMap';
+import { typeColor } from '@/lib/objectTypes';
 import { shortId } from '@/lib/format';
 import { objectiveView, type PlaceRole } from '@/lib/objectiveSchematics';
-import { formatDistance, missionPlaces, ROLE_COLORS, type PlaceLatLng } from '@/lib/places';
+import {
+  formatDistance,
+  LANDMARK_TYPES,
+  missionPlaces,
+  ROLE_COLORS,
+  type PlaceLatLng,
+  type PlacesFrame,
+} from '@/lib/places';
 
 interface MissionPlacesMapProps {
   objectives: MissionObjective[];
@@ -35,6 +46,39 @@ function placeIcon(name: string, role: PlaceRole, state: 'chosen' | 'other' | 'n
   });
 }
 
+/** Landmarks named by default: villages and cities, the names players know. */
+const NAMED_BY_DEFAULT = ['poi_village', 'city'];
+/** Below this zoom (1 px = 64 m) landmarks lose their names: they would pile up. */
+const NAMES_MIN_ZOOM = -6;
+
+/** Reports the map's zoom as it changes. */
+function ZoomWatch({ onZoom }: { onZoom: (zoom: number) => void }) {
+  const map = useMapEvents({ zoomend: () => onZoom(map.getZoom()) });
+  useEffect(() => onZoom(map.getZoom()), [map, onZoom]);
+  return null;
+}
+
+const landmarkIcons = new Map<string, L.DivIcon>();
+
+/** A landmark: a small square of its type's colour, its name beside it when names are on. */
+function landmarkIcon(objectType: string, name: string | null) {
+  const key = `${objectType}|${name ?? ''}`;
+  let icon = landmarkIcons.get(key);
+  if (!icon) {
+    icon = L.divIcon({
+      className: '',
+      iconSize: [9, 9],
+      html: `<span class="relative block size-full rounded-xs border border-background" style="background:${typeColor(objectType)}">${
+        name
+          ? `<span class="pointer-events-none absolute top-1/2 left-full ml-1 -translate-y-1/2 whitespace-nowrap text-xs leading-none text-fg-2 [text-shadow:0_0_3px_var(--background),0_0_3px_var(--background)]">${escapeHtml(name)}</span>`
+          : ''
+      }</span>`,
+    });
+    landmarkIcons.set(key, icon);
+  }
+  return icon;
+}
+
 /** Head of a route at its delivery place, pointing along it. */
 function routeHead(from: PlaceLatLng, to: PlaceLatLng, opacity: number) {
   return L.divIcon({
@@ -50,11 +94,22 @@ function routeHead(from: PlaceLatLng, to: PlaceLatLng, opacity: number) {
 function FitPlaces({ points, body }: { points: PlaceLatLng[]; body: string }) {
   const map = useMap();
   const shown = useRef<string | null>(null);
+  // The legend beside the map appears with the landmarks: Leaflet must read its new size.
+  useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => map.invalidateSize());
+    observer.observe(map.getContainer());
+    return () => observer.disconnect();
+  }, [map]);
   useEffect(() => {
     if (shown.current === body || points.length === 0) return;
     shown.current = body;
-    if (points.length === 1) map.setView(points[0] as PlaceLatLng, -1);
-    else map.fitBounds(L.latLngBounds(points), { padding: [70, 70], maxZoom: 0 });
+    map.invalidateSize();
+    // Not animated: a resize during the animation (the legend appearing) would leave it halfway.
+    if (points.length === 1) map.setView(points[0] as PlaceLatLng, -1, { animate: false });
+    else {
+      map.fitBounds(L.latLngBounds(points), { padding: [70, 70], maxZoom: 0, animate: false });
+    }
   }, [map, points, body]);
   return null;
 }
@@ -73,12 +128,46 @@ export function MissionPlacesMap({
   onSelect,
 }: MissionPlacesMapProps) {
   const { t, i18n } = useTranslation();
-  const places = useMemo(
-    () => missionPlaces(objectives.map((o) => ({ objective: o, view: objectiveView(o, pois) }))),
+  const views = useMemo(
+    () => objectives.map((o) => ({ objective: o, view: objectiveView(o, pois) })),
     [objectives, pois],
   );
+  const own = useMemo(() => missionPlaces(views), [views]);
   const [chosenBody, setChosenBody] = useState<string | undefined>(undefined);
-  const shown = places.bodies.find((b) => b.model === chosenBody) ?? places.bodies[0];
+  const model = (own.bodies.find((b) => b.model === chosenBody) ?? own.bodies[0])?.model;
+
+  // The planet's landmarks, shown or hidden by type as on its map (ADR 0027 update).
+  const [shownTypes, setShownTypes] = useState<string[]>([...LANDMARK_TYPES]);
+  const [namedTypes, setNamedTypes] = useState<string[]>(NAMED_BY_DEFAULT);
+  const [zoom, setZoom] = useState(0);
+  const landmarks = useMissionLandmarks(model, shownTypes);
+  const landmarksMap = landmarks.map.data;
+  // On the planet map's frame once read, so the places land among its landmarks.
+  const places = useMemo(() => {
+    if (!model || !landmarksMap) return own;
+    const frame: PlacesFrame = {
+      center: directionOf(landmarksMap.center.lat, landmarksMap.center.lon),
+      radius: landmarksMap.referenceRadius,
+    };
+    return missionPlaces(views, new Map([[model, frame]]));
+  }, [own, views, model, landmarksMap]);
+  const shown = places.bodies.find((b) => b.model === model);
+  const legend = (landmarksMap?.counts ?? [])
+    .filter((c) => LANDMARK_TYPES.includes(c.object_type) && c.total > 0)
+    .map((c) => ({
+      objectType: c.object_type,
+      count: c.total,
+      shown: shownTypes.includes(c.object_type),
+      named: namedTypes.includes(c.object_type),
+      shape: 'square' as const,
+      omitted: landmarksMap?.omitted.includes(c.object_type),
+    }))
+    .sort((a, b) => b.count - a.count);
+  const landmarkPoints = (landmarksMap?.points ?? []).filter(
+    (p) => LANDMARK_TYPES.includes(p.object_type) && shownTypes.includes(p.object_type),
+  );
+  const toggle = (list: string[], type: string, on: boolean) =>
+    on ? [...new Set([...list, type])] : list.filter((t) => t !== type);
   const points = useMemo(() => shown?.places.map((p) => p.at) ?? [], [shown]);
   const roleName = (role: PlaceRole) => t(`missions.objectivePlaces.${role}`);
   const bodyName = (b: (typeof places.bodies)[number]) =>
@@ -113,106 +202,145 @@ export function MissionPlacesMap({
         </ul>
         {shown && (
           <p className="text-xs text-fg-3">
-            {t('missions.placesMap.onBody', { name: bodyName(shown) })}
+            {t(landmarksMap ? 'missions.placesMap.onPlanetMap' : 'missions.placesMap.onBody', {
+              name: bodyName(shown),
+            })}
+            {!landmarks.readable && ` · ${t('missions.placesMap.noLandmarks')}`}
           </p>
         )}
       </div>
       {shown && (
-        <div
-          className="relative h-112 overflow-hidden rounded-lg border"
-          role="region"
-          aria-label={t('missions.placesMap.label')}
-        >
-          <MetricMap gridCaption={(step, major) => t('missions.placesMap.grid', { step, major })}>
-            {shown.places.map((p) =>
-              p.poi.radiusM ? (
-                <Circle
-                  key={`zone-${p.poi.id}`}
-                  center={p.at}
-                  radius={p.poi.radiusM}
-                  interactive={false}
-                  pathOptions={{
-                    color: ROLE_COLORS[p.uses[0]?.role ?? 'target'],
-                    weight: 1,
-                    opacity: 0.6,
-                    fillOpacity: 0.08,
-                  }}
-                />
-              ) : null,
-            )}
-            {shown.routes.map((r) => {
-              const dim = selected !== undefined && selected !== r.objectiveId;
-              const opacity = dim ? 0.3 : r.loaded ? 0.9 : 0.6;
-              return (
-                <Polyline
-                  key={`route-${r.objectiveId}`}
-                  positions={[r.from, r.to]}
-                  pathOptions={{
-                    color: '#ffba08',
-                    weight: selected === r.objectiveId ? 4 : 3,
-                    opacity,
-                    ...(r.loaded ? {} : { dashArray: '8 6' }),
-                  }}
-                  eventHandlers={{ click: () => onSelect(r.objectiveId) }}
-                >
-                  <Tooltip sticky>
-                    {[
-                      t(
-                        r.loaded
-                          ? 'missions.objectivePlaces.loaded'
-                          : 'missions.objectivePlaces.toLoad',
-                      ),
-                      r.distance !== null
-                        ? t('missions.objectivePlaces.distance', {
-                            distance: formatDistance(r.distance, i18n.language),
-                          })
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')}
-                  </Tooltip>
-                </Polyline>
-              );
-            })}
-            {shown.routes.map((r) => (
-              <Marker
-                key={`head-${r.objectiveId}`}
-                position={r.to}
-                icon={routeHead(
-                  r.from,
-                  r.to,
-                  selected !== undefined && selected !== r.objectiveId ? 0.3 : 1,
-                )}
-                interactive={false}
-                keyboard={false}
-              />
-            ))}
-            {shown.places.map((p) => {
-              const chosen = p.uses.some((u) => u.objectiveId === selected);
-              const state = selected === undefined ? 'none' : chosen ? 'chosen' : 'other';
-              const first = p.uses[0];
-              return (
+        <div className="flex h-112 overflow-hidden rounded-lg border">
+          <div
+            className="relative min-w-0 flex-1"
+            role="region"
+            aria-label={t('missions.placesMap.label')}
+          >
+            <MetricMap gridCaption={(step, major) => t('missions.placesMap.grid', { step, major })}>
+              {landmarkPoints.map((p) => (
                 <Marker
-                  key={p.poi.id}
-                  position={p.at}
-                  icon={placeIcon(p.poi.name, first?.role ?? 'target', state)}
-                  zIndexOffset={chosen ? 1000 : 500}
-                  title={[
-                    p.poi.name,
-                    ...p.uses.map((u) =>
-                      t('missions.placesMap.use', {
-                        step: u.step,
-                        title: u.title,
-                        role: roleName(u.role),
-                      }),
-                    ),
-                  ].join(' · ')}
-                  eventHandlers={{ click: () => first && onSelect(first.objectiveId) }}
+                  key={p.object_uuid}
+                  position={[p.y, p.x]}
+                  icon={landmarkIcon(
+                    p.object_type,
+                    zoom >= NAMES_MIN_ZOOM && namedTypes.includes(p.object_type)
+                      ? pointLabel(p)
+                      : null,
+                  )}
+                  interactive={false}
+                  keyboard={false}
+                  title={`${pointLabel(p)} · ${p.object_type}`}
                 />
-              );
-            })}
-            <FitPlaces points={points} body={shown.model} />
-          </MetricMap>
+              ))}
+              {shown.places.map((p) =>
+                p.poi.radiusM ? (
+                  <Circle
+                    key={`zone-${p.poi.id}`}
+                    center={p.at}
+                    radius={p.poi.radiusM}
+                    interactive={false}
+                    pathOptions={{
+                      color: ROLE_COLORS[p.uses[0]?.role ?? 'target'],
+                      weight: 1,
+                      opacity: 0.6,
+                      fillOpacity: 0.08,
+                    }}
+                  />
+                ) : null,
+              )}
+              {shown.routes.map((r) => {
+                const dim = selected !== undefined && selected !== r.objectiveId;
+                const opacity = dim ? 0.3 : r.loaded ? 0.9 : 0.6;
+                return (
+                  <Polyline
+                    key={`route-${r.objectiveId}`}
+                    positions={[r.from, r.to]}
+                    pathOptions={{
+                      color: '#ffba08',
+                      weight: selected === r.objectiveId ? 4 : 3,
+                      opacity,
+                      ...(r.loaded ? {} : { dashArray: '8 6' }),
+                    }}
+                    eventHandlers={{ click: () => onSelect(r.objectiveId) }}
+                  >
+                    <Tooltip sticky>
+                      {[
+                        t(
+                          r.loaded
+                            ? 'missions.objectivePlaces.loaded'
+                            : 'missions.objectivePlaces.toLoad',
+                        ),
+                        r.distance !== null
+                          ? t('missions.objectivePlaces.distance', {
+                              distance: formatDistance(r.distance, i18n.language),
+                            })
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </Tooltip>
+                  </Polyline>
+                );
+              })}
+              {shown.routes.map((r) => (
+                <Marker
+                  key={`head-${r.objectiveId}`}
+                  position={r.to}
+                  icon={routeHead(
+                    r.from,
+                    r.to,
+                    selected !== undefined && selected !== r.objectiveId ? 0.3 : 1,
+                  )}
+                  interactive={false}
+                  keyboard={false}
+                />
+              ))}
+              {shown.places.map((p) => {
+                const chosen = p.uses.some((u) => u.objectiveId === selected);
+                const state = selected === undefined ? 'none' : chosen ? 'chosen' : 'other';
+                const first = p.uses[0];
+                return (
+                  <Marker
+                    key={p.poi.id}
+                    position={p.at}
+                    icon={placeIcon(p.poi.name, first?.role ?? 'target', state)}
+                    zIndexOffset={chosen ? 1000 : 500}
+                    title={[
+                      p.poi.name,
+                      ...p.uses.map((u) =>
+                        t('missions.placesMap.use', {
+                          step: u.step,
+                          title: u.title,
+                          role: roleName(u.role),
+                        }),
+                      ),
+                    ].join(' · ')}
+                    eventHandlers={{ click: () => first && onSelect(first.objectiveId) }}
+                  />
+                );
+              })}
+              <ZoomWatch onZoom={setZoom} />
+              <FitPlaces
+                points={points}
+                body={`${shown.model}|${landmarksMap ? 'planet' : 'own'}`}
+              />
+            </MetricMap>
+          </div>
+          {legend.length > 0 && (
+            <aside className="w-60 shrink-0 overflow-y-auto border-l p-3">
+              <MapLegend
+                entries={legend}
+                onToggle={(type, on) => setShownTypes((list) => toggle(list, type, on))}
+                onToggleNames={(type, on) => setNamedTypes((list) => toggle(list, type, on))}
+                labels={{
+                  title: t('missions.placesMap.landmarks'),
+                  toggle: (type) => t('map.toggle', { type }),
+                  names: (type) => t('map.names', { type }),
+                  omitted: t('map.omitted'),
+                }}
+              />
+            </aside>
+          )}
         </div>
       )}
       {places.undrawn.length > 0 && (
