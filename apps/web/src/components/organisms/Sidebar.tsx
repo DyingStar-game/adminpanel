@@ -72,7 +72,6 @@ const SECTIONS: {
       { id: 'import', icon: UploadIcon },
       { id: 'simulation', icon: NetworkIcon },
       { id: 'npcs', icon: BotIcon },
-      { id: 'missions', icon: ScrollTextIcon },
     ],
   },
   {
@@ -82,6 +81,7 @@ const SECTIONS: {
       { id: 'moderation', icon: ShieldAlertIcon },
       { id: 'organisations', icon: Building2Icon },
       { id: 'economy', icon: CoinsIcon },
+      { id: 'missions', icon: ScrollTextIcon },
     ],
   },
   { title: 'configuration', items: [{ id: 'settings', icon: SettingsIcon, soon: true }] },

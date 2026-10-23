@@ -133,7 +133,7 @@ describe('Sidebar', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('shows missions in the game world to whoever holds mission:read', async () => {
+  it('shows missions in the administration to whoever holds mission:read', async () => {
     useInProcessBff();
     const onNavigate = vi.fn();
     renderWithProviders(
@@ -145,7 +145,9 @@ describe('Sidebar', () => {
 
     await userEvent.click(await within(nav).findByRole('button', { name: 'Missions' }));
     expect(onNavigate).toHaveBeenCalledWith('missions');
-    expect(within(nav).getByText('Game world')).toBeInTheDocument();
+    // With the other game services administered from the panel (maintainer, 2026-10-23).
+    expect(within(nav).getByText('Administration')).toBeInTheDocument();
+    expect(within(nav).queryByText('Game world')).not.toBeInTheDocument();
     expect(
       within(nav).queryByRole('button', { name: 'Persistence — Items' }),
     ).not.toBeInTheDocument();

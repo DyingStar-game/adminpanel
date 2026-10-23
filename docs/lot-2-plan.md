@@ -73,9 +73,9 @@ maintainer.
   `horizonserver` `3f54dc1` (types `food` and `tool`, new properties, none removed) and
   `social`'s contract re-pinned to `7106778` (standing routes, political entities without a head,
   `standing` on every profile, added to its mock).
-- **Not checked in a browser yet**: needs `make up K8S=1`, `mission:write` given on minikube's
-  `dyingstar-admin` (as `inventory:read` was), and a simulation mission there (minikube's
-  `universesimulator` answers 404 on `/universesimulator/api/health`).
+- **Checked by the maintainer** (2026-10-23): cancelling a mission works, and the crate views
+  (ADR 0029). A simulation mission's cancel still waits for one to exist (minikube's
+  `universesimulator` has no world imported; its publisher is refused by `mission`, below).
 - **`universesimulator` re-pinned** from `develop` (`a863c00`, same file as the working copy):
   ADR 0025's open question 1 closed.
 - **For the back team**: pre-production's `svc-admin` needs `mission:write` (the maintainer
@@ -209,7 +209,7 @@ maintainer.
 
 ### 2026-10-11 — O.4 mission catalogue done
 
-- **O.4 built** (below): "Missions" in the sidebar (Game world), every mission of `mission`, any
+- **O.4 built** (below): "Missions" in the sidebar (Game world; moved to Administration on 2026-10-23), every mission of `mission`, any
   status, filtered by status, category and origin, read as `svc-admin` for `mission:read`.
   **List only, by the maintainer's choice**: no mission page until the back team gives an
   internal detail route (question 18).
