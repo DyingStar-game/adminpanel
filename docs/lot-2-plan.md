@@ -55,6 +55,36 @@ maintainer.
   audiences `mission-api`, `inventory-api`) and its secret, `client_credentials` allowed from
   outside; and whether pre-production's `universesimulator` publishes missions.
 
+### 2026-10-23 — ADR 0028, cancelling a mission, where to resume
+
+- **ADR 0028 accepted** (maintainer, 2026-10-23): a mission of `universesimulator` (`scriptId`
+  `usim:leg:…`) is cancelled **through its supply order** (`simulation.manage`): cancelled alone,
+  the simulation publishes it again (up to `SIM_LEG_MAX_ATTEMPTS`, then fails the order). Any
+  other open mission is cancelled in `mission` as `svc-admin` for `mission:write` (README ›
+  Interne, develop `0c14db4`), its escrow refunded; the BFF refuses a simulation mission there
+  (`409 SIMULATION_MISSION`). The order is found from the objectives' `payload` (`orderId`,
+  `legId`, written by `universesimulator`'s publisher), the latest 100 orders as a fallback. The
+  catalogue names the simulation as issuer; the transits tab shows a published leg's mission by
+  its title and status.
+- **Built**: `POST /api/mission/missions/:id/cancel` (audited), `MissionCancel` in a mission's
+  page actions, `LegMission` in the orders' timeline, `mission.write` (opening `mission.read`
+  too), `mission:write` in both local realms and ADR 0023 › Mission; the mock gains the water
+  leg's mission and `cancelMission`. `make check` passes: the definitions snapshot updated to
+  `horizonserver` `3f54dc1` (types `food` and `tool`, new properties, none removed) and
+  `social`'s contract re-pinned to `7106778` (standing routes, political entities without a head,
+  `standing` on every profile, added to its mock).
+- **Not checked in a browser yet**: needs `make up K8S=1`, `mission:write` given on minikube's
+  `dyingstar-admin` (as `inventory:read` was), and a simulation mission there (minikube's
+  `universesimulator` answers 404 on `/universesimulator/api/health`).
+- **`universesimulator` re-pinned** from `develop` (`a863c00`, same file as the working copy):
+  ADR 0025's open question 1 closed.
+- **For the back team**: pre-production's `svc-admin` needs `mission:write` (the maintainer
+  asks); `universesimulator`'s publisher (`build_mission`, develop `0c14db4`) sends `transport`
+  objectives with `params: { itemId }`, refused by `mission`'s strict `transport` kind
+  (`goodType`, `source`, `zone`), and mining legs as `deliver_items`, a kind `mission` no longer
+  has: no simulation mission can be published against today's `mission`; `mission`'s README
+  still lists both `…/objectives/:objectiveId/progress` routes its code dropped.
+
 ### 2026-10-23 — ADR 0027, a mission's places on a map, where to resume
 
 - **Branch `feature/missions`** (on `origin/develop`, with the simulation section of PR #2; the
