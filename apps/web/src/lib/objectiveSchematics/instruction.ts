@@ -25,8 +25,9 @@ export const goodName = (goodType: string) => {
 };
 
 /**
- * What is carried or owned, with its quantity: `1 × Drill parts`, or with the objective's unit
- * `20 barrels (Water barrel)`.
+ * What is carried or owned, with its quantity, one way for every objective: the quantity, the
+ * objective's unit when it has one, then `×` and the goods (`1 × Drill parts`,
+ * `20 barrels × Water barrel`).
  */
 export function objectiveGoods(
   objective: MissionObjective,
@@ -36,7 +37,7 @@ export function objectiveGoods(
 ): string {
   const quantity = new Intl.NumberFormat(language).format(objective.targetQuantity);
   const name = good ? goodName(good) : fallback;
-  return objective.unit ? `${quantity} ${objective.unit} (${name})` : `${quantity} × ${name}`;
+  return `${quantity}${objective.unit ? ` ${objective.unit}` : ''} × ${name}`;
 }
 
 /** The sentence of an objective: its kind's keys and the values filling them. */

@@ -64,10 +64,10 @@ describe('objective schematics (ADR 0026)', () => {
 
   it('tells what to do, the places named or by their id', () => {
     expect(instruction(missionIds.transport)).toBe(
-      'Pick up 4 crates (Drill parts) at Vance depot, then deliver them to Drill site 7.',
+      'Pick up 4 crates × Drill parts at Vance depot, then deliver them to Drill site 7.',
     );
     expect(instruction(missionIds.transport, 0, false)).toBe(
-      'Pick up 4 crates (Drill parts) at POI 0b1a7e1e, then deliver them to POI 0b1a7e1e.',
+      'Pick up 4 crates × Drill parts at POI 0b1a7e1e, then deliver them to POI 0b1a7e1e.',
     );
     expect(instruction(missionIds.delivery, 1)).toBe(
       'Go to an unknown place (0b1a7e1e): the first visit counts.',
