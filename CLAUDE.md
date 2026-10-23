@@ -10,6 +10,17 @@ Guidance for Claude Code when working in this repository.
   `origin/develop`, for a PR the maintainer opens once satisfied), under the maintainer's git
   identity. Never on any other branch, never amend, never push.
 - Never add `Co-Authored-By` or any AI attribution to commits or PR descriptions.
+- **PR descriptions follow the organisation's template** (`DyingStar-game/.github` ›
+  `.github/PULL_REQUEST_TEMPLATE.md`, which `gh pr create --body-file` does not apply): fill it,
+  never hand-roll the body. `## Description`: one line, then a `### <topic> (ADR nnnn)` section
+  per topic, bullets with a **bold lead**, a `### Other`, and whether `make check` passes (model:
+  `DyingStar-game/launcher` PR #44). `## Changelog`: the admin panel is not a component of the
+  player-facing changelog (maintainer, 2026-10-23: staff only, not in `components.json`), so its
+  `CHANGELOG_EN` / `CHANGELOG_FR` blocks are deleted, as ADR 0001 of `DyingStar-game/changelog`
+  says for "no player-visible change"; the skill `changelog-entry` (plugin
+  `changelog@dyingstar`, `.claude/settings.json`) holds those rules. Keep the description
+  current on each push; `gh pr edit` fails here (Projects classic deprecation): update it with
+  `gh api -X PATCH repos/DyingStar-game/adminpanel/pulls/<n> -F body=@<file>`.
 - Allowed otherwise: creating/switching branches and read-only commands (`git status`, `git diff`,
   `git log`).
 
