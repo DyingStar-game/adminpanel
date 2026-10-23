@@ -132,6 +132,13 @@ export type PlayerProfile = {
    */
   role: string | null;
   reputation: number;
+  /**
+   * Character standing per domain (mission categories), written by the game through the internal standing routes and read by Mission. Distinct from `reputation` (moderation/social score).
+   *
+   */
+  standing: {
+    [key: string]: number;
+  };
   playtimeSeconds: number;
   rpSheet: RpSheet | null;
   createdAt: string;
@@ -146,12 +153,31 @@ export type ProfilePatch = {
   rpSheet?: RpSheet | null;
 };
 
+/**
+ * Player position, relative to the body named by `scene` (local frame, metres). In open space (`scene: "space"`) the frame is the system itself.
+ *
+ */
 export type Location = {
+  /**
+   * Star system
+   */
   system?: string;
+  /**
+   * Body or sub-scene; `"space"` = open space (frame of the system)
+   */
   scene?: string;
   position?: {
+    /**
+     * Metres from the centre of the body named by scene
+     */
     x: number;
+    /**
+     * Metres in the frame of the body named by scene
+     */
     y: number;
+    /**
+     * Metres in the frame of the body named by scene
+     */
     z: number;
   };
 };
@@ -557,9 +583,9 @@ export type InternalCreateCorporation = CreateCorporation & {
 
 export type InternalCreatePoliticalEntity = CreatePoliticalEntity & {
   /**
-   * Profile (player or NPC) to make head
+   * Profile (player or NPC) to make head; omitted or null for a headless (system-governed) entity
    */
-  headId: string;
+  headId?: string | null;
 };
 
 export type ReputationEvent = {
@@ -848,6 +874,13 @@ export type SanctionPage = {
 
 export type PoliticalEntitySummaryPage = {
   items: Array<PoliticalEntitySummary>;
+  limit: number;
+  offset: number;
+  total: number;
+};
+
+export type PoliticalEntityListPage = {
+  items: Array<PoliticalEntity>;
   limit: number;
   offset: number;
   total: number;
@@ -3771,6 +3804,105 @@ export type InternalUpsertNpcResponses = {
 export type InternalUpsertNpcResponse =
   InternalUpsertNpcResponses[keyof InternalUpsertNpcResponses];
 
+export type InternalGetStandingData = {
+  body?: never;
+  path: {
+    playerId: string;
+  };
+  query?: never;
+  url: '/api/internal/players/{playerId}/standing';
+};
+
+export type InternalGetStandingErrors = {
+  /**
+   * Invalid body, query or path parameters (`VALIDATION_ERROR`) or malformed JSON (`INVALID_JSON`)
+   */
+  400: Error;
+  /**
+   * Missing or invalid player token / service token (`UNAUTHORIZED`)
+   */
+  401: Error;
+  /**
+   * The service token is not from an allowed client (`SERVICE_FORBIDDEN`) or the service account lacks the route's capability role (`FORBIDDEN`)
+   *
+   */
+  403: Error;
+  /**
+   * Resource not found (`NOT_FOUND`)
+   */
+  404: Error;
+};
+
+export type InternalGetStandingError = InternalGetStandingErrors[keyof InternalGetStandingErrors];
+
+export type InternalGetStandingResponses = {
+  /**
+   * Standing map
+   */
+  200: {
+    playerId: string;
+    standing: {
+      [key: string]: number;
+    };
+  };
+};
+
+export type InternalGetStandingResponse =
+  InternalGetStandingResponses[keyof InternalGetStandingResponses];
+
+export type InternalAddStandingData = {
+  body: {
+    domain: string;
+    /**
+     * Signed non-zero delta
+     */
+    amount: number;
+  };
+  path: {
+    playerId: string;
+  };
+  query?: never;
+  url: '/api/internal/players/{playerId}/standing';
+};
+
+export type InternalAddStandingErrors = {
+  /**
+   * Invalid body, query or path parameters (`VALIDATION_ERROR`) or malformed JSON (`INVALID_JSON`)
+   */
+  400: Error;
+  /**
+   * Missing or invalid player token / service token (`UNAUTHORIZED`)
+   */
+  401: Error;
+  /**
+   * The service token is not from an allowed client (`SERVICE_FORBIDDEN`) or the service account lacks the route's capability role (`FORBIDDEN`)
+   *
+   */
+  403: Error;
+  /**
+   * Resource not found (`NOT_FOUND`)
+   */
+  404: Error;
+};
+
+export type InternalAddStandingError = InternalAddStandingErrors[keyof InternalAddStandingErrors];
+
+export type InternalAddStandingResponses = {
+  /**
+   * Updated standing map
+   */
+  200: {
+    playerId: string;
+    domain: string;
+    standing: {
+      [key: string]: number;
+    };
+  };
+};
+
+export type InternalAddStandingResponse =
+  InternalAddStandingResponses[keyof InternalAddStandingResponses];
+
 export type InternalGetPresenceData = {
   body?: never;
   path: {
@@ -3861,6 +3993,57 @@ export type InternalSetPresenceResponses = {
 
 export type InternalSetPresenceResponse =
   InternalSetPresenceResponses[keyof InternalSetPresenceResponses];
+
+export type InternalSetPresenceBatchData = {
+  body: {
+    players: Array<{
+      playerId: string;
+      status?: PresenceStatus;
+      /**
+       * `null` clears; omitted keeps the previous location
+       */
+      location?: Location | null;
+    }>;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/internal/players/presence/batch';
+};
+
+export type InternalSetPresenceBatchErrors = {
+  /**
+   * Invalid body, query or path parameters (`VALIDATION_ERROR`) or malformed JSON (`INVALID_JSON`)
+   */
+  400: Error;
+  /**
+   * Missing or invalid player token / service token (`UNAUTHORIZED`)
+   */
+  401: Error;
+  /**
+   * The service token is not from an allowed client (`SERVICE_FORBIDDEN`) or the service account lacks the route's capability role (`FORBIDDEN`)
+   *
+   */
+  403: Error;
+};
+
+export type InternalSetPresenceBatchError =
+  InternalSetPresenceBatchErrors[keyof InternalSetPresenceBatchErrors];
+
+export type InternalSetPresenceBatchResponses = {
+  /**
+   * Refreshed count and ids without a profile
+   */
+  200: {
+    refreshed: number;
+    /**
+     * Player ids without a profile (not refreshed)
+     */
+    unknown: Array<string>;
+  };
+};
+
+export type InternalSetPresenceBatchResponse =
+  InternalSetPresenceBatchResponses[keyof InternalSetPresenceBatchResponses];
 
 export type InternalApplyStatsData = {
   body: {
@@ -5454,6 +5637,54 @@ export type InternalGetCorporationPoliticsResponses = {
 export type InternalGetCorporationPoliticsResponse =
   InternalGetCorporationPoliticsResponses[keyof InternalGetCorporationPoliticsResponses];
 
+export type InternalFindPoliticalEntitiesData = {
+  body?: never;
+  path?: never;
+  query?: {
+    type?: PoliticalEntityType;
+    /**
+     * Direct parent entity
+     */
+    parentId?: string;
+    /**
+     * Exact entity name
+     */
+    name?: string;
+    limit?: number;
+    offset?: number;
+  };
+  url: '/api/internal/politics';
+};
+
+export type InternalFindPoliticalEntitiesErrors = {
+  /**
+   * Invalid body, query or path parameters (`VALIDATION_ERROR`) or malformed JSON (`INVALID_JSON`)
+   */
+  400: Error;
+  /**
+   * Missing or invalid player token / service token (`UNAUTHORIZED`)
+   */
+  401: Error;
+  /**
+   * The service token is not from an allowed client (`SERVICE_FORBIDDEN`) or the service account lacks the route's capability role (`FORBIDDEN`)
+   *
+   */
+  403: Error;
+};
+
+export type InternalFindPoliticalEntitiesError =
+  InternalFindPoliticalEntitiesErrors[keyof InternalFindPoliticalEntitiesErrors];
+
+export type InternalFindPoliticalEntitiesResponses = {
+  /**
+   * Matching entities
+   */
+  200: PoliticalEntityListPage;
+};
+
+export type InternalFindPoliticalEntitiesResponse =
+  InternalFindPoliticalEntitiesResponses[keyof InternalFindPoliticalEntitiesResponses];
+
 export type InternalCreatePoliticalEntityData = {
   body: InternalCreatePoliticalEntity;
   path?: never;
@@ -5536,6 +5767,48 @@ export type InternalDisbandPoliticalEntityResponses = {
 export type InternalDisbandPoliticalEntityResponse =
   InternalDisbandPoliticalEntityResponses[keyof InternalDisbandPoliticalEntityResponses];
 
+export type InternalGetPoliticalEntityData = {
+  body?: never;
+  path: {
+    entityId: string;
+  };
+  query?: never;
+  url: '/api/internal/politics/{entityId}';
+};
+
+export type InternalGetPoliticalEntityErrors = {
+  /**
+   * Invalid body, query or path parameters (`VALIDATION_ERROR`) or malformed JSON (`INVALID_JSON`)
+   */
+  400: Error;
+  /**
+   * Missing or invalid player token / service token (`UNAUTHORIZED`)
+   */
+  401: Error;
+  /**
+   * The service token is not from an allowed client (`SERVICE_FORBIDDEN`) or the service account lacks the route's capability role (`FORBIDDEN`)
+   *
+   */
+  403: Error;
+  /**
+   * Resource not found (`NOT_FOUND`)
+   */
+  404: Error;
+};
+
+export type InternalGetPoliticalEntityError =
+  InternalGetPoliticalEntityErrors[keyof InternalGetPoliticalEntityErrors];
+
+export type InternalGetPoliticalEntityResponses = {
+  /**
+   * Entity
+   */
+  200: PoliticalEntity;
+};
+
+export type InternalGetPoliticalEntityResponse =
+  InternalGetPoliticalEntityResponses[keyof InternalGetPoliticalEntityResponses];
+
 export type InternalUpdatePoliticalEntityData = {
   body: PoliticalEntityPatch;
   path: {
@@ -5581,6 +5854,141 @@ export type InternalUpdatePoliticalEntityResponses = {
 
 export type InternalUpdatePoliticalEntityResponse =
   InternalUpdatePoliticalEntityResponses[keyof InternalUpdatePoliticalEntityResponses];
+
+export type InternalListPoliticalChildrenData = {
+  body?: never;
+  path: {
+    entityId: string;
+  };
+  query?: {
+    limit?: number;
+    offset?: number;
+  };
+  url: '/api/internal/politics/{entityId}/children';
+};
+
+export type InternalListPoliticalChildrenErrors = {
+  /**
+   * Invalid body, query or path parameters (`VALIDATION_ERROR`) or malformed JSON (`INVALID_JSON`)
+   */
+  400: Error;
+  /**
+   * Missing or invalid player token / service token (`UNAUTHORIZED`)
+   */
+  401: Error;
+  /**
+   * The service token is not from an allowed client (`SERVICE_FORBIDDEN`) or the service account lacks the route's capability role (`FORBIDDEN`)
+   *
+   */
+  403: Error;
+  /**
+   * Resource not found (`NOT_FOUND`)
+   */
+  404: Error;
+};
+
+export type InternalListPoliticalChildrenError =
+  InternalListPoliticalChildrenErrors[keyof InternalListPoliticalChildrenErrors];
+
+export type InternalListPoliticalChildrenResponses = {
+  /**
+   * Child summaries
+   */
+  200: PoliticalEntitySummaryPage;
+};
+
+export type InternalListPoliticalChildrenResponse =
+  InternalListPoliticalChildrenResponses[keyof InternalListPoliticalChildrenResponses];
+
+export type InternalListPoliticalAncestorsData = {
+  body?: never;
+  path: {
+    entityId: string;
+  };
+  query?: never;
+  url: '/api/internal/politics/{entityId}/ancestors';
+};
+
+export type InternalListPoliticalAncestorsErrors = {
+  /**
+   * Invalid body, query or path parameters (`VALIDATION_ERROR`) or malformed JSON (`INVALID_JSON`)
+   */
+  400: Error;
+  /**
+   * Missing or invalid player token / service token (`UNAUTHORIZED`)
+   */
+  401: Error;
+  /**
+   * The service token is not from an allowed client (`SERVICE_FORBIDDEN`) or the service account lacks the route's capability role (`FORBIDDEN`)
+   *
+   */
+  403: Error;
+  /**
+   * Resource not found (`NOT_FOUND`)
+   */
+  404: Error;
+};
+
+export type InternalListPoliticalAncestorsError =
+  InternalListPoliticalAncestorsErrors[keyof InternalListPoliticalAncestorsErrors];
+
+export type InternalListPoliticalAncestorsResponses = {
+  /**
+   * Ancestors, nearest first
+   */
+  200: Array<PoliticalEntity>;
+};
+
+export type InternalListPoliticalAncestorsResponse =
+  InternalListPoliticalAncestorsResponses[keyof InternalListPoliticalAncestorsResponses];
+
+export type InternalSetPoliticalEntityParentData = {
+  body: {
+    parentId: string | null;
+  };
+  path: {
+    entityId: string;
+  };
+  query?: never;
+  url: '/api/internal/politics/{entityId}/parent';
+};
+
+export type InternalSetPoliticalEntityParentErrors = {
+  /**
+   * Invalid body, query or path parameters (`VALIDATION_ERROR`) or malformed JSON (`INVALID_JSON`)
+   */
+  400: Error;
+  /**
+   * Missing or invalid player token / service token (`UNAUTHORIZED`)
+   */
+  401: Error;
+  /**
+   * The service token is not from an allowed client (`SERVICE_FORBIDDEN`) or the service account lacks the route's capability role (`FORBIDDEN`)
+   *
+   */
+  403: Error;
+  /**
+   * Resource not found (`NOT_FOUND`)
+   */
+  404: Error;
+  /**
+   * State conflict (`CONFLICT`)
+   */
+  409: Error;
+};
+
+export type InternalSetPoliticalEntityParentError =
+  InternalSetPoliticalEntityParentErrors[keyof InternalSetPoliticalEntityParentErrors];
+
+export type InternalSetPoliticalEntityParentResponses = {
+  /**
+   * Updated entity
+   */
+  200: PoliticalEntity;
+};
+
+export type InternalSetPoliticalEntityParentResponse =
+  InternalSetPoliticalEntityParentResponses[keyof InternalSetPoliticalEntityParentResponses];
 
 export type InternalTransferPoliticalHeadData = {
   body: {

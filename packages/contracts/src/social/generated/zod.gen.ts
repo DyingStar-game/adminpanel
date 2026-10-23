@@ -118,6 +118,7 @@ export const zPlayerProfile = z.object({
   biography: z.string().nullable(),
   role: z.string().nullable(),
   reputation: z.int(),
+  standing: z.record(z.string(), z.int()).default({}),
   playtimeSeconds: z.int(),
   rpSheet: zRpSheet.nullable(),
   createdAt: z.iso.datetime(),
@@ -132,6 +133,10 @@ export const zProfilePatch = z.object({
   rpSheet: zRpSheet.nullish(),
 });
 
+/**
+ * Player position, relative to the body named by `scene` (local frame, metres). In open space (`scene: "space"`) the frame is the system itself.
+ *
+ */
 export const zLocation = z.object({
   system: z.string().max(64).optional(),
   scene: z.string().max(128).optional(),
@@ -531,7 +536,7 @@ export const zInternalCreateCorporation = zCreateCorporation.and(
 
 export const zInternalCreatePoliticalEntity = zCreatePoliticalEntity.and(
   z.object({
-    headId: z.uuid(),
+    headId: z.uuid().nullish(),
   }),
 );
 
@@ -802,6 +807,13 @@ export const zSanctionPage = z.object({
 
 export const zPoliticalEntitySummaryPage = z.object({
   items: z.array(zPoliticalEntitySummary),
+  limit: z.int().gte(1).lte(100).default(20),
+  offset: z.int().gte(0).default(0),
+  total: z.int().gte(0),
+});
+
+export const zPoliticalEntityListPage = z.object({
+  items: z.array(zPoliticalEntity),
   limit: z.int().gte(1).lte(100).default(20),
   offset: z.int().gte(0).default(0),
   total: z.int().gte(0),
@@ -1658,6 +1670,36 @@ export const zInternalUpsertNpcPath = z.object({
  */
 export const zInternalUpsertNpcResponse = zPlayerProfile;
 
+export const zInternalGetStandingPath = z.object({
+  playerId: z.uuid(),
+});
+
+/**
+ * Standing map
+ */
+export const zInternalGetStandingResponse = z.object({
+  playerId: z.uuid(),
+  standing: z.record(z.string(), z.int()),
+});
+
+export const zInternalAddStandingBody = z.object({
+  domain: z.string().min(1).max(32),
+  amount: z.int().gte(-100000).lte(100000),
+});
+
+export const zInternalAddStandingPath = z.object({
+  playerId: z.uuid(),
+});
+
+/**
+ * Updated standing map
+ */
+export const zInternalAddStandingResponse = z.object({
+  playerId: z.uuid(),
+  domain: z.string(),
+  standing: z.record(z.string(), z.int()),
+});
+
 export const zInternalGetPresencePath = z.object({
   playerId: z.uuid(),
 });
@@ -1689,6 +1731,27 @@ export const zInternalSetPresenceResponse = z
     playerId: z.uuid(),
   })
   .and(zPresence);
+
+export const zInternalSetPresenceBatchBody = z.object({
+  players: z
+    .array(
+      z.object({
+        playerId: z.uuid(),
+        status: zPresenceStatus.optional(),
+        location: zLocation.nullish(),
+      }),
+    )
+    .min(1)
+    .max(5000),
+});
+
+/**
+ * Refreshed count and ids without a profile
+ */
+export const zInternalSetPresenceBatchResponse = z.object({
+  refreshed: z.int().gte(0),
+  unknown: z.array(z.uuid()),
+});
 
 export const zInternalApplyStatsBody = z.object({
   playtimeSecondsDelta: z.int().gte(0).optional(),
@@ -2144,6 +2207,19 @@ export const zInternalGetCorporationPoliticsResponse = z.object({
   politicalEntityId: z.uuid().nullable(),
 });
 
+export const zInternalFindPoliticalEntitiesQuery = z.object({
+  type: zPoliticalEntityType.optional(),
+  parentId: z.uuid().optional(),
+  name: z.string().min(1).max(64).optional(),
+  limit: z.int().gte(1).lte(100).optional().default(20),
+  offset: z.int().gte(0).optional().default(0),
+});
+
+/**
+ * Matching entities
+ */
+export const zInternalFindPoliticalEntitiesResponse = zPoliticalEntityListPage;
+
 export const zInternalCreatePoliticalEntityBody = zInternalCreatePoliticalEntity;
 
 /**
@@ -2160,6 +2236,15 @@ export const zInternalDisbandPoliticalEntityPath = z.object({
  */
 export const zInternalDisbandPoliticalEntityResponse = z.void();
 
+export const zInternalGetPoliticalEntityPath = z.object({
+  entityId: z.uuid(),
+});
+
+/**
+ * Entity
+ */
+export const zInternalGetPoliticalEntityResponse = zPoliticalEntity;
+
 export const zInternalUpdatePoliticalEntityBody = zPoliticalEntityPatch;
 
 export const zInternalUpdatePoliticalEntityPath = z.object({
@@ -2170,6 +2255,42 @@ export const zInternalUpdatePoliticalEntityPath = z.object({
  * Updated entity
  */
 export const zInternalUpdatePoliticalEntityResponse = zPoliticalEntity;
+
+export const zInternalListPoliticalChildrenPath = z.object({
+  entityId: z.uuid(),
+});
+
+export const zInternalListPoliticalChildrenQuery = z.object({
+  limit: z.int().gte(1).lte(100).optional().default(20),
+  offset: z.int().gte(0).optional().default(0),
+});
+
+/**
+ * Child summaries
+ */
+export const zInternalListPoliticalChildrenResponse = zPoliticalEntitySummaryPage;
+
+export const zInternalListPoliticalAncestorsPath = z.object({
+  entityId: z.uuid(),
+});
+
+/**
+ * Ancestors, nearest first
+ */
+export const zInternalListPoliticalAncestorsResponse = z.array(zPoliticalEntity);
+
+export const zInternalSetPoliticalEntityParentBody = z.object({
+  parentId: z.uuid().nullable(),
+});
+
+export const zInternalSetPoliticalEntityParentPath = z.object({
+  entityId: z.uuid(),
+});
+
+/**
+ * Updated entity
+ */
+export const zInternalSetPoliticalEntityParentResponse = zPoliticalEntity;
 
 export const zInternalTransferPoliticalHeadBody = z.object({
   playerId: z.uuid(),
