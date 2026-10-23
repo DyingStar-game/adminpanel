@@ -739,7 +739,20 @@ export const en = {
       step: 'Step {{step}}',
       parameters: 'Parameters as stored',
       noSchematic: 'A kind the panel does not draw yet: its parameters as stored.',
-      route: 'Route of the objective',
+      places: 'Places of the objective',
+    },
+    placesMap: {
+      title: 'Places',
+      label: "Map of the mission's places",
+      legend: 'Roles of the places',
+      body: 'Body',
+      onBody: "On {{name}}, around the places (true distances; not the planet map's frame)",
+      grid: 'Grid {{step}} · thick lines {{major}}',
+      use: 'step {{step}} {{title}}: {{role}}',
+      elsewhere: 'Not on the map',
+      unread:
+        'The places were not read from the inventory (inventory:read): the objectives give their POI ids.',
+      showOnMap: 'On the map',
     },
     objectiveStatus: {
       pending: 'To do',

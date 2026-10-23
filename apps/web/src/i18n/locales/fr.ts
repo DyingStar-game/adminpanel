@@ -752,7 +752,21 @@ export const fr: Translations = {
       parameters: 'Paramètres tels que stockés',
       noSchematic:
         'Un type que le panneau ne dessine pas encore : ses paramètres tels que stockés.',
-      route: "Trajet de l'objectif",
+      places: "Lieux de l'objectif",
+    },
+    placesMap: {
+      title: 'Lieux',
+      label: 'Carte des lieux de la mission',
+      legend: 'Rôles des lieux',
+      body: 'Corps',
+      onBody:
+        'Sur {{name}}, autour des lieux (distances réelles ; pas le repère de la carte de la planète)',
+      grid: 'Grille {{step}} · traits épais {{major}}',
+      use: 'étape {{step}} {{title}} : {{role}}',
+      elsewhere: 'Hors de la carte',
+      unread:
+        "Les lieux n'ont pas été lus dans l'inventaire (inventory:read) : les objectifs donnent les ids de leurs POI.",
+      showOnMap: 'Sur la carte',
     },
     objectiveStatus: {
       pending: 'À faire',

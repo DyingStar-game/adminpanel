@@ -77,4 +77,28 @@ describe('MissionObjectives (ADR 0026)', () => {
     expect(screen.getByText(/"npcId": "n-1"/)).toBeVisible();
     expect(screen.getByText('weight 2')).toBeInTheDocument();
   });
+
+  it('chooses an objective with places for the map, and frames the chosen one (ADR 0027)', async () => {
+    const onSelect = vi.fn();
+    const [transport] = of(missionIds.transport);
+    if (!transport) throw new Error('fixture');
+    renderWithProviders(
+      <MissionObjectives
+        objectives={of(missionIds.transport)}
+        places={places}
+        players={{}}
+        selected={transport.id}
+        onSelect={onSelect}
+      />,
+    );
+
+    const [chosen, owned] = screen.getAllByRole('article');
+    expect(chosen).toHaveAttribute('aria-current', 'true');
+    // Owning items sends no one anywhere: nothing to show on the map.
+    expect(within(owned as HTMLElement).queryByRole('button', { name: 'On the map' })).toBeNull();
+    const toggle = within(chosen as HTMLElement).getByRole('button', { name: 'On the map' });
+    expect(toggle).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(toggle);
+    expect(onSelect).toHaveBeenCalledWith(undefined);
+  });
 });

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeftIcon } from 'lucide-react';
 import { MonoText } from '@/components/atoms/MonoText';
@@ -6,6 +7,7 @@ import { MissionReward } from '@/components/molecules/MissionReward';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { MissionAssignmentsTable } from '@/components/organisms/MissionAssignmentsTable';
 import { MissionObjectives } from '@/components/organisms/MissionObjectives';
+import { MissionPlacesMap } from '@/components/organisms/MissionPlacesMap';
 import { MissionTerms, type MissionLinks } from '@/components/organisms/MissionTerms';
 import { ServicePageLayout } from '@/components/templates/ServicePageLayout';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +43,8 @@ export function MissionPage({
   // Players and organisations have their pages for who may read `social` (as the sidebar).
   const social = services.includes('social') && can('social.moderate');
   const detail = useMission(missionId);
+  // The objective chosen on the map or its card (ADR 0027).
+  const [selected, setSelected] = useState<string | undefined>(undefined);
 
   const back = (
     <Button variant="outline" size="sm" onClick={onBack}>
@@ -121,12 +125,23 @@ export function MissionPage({
         onOpenPoliticalEntity={social ? onOpenPoliticalEntity : undefined}
       />
       <section className="flex flex-col gap-2">
+        <h2 className="text-sm font-semibold">{t('missions.placesMap.title')}</h2>
+        <MissionPlacesMap
+          objectives={d.objectives}
+          places={d.places}
+          selected={selected}
+          onSelect={setSelected}
+        />
+      </section>
+      <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold">{t('missions.detail.objectives')}</h2>
         <MissionObjectives
           objectives={d.objectives}
           places={d.places}
           players={d.players}
           onOpenPlayer={social ? onOpenPlayer : undefined}
+          selected={selected}
+          onSelect={setSelected}
         />
       </section>
       <section className="flex flex-col gap-2">

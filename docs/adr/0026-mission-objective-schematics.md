@@ -93,6 +93,10 @@ the arrow between them, the good and its quantity on the arrow, the gauge), weig
 today. The raw `params` stay available, folded. A `manual` objective has no drawing, only its
 instruction and who confirms it.
 
+**Amended by [ADR 0027](./0027-mission-places-map.md) (2026-10-23)**: the strip of pins was not
+usable visually; the places of every objective are drawn on one map of the mission instead, and
+the card lists its places as text.
+
 ### POIs, read from `inventory`
 
 - The BFF resolves an objective's POIs through `inventory`'s `GET /api/internal/pois/:poiId`

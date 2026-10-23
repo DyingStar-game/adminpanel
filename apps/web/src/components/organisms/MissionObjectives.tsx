@@ -1,14 +1,17 @@
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Poi } from '@dyingstar-admin/contracts/inventory';
 import type { MissionObjective } from '@dyingstar-admin/contracts/mission';
 import { Chip } from '@/components/atoms/Chip';
 import { MissionReward } from '@/components/molecules/MissionReward';
-import { ObjectiveRoute } from '@/components/molecules/ObjectiveRoute';
+import { ObjectivePlaces } from '@/components/molecules/ObjectivePlaces';
 import { RawJson } from '@/components/molecules/RawJson';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/cn';
 import { shortId } from '@/lib/format';
 import { objectiveView, type ObjectiveView } from '@/lib/objectiveSchematics';
-import { objectiveInstruction, objectiveQuantity } from '@/lib/objectiveSchematics/instruction';
+import { objectiveInstruction } from '@/lib/objectiveSchematics/instruction';
 
 interface MissionObjectivesProps {
   objectives: MissionObjective[];
@@ -18,6 +21,10 @@ interface MissionObjectivesProps {
   players: Record<string, string>;
   /** Opens a player's sheet; unset, players are not links (the account may not see them). */
   onOpenPlayer?: ((id: string) => void) | undefined;
+  /** The objective chosen on the mission's map (ADR 0027): its card is framed. */
+  selected?: string | undefined;
+  /** Chooses an objective with places, to show them on the map; unset, no such choice. */
+  onSelect?: ((objectiveId: string | undefined) => void) | undefined;
 }
 
 /**
@@ -30,6 +37,8 @@ export function MissionObjectives({
   places,
   players,
   onOpenPlayer,
+  selected,
+  onSelect,
 }: MissionObjectivesProps) {
   const { t } = useTranslation();
   if (objectives.length === 0) return <p className="text-sm text-fg-3">{t('moderation.none')}</p>;
@@ -43,6 +52,8 @@ export function MissionObjectives({
             view={objectiveView(objective, places)}
             players={players}
             onOpenPlayer={onOpenPlayer}
+            selected={selected === objective.id}
+            onSelect={onSelect && ((on) => onSelect(on ? objective.id : undefined))}
           />
         </li>
       ))}
@@ -55,15 +66,36 @@ interface ObjectiveCardProps {
   view: ObjectiveView | null;
   players: Record<string, string>;
   onOpenPlayer?: ((id: string) => void) | undefined;
+  selected: boolean;
+  onSelect?: ((on: boolean) => void) | undefined;
 }
 
-function ObjectiveCard({ objective: o, view, players, onOpenPlayer }: ObjectiveCardProps) {
+function ObjectiveCard({
+  objective: o,
+  view,
+  players,
+  onOpenPlayer,
+  selected,
+  onSelect,
+}: ObjectiveCardProps) {
   const { t, i18n } = useTranslation();
   const hasParams = o.params !== null && Object.keys(o.params).length > 0;
-  const cargo = view?.good ? `${objectiveQuantity(o, i18n.language)} · ${view.good}` : undefined;
+  const placed = view?.places.some((p) => p.poiId) ?? false;
+  // Chosen on the map: brought into view.
+  const card = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (selected) card.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  }, [selected]);
 
   return (
-    <article className="flex flex-col gap-3 rounded-lg border px-4 py-3">
+    <article
+      ref={card}
+      aria-current={selected || undefined}
+      className={cn(
+        'flex flex-col gap-3 rounded-lg border px-4 py-3',
+        selected && 'border-primary ring-1 ring-primary',
+      )}
+    >
       <header className="flex flex-wrap items-center gap-2">
         <span className="text-xs text-fg-3 tabular-nums">
           {t('missions.objectiveDetail.step', { step: o.order })}
@@ -79,6 +111,17 @@ function ObjectiveCard({ objective: o, view, players, onOpenPlayer }: ObjectiveC
           <span className="text-xs text-fg-3">
             {t('missions.detail.weight', { count: o.weight })}
           </span>
+        )}
+        {placed && onSelect && (
+          <Button
+            variant={selected ? 'secondary' : 'outline'}
+            size="xs"
+            className="ml-auto"
+            aria-pressed={selected}
+            onClick={() => onSelect(!selected)}
+          >
+            {t('missions.placesMap.showOnMap')}
+          </Button>
         )}
       </header>
       {o.description && <p className="text-xs text-fg-3">{o.description}</p>}
@@ -105,7 +148,7 @@ function ObjectiveCard({ objective: o, view, players, onOpenPlayer }: ObjectiveC
               )}
             </span>
           )}
-          <ObjectiveRoute places={view.places} cargo={cargo} loaded={view.loaded} />
+          <ObjectivePlaces places={view.places} loaded={view.loaded} />
           <ObjectiveProgress objective={o} view={view} />
         </>
       ) : (

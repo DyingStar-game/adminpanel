@@ -172,7 +172,8 @@ wire.
   following the kind's code in `mission`'s `src/kinds/objectives/`. A test checks each file
   against a fixture objective of its kind (`packages/testing`, `missionMock.ts`). The POIs are
   named from `inventory` by the BFF for who holds `inventory:read`; `MissionObjectives` draws
-  every objective.
+  every objective, and `MissionPlacesMap` puts the places of every objective on one map
+  ([ADR 0027](./docs/adr/0027-mission-places-map.md), `lib/places.ts` › `missionPlaces`).
 
 - **Game service — per service** ([ADR 0024](./docs/adr/0024-game-services-social-first.md)),
   `social`, `economie` and `mission` being the models: pin its OpenAPI in `packages/contracts`

@@ -29,7 +29,23 @@ starting a session on lot 2.**
 Order agreed with the maintainer on 2026-10-08: I (acting on players) before K (organisations),
 since the player sheet is where moderators look first.
 
-### 2026-10-23 — ADR 0026, objective schematics, where to resume
+### 2026-10-23 — ADR 0027, a mission's places on a map, where to resume
+
+- **Branch `feature/missions`** (on `origin/develop`, with the simulation section of PR #2; the
+  maintainer allowed commits on it, PR once satisfied). The work of lot 2 step O was carried
+  over from `develop`'s working tree; ADR 0025 is the simulation's, the objective schematics are
+  ADR 0026.
+- **ADR 0027, accepted** (maintainer, 2026-10-23: the strip of pins "not usable visually", "an
+  equivalent of the network map"): a "Places" map on a mission's page, in `MetricMap` like the
+  network map, every objective's POIs as discs by role (load, deliver, reach) with their names,
+  zones as circles, a `transport` as a line (dashed until loaded) with its head; a frame of the
+  places themselves (no persistence read: a planet cannot be found from a POI's scene, two items
+  share `tarsis_3.tscn`); places in open space or unknown listed under it; objective and places
+  chosen from either side. The objective cards list their places as text.
+- **Checked live on minikube** (GET only, as `ynotna`): the transport's two places 196 km apart,
+  the foundry's 40 m zone, the relay station listed in open space.
+
+### 2026-10-23 — ADR 0026, objective schematics
 
 - **ADR 0026 accepted** (maintainer, 2026-10-23): a declarative schematic per objective kind
   (`lib/objectiveSchematics/`), its "what to do" sentence in `en` / `fr`, the POIs named from
