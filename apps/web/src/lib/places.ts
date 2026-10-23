@@ -219,6 +219,9 @@ export function missionPlaces(
   return { bodies, undrawn: [...undrawn.values()] };
 }
 
+/** Colour of the goods in an objective's sentence: one no role uses. */
+export const GOODS_COLOR = '#c084fc';
+
 /** Colour of a place on the map by its role: load in blue, deliver in gold, reach in green. */
 export const ROLE_COLORS: Record<PlaceRole, string> = {
   pickup: '#38bdf8',

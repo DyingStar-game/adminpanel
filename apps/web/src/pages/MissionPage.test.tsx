@@ -48,7 +48,10 @@ describe('MissionPage (ADR 0024 step O)', () => {
     expect(screen.getByText('Report to the foreman')).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Be inside Foundry loading bay carrying 10 t of iron_ore: where it comes from is not checked. What every assignee inside carries adds up.',
+        (_, el) =>
+          el?.tagName === 'P' &&
+          el.textContent ===
+            'Bring 10 t (Iron ore) to Foundry loading bay and stay inside: where they come from is not checked. What every assignee inside carries adds up.',
       ),
     ).toBeInTheDocument();
     expect(screen.getByText('Unknown place')).toBeInTheDocument();

@@ -53,7 +53,11 @@ describe('MissionObjectives (ADR 0026)', () => {
     );
 
     expect(
-      screen.getByText('Bring ddurieux, seated but not driving, to Relay station.'),
+      screen.getByText(
+        (_, el) =>
+          el?.tagName === 'P' &&
+          el.textContent === 'Bring ddurieux, seated but not driving, to Relay station.',
+      ),
     ).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /ddurieux/ }));
     expect(onOpenPlayer).toHaveBeenCalledWith(socialIds.reporter);

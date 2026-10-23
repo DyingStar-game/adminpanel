@@ -703,25 +703,26 @@ export const fr: Translations = {
     objectiveKinds: {
       deliver_material: {
         instruction:
-          "Être dans {{to}} en portant {{quantity}} de {{good}} : leur provenance n'est pas vérifiée.",
+          "Apporter <goods>{{goods}}</goods> à <to>{{to}}</to> et y rester : leur provenance n'est pas vérifiée.",
         pooled: "Ce que porte chaque preneur présent s'additionne.",
       },
       transport: {
         instruction:
-          'Charger {{quantity}} de {{good}} à {{from}}, puis livrer le chargement à {{to}}.',
+          'Récupérer <goods>{{goods}}</goods> à <from>{{from}}</from>, puis les livrer à <to>{{to}}</to>.',
       },
       transport_passenger: {
-        instruction: "Amener {{player}}, assis mais sans conduire, jusqu'à {{to}}.",
+        instruction:
+          "Amener <player>{{player}}</player>, assis mais sans conduire, jusqu'à <to>{{to}}</to>.",
       },
-      visit: { instruction: 'Atteindre {{to}} : le premier passage compte.' },
+      visit: { instruction: 'Se rendre à <reach>{{to}}</reach> : le premier passage compte.' },
       owns_items: {
         instruction:
-          "Posséder {{quantity}} de {{good}} dans l'inventaire : en vendre ou en utiliser fait baisser la progression.",
+          "Posséder <goods>{{goods}}</goods> dans l'inventaire : en vendre ou en utiliser fait baisser la progression.",
       },
       manual: { instruction: "Atteint quand l'émetteur de la mission le confirme." },
     },
     objectivePlaces: {
-      pickup: 'Charger',
+      pickup: 'Récupérer',
       dropoff: 'Livrer',
       target: 'Atteindre',
       poi: 'POI {{id}}',
@@ -735,8 +736,8 @@ export const fr: Translations = {
       distance: '{{distance}}',
       altitude: 'Altitude {{altitude}}',
       radius: 'Zone de {{radius}}',
-      loaded: 'Chargé, en route',
-      toLoad: 'Pas encore chargé',
+      loaded: 'Récupéré',
+      toLoad: 'Pas encore récupéré',
       copy: "Copier l'id du POI",
     },
     objectiveProgress: {

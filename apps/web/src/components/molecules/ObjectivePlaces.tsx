@@ -1,5 +1,7 @@
 import { useTranslation } from 'react-i18next';
+import { CheckIcon } from 'lucide-react';
 import { MonoText } from '@/components/atoms/MonoText';
+import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { formatAltitude, formatLatLon } from '@/lib/bodyMap';
 import type { PlaceView } from '@/lib/objectiveSchematics';
@@ -8,17 +10,19 @@ import { IdLabel } from './IdLabel';
 
 interface ObjectivePlacesProps {
   places: PlaceView[];
-  /** For a two-phase kind, whether the goods are loaded; null otherwise. */
+  /** For a two-phase kind, whether the goods are picked up; null otherwise. */
   loaded: boolean | null;
+  /** Whether someone took the mission: the pick-up's state only says something then. */
+  taken: boolean;
 }
 
 /**
  * An objective's places in a column (ADR 0027; the map draws them): each one's role bubble and
- * name, the bubbles joined by a dotted line with the distance (along the surface) beside it, then
- * whether the goods are loaded. A place's name opens its details (body, latitude / longitude,
+ * name, the bubbles joined by a dotted line with the distance (along the surface) beside it; on
+ * the pick-up, whether the goods are picked up, once someone took the mission. A place's name opens its details (body, latitude / longitude,
  * altitude, zone, id); a place `inventory` does not know, or did not give, shows its id.
  */
-export function ObjectivePlaces({ places, loaded }: ObjectivePlacesProps) {
+export function ObjectivePlaces({ places, loaded, taken }: ObjectivePlacesProps) {
   const { t, i18n } = useTranslation();
   if (places.length === 0) return null;
 
@@ -44,8 +48,18 @@ export function ObjectivePlaces({ places, loaded }: ObjectivePlacesProps) {
               <span className="text-xs text-fg-3">
                 {t(`missions.objectivePlaces.${place.role}`)}
               </span>
-              <span className="flex min-w-0">
+              <span className="flex min-w-0 items-center gap-2">
                 <PlaceName place={place} language={i18n.language} />
+                {place.role === 'pickup' && loaded !== null && taken && (
+                  <Badge variant={loaded ? 'secondary' : 'outline'}>
+                    {loaded && <CheckIcon aria-hidden />}
+                    {t(
+                      loaded
+                        ? 'missions.objectivePlaces.loaded'
+                        : 'missions.objectivePlaces.toLoad',
+                    )}
+                  </Badge>
+                )}
               </span>
               {next && (
                 <>
@@ -61,11 +75,6 @@ export function ObjectivePlaces({ places, loaded }: ObjectivePlacesProps) {
           );
         })}
       </ol>
-      {loaded !== null && (
-        <p className="pl-6 text-xs text-fg-3">
-          {t(loaded ? 'missions.objectivePlaces.loaded' : 'missions.objectivePlaces.toLoad')}
-        </p>
-      )}
     </div>
   );
 }

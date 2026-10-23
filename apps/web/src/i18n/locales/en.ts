@@ -694,22 +694,26 @@ export const en = {
     objectiveKinds: {
       deliver_material: {
         instruction:
-          'Be inside {{to}} carrying {{quantity}} of {{good}}: where it comes from is not checked.',
+          'Bring <goods>{{goods}}</goods> to <to>{{to}}</to> and stay inside: where they come from is not checked.',
         pooled: 'What every assignee inside carries adds up.',
       },
       transport: {
-        instruction: 'Load {{quantity}} of {{good}} at {{from}}, then deliver the load to {{to}}.',
+        instruction:
+          'Pick up <goods>{{goods}}</goods> at <from>{{from}}</from>, then deliver them to <to>{{to}}</to>.',
       },
-      transport_passenger: { instruction: 'Bring {{player}}, seated but not driving, to {{to}}.' },
-      visit: { instruction: 'Reach {{to}}: the first visit counts.' },
+      transport_passenger: {
+        instruction:
+          'Bring <player>{{player}}</player>, seated but not driving, to <to>{{to}}</to>.',
+      },
+      visit: { instruction: 'Go to <reach>{{to}}</reach>: the first visit counts.' },
       owns_items: {
         instruction:
-          'Own {{quantity}} of {{good}} in the inventory: selling or using some lowers the progress.',
+          'Hold <goods>{{goods}}</goods> in the inventory: selling or using some lowers the progress.',
       },
       manual: { instruction: "Done when the mission's issuer confirms it." },
     },
     objectivePlaces: {
-      pickup: 'Load',
+      pickup: 'Pick up',
       dropoff: 'Deliver',
       target: 'Reach',
       poi: 'POI {{id}}',
@@ -723,8 +727,8 @@ export const en = {
       distance: '{{distance}}',
       altitude: 'Altitude {{altitude}}',
       radius: 'Zone of {{radius}}',
-      loaded: 'Loaded, on the way',
-      toLoad: 'Not loaded yet',
+      loaded: 'Picked up',
+      toLoad: 'Not picked up yet',
       copy: 'Copy the POI id',
     },
     objectiveProgress: {

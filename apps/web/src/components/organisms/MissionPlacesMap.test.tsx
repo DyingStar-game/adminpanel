@@ -44,7 +44,9 @@ describe('MissionPlacesMap (ADR 0027)', () => {
 
     expect(screen.getByRole('region', { name: "Map of the mission's places" })).toBeInTheDocument();
     expect(screen.getByText(/^On Tarsis III — Sandbox, around the places/)).toBeInTheDocument();
-    const depot = screen.getByTitle('Vance depot · step 1 Bring the parts to the drill site: Load');
+    const depot = screen.getByTitle(
+      'Vance depot · step 1 Bring the parts to the drill site: Pick up',
+    );
     expect(
       screen.getByTitle('Drill site 7 · step 1 Bring the parts to the drill site: Deliver'),
     ).toBeInTheDocument();

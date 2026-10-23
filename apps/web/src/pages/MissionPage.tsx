@@ -147,6 +147,7 @@ export function MissionPage({
           onOpenPlayer={social ? onOpenPlayer : undefined}
           selected={selected}
           onSelect={setSelected}
+          taken={summary.active > 0}
         />
       </section>
       <section className="flex flex-col gap-2">

@@ -3,13 +3,14 @@ import { useTranslation } from 'react-i18next';
 import type { Poi } from '@dyingstar-admin/contracts/inventory';
 import type { MissionObjective } from '@dyingstar-admin/contracts/mission';
 import { MissionReward } from '@/components/molecules/MissionReward';
+import { ObjectiveInstruction } from '@/components/molecules/ObjectiveInstruction';
 import { ObjectivePlaces } from '@/components/molecules/ObjectivePlaces';
 import { RawJson } from '@/components/molecules/RawJson';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
 import { objectiveView, type ObjectiveView } from '@/lib/objectiveSchematics';
-import { objectiveInstruction } from '@/lib/objectiveSchematics/instruction';
+import { instructionParts } from '@/lib/objectiveSchematics/instruction';
 import { EntityLink } from '@/components/molecules/EntityLink';
 
 interface MissionObjectivesProps {
@@ -24,6 +25,8 @@ interface MissionObjectivesProps {
   selected?: string | undefined;
   /** Chooses an objective with places, to show them on the map; unset, no such choice. */
   onSelect?: ((objectiveId: string | undefined) => void) | undefined;
+  /** Whether someone has the mission in hand (an active assignment): progress states then mean something. */
+  taken?: boolean;
 }
 
 /**
@@ -38,6 +41,7 @@ export function MissionObjectives({
   onOpenPlayer,
   selected,
   onSelect,
+  taken = false,
 }: MissionObjectivesProps) {
   const { t } = useTranslation();
   if (objectives.length === 0) return <p className="text-sm text-fg-3">{t('moderation.none')}</p>;
@@ -52,6 +56,7 @@ export function MissionObjectives({
             players={players}
             onOpenPlayer={onOpenPlayer}
             selected={selected === objective.id}
+            taken={taken}
             onSelect={onSelect && ((on) => onSelect(on ? objective.id : undefined))}
           />
         </li>
@@ -67,6 +72,7 @@ interface ObjectiveCardProps {
   onOpenPlayer?: ((id: string) => void) | undefined;
   selected: boolean;
   onSelect?: ((on: boolean) => void) | undefined;
+  taken: boolean;
 }
 
 function ObjectiveCard({
@@ -76,6 +82,7 @@ function ObjectiveCard({
   onOpenPlayer,
   selected,
   onSelect,
+  taken,
 }: ObjectiveCardProps) {
   const { t, i18n } = useTranslation();
   const hasParams = o.params !== null && Object.keys(o.params).length > 0;
@@ -139,16 +146,16 @@ function ObjectiveCard({
       </header>
       {view ? (
         <div className="flex flex-col gap-2.5 pl-9">
-          <p className="text-sm">
-            {objectiveInstruction(t, o, view, { language: i18n.language, players })}
-          </p>
+          <ObjectiveInstruction
+            parts={instructionParts(t, o, view, { language: i18n.language, players })}
+          />
           {view.playerId && (
             <span className="flex items-center gap-2 text-sm">
               <span className="text-xs text-fg-3">{t('missions.objectivePlaces.passenger')}</span>
               <EntityLink id={view.playerId} label={players[view.playerId]} onOpen={onOpenPlayer} />
             </span>
           )}
-          <ObjectivePlaces places={view.places} loaded={view.loaded} />
+          <ObjectivePlaces places={view.places} loaded={view.loaded} taken={taken} />
           <ObjectiveProgress objective={o} view={view} />
         </div>
       ) : (

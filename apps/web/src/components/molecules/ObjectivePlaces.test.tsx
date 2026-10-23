@@ -16,12 +16,14 @@ describe('ObjectivePlaces (ADR 0027)', () => {
           { role: 'dropoff', poiId: poiIds.drillSite, poi: drillSite },
         ]}
         loaded
+        taken
       />,
     );
 
     const list = screen.getByRole('list', { name: 'Places of the objective' });
-    expect(list).toHaveTextContent(/Load\s*Vance depot.*km.*Deliver\s*Drill site 7/);
-    expect(screen.getByText('Loaded, on the way')).toBeInTheDocument();
+    expect(list).toHaveTextContent(
+      /Pick up\s*Vance depot\s*Picked up.*km\s*Deliver\s*Drill site 7/,
+    );
     // Details on demand: body, position, zone, the id to copy.
     expect(screen.queryByText('Tarsis III — Sandbox')).toBeNull();
     await userEvent.click(screen.getByRole('button', { name: 'Drill site 7' }));
@@ -38,6 +40,7 @@ describe('ObjectivePlaces (ADR 0027)', () => {
           { role: 'dropoff', poiId: poiIds.depot, poi: undefined },
         ]}
         loaded={null}
+        taken
       />,
     );
 
@@ -45,5 +48,19 @@ describe('ObjectivePlaces (ADR 0027)', () => {
     expect(screen.getByText('Not read from the inventory')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'Copy the POI id' })).toHaveLength(2);
     expect(screen.queryByText(/km/)).toBeNull();
+  });
+
+  it('says nothing of the pick-up while no one has the mission in hand', () => {
+    renderWithProviders(
+      <ObjectivePlaces
+        places={[
+          { role: 'pickup', poiId: poiIds.depot, poi: depot },
+          { role: 'dropoff', poiId: poiIds.drillSite, poi: drillSite },
+        ]}
+        loaded={false}
+        taken={false}
+      />,
+    );
+    expect(screen.queryByText('Not picked up yet')).toBeNull();
   });
 });
