@@ -119,4 +119,34 @@ describe('GET /api/bodies/:uuid/map', () => {
       ]),
     );
   });
+
+  it('counts players once, those standing on the body and those housed in it', async () => {
+    const dataset = createDataset();
+    const housed = dataset.find((item) => item.object_uuid === ids.player);
+    if (!housed) throw new Error('No fixture player');
+    // Player positions now reach persistence: a player out of their building stands on the
+    // planet itself, beside the ones still housed.
+    const standing: Item = {
+      ...housed,
+      object_uuid: '1b029618-ee3b-4045-abaa-ed1fafd9f8f9',
+      object_data: {
+        ...housed.object_data,
+        uuid: '1b029618-ee3b-4045-abaa-ed1fafd9f8f9',
+        name: 'walker',
+        parent_id: ids.planet,
+        position: { x: 0, y: 6_361_600, z: 120 },
+      },
+    };
+    const body = await read(
+      await buildApp({ dataset: [...dataset, standing] }).request(`/api/bodies/${ids.planet}/map`),
+    );
+
+    expect(body.counts.filter((c: { object_type: string }) => c.object_type === 'player')).toEqual([
+      { object_type: 'player', total: 2 },
+    ]);
+    const players = body.points.filter((p: { object_type: string }) => p.object_type === 'player');
+    expect(players.map((p: { object_uuid: string }) => p.object_uuid).sort()).toEqual(
+      [ids.player, standing.object_uuid].sort(),
+    );
+  });
 });
