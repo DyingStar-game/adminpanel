@@ -5,9 +5,10 @@ Guidance for Claude Code when working in this repository.
 ## Golden rule — Git
 
 - **Never commit, amend, tag or push on your own.** The maintainer creates every commit.
-- Exception granted by the maintainer: commits are allowed **only on the working branch
-  `feature/manage-persistence`**, under the maintainer's git identity. Never on any other branch,
-  never amend, never push.
+- Exception granted by the maintainer: commits are allowed **only on the working branches
+  `feature/manage-persistence` and `feature/missions`** (the latter from 2026-10-23, on top of
+  `origin/develop`, for a PR the maintainer opens once satisfied), under the maintainer's git
+  identity. Never on any other branch, never amend, never push.
 - Never add `Co-Authored-By` or any AI attribution to commits or PR descriptions.
 - Allowed otherwise: creating/switching branches and read-only commands (`git status`, `git diff`,
   `git log`).
@@ -24,8 +25,8 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 | Install dependencies | `make install` |
 | Any pnpm command | `make pnpm <cmd>` — flags go through `ARGS`, e.g. `make pnpm add zod ARGS="--filter @dyingstar-admin/web"` |
 | Dev servers (Vite :5173 + BFF :3000) | `make pnpm dev` |
-| Test data in minikube's `social` and `economie` (after each reset) | `make seed-social` (`make up K8S=1`, Keycloak import done; replays skipped); `make reset-social` empties `social` first |
-| Re-pin the game services' OpenAPI, regenerate their Zod schemas | `make contracts-update` |
+| Test data in minikube's `social` and `economie` (after each reset) | `make seed-social` (`make up K8S=1`, Keycloak import done; replays skipped); `make reset-social` empties `social` first, `make reset-mission` `mission` |
+| Re-pin the game services' OpenAPI, regenerate their Zod schemas | `make contracts-update` (one service: `SERVICE=mission`) |
 | Checks before committing | `make check` (format, lint, typecheck, test, format check); commit only when it passes |
 | Testers profile (build + serve on :3000) | `make start` / `make stop` |
 | Production image | `make image` |
@@ -62,8 +63,9 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 open questions for the back team), then the ADR index. Done: sign-in, `social` (moderation,
 players, report actions, organisations read and managed), one game server per panel, `economie`
 reading (O.1), settings (O.2: corporations, political taxes, assessments) and money movements
-(O.3: credit, debit, mint). **Next: `inventory`**, same pattern. Much was not
-tried live yet: the plan says what. Lot 1 (persistence items) is done:
+(O.3: credit, debit, mint), `mission`'s catalogue (O.4) and a mission's page (O.5, checked live on
+minikube). **Next: `inventory`**, same
+pattern. Much was not tried live yet: the plan says what. Lot 1 (persistence items) is done:
 [`docs/lot-1-plan.md`](./docs/lot-1-plan.md).
 Contributor docs: `ONBOARDING.md`, `ARCHITECTURE.md`, `docs/bff-api.md` (keep them in step when
 routes, services or the setup change).
@@ -162,10 +164,21 @@ Views adapt to the data through declarative files, validated with Zod at load ti
 The generic organism `SchematicCard` draws any schematic on the object page; nothing else to
 wire.
 
+- **Objective schematic — per `mission` objective kind** ([ADR 0026](./docs/adr/0026-mission-objective-schematics.md)),
+  `apps/web/src/lib/objectiveSchematics/<kind>.ts`, registered in its `index.ts`: the kind's
+  `places` (POI paths in `params` and their role `pickup` / `dropoff` / `target`), `good`,
+  `player`, `pooled`, `loaded` (a path in `state`) and how its `progress` reads; then its
+  "what to do" sentence in `en.ts` and `fr.ts` (`missions.objectiveKinds.<kind>.instruction`),
+  following the kind's code in `mission`'s `src/kinds/objectives/`. A test checks each file
+  against a fixture objective of its kind (`packages/testing`, `missionMock.ts`). The POIs are
+  named from `inventory` by the BFF for who holds `inventory:read`; `MissionObjectives` draws
+  every objective.
+
 - **Game service — per service** ([ADR 0024](./docs/adr/0024-game-services-social-first.md)),
-  `social` and `economie` being the models: pin its OpenAPI in `packages/contracts`
-  (`SERVICES` in `src/services.ts`, its entry in `openapi-ts.config.ts` and `package.json`
-  exports, `make contracts-update`; a GitHub sync test alerts on drift), a client in
+  `social`, `economie` and `mission` being the models: pin its OpenAPI in `packages/contracts`
+  (`SERVICES` and its branch in `SOURCE_REFS`, `src/services.ts`, its entry in
+  `openapi-ts.config.ts` and `package.json` exports, `make contracts-update`; a GitHub sync test
+  alerts on drift), a client in
   `apps/bff/src/clients/<service>.ts` on the shared `clients/upstream.ts` (timeouts, errors,
   `svc-admin`), curated routes `/api/<service>/…` guarded by a permission
   (`packages/schemas/src/permissions.ts`), its URL (`<SERVICE>_URL`, listed in `GET /api/panel`

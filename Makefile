@@ -119,12 +119,13 @@ definitions-update: ## Update the bundled type definitions (fallback.json) from 
 	@$(PNPM) --filter @dyingstar-admin/bff definitions:update
 
 .PHONY: contracts-update
-contracts-update: ## Pin the game services' OpenAPI from GitHub and regenerate their Zod schemas (ADR 0024)
+contracts-update: ## Pin the game services' OpenAPI from GitHub and regenerate their Zod schemas (ADR 0024; SERVICE=mission for one)
 	@echo "$(CYAN)📥 Updating service contracts from GitHub...$(RESET)"
-	@$(PNPM) --filter @dyingstar-admin/contracts contracts:update
+	@$(PNPM) --filter @dyingstar-admin/contracts contracts:update $(SERVICE)
+	@$(PNPM) --filter @dyingstar-admin/contracts generate
 
 .PHONY: seed-social
-seed-social: ## Fill minikube's social (players, organisations, reports, sanctions) and economie (wallets) (after `make up K8S=1`; safe to rerun)
+seed-social: ## Fill minikube's social (players, organisations, reports, sanctions), economie (wallets) and mission (missions) (after `make up K8S=1`; safe to rerun)
 	@echo "$(CYAN)🌱 Seeding minikube's social...$(RESET)"
 	@$(PNPM) --filter @dyingstar-admin/contracts social:seed
 
@@ -132,9 +133,18 @@ seed-social: ## Fill minikube's social (players, organisations, reports, sanctio
 reset-social: ## Empty minikube's social (all its data), restart it, then seed it again (after `make up K8S=1`)
 	@[ "$$(kubectl config current-context 2>/dev/null)" = minikube ] || { echo "$(RED)kubectl is not on minikube: stopping$(RESET)"; exit 1; }
 	@echo "$(YELLOW)🧹 Emptying minikube's social database...$(RESET)"
-	@kubectl exec -i -n dyingstar social-db-1 -c postgres -- psql -q -v ON_ERROR_STOP=1 -U postgres -d social < docker/minikube/social-reset.sql
+	@kubectl exec -i -n dyingstar social-db-1 -c postgres -- psql -q -v ON_ERROR_STOP=1 -U postgres -d social < docker/minikube/service-reset.sql
 	@kubectl rollout restart deployment/service-social -n dyingstar
 	@kubectl rollout status deployment/service-social -n dyingstar --timeout=180s
+	@$(MAKE) --no-print-directory seed-social
+
+.PHONY: reset-mission
+reset-mission: ## Empty minikube's mission (all its missions), restart it, then seed it again (after `make up K8S=1`)
+	@[ "$$(kubectl config current-context 2>/dev/null)" = minikube ] || { echo "$(RED)kubectl is not on minikube: stopping$(RESET)"; exit 1; }
+	@echo "$(YELLOW)🧹 Emptying minikube's mission database...$(RESET)"
+	@kubectl exec -i -n dyingstar mission-db-1 -c postgres -- psql -q -v ON_ERROR_STOP=1 -U postgres -d mission < docker/minikube/service-reset.sql
+	@kubectl rollout restart deployment/service-mission -n dyingstar
+	@kubectl rollout status deployment/service-mission -n dyingstar --timeout=180s
 	@$(MAKE) --no-print-directory seed-social
 
 .PHONY: image
@@ -196,7 +206,7 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST) | grep -E "^  .{5}(start|stop) "
 	@echo ""
 	@echo "$(YELLOW)Dev Profile (Development):$(RESET)"
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST) | grep -E "^  .{5}(up|down|install|pnpm|check|seed-social|reset-social|image) "
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST) | grep -E "^  .{5}(up|down|install|pnpm|check|seed-social|reset-social|reset-mission|image) "
 	@echo ""
 	@echo "$(YELLOW)Utilities:$(RESET)"
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST) | grep -E "^  .{5}(logs|logs-app|logs-dev|shell|status|clean-volumes) "

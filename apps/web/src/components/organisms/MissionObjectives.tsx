@@ -1,0 +1,168 @@
+import { useTranslation } from 'react-i18next';
+import type { Poi } from '@dyingstar-admin/contracts/inventory';
+import type { MissionObjective } from '@dyingstar-admin/contracts/mission';
+import { Chip } from '@/components/atoms/Chip';
+import { MissionReward } from '@/components/molecules/MissionReward';
+import { ObjectiveRoute } from '@/components/molecules/ObjectiveRoute';
+import { RawJson } from '@/components/molecules/RawJson';
+import { Badge } from '@/components/ui/badge';
+import { shortId } from '@/lib/format';
+import { objectiveView, type ObjectiveView } from '@/lib/objectiveSchematics';
+import { objectiveInstruction, objectiveQuantity } from '@/lib/objectiveSchematics/instruction';
+
+interface MissionObjectivesProps {
+  objectives: MissionObjective[];
+  /** The POIs the objectives point at, from `inventory`; unset when they were not read. */
+  places?: Record<string, Poi | null> | undefined;
+  /** Display names `social` gave, by player id. */
+  players: Record<string, string>;
+  /** Opens a player's sheet; unset, players are not links (the account may not see them). */
+  onOpenPlayer?: ((id: string) => void) | undefined;
+}
+
+/**
+ * A mission's objectives, one card each (ADR 0026), required ones in `mission`'s order then the
+ * bonus ones: what the player has to do, its places and goods drawn by its kind's schematic, its
+ * progress, weight and bonus reward. A kind the panel does not draw shows its parameters.
+ */
+export function MissionObjectives({
+  objectives,
+  places,
+  players,
+  onOpenPlayer,
+}: MissionObjectivesProps) {
+  const { t } = useTranslation();
+  if (objectives.length === 0) return <p className="text-sm text-fg-3">{t('moderation.none')}</p>;
+  const ordered = [...objectives.filter((o) => !o.isBonus), ...objectives.filter((o) => o.isBonus)];
+  return (
+    <ol className="flex flex-col gap-3">
+      {ordered.map((objective) => (
+        <li key={objective.id}>
+          <ObjectiveCard
+            objective={objective}
+            view={objectiveView(objective, places)}
+            players={players}
+            onOpenPlayer={onOpenPlayer}
+          />
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+interface ObjectiveCardProps {
+  objective: MissionObjective;
+  view: ObjectiveView | null;
+  players: Record<string, string>;
+  onOpenPlayer?: ((id: string) => void) | undefined;
+}
+
+function ObjectiveCard({ objective: o, view, players, onOpenPlayer }: ObjectiveCardProps) {
+  const { t, i18n } = useTranslation();
+  const hasParams = o.params !== null && Object.keys(o.params).length > 0;
+  const cargo = view?.good ? `${objectiveQuantity(o, i18n.language)} · ${view.good}` : undefined;
+
+  return (
+    <article className="flex flex-col gap-3 rounded-lg border px-4 py-3">
+      <header className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-fg-3 tabular-nums">
+          {t('missions.objectiveDetail.step', { step: o.order })}
+        </span>
+        <h3 className="text-sm font-semibold">{o.title}</h3>
+        <Badge variant="outline">
+          {t(`missions.objectiveTypes.${o.type}` as never, { defaultValue: o.type })}
+        </Badge>
+        <Badge variant="outline">{t(`missions.objectiveStatus.${o.status}`)}</Badge>
+        {o.isBonus && <Badge variant="secondary">{t('missions.detail.bonus')}</Badge>}
+        {o.isBonus && o.bonusReward && <MissionReward rewards={[o.bonusReward]} />}
+        {!o.isBonus && o.weight !== 1 && (
+          <span className="text-xs text-fg-3">
+            {t('missions.detail.weight', { count: o.weight })}
+          </span>
+        )}
+      </header>
+      {o.description && <p className="text-xs text-fg-3">{o.description}</p>}
+      {view ? (
+        <>
+          <p className="text-sm">
+            {objectiveInstruction(t, o, view, { language: i18n.language, players })}
+          </p>
+          {view.playerId && (
+            <span className="flex items-center gap-2 text-sm">
+              <span className="text-xs text-fg-3">{t('missions.objectivePlaces.passenger')}</span>
+              {onOpenPlayer ? (
+                <Chip
+                  variant="link"
+                  title={view.playerId}
+                  onClick={() => view.playerId && onOpenPlayer(view.playerId)}
+                >
+                  {players[view.playerId] ?? shortId(view.playerId)}
+                </Chip>
+              ) : (
+                <span title={view.playerId}>
+                  {players[view.playerId] ?? shortId(view.playerId)}
+                </span>
+              )}
+            </span>
+          )}
+          <ObjectiveRoute places={view.places} cargo={cargo} loaded={view.loaded} />
+          <ObjectiveProgress objective={o} view={view} />
+        </>
+      ) : (
+        <p className="text-sm text-fg-3">{t('missions.objectiveDetail.noSchematic')}</p>
+      )}
+      {hasParams && (
+        <details className="text-sm" open={!view}>
+          <summary className="cursor-pointer text-xs text-fg-3">
+            {t('missions.objectiveDetail.parameters')}
+          </summary>
+          <div className="mt-2">
+            <RawJson value={o.params} copyLabel={t('copy.value')} />
+          </div>
+        </details>
+      )}
+    </article>
+  );
+}
+
+/** Progress as its kind reads it: a quantity, a place reached, what is owned, a confirmation. */
+function ObjectiveProgress({
+  objective: o,
+  view,
+}: {
+  objective: MissionObjective;
+  view: ObjectiveView;
+}) {
+  const { t, i18n } = useTranslation();
+  const done = o.status === 'completed';
+  const mode = view.schematic.progress;
+  if (mode === 'reached' || mode === 'confirmed') {
+    const reached = done || o.currentProgress >= o.targetQuantity;
+    const key =
+      mode === 'reached' ? (reached ? 'reached' : 'notReached') : reached ? 'confirmed' : 'waiting';
+    return <p className="text-xs text-fg-2">{t(`missions.objectiveProgress.${key}`)}</p>;
+  }
+  const target = Math.max(o.targetQuantity, 1);
+  const percent = Math.round((Math.min(o.currentProgress, target) / target) * 100);
+  const number = new Intl.NumberFormat(i18n.language);
+  const value = `${number.format(o.currentProgress)} / ${number.format(o.targetQuantity)}${o.unit ? ` ${o.unit}` : ''}`;
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-baseline justify-between gap-2 text-xs">
+        <span className="text-fg-3">{t(`missions.objectiveProgress.${mode}`)}</span>
+        <span className="tabular-nums">{value}</span>
+      </div>
+      <div
+        role="progressbar"
+        aria-label={o.title}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
+        aria-valuetext={value}
+        className="h-1.5 overflow-hidden rounded-full bg-fg-3/25"
+      >
+        <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
+      </div>
+    </div>
+  );
+}

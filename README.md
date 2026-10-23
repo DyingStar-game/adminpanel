@@ -111,7 +111,7 @@ make check   # format, lint, typecheck, test, format check
 The first `make up` or `make start` creates `.env.local` from [`.env.sample`](./.env.sample).
 One panel serves one environment and its one game server (ADR 0023, 0024): set its name
 (`GAME_SERVER_NAME`), the URLs of the game services it manages (`PERSISTENCE_URL`,
-`SOCIAL_URL`, `ECONOMIE_URL`, `UNIVERSESIMULATOR_URL`, `NPC_URL`; unset, the service is hidden), its Keycloak (`OIDC_*`) and where object type
+`SOCIAL_URL`, `ECONOMIE_URL`, `UNIVERSESIMULATOR_URL`, `NPC_URL`, `MISSION_URL`; unset, the service is hidden), its Keycloak (`OIDC_*`) and where object type
 definitions are read from (`DEFINITIONS_*`).
 
 #### Migrating from `SERVERS` (2026-10-08)
@@ -163,9 +163,10 @@ For `svc-admin`, ask the back team to:
    one secret each), as they do for the game services' `svc-*` accounts;
 2. keep on `svc-admin` the capability roles of the services' READMEs the panel uses:
    `social:corporation:write`, `social:politics:write` and `economie`'s (`economie:wallet:*`,
-   `economie:politics:*`, `economie:corporation:*`, `economie:money:issue`), with the audiences
-   `social-api` and `economie-api`;
-3. list `svc-admin` in `social`'s `INTERNAL_SERVICE_CLIENTS` (already the case in dev-local).
+   `economie:politics:*`, `economie:corporation:*`, `economie:money:issue`) and `mission:read`,
+   with the audiences `social-api`, `economie-api` and `mission-api`;
+3. list `svc-admin` in the `INTERNAL_SERVICE_CLIENTS` of `social`, `economie` and `mission`
+   (already the case in dev-local).
 
 People get the same capability roles as client roles on `dyingstar-admin` to see the
 management actions. Locally, `make up K8S=1` reads the secret from minikube

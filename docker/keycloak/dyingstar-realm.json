@@ -183,6 +183,14 @@
         {
           "name": "economie:money:issue",
           "description": "Issue money into political treasuries through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "mission:read",
+          "description": "Read missions through mission's internal API (ADR 0023)"
+        },
+        {
+          "name": "inventory:read",
+          "description": "Name the POIs of mission objectives through inventory's internal API (ADR 0026)"
         }
       ]
     }
@@ -299,7 +307,9 @@
           "economie:politics:manage",
           "economie:wallet:credit",
           "economie:wallet:debit",
-          "economie:money:issue"
+          "economie:money:issue",
+          "mission:read",
+          "inventory:read"
         ]
       },
       "groups": ["/staff"]
@@ -333,7 +343,9 @@
           "economie:politics:manage",
           "economie:wallet:credit",
           "economie:wallet:debit",
-          "economie:money:issue"
+          "economie:money:issue",
+          "mission:read",
+          "inventory:read"
         ]
       },
       "groups": ["/staff"]

@@ -1,5 +1,5 @@
 /**
- * Fills the back team's minikube `social` (and `economie`) with test data (`make seed-social`, after
+ * Fills the back team's minikube `social` (and `economie`, `mission`) with test data (`make seed-social`, after
  * `make up K8S=1`). Their databases are recreated with the stack, so it is safe to run again:
  * what already exists (profile, friendship, organisation, report, sanction) is kept and reported
  * as skipped.
@@ -20,6 +20,8 @@ import {
   zIssueSanctionBody,
   zProfilePatch,
 } from '../src/social';
+import { zCreatePoi } from '../src/inventory';
+import { type CreateMissionAsAccepted, zCreateMissionAsAccepted } from '../src/mission';
 
 const SOCIAL_URL = process.env.SOCIAL_URL;
 const REALM_URL = process.env.OIDC_DISCOVERY_URL;
@@ -483,6 +485,411 @@ if (ECONOMIE_URL && SVC_ADMIN_SECRET) {
   }
 } else {
   console.log('Economie: skipped (ECONOMIE_URL or SVC_ADMIN_CLIENT_SECRET unset: make up K8S=1)');
+}
+
+// ── mission (ADR 0024 step O): missions created as svc-admin, as the game server does through
+// its internal API. Each has its own `scriptId`, unique in `mission`: a rerun answers 409.
+const MISSION_URL = process.env.MISSION_URL;
+
+/**
+ * What happens to a mission once created, in order, as the game server would do it: a player
+ * takes it, the issuer confirms its `manual` objective at `confirm` (index in creation order), it
+ * is handed in without paying (`settle: false`, so no money moves; `partial` for its weighted
+ * progress), cancelled, or declared an event with its places (`mission` ignores `isEvent` at
+ * creation, question 20 of the lot 2 plan). The other kinds progress from the players' states
+ * the game server sends, measured against `inventory`'s POIs: none here.
+ */
+type Step =
+  | { event: number }
+  | { assign: string }
+  | { confirm: number }
+  | { complete: string; partial?: boolean }
+  | 'cancel';
+
+/**
+ * POIs the objectives point at (`kinds/objectives/`: a `{ kind: 'poi', poiId }` zone), created in
+ * `inventory` as the game's (`system` owner) through its internal API (`inventory:poi:manage`,
+ * held by `svc-admin`) and found again by name on a rerun. On SandBox (Tarsis III), metres from
+ * its centre about 4 km above its wiki radius; the relay station in open space. A mission's own
+ * zones are checked against `inventory`: none uses a POI.
+ */
+const SEED_POIS = {
+  foundryBay: {
+    name: 'Foundry loading bay',
+    scene: 'tarsis_3/new-haven',
+    at: [-3_828_872.1, 2_444_118.3, 4_451_474.4],
+    radiusM: 40,
+  },
+  clinic: {
+    name: 'Ostrowski clinic',
+    scene: 'tarsis_3/new-haven',
+    at: [-3_830_410.2, 2_443_201.7, 4_450_655.9],
+  },
+  depot: { name: 'Vance depot', scene: 'tarsis_3', at: [-3_874_453.7, 2_474_828.3, 4_394_705.1] },
+  drillSite: {
+    name: 'Drill site 7',
+    scene: 'tarsis_3',
+    at: [-3_787_869.0, 2_361_899.4, 4_530_240.5],
+    radiusM: 120,
+  },
+  craterRim: {
+    name: 'Crater rim',
+    scene: 'tarsis_3',
+    at: [4_372_129.0, 1_656_808.7, -4_311_504.8],
+  },
+  craterFloor: {
+    name: 'Crater floor',
+    scene: 'tarsis_3',
+    at: [4_370_805.6, 1_655_301.2, -4_310_498.3],
+  },
+  relayStation: { name: 'Relay station', scene: 'space', at: [12_000_000, 0, 3_000_000] },
+  mainSquare: {
+    name: 'New Haven main square',
+    scene: 'tarsis_3/new-haven',
+    at: [-3_829_640.8, 2_443_660.0, 4_451_070.1],
+    radiusM: 60,
+  },
+} satisfies Record<
+  string,
+  { name: string; scene: string; at: [number, number, number]; radiusM?: number }
+>;
+type SeedPoi = keyof typeof SEED_POIS;
+/** The game's owner of the seed's POIs in `inventory` (any UUID: `system` holders are opaque). */
+const POI_OWNER = '5eed0000-0000-4000-8000-000000000001';
+
+/** A mission's body; `requires` names the seed missions to complete first (their `scriptId`). */
+type SeedMission = Omit<CreateMissionAsAccepted, 'scriptId' | 'requiresMissionIds'> & {
+  requires?: string[];
+};
+
+/**
+ * Missions of each status and shape the panel lists: script id, body, then its steps. Each
+ * objective's `params` follows its kind (`deliver_material` and `transport` a `goodType` and POIs,
+ * `visit` a POI, `manual` none).
+ */
+const missions = (
+  poi: (key: SeedPoi) => { kind: 'poi'; poiId: string },
+): [string, SeedMission, Step[]][] => [
+  [
+    'seed.ore-delivery',
+    {
+      title: 'Iron ore for New Haven',
+      description: 'The foundry runs short: bring ore to its loading bay.',
+      category: 'delivery',
+      rewards: [{ type: 'credits', currency: 'credits', amount: 1_500 }],
+      zones: [{ kind: 'system', system: 'tarsis' }],
+      maxAssignees: 3,
+      allowPartial: true,
+      objectives: [
+        {
+          type: 'deliver_material',
+          title: 'Deliver 10 t of iron ore',
+          targetQuantity: 10,
+          unit: 't',
+          params: { goodType: 'iron_ore', zone: poi('foundryBay') },
+        },
+        {
+          type: 'manual',
+          title: 'Before the night shift',
+          isBonus: true,
+          bonusReward: { type: 'standing', domain: 'delivery', amount: 5 },
+        },
+      ],
+    },
+    [],
+  ],
+  [
+    'seed.water-run',
+    {
+      title: 'Water for the clinic',
+      description: 'Mara needs clean water before the next shift.',
+      category: 'delivery',
+      rewards: [{ type: 'credits', currency: 'credits', amount: 800 }],
+      maxAssignees: 2,
+      objectives: [
+        {
+          type: 'deliver_material',
+          title: 'Deliver 20 barrels of water',
+          targetQuantity: 20,
+          unit: 'barrels',
+          params: { goodType: 'water_barrel', zone: poi('clinic') },
+        },
+      ],
+    },
+    [{ assign: 'player-orin' }, { assign: 'player-juno' }],
+  ],
+  [
+    'seed.parts-run',
+    {
+      title: 'Escort the drill parts',
+      category: 'transport',
+      issuerType: 'corporation',
+      rewards: [
+        { type: 'credits', currency: 'credits', amount: 4_000 },
+        { type: 'item', itemId: 'drill_bit', quantity: 2 },
+      ],
+      prerequisites: [{ kind: 'min_reputation', params: { min: 10 } }],
+      assignmentDeadlineHours: 48,
+      objectives: [
+        {
+          type: 'transport',
+          title: 'Bring the parts to the drill site',
+          params: { goodType: 'drill_parts', source: poi('depot'), zone: poi('drillSite') },
+        },
+      ],
+    },
+    [],
+  ],
+  [
+    'seed.first-survey',
+    {
+      title: 'The first survey',
+      kind: 'scenario',
+      category: 'exploration',
+      rewards: [{ type: 'credits', currency: 'credits', amount: 250 }],
+      objectives: [
+        { type: 'manual', title: 'Meet the surveyor', order: 0 },
+        {
+          type: 'visit',
+          title: 'Reach the crater rim',
+          order: 1,
+          weight: 2,
+          params: { zone: poi('craterRim') },
+        },
+      ],
+    },
+    [{ assign: 'player-kira' }, { confirm: 0 }],
+  ],
+  [
+    'seed.crater-depths',
+    {
+      title: "The crater's depths",
+      kind: 'scenario',
+      category: 'exploration',
+      requires: ['seed.first-survey'],
+      rewards: [
+        { type: 'credits', currency: 'credits', amount: 400 },
+        { type: 'standing', domain: 'exploration', amount: 10 },
+      ],
+      objectives: [
+        { type: 'visit', title: 'Reach the crater floor', params: { zone: poi('craterFloor') } },
+      ],
+    },
+    [],
+  ],
+  [
+    'seed.wreck-salvage',
+    {
+      title: 'Strip the old hauler',
+      category: 'mining',
+      rewards: [{ type: 'credits', currency: 'credits', amount: 600 }],
+      allowPartial: true,
+      objectives: [
+        { type: 'manual', title: 'Bring back its engine block', weight: 3 },
+        { type: 'manual', title: 'Bring back its fuel cells' },
+      ],
+    },
+    [{ assign: 'player-silas' }, { confirm: 0 }, { complete: 'player-silas', partial: true }],
+  ],
+  [
+    'seed.beacon-check',
+    {
+      title: 'Check the beacon',
+      category: 'divers',
+      autoComplete: false,
+      rewards: [{ type: 'standing', domain: 'divers', amount: 3 }],
+      objectives: [{ type: 'manual', title: 'Report the beacon working' }],
+    },
+    [{ assign: 'player-mara' }, { confirm: 0 }, { complete: 'player-mara' }],
+  ],
+  [
+    'seed.relay-station',
+    {
+      title: 'Clear the relay station',
+      category: 'exploration',
+      groupClaimable: true,
+      maxAssignees: 4,
+      objectives: [
+        {
+          type: 'visit',
+          title: 'Enter the relay station',
+          params: { zone: poi('relayStation') },
+        },
+      ],
+    },
+    [],
+  ],
+  [
+    'seed.founders-day',
+    {
+      title: "Founders' Day parade",
+      description: 'Everyone is welcome on the main square.',
+      category: 'exploration',
+      rewards: [{ type: 'credits', currency: 'credits', amount: 50 }],
+      objectives: [
+        { type: 'visit', title: 'Join the parade', params: { zone: poi('mainSquare') } },
+      ],
+    },
+    [{ event: 500 }],
+  ],
+  [
+    'seed.spare-battery',
+    {
+      title: 'Buy my spare battery',
+      category: 'delivery',
+      rewards: [{ type: 'credits', currency: 'credits', amount: 300 }],
+      objectives: [{ type: 'manual', title: 'Hand over a battery' }],
+    },
+    ['cancel'],
+  ],
+];
+
+const INVENTORY_URL = process.env.INVENTORY_URL;
+
+/**
+ * The seed's POIs in `inventory`, created once (found again by name among the `system` owner's):
+ * their ids by key. Without `INVENTORY_URL`, placeholders `inventory` does not hold.
+ */
+async function seedPois(bearer: string): Promise<Record<SeedPoi, string>> {
+  const keys = Object.keys(SEED_POIS) as SeedPoi[];
+  if (!INVENTORY_URL) {
+    console.log('  · POIs: placeholders (INVENTORY_URL unset: make up K8S=1)');
+    return Object.fromEntries(
+      keys.map((key, i) => [
+        key,
+        `a1f0c3d2-${String(i + 1).padStart(4, '0')}-4c5e-9a7b-5e3d0c0f0000`,
+      ]),
+    ) as Record<SeedPoi, string>;
+  }
+  const call = async (method: string, path: string, body?: unknown) => {
+    const res = await fetch(`${INVENTORY_URL}/api/internal${path}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${bearer}`,
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const text = await res.text();
+    return { status: res.status, data: text ? (JSON.parse(text) as unknown) : null };
+  };
+  const owned = await call('GET', `/holders/system/${POI_OWNER}/pois?limit=100`);
+  expect('inventory POIs', owned.status, owned.data, [200]);
+  const byName = new Map(
+    (owned.data as { items: { id: string; name: string }[] }).items.map((p) => [p.name, p.id]),
+  );
+  const ids: Partial<Record<SeedPoi, string>> = {};
+  for (const key of keys) {
+    const { name, scene, at, ...rest } = SEED_POIS[key];
+    const known = byName.get(name);
+    if (known) {
+      console.log(`  · POI ${name}: already there`);
+      ids[key] = known;
+      continue;
+    }
+    const body = zCreatePoi.parse({
+      owner: { type: 'system', id: POI_OWNER },
+      name,
+      system: 'tarsis',
+      scene,
+      x: at[0],
+      y: at[1],
+      z: at[2],
+      visibility: 'public',
+      ...rest,
+    });
+    const created = await call('POST', '/pois', body);
+    expect(`POI ${name}`, created.status, created.data, [201]);
+    ids[key] = (created.data as { id: string }).id;
+  }
+  return ids as Record<SeedPoi, string>;
+}
+
+if (MISSION_URL && SVC_ADMIN_SECRET) {
+  console.log('Mission');
+  const bearer = await serviceToken();
+  const mission = async (method: string, path: string, body?: unknown) => {
+    const res = await fetch(`${MISSION_URL}/api/internal${path}`, {
+      method,
+      headers: {
+        Authorization: `Bearer ${bearer}`,
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+    const text = await res.text();
+    return { status: res.status, data: text ? (JSON.parse(text) as unknown) : null };
+  };
+  // The seed's missions already there (a rerun), by `scriptId`: the chains point at them.
+  const seeded = new Map<string, string>();
+  for (let offset = 0; ; offset += 100) {
+    const page = await mission('GET', `/missions?limit=100&offset=${offset}`);
+    expect('mission catalogue', page.status, page.data, [200]);
+    const { missions, total } = page.data as {
+      missions: { id: string; scriptId: string | null }[];
+      total: number;
+    };
+    for (const row of missions) if (row.scriptId) seeded.set(row.scriptId, row.id);
+    if (offset + 100 >= total) break;
+  }
+  const poiIds = await seedPois(bearer);
+  const place = (key: SeedPoi) => ({ kind: 'poi' as const, poiId: poiIds[key] });
+  for (const [scriptId, { requires = [], ...spec }, steps] of missions(place)) {
+    // The corporation's mission is issued by Vance Freight (`social`'s id).
+    const issuerId =
+      spec.issuerType === 'corporation' ? corporations.get('Vance Freight') : undefined;
+    const requiresMissionIds = requires.flatMap((required) => seeded.get(required) ?? []);
+    const body = zCreateMissionAsAccepted.parse({
+      ...spec,
+      scriptId,
+      ...(issuerId ? { issuerId } : {}),
+      ...(requiresMissionIds.length > 0 ? { requiresMissionIds } : {}),
+    });
+    const created = await mission('POST', '/missions', body);
+    expect(`mission ${spec.title}`, created.status, created.data, [201], [409]);
+    // Steps only after a creation: a rerun leaves an existing mission as it is.
+    if (created.status !== 201) continue;
+    const { mission: row, objectives } = created.data as {
+      mission: { id: string };
+      objectives: { id: string }[];
+    };
+    seeded.set(scriptId, row.id);
+    const path = `/missions/${row.id}`;
+    for (const step of steps) {
+      const [what, done] =
+        step === 'cancel'
+          ? ['cancelled', await mission('POST', `${path}/cancel`)]
+          : 'event' in step
+            ? [
+                `an event of ${step.event} places`,
+                await mission('POST', `${path}/event`, { enabled: true, maxAssignees: step.event }),
+              ]
+            : 'assign' in step
+              ? [
+                  `taken by ${step.assign}`,
+                  await mission('POST', `${path}/assign`, { playerId: id(step.assign) }),
+                ]
+              : 'confirm' in step
+                ? [
+                    `objective ${step.confirm} confirmed`,
+                    await mission(
+                      'POST',
+                      `${path}/objectives/${objectives[step.confirm]?.id}/confirm`,
+                    ),
+                  ]
+                : [
+                    `${step.partial ? 'partly handed in' : 'completed'} by ${step.complete}, unpaid`,
+                    await mission('POST', `${path}/complete`, {
+                      playerId: id(step.complete),
+                      settle: false,
+                      partial: step.partial ?? false,
+                    }),
+                  ];
+      expect(`  ${spec.title}: ${what}`, done.status, done.data, [200, 201]);
+    }
+  }
+} else {
+  console.log('Mission: skipped (MISSION_URL or SVC_ADMIN_CLIENT_SECRET unset: make up K8S=1)');
 }
 
 console.log(`Done: ${ids.size} players in ${SOCIAL_URL}`);

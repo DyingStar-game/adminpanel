@@ -341,10 +341,49 @@ pushed). No role is invented: the panel's permissions (`npc.view`, `npc.manage`,
 Its debug routes (`/debug/…`) and Keycloak report (`/health/keycloak`) are not used by the panel:
 ❓. The persistence roles open nothing here.
 
-#### Inventory, mission, market — later lots (sent as `svc-admin`)
+#### Mission (decided 2026-10-11, same rule)
 
-One table per service, written when the service is integrated, from its OpenAPI and its
-capability roles (`inventory:*`, `mission:*`, `market:*`). Until then: ❓.
+`mission`'s README has **no Admin section**: a *Joueur* API (any signed-in player; its code
+reads the moderation roles but no route checks them, so a staff account is a plain player
+there) and an **Interne** API for service accounts (`svc-admin` is allowed, audience
+`mission-api`, checked live on minikube on 2026-10-11). The panel uses the Interne API only,
+opened by **the capability role of its README held by the person** on `dyingstar-admin`.
+
+**Source: `mission`'s README**,
+[`DyingStar-game/services` › `mission`](https://github.com/DyingStar-game/services/tree/develop/mission)
+(section Interne, column « Rôle requis »), checked against its code (`src/middleware/auth.ts` ›
+`SERVICE_ROLES`, `src/routes/internal.routes.ts`) at `develop` `4df4e0a` (2026-10-06); the detail
+route at `develop` `0c14db4` (2026-10-22, PR #37 merging `5725d56`).
+
+| Action (route of `mission`) | The person needs | Sent as |
+|---|---|---|
+| The catalogue: every mission, any status, without the players' zone, group and free-place filters (`GET /api/internal/missions`) | `mission:read` | `svc-admin` |
+| A mission's page: its objectives, every assignment, assignees' names and its group from `social`, the missions to finish first, whatever its visibility (`GET /api/internal/missions/:missionId`) | `mission:read` | `svc-admin` |
+
+The player route `GET /api/missions/:id` is not used: it hides a mission shared with a group from
+anyone outside it and would make the panel act as a player. The internal detail route the
+maintainer asked for (2026-10-11) is in `mission`'s README › Interne (`mission:read`) since
+2026-10-22 (lot 2 plan, question 18).
+
+#### Inventory (sent as `svc-admin`)
+
+Same rule as `mission`'s (Interne section, the README's capability role held by the person on
+`dyingstar-admin`). **Source: `inventory`'s README**,
+[`DyingStar-game/services` › `inventory`](https://github.com/DyingStar-game/services/tree/develop/inventory)
+(section Interne, column « Rôle requis »), checked against its code (`src/middleware/auth.ts` ›
+`SERVICE_ROLES`, `src/routes/internal.routes.ts`) at `develop` `bdee3c0` (2026-10-19).
+
+| Action (route of `inventory`) | The person needs | Sent as |
+|---|---|---|
+| Name the places of a mission's objectives: one POI, its name, body and position (`GET /api/internal/pois/:poiId`), on a mission's page (ADR 0026) | `inventory:read` (with `mission:read` for the page) | `svc-admin` |
+
+Without `inventory:read`, a mission's page shows its objectives' POI ids only. The rest of
+`inventory` (holders' goods, holds, transfers) is for its own step.
+
+#### Market — later lot (sent as `svc-admin`)
+
+One table, written when the service is integrated, from its OpenAPI and its capability roles
+(`market:*`). Until then: ❓.
 
 ¹ Not created in the back team's realms yet (added in our local realms only).
 

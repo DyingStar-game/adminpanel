@@ -1,0 +1,3356 @@
+[
+  {
+    "object_data": {
+      "from_timestamp": 1792779233,
+      "name": "SandBox",
+      "parent_id": "",
+      "positions": [
+        { "x": 57642203037.778, "y": -27427343640.073, "z": 54720765586.151 },
+        { "x": 57642213420.16, "y": -27427348356.779, "z": 54720752825.279 }
+      ],
+      "rotations": [
+        { "w": 0.742, "x": 0.087, "y": -0.657, "z": 0.098 },
+        { "w": 0.742, "x": 0.087, "y": -0.657, "z": 0.098 }
+      ],
+      "scenename": "scenes/systems/tarsis/tarsis_3.tscn",
+      "soi": 516294973.3080369
+    },
+    "object_type": "planet",
+    "object_uuid": "c0379c08-1d5b-4ca2-8876-230908141b68"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0011",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4074322.221, "y": 1269925.815, "z": 4721472.977 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.222564, "y": -0.81274, "z": -1.364759 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "f87ab025-db9d-5dad-9a19-09f4b96063c2"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0068",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4417576.542, "y": 2542109.497, "z": 3811537.356 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.159903, "y": -2.282681, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "b62a052b-7f36-486e-be69-0d52a2f5e6ad"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0008",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4331662.166, "y": 1501489.688, "z": 4414448.075 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.229435, "y": -0.738134, "z": -1.326091 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "129695fa-cc8e-5442-a38d-614f7503e191"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0066",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4431683.01, "y": 2571364.16, "z": 3771397.2 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.1547, "y": -2.2759, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "128e9b73-a9a4-4878-835e-37cc321e85c4"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "128e9b73-a9a4-4878-835e-37cc321e85c4"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0063",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4428092.145, "y": 2604659.98, "z": 3751821.49 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.149, "y": -2.2737, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "51ff4fce-60b7-40c9-adbf-2ab51bfdea8f"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "51ff4fce-60b7-40c9-adbf-2ab51bfdea8f"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0029",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4393177.601, "y": 1637259.24, "z": 4304008.941 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.310617, "y": -2.34548, "z": -0.000446 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "6ffe2785-a6a0-57fd-bc6b-a9736dafd686"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0046",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4246295.766, "y": 1340501.11, "z": 4547213.351 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.358581, "y": -2.390528, "z": 0.000124 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "f069b066-58c0-5d80-993e-78e4a529c726"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0032",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4404801.146, "y": 1684070.941, "z": 4273962.113 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.23928, "y": -0.703335, "z": -1.294941 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "540534a5-32da-402e-92b4-ee45e30828b9"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0017",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4464593.104, "y": 2063846.976, "z": 4038943.463 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.240544, "y": -2.30628, "z": 0.000094 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "9c67d824-906d-555e-9aeb-298e99d5ac6c"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0059",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4447905.13, "y": 2636799.575, "z": 3705881.935 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.1434, "y": -2.2654, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "aeb30b8e-7dba-4ce0-8a91-7f3cf60d5554"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "aeb30b8e-7dba-4ce0-8a91-7f3cf60d5554"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0018",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4469635.837, "y": 2091161.484, "z": 4019268.51 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.236003, "y": -2.303037, "z": -0.000145 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "2f9fc17d-2aa9-5629-ab74-76834b94f77b"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0019",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4430193.612, "y": 1937226.301, "z": 4138315.966 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.261502, "y": -2.322316, "z": 0.000164 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "6d14c85d-7f1d-51b1-bb1b-1604dc19896f"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0040",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4166488.718, "y": 1317553.75, "z": 4627044.856 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.220157, "y": -0.790353, "z": -1.357031 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "ad10ba7c-c98f-45fc-bbd8-bbd5edad335c"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0013",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4441520.107, "y": 2639190.31, "z": 3716543.267 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.301237, "y": -0.554701, "z": -1.121606 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "d068e92e-c43a-4b50-b2c1-87c18b486487"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0058",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4431507.995, "y": 2637908.14, "z": 3724591.755 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.1432, "y": -2.2697, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "3173caa0-fbac-4eb2-a4e6-47e66f8fe30d"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "3173caa0-fbac-4eb2-a4e6-47e66f8fe30d"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0046",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 3942580.469, "y": 1145643.272, "z": 4862990.947 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.222355, "y": -0.848159, "z": -1.38518 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "92627bb1-b1dd-4ed7-812b-191ea31068e1"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0042",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4283382.061, "y": 1395081.87, "z": 4495720.733 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.3498, "y": -2.380501, "z": 0.000121 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "888a1702-3d00-5d3c-90e9-bee1e51e7a09"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0055",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 3984843.96, "y": 1206377.328, "z": 4813604.945 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.380091, "y": -2.449763, "z": -0.000342 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "80f08e0a-d82a-50a0-8cb8-5369d61a9071"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0056",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4438654.62, "y": 2656475.605, "z": 3703030.73 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.14, "y": -2.2661, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "9e34d079-1130-46d1-b19b-2e01a350981b"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "9e34d079-1130-46d1-b19b-2e01a350981b"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0042",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4105401.831, "y": 1285737.37, "z": 4690167.954 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.222447, "y": -0.80511, "z": -1.362161 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "dc94deb4-0fb6-4967-bce6-b6d84bc8705f"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0025",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4446723.826, "y": 2044403.896, "z": 4068437.064 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.275262, "y": -0.645053, "z": -1.230472 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "1b621bc4-b6c9-4ba6-999a-e0663e64145c"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0039",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4196868.352, "y": 1333476.361, "z": 4594916.435 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.220035, "y": -0.782699, "z": -1.354413 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "5cd57c1f-0d98-44fd-9e40-813d4d1f7b79"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0024",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4451657.948, "y": 2126018.994, "z": 4020933.346 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.273936, "y": -0.63485, "z": -1.216438 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "366f2ef6-8d8d-444d-97bb-f3c1331e65c7"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0002",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4424991.274, "y": 2501160.525, "z": 3829982.829 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.302196, "y": -0.579813, "z": -1.146534 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "8f3f1f0f-f8a9-59e1-bb90-07548f4e797e"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0026",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4382670.282, "y": 1689959.79, "z": 4294340.149 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.302038, "y": -2.34647, "z": 0.000438 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "07a60f8b-d564-5af6-b22d-2b633e348abb"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0067",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4415763.48, "y": 2549200.405, "z": 3803900.645 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.1585, "y": -2.2819, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "fd113bf4-8d83-48ca-ae8c-b8bb5bf07849"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "fd113bf4-8d83-48ca-ae8c-b8bb5bf07849"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0053",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 3991019.168, "y": 1212078.895, "z": 4807052.212 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.379178, "y": -2.448758, "z": 0.000076 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "7a5b2295-0395-54f7-92c5-3362315c623f"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0001",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4450527.551, "y": 2674096.493, "z": 3675918.78 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.137, "y": -2.261, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "4d4cd92f-75c1-49d7-9aa9-462b4b486e2f"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "4d4cd92f-75c1-49d7-9aa9-462b4b486e2f"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0054",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 3976592.438, "y": 1234655.906, "z": 4813258.522 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.375563, "y": -2.450763, "z": -0.000324 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "e53aed95-03b0-5072-8918-56ba235daae6"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0019",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4452843.162, "y": 2370393.18, "z": 3880534.005 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.280245, "y": -0.601062, "z": -1.172805 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "36f2a932-044f-4587-84b7-ac4244a2c6b2"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0006",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4439196.471, "y": 1746458.407, "z": 4212901.368 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.24478, "y": -0.687907, "z": -1.284039 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "1cd60948-237a-5c4d-8c2a-e93dbb31c984"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0033",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4309116.55, "y": 1548868.406, "z": 4420140.432 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.324962, "y": -2.368483, "z": -0.000417 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "8e9daaf5-ebb3-595b-a150-500d66e95802"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0021",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4421208.558, "y": 1778699.564, "z": 4218324.663 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.288, "y": -2.333, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "80ef662d-1ac5-58c4-8e24-1853bdac25f2"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0022",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4463450.483, "y": 2201764.699, "z": 3966731.931 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.28341, "y": -0.618948, "z": -1.202179 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "ccad6090-a204-41a7-b809-6870f8c9386d"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0007",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4386786.282, "y": 1652698.228, "z": 4304627.149 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.239618, "y": -0.710201, "z": -1.300188 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "a6bcd0d4-31b1-579a-87fe-903469678e3c"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0023",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4457562.139, "y": 2163732.638, "z": 3994185.908 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.273304, "y": -0.629115, "z": -1.209934 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "4c608b96-98ae-4b96-801c-0762096187e2"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0031",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4332675.748, "y": 1546814.211, "z": 4397772.945 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.325295, "y": -2.363484, "z": -0.000161 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "7bfdfae6-99ec-5354-a381-0755fb7ab00a"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0045",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 3955008.239, "y": 1185968.743, "z": 4843191.942 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.222083, "y": -0.843166, "z": -1.378578 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "fdd8e279-1bf4-4778-81e3-a946e08c46d3"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0065",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4412781.975, "y": 2573320.06, "z": 3791470.125 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.1544, "y": -2.2806, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "482cff6d-8ccb-42c1-bd61-a2e3fc0bd84a"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "482cff6d-8ccb-42c1-bd61-a2e3fc0bd84a"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0061",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4420506.605, "y": 2613434.85, "z": 3754661.91 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.1474, "y": -2.2749, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "d23753c8-a29e-4919-8bbe-838e764d7d41"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "d23753c8-a29e-4919-8bbe-838e764d7d41"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0071",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4414059.546, "y": 2534956.426, "z": 3820365.749 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.161128, "y": -2.28422, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "e0f03ca6-82ab-41e8-9f38-8937514a6b1a"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0034",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4358757.994, "y": 1581185.157, "z": 4359610.357 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.240365, "y": -0.722589, "z": -1.312124 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "ea44ff8a-77f0-4d65-9d68-e71b58651867"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0044",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4204954.592, "y": 1356799.883, "z": 4580673.659 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.35596, "y": -2.39853, "z": -0.000394 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "7ce01f8f-64f1-55a7-a04e-e7a38802243f"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0041",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4295108.592, "y": 1394436.152, "z": 4484719.637 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.349904, "y": -2.377497, "z": -0.000283 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "314e1da3-c61f-595d-995f-c66486b40ea6"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0017",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4434306.211, "y": 2458852.282, "z": 3846569.134 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.30315, "y": -0.583145, "z": -1.15403 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "d64075a8-d7ea-47af-a4de-86183ba5b411"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0028",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4380149.238, "y": 1647553.416, "z": 4313349.117 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.308942, "y": -2.348475, "z": -0.000035 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "60f5f21a-1e7d-54a9-83cd-c4e86396d081"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0023",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4442952.466, "y": 1739138.578, "z": 4211969.92 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.294, "y": -2.33, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "b4f90c05-b0e4-53a0-aa73-f63f2a11c789"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0005",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4444589.548, "y": 1916664.931, "z": 4132449.576 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.261173, "y": -0.66451, "z": -1.253786 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "63a6ea9d-ad6c-502a-a75b-688a2a15c2ca"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0038",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4271015.287, "y": 1420640.13, "z": 4499481.109 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.345682, "y": -2.382502, "z": 0.000257 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "899e9c85-d8d6-55a2-bf6e-2892b331cd22"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0041",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4135943.165, "y": 1301595.23, "z": 4658856.534 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.222327, "y": -0.797536, "z": -1.359555 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "87e91ffa-a41f-464f-9200-bff62b0fd0c0"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0026",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4446409.34, "y": 2001677.092, "z": 4089969.806 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.259962, "y": -0.655426, "z": -1.23931 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "27d4b493-fe44-4291-be3f-1990ac15b260"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0064",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4415475.555, "y": 2587233.635, "z": 3778848.415 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.152, "y": -2.2787, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "8f6d83c2-299d-4664-865a-2aff6cec16fb"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "8f6d83c2-299d-4664-865a-2aff6cec16fb"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0021",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4468810.899, "y": 2240285.704, "z": 3939031.522 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.28271, "y": -0.613007, "z": -1.195492 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "5568e9ba-b566-4c21-a170-250414d48ba0"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0035",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4346570.891, "y": 1544218.215, "z": 4384955.166 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.229037, "y": -0.731454, "z": -1.319003 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "789e73ab-2304-4198-94b4-07163dd29b3b"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0048",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4212675.581, "y": 1332833.617, "z": 4580615.593 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.359813, "y": -2.397531, "z": -0.000472 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "907ebecd-da05-5a44-a7c8-4ae91d19d7e5"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0007",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4411050.874, "y": 2498160.839, "z": 3847979.058 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.167423, "y": -2.288167, "z": 0.00004 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "24f0e061-a08c-58c6-9250-96b0d57168ec"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0025",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4384520.718, "y": 1677322.855, "z": 4297404.603 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.304097, "y": -2.346471, "z": 0.0003 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "d88f9a63-5daf-521e-a7ae-bed5e41759f6"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0035",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4335702.087, "y": 1466515.095, "z": 4422232.593 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.338, "y": -2.366, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "e219d6ca-6da0-518c-8335-25ca715be611"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0003",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4470527.4, "y": 2279910.919, "z": 3914270.197 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.281976, "y": -0.607769, "z": -1.188599 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "8996b7bc-7be7-53f6-ab63-ed0730ab6a65"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0043",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4043715.846, "y": 1250361.728, "z": 4752902.053 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.222708, "y": -0.820453, "z": -1.367971 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "7c8c8c62-8c4d-4a60-b54d-01435efcaca4"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0036",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4314985.086, "y": 1467515.48, "z": 4442119.116 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.229743, "y": -0.744466, "z": -1.33172 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "6cdd901d-3074-46f1-a37a-c9908d2cf875"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0018",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4443747.598, "y": 2414238.052, "z": 3863894.684 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.304135, "y": -0.586674, "z": -1.161915 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "29ff0d1b-8cd6-4ed2-a2aa-fcc42c87dc7f"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0032",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4308615.707, "y": 1524720.846, "z": 4429015.381 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.328872, "y": -2.369483, "z": -0.000476 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "573ee322-80b0-5d5a-b4d1-87b0552d5710"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0024",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4450328.211, "y": 1758355.834, "z": 4196174.9 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.291, "y": -2.327, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "ed42e738-9671-5c3d-885e-cbb205233084"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0030",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4401572.829, "y": 1642694.627, "z": 4293347.321 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.309733, "y": -2.343478, "z": -0.000261 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "03261d6c-1eea-5f90-9e58-f81e25ec61fd"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0013",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4497931.336, "y": 2268313.428, "z": 3889535.718 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.206375, "y": -2.283735, "z": -0.000047 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "7f08342c-e873-57f3-870e-09d51fc51b74"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0051",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4059161.808, "y": 1300503.836, "z": 4726205.18 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.365, "y": -2.432, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "d4af5e8f-4eb4-5865-b453-ee408c0a1fd0"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0016",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4422308.933, "y": 2541384.889, "z": 3806529.49 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.301272, "y": -0.574951, "z": -1.13939 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "6a9721f2-1674-49c1-abf1-297977926d0e"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0069",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4409788.162, "y": 2551311.55, "z": 3814406.631 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.158325, "y": -2.283927, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "41c0f963-eab2-4de3-af81-df599465c901"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0034",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4322131.452, "y": 1532173.129, "z": 4413246.587 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.327665, "y": -2.366484, "z": -0.000137 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "6b1da2fa-e11f-57e3-9368-643c135141d0"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0011",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4458696.572, "y": 2284876.269, "z": 3924854.842 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.203588, "y": -2.292734, "z": 0.000122 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "75020679-df63-557c-8e2d-cc5ace44a477"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0070",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4404303.97, "y": 2543478.799, "z": 3825956.397 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.159668, "y": -2.286039, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "62f13b6e-feb8-4939-b0ef-b1dabb517c38"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0014",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4427160.179, "y": 2613731.039, "z": 3751504.101 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.301855, "y": -0.562262, "z": -1.12616 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "9912b72c-8988-4c57-8f49-ee28f871802c"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0060",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4442044.155, "y": 2627681.62, "z": 3719286.915 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.145, "y": -2.2679, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "fd1626ba-cd22-4c1c-8ee1-83dae15b1b31"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "fd1626ba-cd22-4c1c-8ee1-83dae15b1b31"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0012",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 3982270.195, "y": 1212701.98, "z": 4814145.637 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.221898, "y": -0.835882, "z": -1.374197 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "597fd315-7cea-5803-b95c-f9ed690fdf79"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0038",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4251933.858, "y": 1376002.589, "z": 4531312.785 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.219702, "y": -0.767726, "z": -1.347414 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "c2ab9ada-7708-44c1-a3a1-91adb9eeceab"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0022",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4421595.946, "y": 1740921.034, "z": 4233651.315 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.294, "y": -2.334, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "b20e2b6e-b449-54f4-8b61-bd63150a067d"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0015",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4423501.825, "y": 2579102.946, "z": 3779679.855 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.300389, "y": -0.569331, "z": -1.132676 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "9157a0df-cd26-46da-a6f9-87ec70ce480d"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0043",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4218373.971, "y": 1378226.323, "z": 4561900.202 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.352513, "y": -2.395528, "z": 0.000223 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "a64e23ea-637f-57eb-b47d-f2a3942b134d"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0009",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4276447.24, "y": 1400160.573, "z": 4500741.004 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.222202, "y": -0.759971, "z": -1.343294 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "4e661f0a-e968-5fe6-bc84-215834a4adcf"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0002",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4463570.305, "y": 2666660.615, "z": 3667648.715 },
+      "radius_m": 1000,
+      "rotation": { "x": 0.2998, "y": -0.5446, "z": -1.1167 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "3191c971-4c3e-4b97-ac1a-3b8bba44f9cd"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "3191c971-4c3e-4b97-ac1a-3b8bba44f9cd"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0062",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4424119.265, "y": 2623649.505, "z": 3743305.335 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.1457, "y": -2.273, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "b9e99cc9-fe60-43b2-b781-a90af09bdd1f"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "b9e99cc9-fe60-43b2-b781-a90af09bdd1f"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0027",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4445478.397, "y": 1959604.344, "z": 4111300.628 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.260569, "y": -0.659968, "z": -1.246481 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "fa8be817-ea52-41c9-b1ab-53554ecc7a88"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0005",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4419661.235, "y": 2512214.389, "z": 3828902.408 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.165021, "y": -2.28517, "z": 0.000435 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "75af1f86-9f0a-526a-b9e7-cc46ae6fc8a2"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0012",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4485892.085, "y": 2247683.504, "z": 3915330.29 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.209842, "y": -2.288224, "z": -0.00015 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "883ed92b-3f1e-51fd-88b1-7bec313b2608"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0006",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4413006.118, "y": 2509933.952, "z": 3838063.154 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.165411, "y": -2.286164, "z": -0.000424 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "55d0e87d-1817-5e40-9e96-885b6b08e819"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0028",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4443580.062, "y": 1873487.269, "z": 4153283.267 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.261766, "y": -0.669027, "z": -1.261117 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "7507cab2-1712-4108-830f-7bc3413b6ae3"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0014",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4486678.317, "y": 2311043.868, "z": 3877359.169 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.199179, "y": -2.283734, "z": 0.000243 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "fe3cc372-26da-5ec7-bc07-4c98327b9131"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0004",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4446875.085, "y": 2086251.367, "z": 4046971.389 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.274589, "y": -0.640451, "z": -1.223283 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "874884dc-1054-587f-b0a5-8acdd67e8df3"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0044",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4012949.03, "y": 1231578.477, "z": 4783782.473 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.221765, "y": -0.828315, "z": -1.371102 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "2b6ce3ee-e7f5-4d23-b444-dfa76f3fc262"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0033",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4370718.733, "y": 1618814.255, "z": 4333748.768 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.239977, "y": -0.716751, "z": -1.305847 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "75b6d049-1371-4557-9af0-337eee47f241"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0020",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4398277.715, "y": 1933071.732, "z": 4174147.462 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.262187, "y": -2.330177, "z": 0.000116 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "cab3f8d6-bc37-59ab-83d1-bae08cf19fcb"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0037",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4295827.805, "y": 1410703.645, "z": 4478939.484 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.347283, "y": -2.377502, "z": 0.000432 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "fee4ddd2-f753-574d-8bd8-fca80487b790"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0037",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4298264.71, "y": 1433207.342, "z": 4469447.103 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.221928, "y": -0.752743, "z": -1.337841 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "d5bb07e3-55c2-49e0-8050-b1fd4b0ddf38"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0031",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4422164.089, "y": 1715399.713, "z": 4243464.246 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.245138, "y": -0.694702, "z": -1.289253 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "bb028648-adc7-4b9a-99d5-7363e1dcdacf"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0052",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4099112.894, "y": 1245938.817, "z": 4706381.854 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.374, "y": -2.425, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "d2199102-a852-533a-9a3c-5419f5f52761"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0049",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4073862.675, "y": 1314056.846, "z": 4709778.946 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.363, "y": -2.428, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "cc452071-3fe0-5394-ade5-5e3bd13dc385"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0003",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4444641.705, "y": 2664565.915, "z": 3689948 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.1386, "y": -2.264, "z": 0.0003 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "f1e32234-34d9-4845-b791-ebbdc5fd02a7"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "f1e32234-34d9-4845-b791-ebbdc5fd02a7"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0030",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4440921.364, "y": 1789481.989, "z": 4192981.262 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.244272, "y": -0.683596, "z": -1.276805 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "498e7b3a-8eb6-4ebb-b67f-2e62577da00a"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0016",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4419588.575, "y": 2078175.779, "z": 4080875.209 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.238163, "y": -2.315945, "z": -0.000401 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "522be9b2-2ae5-5aa3-90a8-234e0c70ec41"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0047",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 3929946.449, "y": 1104405.448, "z": 4882717.453 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.222622, "y": -0.853195, "z": -1.391924 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "15ed6fe1-f6ef-4a55-9fe5-289f8887fb9e"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0029",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4442485.674, "y": 1831100.964, "z": 4173309.3 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.243768, "y": -0.679379, "z": -1.269795 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "0ae1b025-8768-4d7d-9d31-38f911588f5e"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0045",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4225869.123, "y": 1341665.614, "z": 4565860.68 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.358394, "y": -2.394529, "z": -0.000311 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "ee7895c9-efb8-541d-81d6-09cfb77c684e"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0015",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4434326.985, "y": 2112782.623, "z": 4046975.907 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.232404, "y": -2.310284, "z": -0.000255 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "9459bf3a-530f-5ef9-95c7-3bea4add7064"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0040",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4278458.785, "y": 1383004.442, "z": 4504132.476 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.351744, "y": -2.381497, "z": -0.000378 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "7db2047d-b448-5740-b9c9-18aef22cde5b"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0047",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4241032.985, "y": 1356896.872, "z": 4547261.848 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.355945, "y": -2.390531, "z": -0.000484 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "ef0bd9a6-f331-5537-92bf-855c0f6a0e91"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0020",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4462074.742, "y": 2323914.654, "z": 3898003.321 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.281144, "y": -0.604512, "z": -1.180928 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "7345b5a6-d542-4ed0-9624-65ab508c8cf5"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0010",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4226832.57, "y": 1351569.548, "z": 4562046.295 },
+      "radius_m": 2000,
+      "rotation": { "x": 0.219894, "y": -0.774928, "z": -1.351436 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "84131032-f303-51b8-b05e-7e4bf93b2c30"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0010",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4452138.675, "y": 2308577.138, "z": 3918424.814 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.199595, "y": -2.292734, "z": 0.000199 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "7f669fca-be66-502e-a46c-0d8e891f9fdb"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "F0001",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 1000,
+      "position": { "x": 4459226.579, "y": 2659326.981, "z": 3680814.929 },
+      "radius_m": 2500,
+      "rotation": { "x": 0.300742, "y": -0.546928, "z": -1.118 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/cities/ares_city_factory.tscn",
+      "type": "factory"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "7bd7708d-8787-5acb-8a84-6bfc8e0caad5"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0009",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4434440.8, "y": 2503790.077, "z": 3817314.534 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.166461, "y": -2.281165, "z": -0.000351 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "22387868-a7ab-5295-a58b-300756adaae6"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0036",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4353075.973, "y": 1482223.892, "z": 4399870.694 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.336, "y": -2.362, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "8234b67a-ddaf-51d7-a6d5-02cf537f9dfb"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0039",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4262105.555, "y": 1402700.209, "z": 4513536.149 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.348573, "y": -2.384497, "z": -0.000332 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "621e6b4d-0e02-5c2f-9249-b89a09231b6d"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0027",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4371370.17, "y": 1654967.478, "z": 4319412.657 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.307736, "y": -2.350471, "z": 0.000246 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "edd3143b-407a-5108-87cb-12e77cc0efa9"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0050",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4034952.115, "y": 1290152.767, "z": 4749714.463 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.367, "y": -2.437, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "52cd804f-8ed5-56a9-ac19-0d45ac01869a"
+  },
+  {
+    "object_data": {
+      "is_spawned": false,
+      "name": "M0008",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4442790.541, "y": 2487535.068, "z": 3818232.8 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.169237, "y": -2.281169, "z": 0.0004 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": false,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "mining"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "5223a365-5903-5527-963b-2660e1b72e6c"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0004",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4457458.835, "y": 2646060.615, "z": 3687793.075 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.1418, "y": -2.262, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "6dc675ff-dce2-4733-949f-8a40d97a429a"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "6dc675ff-dce2-4733-949f-8a40d97a429a"
+  },
+  {
+    "object_data": {
+      "is_spawned": true,
+      "name": "M0057",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "population": 250,
+      "position": { "x": 4434349.09, "y": 2644069, "z": 3716878.16 },
+      "radius_m": 1000,
+      "rotation": { "x": -1.1422, "y": -2.2684, "z": 0 },
+      "scenename": "scenes/_universe/structures/urban/poi_villages.tscn",
+      "spawn_requested": true,
+      "spawn_scene": "scenes/_universe/structures/urban/villages/ares_village_mining.tscn",
+      "type": "poi_village",
+      "uuid": "717a06b3-ec62-457f-9c4f-b77abc3bfdcb"
+    },
+    "object_type": "poi_village",
+    "object_uuid": "717a06b3-ec62-457f-9c4f-b77abc3bfdcb"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "9e34d079-1130-46d1-b19b-2e01a350981b",
+      "position": { "x": 4438692.11198421, "y": 2656431.08398228, "z": 3703017.72843077 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.1400218657011, "y": 0.875506653589681, "z": 3.48242169409268e-7 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "f46688c6-651e-74c0-edd7-81671f17759d"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "f46688c6-651e-74c0-edd7-81671f17759d"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "aeb30b8e-7dba-4ce0-8a91-7f3cf60d5554",
+      "position": { "x": 4447942.4971473, "y": 2636754.97980124, "z": 3705868.81553469 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.14341846218199, "y": 0.876151653589757, "z": -3.21549502393261e-8 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "cef8fea9-b349-b218-edcd-28087b7d25c4"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "cef8fea9-b349-b218-edcd-28087b7d25c4"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "d23753c8-a29e-4919-8bbe-838e764d7d41",
+      "position": { "x": 4420543.95628654, "y": 2613390.17531184, "z": 3754649.02859802 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.14744091895545, "y": 0.866665653589854, "z": -3.0903560950897e-7 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "3c9000c5-b4bd-4e8b-9e80-df228adb17a4"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "3c9000c5-b4bd-4e8b-9e80-df228adb17a4"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "b9e99cc9-fe60-43b2-b781-a90af09bdd1f",
+      "position": { "x": 4424156.65407503, "y": 2623604.86484497, "z": 3743292.43288239 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.14568068662043, "y": 0.868562653590124, "z": -4.35698385327141e-7 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "77268083-65ac-1e37-9695-da5b6f2a07cc"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "77268083-65ac-1e37-9695-da5b6f2a07cc"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "51ff4fce-60b7-40c9-adbf-2ab51bfdea8f",
+      "position": { "x": 4428129.42903857, "y": 2604615.27311533, "z": 3751808.51961713 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.14895341487596, "y": 0.867884653589365, "z": -4.22287416636142e-7 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "d4a08822-3c36-5a81-9cd7-74c5cb7ea755"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "d4a08822-3c36-5a81-9cd7-74c5cb7ea755"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "717a06b3-ec62-457f-9c4f-b77abc3bfdcb",
+      "position": { "x": 4434386.54000487, "y": 2644024.43357559, "z": 3716865.18504712 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.14216022197471, "y": 0.873191653589678, "z": -2.1585742295136e-7 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "0cbd1a7f-f8d8-4588-cc5b-dc40f4e65322"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "0cbd1a7f-f8d8-4588-cc5b-dc40f4e65322"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "8f6d83c2-299d-4664-865a-2aff6cec16fb",
+      "position": { "x": 4415512.80314944, "y": 2587188.86968826, "z": 3778835.54143672 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.15196210821828, "y": 0.862933653589794, "z": 5.07982711273147e-9 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "6d69db30-cd87-b0ef-37d3-187de7284ccd"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "6d69db30-cd87-b0ef-37d3-187de7284ccd"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "6dc675ff-dce2-4733-949f-8a40d97a429a",
+      "position": { "x": 4457496.21163159, "y": 2646016.0569114, "z": 3687779.87095098 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.14181970345083, "y": 0.87959266081815, "z": -0.0000166690959262361 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "48ff1510-75f8-26ad-d867-ca721b9026de"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "48ff1510-75f8-26ad-d867-ca721b9026de"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "f1e32234-34d9-4845-b791-ebbdc5fd02a7",
+      "position": { "x": 4444679.210666, "y": 2664521.41653285, "z": 3689934.95429493 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.13861903576625, "y": 0.877592915051701, "z": -0.00028722531958188 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "5b43b0ca-0d3c-ec35-7969-a2eb05c3a6f9"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "5b43b0ca-0d3c-ec35-7969-a2eb05c3a6f9"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "482cff6d-8ccb-42c1-bd61-a2e3fc0bd84a",
+      "position": { "x": 4412819.16746283, "y": 2573275.24570676, "z": 3791457.25176117 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.15435472032897, "y": 0.860984653589604, "z": 2.74219455331315e-7 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "29802ffd-20ce-e4d6-a837-9e9ac83a02e8"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "29802ffd-20ce-e4d6-a837-9e9ac83a02e8"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "128e9b73-a9a4-4878-835e-37cc321e85c4",
+      "position": { "x": 4431720.12962275, "y": 2571319.34084425, "z": 3771384.13984582 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.15471980563519, "y": 0.865717653589692, "z": 2.1097695849512e-7 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "662dbcf6-c4cc-f6f6-e0ad-c858d72a7c59"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "662dbcf6-c4cc-f6f6-e0ad-c858d72a7c59"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "3191c971-4c3e-4b97-ac1a-3b8bba44f9cd",
+      "position": { "x": 4463577.12970009, "y": 2666704.27931433, "z": 3667608.66664127 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": -0.299829838101647, "y": 2.59695758329413, "z": 1.11668138073091 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "f790944e-5ee9-97aa-4a2a-256a2f1e9936"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "f790944e-5ee9-97aa-4a2a-256a2f1e9936"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "fd113bf4-8d83-48ca-ae8c-b8bb5bf07849",
+      "position": { "x": 4415800.5468615, "y": 2549155.51211398, "z": 3803887.69816128 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.15848148724362, "y": 0.859699653589367, "z": -3.50512376163041e-7 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "9efce1f7-75d7-f6de-ca9f-aa06bb5b5c29"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "9efce1f7-75d7-f6de-ca9f-aa06bb5b5c29"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "fd1626ba-cd22-4c1c-8ee1-83dae15b1b31",
+      "position": { "x": 4442081.49979478, "y": 2627636.99617036, "z": 3719273.8420796 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.14498963245671, "y": 0.873726653589652, "z": 1.581729074627e-7 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "337281cc-76cb-3982-610b-b2480a6a397f"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "337281cc-76cb-3982-610b-b2480a6a397f"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "3173caa0-fbac-4eb2-a4e6-47e66f8fe30d",
+      "position": { "x": 4431545.42686332, "y": 2637863.55311773, "z": 3724578.80250832 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.143222880678, "y": 0.871855653589731, "z": 2.14136314867642e-7 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": false,
+      "storage_shelves": [],
+      "type": "cargo_depot",
+      "uuid": "7731830b-4884-05e1-0367-d0e4eb1ba095"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "7731830b-4884-05e1-0367-d0e4eb1ba095"
+  },
+  {
+    "object_data": {
+      "is_pnj_workplace": false,
+      "max_distance_to_reception": 5,
+      "name": "cargo_depot",
+      "parent_id": "c0379c08-1d5b-4ca2-8876-230908141b68",
+      "pnj_box_temp_zones": {},
+      "pnj_reception_deposited_item": [],
+      "pnj_zones": {
+        "Reception": {
+          "PNJPlace0": {
+            "path": "Reception Desk/PNJPlace0",
+            "position": "(0.717, 0.251, 3.903)",
+            "size": "(0.72, 0.498, 0.556)"
+          }
+        },
+        "TempZone": {
+          "PNJPlace0": {
+            "path": "TempZone/Place0/PNJPlace0",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 9.46)"
+          },
+          "PNJPlace1": {
+            "path": "TempZone/Place1/PNJPlace1",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.971)"
+          },
+          "PNJPlace2": {
+            "path": "TempZone/Place2/PNJPlace2",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 8.459)"
+          },
+          "PNJPlace3": {
+            "path": "TempZone/Place3/PNJPlace3",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 0.993, 7.99)"
+          },
+          "PNJPlace4": {
+            "path": "TempZone/Place4/PNJPlace4",
+            "position": "(-4.032, 0.251, 9.471)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.485, 9.46)"
+          },
+          "PNJPlace5": {
+            "path": "TempZone/Place5/PNJPlace5",
+            "position": "(-4.032, 0.251, 8.982)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.971)"
+          },
+          "PNJPlace6": {
+            "path": "TempZone/Place6/PNJPlace6",
+            "position": "(-4.032, 0.251, 8.47)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 8.459)"
+          },
+          "PNJPlace7": {
+            "path": "TempZone/Place7/PNJPlace7",
+            "position": "(-4.032, 0.251, 8.001)",
+            "size": "(0.37, 0.5, 0.24)",
+            "target": "(-5.354, 1.486, 7.99)"
+          }
+        }
+      },
+      "poi_uuid": "4d4cd92f-75c1-49d7-9aa9-462b4b486e2f",
+      "position": { "x": 4450560.6, "y": 2674049.34, "z": 3675901.975 },
+      "reception_owner": "",
+      "reception_players": [],
+      "rotation": { "x": 1.137, "y": 0.8806, "z": 0.0001 },
+      "scenename": "scenes/_universe/structures/industrial/cargo_depot.tscn",
+      "shelves_spawned": true,
+      "storage_shelves": [],
+      "terrain_settled": {
+        "pads": {
+          "prop:8276a47f-c581-27a0-e40a-58bdb7e7b27b": {
+            "apron_m": 8,
+            "hx": 10.39,
+            "hy": 48.46,
+            "lat": 24.8556687,
+            "lon": -39.5547093,
+            "span": 0.309,
+            "talus_m": 5.156,
+            "yaw": 0.0001,
+            "z": 5625.863,
+            "z_off": 0
+          }
+        },
+        "relief": "bd68e3ae6fa77859"
+      },
+      "type": "cargo_depot",
+      "uuid": "8276a47f-c581-27a0-e40a-58bdb7e7b27b"
+    },
+    "object_type": "cargo_depot",
+    "object_uuid": "8276a47f-c581-27a0-e40a-58bdb7e7b27b"
+  }
+]

@@ -10,11 +10,15 @@ import {
   createDataset,
   createPersistenceMock,
   createEconomieMock,
+  createInventoryMock,
+  createMissionMock,
   createSocialMock,
   createUniversesimulatorMock,
   createNpcMock,
   ECONOMIE_URL,
   NPC_URL,
+  INVENTORY_URL,
+  MISSION_URL,
   PERSISTENCE_URL,
   SOCIAL_URL,
   UNIVERSESIMULATOR_URL,
@@ -24,6 +28,8 @@ import { createApp } from './app';
 import { createEconomieClient } from './clients/economie';
 import { createNpcClient } from './clients/npc';
 import { createUniversesimulatorClient } from './clients/universesimulator';
+import { createInventoryClient } from './clients/inventory';
+import { createMissionClient } from './clients/mission';
 import { createSocialClient } from './clients/social';
 import fallback from './definitions/fallback.json';
 import type { DefinitionsService } from './services/definitions';
@@ -52,6 +58,8 @@ export function createInProcessBff({
   const economie = createEconomieMock();
   const universesimulator = createUniversesimulatorMock();
   const npc = createNpcMock();
+  const mission = createMissionMock();
+  const inventory = createInventoryMock();
   const app = createApp({
     auth: false,
     gameServerName: 'Universe Testing',
@@ -74,6 +82,16 @@ export function createInProcessBff({
       timeoutMs: 1000,
     }),
     npc: createNpcClient({ baseUrl: NPC_URL, timeoutMs: 1000 }),
+    mission: createMissionClient({
+      baseUrl: MISSION_URL,
+      timeoutMs: 1000,
+      serviceToken: () => Promise.resolve('svc-admin-token'),
+    }),
+    inventory: createInventoryClient({
+      baseUrl: INVENTORY_URL,
+      timeoutMs: 1000,
+      serviceToken: () => Promise.resolve('svc-admin-token'),
+    }),
     // The record of writes stays out of the test output.
     audit: () => undefined,
   });
@@ -88,12 +106,16 @@ export function createInProcessBff({
     economie,
     universesimulator,
     npc,
+    mission,
+    inventory,
     handlers: [
       ...persistence.handlers,
       ...social.handlers,
       ...economie.handlers,
       ...universesimulator.handlers,
       ...npc.handlers,
+      ...mission.handlers,
+      ...inventory.handlers,
       http.all('*/api/*', forward),
       http.get('*/health', forward),
     ],

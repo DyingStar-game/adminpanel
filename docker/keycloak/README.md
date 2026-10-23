@@ -21,8 +21,8 @@ The password is the user name.
 | `dev-reader` | `persistence:read` | opens, read only |
 | `dev-editor` | `persistence:read`, `persistence:write` | opens |
 | `dev-moderator` | `moderator` (realm) | "access denied" until the `social` moderation is built |
-| `dev-admin` | `admin` (realm), `persistence:*`, `social:corporation:write`, `social:politics:write`, `economie:wallet:read`, `economie:politics:read`, `economie:corporation:manage`, `economie:politics:manage`, `economie:wallet:credit`, `economie:wallet:debit`, `economie:money:issue` | opens; manages organisations, reads wallets, sets economic settings, runs tax assessments, moves and issues money |
-| `ynotna` | `admin` (realm), `persistence:*`, `social:*:write`, `economie:*:read`, `economie:corporation:manage`, `economie:politics:manage`, `economie:wallet:credit`, `economie:wallet:debit`, `economie:money:issue` | opens, manages organisations, reads wallets, sets economic settings, moves and issues money; its id `19dd218f-9cbd-484f-9a3b-cff5285eaa93` is the maintainer's `player` in pre-production persistence, so its sheet links to a real item |
+| `dev-admin` | `admin` (realm), `persistence:*`, `social:corporation:write`, `social:politics:write`, `economie:wallet:read`, `economie:politics:read`, `economie:corporation:manage`, `economie:politics:manage`, `economie:wallet:credit`, `economie:wallet:debit`, `economie:money:issue`, `mission:read`, `inventory:read` | opens; manages organisations, reads wallets, sets economic settings, runs tax assessments, moves and issues money, reads missions and names their places |
+| `ynotna` | `admin` (realm), `persistence:*`, `social:*:write`, `economie:*:read`, `economie:corporation:manage`, `economie:politics:manage`, `economie:wallet:credit`, `economie:wallet:debit`, `economie:money:issue`, `mission:read`, `inventory:read` | opens, manages organisations, reads wallets, sets economic settings, moves and issues money, reads missions and names their places; its id `19dd218f-9cbd-484f-9a3b-cff5285eaa93` is the maintainer's `player` in pre-production persistence, so its sheet links to a real item |
 | `player-kira`, `-orin`, `-mara`, `-silas`, `-juno`, `-tess`, `-dax`, `-pell` | `player` | "access denied"; test players for `social`, fixed ids (see below) |
 
 What each role allows is the interim matrix of `packages/schemas/src/permissions.ts` (ADR 0023,
@@ -44,7 +44,7 @@ moderation roles open nothing of it.
   and `social:corporation:write`, `social:politics:write`, `economie:wallet:read`,
   `economie:politics:read`, `economie:corporation:read`, `economie:corporation:manage`,
   `economie:politics:manage`, `economie:wallet:credit`, `economie:wallet:debit`,
-  `economie:money:issue` (the capability roles of the services' READMEs, held by people,
+  `economie:money:issue`, `mission:read`, `inventory:read` (the capability roles of the services' READMEs, held by people,
   ADR 0023);
 - the realm roles `admin` and `supervisor`, checked by `social` but missing from the back
   team's realms;
@@ -63,11 +63,17 @@ additions above.
 The client `dyingstar-admin` (with the redirect URIs of `localhost:5173`, `localhost:3000` and
 `admin.dyingstar.local`), its client roles and the realm roles `admin` and `supervisor` are in the
 back team's `kubernetes` repository (`keycloak-managed/dev/`, 2026-10-09): their Keycloak has
-them after a sync. `k8s-partial-import.json` still brings the test users (`dev-*`, `player-*`)
+them after a sync, with the client's secret `dyingstar-admin-dev-secret` (the one decided for the
+dev environment, maintainer 2026-10-23), which `docker-compose.k8s.yml` hands the BFF; our compose
+Keycloak keeps `dyingstar-admin-local`. A client role added since (`inventory:read`, ADR 0026) is
+not there yet: it was created by hand on minikube on 2026-10-23 (admin API) and given to `ynotna`
+and `dev-admin`. `k8s-partial-import.json` still brings the test users (`dev-*`, `player-*`)
 and, for a Keycloak synced before that, the same client and roles, to the back team's dev-local
 Keycloak (`http://auth.dyingstar.local/admin`, realm `dyingstar`): Realm settings › Action ›
-Partial import, "Skip" if a resource exists. Imported users live in that Keycloak's database
-only: lost when the back team's stack recreates it.
+Partial import, "Skip" if a resource exists (an existing user keeps its roles: a new role is
+given by hand). Imported users live in that Keycloak's database only: lost when the back team's
+stack recreates it (the commands to redo it:
+[After the back team's stack is recreated](#after-the-back-teams-stack-is-recreated)).
 Regenerate it whenever `dyingstar-realm.json` changes.
 
 Then `make up K8S=1` (their stack running, `minikube tunnel` on) recreates the dev container on
@@ -95,8 +101,9 @@ registers them in `social` (the staff accounts `dev-moderator`, `dev-admin`, `yn
 organisations (a country and its commune, three corporations, one the subsidiary of another), open reports against `player-dax` and `player-pell` (and one back), a warning and a mute on
 `player-dax` by `dev-moderator`, a 72 h suspension on `player-pell` by `dev-admin`. Run it again
 after every reset; on a filled database it skips what exists. `make reset-social` goes back to
-the start: it empties `social`'s database (`docker/minikube/social-reset.sql`, the SQL of
-`social`'s own `reset-db.mjs`), restarts the service, which recreates its tables, then seeds. The data lives in
+the start: it empties `social`'s database (`docker/minikube/service-reset.sql`, the SQL of
+`social`'s own `reset-db.mjs`), restarts the service, which recreates its tables, then seeds.
+`make reset-mission` does the same for `mission` (its missions come back on the seed's POIs). The data lives in
 `packages/contracts/scripts/seed-social.ts`.
 
 ## Workaround: services rejecting every token in minikube (`401 Invalid token`)
@@ -121,4 +128,50 @@ kubectl -n kube-system rollout restart deployment coredns
 
 Check: `kubectl exec deploy/service-social -n dyingstar -- node -e "fetch('http://auth.dyingstar.local/realms/dyingstar/protocol/openid-connect/certs').then(r=>console.log(r.status))"`
 answers `200`. To undo: remove the line and restart CoreDNS again. Not needed any more once the
-back team sets `OIDC_JWKS_URL`.
+back team sets `OIDC_JWKS_URL`. Without an editor: [After the back team's stack is
+recreated](#after-the-back-teams-stack-is-recreated), step 1.
+
+## After the back team's stack is recreated
+
+A restart of their stack may recreate minikube's realm and CoreDNS (done on 2026-10-21): our
+additions are lost. Signs: `make seed-social` stops on `Keycloak refused dev-moderator (400 …
+Invalid user credentials)`, the services answer `401 Invalid token` / `Invalid service token`
+even to `svc-admin`, the realm holds only `devplayer`. Redo, in this order, from WSL (stack
+running, `minikube tunnel` on):
+
+1. **CoreDNS** (the workaround above), without an editor; it does nothing when the line is there:
+
+   ```sh
+   TIP=$(kubectl get svc traefik -n traefik -o jsonpath='{.spec.clusterIP}')
+   kubectl -n kube-system get configmap coredns -o json | python3 -c '
+   import json, sys
+   cm, line = json.load(sys.stdin), sys.argv[1] + " auth.dyingstar.local services.dyingstar.local"
+   cf = cm["data"]["Corefile"]
+   if "auth.dyingstar.local" not in cf:
+       cf = cf.replace("host.minikube.internal\n", "host.minikube.internal\n       " + line + "\n", 1)
+   cm["data"]["Corefile"] = cf
+   json.dump(cm, sys.stdout)' "$TIP" | kubectl replace -f -
+   kubectl -n kube-system rollout restart deployment coredns
+   kubectl -n kube-system rollout status deployment coredns
+   ```
+
+   Then the check above answers `200`.
+
+2. **Keycloak's partial import** (the panel's client roles and the test users), through the admin
+   API instead of the console, `ifResourceExists` = Skip (dev-local admin `admin` / `devpass`):
+
+   ```sh
+   ADMIN_TOKEN=$(curl -s -d grant_type=password -d client_id=admin-cli -d username=admin \
+     -d password=devpass http://auth.dyingstar.local/realms/master/protocol/openid-connect/token \
+     | python3 -c 'import json, sys; print(json.load(sys.stdin)["access_token"])')
+   python3 -c 'import json, sys; d = json.load(open(sys.argv[1])); d["ifResourceExists"] = "SKIP"; json.dump(d, sys.stdout)' \
+     docker/keycloak/k8s-partial-import.json \
+     | curl -s -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' \
+       --data @- http://auth.dyingstar.local/admin/realms/dyingstar/partialImport
+   ```
+
+   It answers `{"added": …, "skipped": …}`: the users come back with the roles of the file, an
+   existing user keeps its own (see "Partial import and existing users" above).
+
+3. **Sign in again** to the panel (the accounts are new), then `make seed-social`: it registers
+   the players in `social` and refills `social`, `economie` and `mission`.

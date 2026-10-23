@@ -68,7 +68,7 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     ]);
   });
 
-  it("mirrors universesimulator's Admin API: reads moderator+, writes admin+ (ADR 0025)", () => {
+  it("mirrors universesimulator's Admin API: reads moderator+, writes admin+ (ADR 0026)", () => {
     const simulation = (roles: string[]) =>
       permissionsOf(roles).filter((p) => p.startsWith('simulation.'));
     expect(simulation(['moderator'])).toEqual([Permission.simulationView]);
@@ -133,5 +133,15 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     expect(permissionsOf(['supervisor', 'economie:wallet:read'])).not.toContain(
       Permission.economieWalletCredit,
     );
+  });
+
+  it("opens missions with mission's capability role only (ADR 0023 › Mission)", () => {
+    expect(permissionsOf(['mission:read'])).toEqual([Permission.missionRead]);
+    expect(permissionsOf(['supervisor', 'mission:write'])).not.toContain(Permission.missionRead);
+  });
+
+  it("names the POIs with inventory's capability role only (ADR 0026)", () => {
+    expect(permissionsOf(['inventory:read'])).toEqual([Permission.inventoryRead]);
+    expect(permissionsOf(['supervisor', 'mission:read'])).not.toContain(Permission.inventoryRead);
   });
 });

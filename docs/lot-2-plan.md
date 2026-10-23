@@ -6,7 +6,7 @@ permissions, one panel per environment) and [ADR 0024](./adr/0024-game-services-
 step needs a new decision, it goes into an ADR before coding. **Read this file first when
 starting a session on lot 2.**
 
-## Status (2026-10-09, O.3 done)
+## Status (2026-10-23, O.5 a mission's page checked live on minikube)
 
 | Step | Status | Commit |
 |------|--------|--------|
@@ -24,12 +24,142 @@ starting a session on lot 2.**
 | L. Replace `SERVERS` / `X-Server-Id` by the panel's own settings (`GAME_SERVER_NAME`, `PERSISTENCE_URL`, `SOCIAL_URL`) | **Done** | `cd2a70d` |
 | M. Final roles × actions matrix (ADR 0023): `social` and `economie` decided (their READMEs' roles); persistence's 🟡 cells left | Persistence: the maintainer's call | — |
 | N. Organisation management (`/api/internal/*` through `svc-admin`; rights decided, ADR 0023) | **Done** on minikube (to try live); pre-production waits for `svc-admin` | `96506c7` |
-| O. Next services, one by one with the ADR 0024 pattern: `economie` first (1. reading, 2. settings, 3. money movements), then `inventory`, `mission`, `market` | **O.1** (`ca9b4b0`), **O.2** (`64ffd9e`) **and O.3 done** (to try live); then `inventory` | — |
+| O. Next services, one by one with the ADR 0024 pattern: `economie` first (1. reading, 2. settings, 3. money movements), then `mission` (4. catalogue, 5. a mission's page), `inventory`, `market` | **O.1** (`ca9b4b0`), **O.2** (`64ffd9e`), **O.3 done** (to try live); **O.4**, **O.5 done** (not committed; both checked live on minikube); then `inventory` | — |
 
 Order agreed with the maintainer on 2026-10-08: I (acting on players) before K (organisations),
 since the player sheet is where moderators look first.
 
-### 2026-10-09 — O.3 done, where to resume
+### 2026-10-23 — ADR 0026, objective schematics, where to resume
+
+- **ADR 0026 accepted** (maintainer, 2026-10-23): a declarative schematic per objective kind
+  (`lib/objectiveSchematics/`), its "what to do" sentence in `en` / `fr`, the POIs named from
+  `inventory` for `inventory:read` (ids only without it), no carrier position.
+- **Built**: a mission's page shows one card per objective (`MissionObjectives`, replacing the
+  table): the sentence filled with the goods, quantity and places, the route (`ObjectiveRoute`:
+  load → deliver, the distance along the surface, where the goods are for a `transport`), each
+  place's name, body, latitude / longitude, altitude and zone, the progress as its kind reads
+  it, the parameters folded. BFF: `inventory`'s client (`INVENTORY_URL`, `svc-admin`, a minute's
+  cache), `places` added to `GET /api/mission/missions/:id` for `inventory.read`, left out when
+  `inventory` is silent. Contract: `inventory` pinned, not generated (question 21). Rights:
+  `inventory:read` in ADR 0023 › Inventory and both local realms. Seed: eight real POIs in
+  `inventory` (`system` owner, found again by name), used by the missions' objectives.
+- **Checked live** (GET only): the eight POIs `make seed-social` created parse with `zPoiView`; an
+  unknown POI answers 404.
+- **Live on minikube** (2026-10-23, at the maintainer's request): the client role
+  `inventory:read` created on minikube's `dyingstar-admin` and given to `ynotna` and `dev-admin`
+  (admin API; the partial import would skip existing users); `mission`'s database emptied and
+  seeded again (`make reset-mission`, new: `docker/minikube/service-reset.sql`, shared with
+  `reset-social`): every seed body accepted (bonus, partial hand-in, chain, transport's two POIs,
+  item reward). Checked in a browser as `ynotna` (GET only): every mission's page names its
+  places (e.g. Vance depot → Drill site 7, 196 km along the surface).
+
+### 2026-10-23 — `fix-mission` merged and live
+
+- **`fix-mission` is merged** into `mission`'s `develop` (PR #37, `0c14db4`, 2026-10-22; the
+  branch is gone) and minikube's `mission` runs it (pod restarted 2026-10-22). Its OpenAPI is the
+  one pinned from `fix-mission`: `SOURCE_REFS` is back to `develop`, `make contracts-update
+  SERVICE=mission` changed nothing but `source.json`'s `ref`.
+- **Checked live** (GET only, `svc-admin`): `GET /api/internal/missions/:id` answers 200 for
+  every mission, and the catalogue's and the details' bodies all parse with `zMissionCatalogue` /
+  `zMissionDetailAsServed`. The columns `autoComplete`, `allowPartial`, `requiresMissionIds`,
+  `assignmentDeadlineHours` are now required in `zMissionAsServed` (`MissionTerms` always shows
+  them).
+- **Seed's missions reworked** (`seed-social.ts`): each objective's `params` follows its kind
+  (`deliver_material` / `transport`: `goodType` and POIs, `visit`: a POI, `manual`: none); a bonus
+  objective with a `standing` bonus reward, weights, a partial hand-in (`complete` with
+  `partial`), a chain (`The crater's depths` requires `The first survey`, resolved by
+  `scriptId` from the catalogue), a time to finish, `divers` and a `standing` reward. The route
+  `…/objectives/:id/progress` is gone: progress now comes from the game server's player states
+  (`PUT /missions/player-states`, measured against `inventory`'s POIs) or from the issuer's
+  `confirm` (`manual` objectives only), which the seed uses. The objectives' POIs are fixed UUIDs
+  `inventory` does not hold (`mission` checks only that they are UUIDs), so no player ever matches
+  them; seed real POIs with the `inventory` step. The body follows `routes/schemas.ts`
+  (`zCreateMissionAsAccepted` in `code.ts`, question 19). `make seed-social` run on 2026-10-23:
+  only the two new missions were created (`Check the beacon` taken, confirmed, completed unpaid);
+  the eight older ones keep their pre-`fix-mission` bodies (409) until `mission`'s database is
+  recreated.
+- **`dyingstar-admin`'s dev secret is `dyingstar-admin-dev-secret`** (decided for the dev
+  environment, maintainer, 2026-10-23): the back team's realm now gives it to the client, with a
+  redirect URI `http://admin.dyingstar.local/auth/callback`. `docker-compose.k8s.yml` and
+  `k8s-partial-import.json` use it; our compose Keycloak keeps `dyingstar-admin-local`.
+- **Checked in a browser** (Playwright in the dev container's network, as `ynotna`, GET only):
+  every mission's page opens (BFF 200, no page error): its chain, the assignees' names from
+  `social`, a `standing` reward, the terms of PR #37.
+
+### 2026-10-21 — O.5 a mission's page, built against `fix-mission`
+
+- **The internal detail route exists on `mission`'s branch `fix-mission`** (`5725d56`,
+  2026-10-19, README › Interne, `mission:read`), not on `develop`. Minikube runs the image
+  `mission:develop` (Harbor has no other tag): checked live (GET only, `svc-admin`), the catalogue
+  answers 200 and `GET /api/internal/missions/:id` **404 `Route not found`**. The `kubernetes`
+  repository's branch `fix-mission` changes Keycloak roles and `internalServiceClients`, not the
+  image.
+- **Maintainer's choice (2026-10-21): build it now** against the contract of `fix-mission`, try it
+  live once deployed. `packages/contracts` pins each service from its own branch
+  (`SOURCE_REFS`: `mission` → `fix-mission`, back to `develop` once merged); `make
+  contracts-update SERVICE=mission` re-pins one service only.
+- **O.5 built**: a row of the catalogue opens `/missions/:missionId`: status, category, origin,
+  event; progress of the required objectives (weighted), places taken, handed in (partly or
+  not), reward (credits, items, standing); its terms (issuer, visibility, group and its name,
+  zones, prerequisites, end, time to finish, completion, partial hand-in, escrow, missions to
+  finish first, script, creator); its objectives (step, kind, progress, weight, bonus and its
+  reward, parameters as stored); who took it (players linked to their sheet for who may read
+  `social`, NPCs, status, deadline, handed in, share, paid). BFF `GET
+  /api/mission/missions/:id`, `mission.read`, as `svc-admin`.
+- **What `fix-mission` changes for the catalogue**: five categories (`delivery`, `transport`,
+  `mining`, `exploration`, `divers`) without migrating the rows, so a row may keep an older one
+  (shown as labelled, or as stored); a `standing` reward; new columns (`autoComplete`,
+  `allowPartial`, `requiresMissionIds`, `assignmentDeadlineHours`) read as optional while
+  minikube is on `develop`; zones without `radiusM`.
+- **When `fix-mission` is live** (merged and deployed, or an image of the branch): `GET` a
+  mission as `svc-admin` and check it parses with `zMissionDetailAsServed`; open a mission in the
+  panel; **rework the seed's missions**: `fix-mission` checks each objective's `params` against
+  its kind (`deliver_material` takes `goodType` and a POI `zone`, the old `itemId` is refused),
+  and adds bonus objectives, weights, partial hand-in and chains worth seeding. The seed keeps
+  the four categories both versions accept meanwhile.
+- **Not committed** (2026-10-21), in the working tree of `develop` with O.4. `make check`: 616
+  tests pass; two GitHub drift alerts fail, unrelated: `social`'s OpenAPI on `develop` (batch
+  presence, cache) and the object definitions (`food`, `tool`, new properties), for the
+  maintainer.
+
+### 2026-10-11 — O.4 mission catalogue done
+
+- **O.4 built** (below): "Missions" in the sidebar (Game world), every mission of `mission`, any
+  status, filtered by status, category and origin, read as `svc-admin` for `mission:read`.
+  **List only, by the maintainer's choice**: no mission page until the back team gives an
+  internal detail route (question 18).
+- **To try on minikube**: `make up K8S=1` again (it now sets `MISSION_URL`), create the client
+  role `mission:read` on `dyingstar-admin` in minikube's Keycloak and give it to `ynotna`
+  (sign in again), `make seed-social` (it now creates eight missions), `make pnpm dev`.
+- Checked live on 2026-10-11 (GET only): `svc-admin`'s token holds `mission:read` with the
+  `mission-api` audience, `GET /api/internal/missions` answers 200; minikube's `mission` was
+  empty.
+- **Not committed** (2026-10-11): the work sits in the working tree of `develop` (equal to
+  `feature/manage-persistence` at `bfb6285`); the maintainer commits. `make check` passes.
+- **Next**: `inventory`, or a mission's page once question 18 is answered.
+
+### O.4 Mission, catalogue — done, to try live on minikube
+
+ADR 0023 › Mission: no Admin API; its Interne API as `svc-admin` for `mission:read` held by the
+person.
+
+- Contract pinned (`packages/contracts/src/mission`). Its OpenAPI is 3.1 but marks nullable
+  fields with 3.0's `nullable: true`: the generated schemas refuse the rows' `null`s, so
+  `code.ts` describes a row as `mission`'s code serves it (`zMissionAsServed`), question 19.
+- BFF: `GET /api/mission/missions` (`status`, `category`, `kind`, `limit`, `offset`),
+  `mission.read`; `MISSION_URL`; `GET /api/panel` lists `mission` only with `svc-admin`'s secret
+  (the catalogue has no other way in).
+- SPA: `/missions`, a table (mission, category, origin, issuer, status, reward, places, created;
+  "Event" and "Group" badges), three filters and pages, all in the URL.
+- Mock: five missions shaped as `mission`'s code stores them (a game delivery, a corporation's
+  transport with escrow, a scenario, a group mission, a cancelled player mission).
+- `make seed-social` creates eight missions as `svc-admin` (`scriptId` `seed.*`, a rerun answers
+  409 and leaves them as they are), then plays the game server's part on some: taken by players,
+  progress reported (shared, additive), one completed without payment (`settle: false`), one
+  cancelled, one declared an event. Injected in minikube on 2026-10-11; the live catalogue
+  parses with `zMissionAsServed`.
+
+### 2026-10-09 — O.3 done
 
 - **O.3 built** (below): credit and debit a player's, an NPC's, a corporation's wallet or a
   political treasury, issue money into a country's or federation's treasury. Not tried live.
@@ -409,3 +539,20 @@ Ready to post (a Discord message was drafted on 2026-10-08). Still open:
 17. `economie`'s `POST /api/internal/politics/:id/mint` takes no `externalId`, unlike credits and
    debits: a resend after a lost answer issues the money twice. Could it accept one? The panel
    only prevents a double click.
+18. ~~`mission` has no internal detail route~~ → `GET /api/internal/missions/:missionId`
+   (`mission:read`), merged into `develop` on 2026-10-22 (PR #37) and deployed on minikube; used
+   by O.5.
+19. `mission`'s OpenAPI is 3.1 but used 3.0's `nullable: true` (ignored in 3.1) → fixed by
+   PR #37 (`type: [string, 'null']`). Its schemas still list no `required` field (every
+   generated field is optional), its internal list takes `groupId`, `groupClaimable`, `isEvent`,
+   and its creation takes the objectives' `weight`, `isBonus`, `bonusReward`, the mission's
+   `allowPartial`, `autoComplete`, `requiresMissionIds`, `assignmentDeadlineHours`
+   (`routes/schemas.ts`), none of which its OpenAPI lists: the panel keeps describing them in
+   `code.ts`.
+20. `mission`'s `POST /api/internal/missions` accepts `isEvent` (its README and OpenAPI list it)
+   but does not store it (`createMission` leaves it out of the insert): the mission is created
+   as a non-event. The seed declares it afterwards (`POST …/:missionId/event`).
+21. `inventory`'s `openapi.yaml` on `develop` (`bdee3c0`) is not valid YAML: line 816,
+   `description: Internal-only: geometry fields …` holds `: ` in an unquoted value. Nothing can
+   be generated from it; the panel pins it (the sync test alerts once it changes) and writes the
+   POI it reads from `inventory`'s code (`contracts/inventory/code.ts`). Could it be quoted?

@@ -19,6 +19,7 @@ sont ceux de l'équipe back, déployés depuis leur dépôt
 | `economie` | Tableau de bord, portefeuilles et trésoreries, réglages et impôts, mouvements d'argent | `ECONOMIE_URL` |
 | `universesimulator` | Simulation de l'économie d'une fédération par village (ADR 0025) | `UNIVERSESIMULATOR_URL` |
 | `npc` | PNJ sur les serveurs : interrupteur global, ajout et retrait (création, apparition, disparition, suppression), liste avec état en direct, routine d'un PNJ, tâches manuelles, journaux, événements et configuration, plannings et actions par activité, lieux de travail des villages (ADR 0026) | `NPC_URL` |
+| `mission` | Le catalogue des missions, tous statuts, et la page d'une mission (lecture seule ; demande `svc-admin`) | `MISSION_URL` |
 | Keycloak | Connexion et rôles ; le compte de service `svc-admin` pour les API internes des services | `OIDC_*`, `SVC_ADMIN_*` |
 | GitHub | Définitions des types d'objets (`*_def.json` de `horizonserver`), avec une copie embarquée | `DEFINITIONS_*` |
 

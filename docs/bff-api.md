@@ -16,7 +16,7 @@ are in `apps/bff/src/app.ts` and `apps/bff/src/routes/`.
 - **Origin**: writes coming from another origin than the panel's (`PUBLIC_URL`, else the
   request's own) are refused: `403 FORBIDDEN_ORIGIN`.
 - **A service not configured** (`PERSISTENCE_URL`, `SOCIAL_URL`, `ECONOMIE_URL`,
-  `UNIVERSESIMULATOR_URL`, `NPC_URL` unset) has no
+  `UNIVERSESIMULATOR_URL`, `NPC_URL`, `MISSION_URL` unset) has no
   routes: they answer `404 NOT_FOUND`, like any unknown `/api/*` path.
 - **Errors** are `{ error, message, details? }`, `error` among `ErrorCode`
   (`packages/schemas/src/common.ts`): `VALIDATION_ERROR` (400, with the Zod issues),
@@ -40,7 +40,7 @@ are in `apps/bff/src/app.ts` and `apps/bff/src/routes/`.
 | Method | Route | Permission | Notes |
 |--------|-------|------------|-------|
 | GET | `/api/me` | session | The person, their roles and permissions, `access` |
-| GET | `/api/panel` | session | `environment`, `gameServerName`, `services` (`persistence`, `social`, `social-management`, `economie`, `economie-wallets`, `universesimulator`): the SPA shows the modules listed |
+| GET | `/api/panel` | session | `environment`, `gameServerName`, `services` (`persistence`, `social`, `social-management`, `economie`, `economie-wallets`, `universesimulator`, `mission`, `inventory`): the SPA shows the modules listed |
 | GET | `/api/definitions` | session | Object type definitions (`*_def.json`, ADR 0006) |
 | GET | `/api/definitions/:type` | session | One definition, 404 if unknown |
 
@@ -213,3 +213,14 @@ with its message). Task, event and current-action ids are `int64`: sent as numbe
 
 The service's debug routes (`/debug/world`, `/debug/routes/…`) and its Keycloak consistency
 report (`/health/keycloak`) are not used by the panel.
+
+## `mission`
+
+Shown when `MISSION_URL` and `svc-admin`'s secret are set (listed as `mission`): its README has
+no Admin section, so its catalogue is read through its Interne API **as `svc-admin`**, for the
+capability role of its README held by the person (ADR 0023 › Mission). Read only.
+
+| Method | Route | Permission | Notes |
+|--------|-------|------------|-------|
+| GET | `/api/mission/missions` | `mission.read` | Every mission, any status, newest first: `status`, `category`, `kind`, `limit` (1–100), `offset` → `{ missions, total, limit, offset }` |
+| GET | `/api/mission/missions/:id` | `mission.read` | One mission whatever its visibility → `{ mission, objectives, assignments, players, group, chain, summary, places? }`; 404 if unknown. `places`: its objectives' POIs from `inventory` by id (`null`: unknown to `inventory`), for `inventory.read` (ADR 0026); left out without it, when `INVENTORY_URL` is unset or when `inventory` does not answer |

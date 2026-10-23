@@ -45,3 +45,4 @@ using lightweight ADRs ([Michael Nygard format](https://cognitect.com/blog/2011/
 | [0024](./0024-game-services-social-first.md) | Game services in the panel, social moderation first | Accepted | 2026-10-08 |
 | [0025](./0025-universe-simulation-section.md) | Universe simulation section: `universesimulator` in the panel | Proposed | 2026-10-11 |
 | [0026](./0026-npc-section.md) | NPCs section: the `npc` service in the panel | Proposed | 2026-10-25 |
+| [0026](./0026-mission-objective-schematics.md) | Mission objective schematics: a declarative view per objective kind | Accepted | 2026-10-23 |

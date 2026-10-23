@@ -133,6 +133,24 @@ describe('Sidebar', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('shows missions in the game world to whoever holds mission:read', async () => {
+    useInProcessBff();
+    const onNavigate = vi.fn();
+    renderWithProviders(
+      <PermissionsContext.Provider value={['mission.read']}>
+        <Sidebar active="missions" onNavigate={onNavigate} onHome={vi.fn()} version="0.1.0" />
+      </PermissionsContext.Provider>,
+    );
+    const nav = screen.getByRole('complementary', { name: 'Navigation' });
+
+    await userEvent.click(await within(nav).findByRole('button', { name: 'Missions' }));
+    expect(onNavigate).toHaveBeenCalledWith('missions');
+    expect(within(nav).getByText('Game world')).toBeInTheDocument();
+    expect(
+      within(nav).queryByRole('button', { name: 'Persistence — Items' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('hides the simulation without its permission, or when universesimulator is not configured', async () => {
     useInProcessBff();
     const { unmount } = renderWithProviders(

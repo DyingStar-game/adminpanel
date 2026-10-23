@@ -44,9 +44,9 @@ Arrêt : `make down`. `make help` liste toutes les cibles.
 panel to the back team's minikube Keycloak) :
 
 ```bash
-make up K8S=1      # connexion au Keycloak de minikube, SOCIAL_URL et ECONOMIE_URL renseignées,
-                   # secret de svc-admin lu dans le cluster
-make seed-social   # joueurs, organisations, signalements, portefeuilles de test (rejouable)
+make up K8S=1      # connexion au Keycloak de minikube, SOCIAL_URL, ECONOMIE_URL et MISSION_URL
+                   # renseignées, secret de svc-admin lu dans le cluster
+make seed-social   # joueurs, organisations, signalements, portefeuilles, missions de test (rejouable)
 make pnpm dev
 ```
 
@@ -54,7 +54,8 @@ Le service `npc` n'a pas de route Traefik sur minikube : pour voir la section PN
 joignable (par ex. `kubectl port-forward -n dyingstar svc/service-npc 9400:9400 --address 0.0.0.0`)
 puis lancez `NPC_URL=http://<adresse vue du conteneur dev>:9400 make up K8S=1` (ADR 0026).
 
-`make reset-social` vide le `social` de minikube puis le remplit à nouveau. Après être passé de
+`make reset-social` vide le `social` de minikube puis le remplit à nouveau ; `make reset-mission`
+fait de même pour `mission`. Après être passé de
 `make up` à `make up K8S=1` (ou l'inverse), relancez `make pnpm dev`.
 
 ## 4. Configuration

@@ -39,7 +39,7 @@ export const Permission = {
   economieWalletDebit: 'economie.walletDebit',
   /** Issuing money into a political treasury, likewise. */
   economieMoneyIssue: 'economie.moneyIssue',
-  /** `universesimulator`'s views: dashboard, network, stocks, orders, prices (ADR 0025). */
+  /** `universesimulator`'s views: dashboard, network, stocks, orders, prices (ADR 0026). */
   simulationView: 'simulation.view',
   /** Pausing, resuming or ticking the simulation, cancelling an order (its Admin writes). */
   simulationManage: 'simulation.manage',
@@ -47,6 +47,10 @@ export const Permission = {
   npcView: 'npc.view',
   /** Its Admin writes: global switch, create, spawn, edit, tasks, schedules, workplaces. */
   npcManage: 'npc.manage',
+  /** `mission`'s catalogue and a mission's page (its Interne API, as `svc-admin`). */
+  missionRead: 'mission.read',
+  /** `inventory`'s POIs, named on a mission's objectives (its Interne API, as `svc-admin`). */
+  inventoryRead: 'inventory.read',
 } as const;
 export type Permission = (typeof Permission)[keyof typeof Permission];
 
@@ -91,7 +95,7 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
   [Permission.economieWalletCredit]: ['economie:wallet:credit'],
   [Permission.economieWalletDebit]: ['economie:wallet:debit'],
   [Permission.economieMoneyIssue]: ['economie:money:issue'],
-  // Mirror of `universesimulator`'s Admin API (ADR 0025): its reads need a moderation role, its
+  // Mirror of `universesimulator`'s Admin API (ADR 0026): its reads need a moderation role, its
   // writes `admin` or `supervisor` (`src/auth/mod.rs` › `MODERATION`, `require_admin`); it checks
   // them itself on the person's token.
   [Permission.simulationView]: ['moderator', 'admin', 'supervisor'],
@@ -100,6 +104,11 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
   // (`src/auth/mod.rs` › `MODERATION`, `Caller::require_admin`), checked on the person's token.
   [Permission.npcView]: ['moderator', 'admin', 'supervisor'],
   [Permission.npcManage]: ['admin', 'supervisor'],
+  // `mission`, same rule (ADR 0023 › Mission): its README has no Admin section; its Interne API
+  // is opened by the capability role of its README held by the person.
+  [Permission.missionRead]: ['mission:read'],
+  // `inventory`, same rule (ADR 0023 › Inventory, ADR 0026).
+  [Permission.inventoryRead]: ['inventory:read'],
 };
 
 /** Permission needed to change the status of, or escalate, a report at each escalation level. */

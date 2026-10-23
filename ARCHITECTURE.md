@@ -17,6 +17,7 @@ repository:
 | `economie` | Economy dashboard, wallets and treasuries, settings and taxes, money movements | `ECONOMIE_URL` |
 | `universesimulator` | Simulation of a federation's economy by village: overview and controls, network map, village stocks and warehouses, thresholds, capacities and flows, supply orders and missions, prices, treasury (ADR 0025) | `UNIVERSESIMULATOR_URL` |
 | `npc` | NPCs on the servers: global switch, add / remove (create, spawn, despawn, delete), roster with live status, an NPC's routine, manual tasks, logs, events and configuration, shift patterns and their activity mapping, villages' workplaces (ADR 0026) | `NPC_URL` |
+| `mission` | The mission catalogue, every status, and a mission's page (read only; needs `svc-admin`) | `MISSION_URL` |
 | Keycloak | Sign-in and roles; the `svc-admin` service account for the services' internal APIs | `OIDC_*`, `SVC_ADMIN_*` |
 | GitHub | Object type definitions (`*_def.json` of `horizonserver`), with a bundled fallback | `DEFINITIONS_*` |
 

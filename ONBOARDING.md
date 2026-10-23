@@ -41,9 +41,9 @@ Stop with `make down`. `make help` lists every target.
 team's minikube Keycloak):
 
 ```bash
-make up K8S=1      # signs in to minikube's Keycloak, sets SOCIAL_URL and ECONOMIE_URL,
-                   # reads svc-admin's secret from the cluster
-make seed-social   # test players, organisations, reports, wallets (safe to rerun)
+make up K8S=1      # signs in to minikube's Keycloak, sets SOCIAL_URL, ECONOMIE_URL and
+                   # MISSION_URL, reads svc-admin's secret from the cluster
+make seed-social   # test players, organisations, reports, wallets, missions (safe to rerun)
 make pnpm dev
 ```
 
@@ -51,7 +51,8 @@ The `npc` service has no Traefik route on minikube: to see the NPCs section, mak
 (e.g. `kubectl port-forward -n dyingstar svc/service-npc 9400:9400 --address 0.0.0.0`) and run
 `NPC_URL=http://<address seen from the dev container>:9400 make up K8S=1` (ADR 0026).
 
-`make reset-social` empties minikube's `social` and seeds it again. After switching between
+`make reset-social` empties minikube's `social` and seeds it again; `make reset-mission` does the
+same for `mission`. After switching between
 `make up` and `make up K8S=1`, run `make pnpm dev` again.
 
 ## 4. Configuration
