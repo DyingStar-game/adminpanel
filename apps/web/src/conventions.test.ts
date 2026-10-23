@@ -62,7 +62,6 @@ const UNTESTED_DEBT = new Set([
   'components/organisms/PropertiesEditor.tsx',
   'components/organisms/PropertySections.tsx',
   'components/organisms/RelationsList.tsx',
-  'components/organisms/SchematicCard.tsx',
   'components/templates/AppShell.tsx',
   'components/templates/ExplorerLayout.tsx',
   'components/templates/ObjectPageLayout.tsx',

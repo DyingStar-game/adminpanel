@@ -38,6 +38,11 @@ export const SchematicSchema = z.object({
        * bed), each with its weight; their position is not drawn.
        */
       contents: z.boolean().default(false),
+      /**
+       * `cargo`: the item's own load, `{ mineral, units, ore_volume }` at this path (a crate's
+       * `content`, ADR 0029), drawn as one content box beside the shape, "empty" without one.
+       */
+      goods: Path.optional(),
     }),
   ),
   /** Seats: reference to the player sitting there, or `""` when empty. */

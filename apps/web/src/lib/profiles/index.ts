@@ -1,4 +1,5 @@
 import { matchesPath } from '@dyingstar-admin/schemas';
+import { crate_container } from './crate_container';
 import { miningrock } from './miningrock';
 import { planet } from './planet';
 import { player } from './player';
@@ -12,10 +13,12 @@ export type { Renderer, TypeProfile } from './schema';
 
 /** Validated profiles; a typo in a profile file fails at load time (and in tests). */
 const PROFILES: Map<string, TypeProfile> = new Map(
-  [vehicle, player, planet, star, miningrock, storage_area, spawnbuilding].map((raw) => {
-    const profile = TypeProfileSchema.parse(raw);
-    return [profile.type, profile];
-  }),
+  [vehicle, player, planet, star, miningrock, storage_area, spawnbuilding, crate_container].map(
+    (raw) => {
+      const profile = TypeProfileSchema.parse(raw);
+      return [profile.type, profile];
+    },
+  ),
 );
 
 /** Types hidden on planetary maps until the viewer shows them (`map.hidden`, ADR 0018). */

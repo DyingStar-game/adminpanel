@@ -33,7 +33,7 @@ import { hasMap, mapBodyOf } from '@/lib/bodyMap';
 import { itemLabel } from '@/lib/itemLabel';
 import { bodyFacts, wikiUrl } from '@/lib/bodies';
 import { hasContents, schematicFor, schematicKeys } from '@/lib/schematics';
-import { contentsOf } from '@/lib/schematics/contents';
+import { contentsOf, ownGoodsOf } from '@/lib/schematics/contents';
 import { hasEnergy, installedEnergy, lookup } from '@/lib/schematics/components';
 import { SPAWN_DISTANCE, SPAWN_HEIGHT, spawnNextTo } from '@/lib/spawn';
 import { useCan } from '@/hooks/useCan';
@@ -104,10 +104,14 @@ function ObjectDetails({
     live: true,
     enabled: !!schematic && hasContents(schematic),
   });
+  // A crate's own load (ADR 0029), else what its children are.
+  const own = schematic ? ownGoodsOf(schematic, item.object_data) : [];
   const contents =
-    schematic && children.data
-      ? contentsOf(schematic, item.object_data, children.data.items)
-      : undefined;
+    own.length > 0
+      ? own
+      : schematic && children.data
+        ? contentsOf(schematic, item.object_data, children.data.items)
+        : undefined;
   const body = bodyFacts(item.object_data.scenename);
   // Bodies drawn around this one (its moons, planets, siblings) open their own page.
   const bodies = useBodyIndex(body !== null);

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { createDataset, ids, loadedRock } from '@dyingstar-admin/testing';
+import { createDataset, haulingCrate, ids, loadedRock } from '@dyingstar-admin/testing';
 import { renderWithProviders } from '@/test/render';
 import { useInProcessBff } from '@/test/bff';
 import { useItemActions } from '@/stores/itemActions';
@@ -43,6 +43,15 @@ describe('ObjectPage', () => {
     const [pilot] = await within(relations).findAllByRole('button', { name: /ddurieux/ });
     await userEvent.click(pilot as HTMLElement);
     expect(onNavigate).toHaveBeenCalledWith(ids.player);
+  });
+
+  it('says what a crate holds, in its headline and beside its drawing (ADR 0029)', async () => {
+    useInProcessBff([...createDataset(), structuredClone(haulingCrate)]);
+    renderPage(haulingCrate.object_uuid);
+
+    expect(await screen.findAllByText('Gold · 66 L · 0.066 m³')).not.toHaveLength(0);
+    const schematic = await screen.findByRole('region', { name: 'Schematic' });
+    expect(within(schematic).getByLabelText('Gold · 66 L · 50 kg')).toBeInTheDocument();
   });
 
   it('draws a battery as a progress bar of its charge in kWh', async () => {

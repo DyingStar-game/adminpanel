@@ -145,15 +145,16 @@ Views adapt to the data through declarative files, validated with Zod at load ti
 
 - **Type profile — per `object_type`** ([ADR 0008](./docs/adr/0008-combined-navigation-type-aware-views.md)),
   `apps/web/src/lib/profiles/<type>.ts`, registered in `lib/profiles/index.ts`: table columns,
-  headline facts, labelled relations, renderers (`namedMap`, `inlineList`, `angle`,
-  `orbitalSamples`), children order, spawn distance / height, map flags (`map.body`,
+  headline facts, labelled relations, renderers (`namedMap`, `inlineList`, `angle`, `size`,
+  `orbitalSamples`, `goods` — what a crate holds, ADR 0029), children order, spawn distance / height, map flags (`map.body`,
   `map.hidden`). Fields: `lib/profiles/schema.ts`.
 - **Scene schematic — per model `scenename`** ([ADR 0016](./docs/adr/0016-scene-schematics.md)),
-  a top-view drawing of one model bound to live data (the truck today). To add one:
+  a top-view drawing of one model bound to live data (the truck, the crates). To add one:
   1. Look at real items of that model first (`GET /items?scenename=…`) to get the paths.
   2. Create `apps/web/src/lib/schematics/<model>.ts` on the model of `truck.ts`: exact
      `scenename` (or a `*` pattern within one path segment), grid `size`, then `shapes`
-     (`body`, `cargo`, `battery` — a charge bar in kWh, `celestial` — a planet, moon or star from its wiki facts), `seats`, `bays` (with an optional access `hatch`, drawn like a door),
+     (`body`, `cargo` — with `contents` (the children it carries) or `goods` (the item's own
+     load, a crate's `content`, ADR 0029), `battery` — a charge bar in kWh, `celestial` — a planet, moon or star from its wiki facts), `seats`, `bays` (with an optional access `hatch`, drawn like a door),
      `lights` (a lens on the body's edge, a small cone when its boolean is true),
      `doors` (a door hinges at its front end and swings out on its side of the drawing) and
      `readouts` (`gauge`, `toggle`, `value`, `energy`). Component kinds and tiers (engine,

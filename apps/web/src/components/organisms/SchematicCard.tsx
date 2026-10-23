@@ -7,6 +7,7 @@ import { MonoText } from '@/components/atoms/MonoText';
 import { TypeDot } from '@/components/atoms/TypeDot';
 import type { RefTarget } from '@/components/molecules/UuidLink';
 import { cn } from '@/lib/cn';
+import { goodsOf, type Goods } from '@/lib/goods';
 import { itemLabel } from '@/lib/itemLabel';
 import { typeColor } from '@/lib/objectTypes';
 import { bodyFactList, bodyFacts, factsOfModel, systemOf, wikiUrl } from '@/lib/bodies';
@@ -66,10 +67,16 @@ export function SchematicCard({
     t(`schematic.labels.${key}` as 'schematic.labels.cab', { defaultValue: key });
   const format = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 });
   const [width, height] = schematic.size;
-  const cargo = contents.length > 0 ? schematic.shapes.find((shape) => shape.contents) : undefined;
+  const cargo =
+    contents.length > 0
+      ? schematic.shapes.find((shape) => shape.contents || shape.goods)
+      : undefined;
   // A group of several items clicked: its items listed under the drawing.
   const [detail, setDetail] = useState<string | null>(null);
-  const opened = contents.find((group) => group.key === detail && group.items.length > 1);
+  // Crates list what they hold even alone, like a crate's own load (ADR 0029).
+  const opened = contents.find(
+    (group) => group.key === detail && (group.items.length > 1 || listsGoods(group)),
+  );
   // The contents grid widens the drawing to the right: the callout, then its columns.
   const columns = Math.min(MAX_CONTENTS_COLUMNS, Math.ceil(contents.length / CONTENTS_ROWS));
   const extra = cargo ? 1.6 + columns * CONTENTS_STEP[0] : 0;
@@ -404,6 +411,8 @@ function Contents({
   const top = cell(0)[1] * U - box / 2;
   const bottom = cell(rows - 1)[1] * U + box / 2;
   const mass = (kg: number) => massText(kg, format);
+  const mineral = (id: string) =>
+    t(`schematic.minerals.${id}` as 'schematic.minerals.gold', { defaultValue: id });
   return (
     <g aria-label={t('schematic.contents', { count })}>
       <circle cx={anchor[0]} cy={anchor[1]} r={2.5} fill="var(--ds-fg-3)" />
@@ -441,13 +450,28 @@ function Contents({
           );
         }
         const color = typeColor(group.objectType);
-        const name = groupName(group, t('schematic.ore'));
+        const name = groupName(group, t('schematic.ore'), mineral, t('schematic.labels.crate'));
         const isSelected = group.key === selected;
+        // A crate's own load: its litres where a group counts its items, nothing to open.
+        const count = group.own
+          ? group.goods?.units != null
+            ? `${format.format(group.goods.units)} L`
+            : '—'
+          : `×${group.items.length}`;
+        const label = group.own
+          ? group.goods
+            ? `${name}${group.goods.units != null ? ` · ${count}` : ''}`
+            : t('schematic.empty')
+          : `${group.items.length} × ${name}`;
         return (
           <ContentBox
             key={group.key}
-            title={`${group.items.length} × ${name}${weight ? ` · ${weight}` : ''}`}
-            onOpen={single ? () => onNavigate(single.object_uuid) : () => onSelect(group.key)}
+            title={`${label}${weight ? ` · ${weight}` : ''}`}
+            onOpen={
+              single && !listsGoods(group)
+                ? () => onNavigate(single.object_uuid)
+                : () => onSelect(group.key)
+            }
           >
             <rect
               x={(x - 0.9) * U}
@@ -467,7 +491,7 @@ function Contents({
               fontWeight={600}
               fill="var(--ds-fg)"
             >
-              ×{group.items.length}
+              {group.own && !group.goods ? '∅' : count}
             </text>
             {weight && (
               <text x={x * U} y={y * U + 12} textAnchor="middle" fontSize={8} fill="var(--ds-fg-2)">
@@ -481,7 +505,7 @@ function Contents({
               fontSize={9.5}
               fill="var(--ds-fg-2)"
             >
-              {name}
+              {group.own && !group.goods ? t('schematic.empty') : name}
             </text>
           </ContentBox>
         );
@@ -506,9 +530,35 @@ function Contents({
 const massText = (kg: number, format: Intl.NumberFormat) =>
   kg >= 1000 ? `${format.format(kg / 1000)} t` : `${format.format(Math.round(kg))} kg`;
 
-/** Name of a content group: ore (its label given) for mined rocks, else its type. */
-const groupName = (group: ContentGroup, ore: string) =>
-  group.objectType === 'miningrock' ? ore : group.objectType;
+/** Crates, carried or the item itself, open the list of what they hold (ADR 0029). */
+const listsGoods = (group: ContentGroup) => group.own || group.objectType === 'crate_container';
+
+/** A volume in m³, to the litre (the drawing's own format keeps one decimal). */
+const volumeText = (m3: number, format: Intl.NumberFormat) =>
+  `${new Intl.NumberFormat(format.resolvedOptions().locale, { maximumFractionDigits: 3 }).format(m3)} m³`;
+
+/** "66 L · 0.066 m³": what goods amount to, the quantities given. */
+const quantities = (goods: Goods, format: Intl.NumberFormat) =>
+  [
+    ...(goods.units === null ? [] : [`${format.format(goods.units)} L`]),
+    ...(goods.volume === null ? [] : [volumeText(goods.volume, format)]),
+  ].join(' · ');
+
+/**
+ * Name of a content group: ore (its label given) for mined rocks, crate (its label given) for
+ * crates carried, whatever they hold (ADR 0029); the mineral of a crate's own load; else its type.
+ */
+const groupName = (
+  group: ContentGroup,
+  ore: string,
+  mineral: (id: string) => string = (id) => id,
+  crate = 'Crate',
+) => {
+  if (group.objectType === 'miningrock') return ore;
+  if (group.objectType !== 'crate_container') return group.objectType;
+  if (group.own) return group.goods ? mineral(group.goods.mineral) : group.objectType;
+  return crate;
+};
 
 /**
  * Items of a content group, listed under the drawing: rocks by mineral (each with its count and
@@ -526,14 +576,18 @@ function ContentDetail({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const name = groupName(group, t('schematic.ore'));
+  const mineralName = (id: string) =>
+    t(`schematic.minerals.${id}` as 'schematic.minerals.gold', { defaultValue: id });
+  const name = groupName(group, t('schematic.ore'), mineralName, t('schematic.labels.crate'));
   const weightOf = (item: Item) =>
     typeof item.object_data.weight === 'number' ? item.object_data.weight : null;
   const sections = new Map<string, Item[]>();
   for (const item of group.items) {
+    // Rocks by mineral; crates in one list, each saying what it holds (ADR 0029).
     const mineral = stringOf(item.object_data.mineral_id) ?? '';
     sections.set(mineral, [...(sections.get(mineral) ?? []), item]);
   }
+  if (group.own) return <OwnGoods group={group} name={name} format={format} onClose={onClose} />;
   const total = (items: Item[]) => items.reduce((sum, item) => sum + (weightOf(item) ?? 0), 0);
   const sorted = [...sections.entries()]
     .map(([mineral, items]) => ({
@@ -586,7 +640,17 @@ function ContentDetail({
               <ul>
                 {section.items.map((item) => {
                   const weight = weightOf(item);
-                  const host = stringOf(item.object_data.host_rock_id);
+                  const goods = goodsOf(item.object_data.content);
+                  // A rock's host rock, or what a crate holds (ADR 0029).
+                  const host =
+                    stringOf(item.object_data.host_rock_id) ??
+                    (group.objectType !== 'crate_container'
+                      ? null
+                      : goods
+                        ? [mineralName(goods.mineral), quantities(goods, format)]
+                            .filter(Boolean)
+                            .join(' · ')
+                        : t('schematic.empty'));
                   return (
                     <li key={item.object_uuid}>
                       <button
@@ -597,11 +661,15 @@ function ContentDetail({
                         <span className="min-w-0 flex-1 truncate text-sm text-link">
                           {itemLabel(item)}
                         </span>
-                        {host && (
-                          <MonoText tone="subtle" className="truncate text-2xs">
-                            {host}
-                          </MonoText>
-                        )}
+                        {host &&
+                          (group.objectType === 'crate_container' ? (
+                            // What it holds is text, not a technical value (ADR 0020).
+                            <span className="truncate text-xs text-fg-2">{host}</span>
+                          ) : (
+                            <MonoText tone="subtle" className="truncate text-2xs">
+                              {host}
+                            </MonoText>
+                          ))}
                         <MonoText className="text-xs whitespace-nowrap">
                           {weight === null ? '—' : massText(weight, format)}
                         </MonoText>
@@ -614,6 +682,66 @@ function ContentDetail({
           );
         })}
       </div>
+    </section>
+  );
+}
+
+/**
+ * What an item holds itself (a crate's `content`, ADR 0029), listed under the drawing: its
+ * mineral, quantity in litres, volume and mass, or that it is empty.
+ */
+function OwnGoods({
+  group,
+  name,
+  format,
+  onClose,
+}: {
+  group: ContentGroup;
+  name: string;
+  format: Intl.NumberFormat;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const { goods } = group;
+  const title = t('schematic.holds', { name: goods ? name : t('schematic.empty') });
+  const facts = goods
+    ? [
+        { key: 'mineral', value: name },
+        ...(goods.units === null
+          ? []
+          : [{ key: 'units', value: `${format.format(goods.units)} L` }]),
+        ...(goods.volume === null
+          ? []
+          : [{ key: 'volume', value: volumeText(goods.volume, format) }]),
+        ...(group.weight === null ? [] : [{ key: 'mass', value: massText(group.weight, format) }]),
+      ]
+    : [];
+  return (
+    <section aria-label={title} className="flex flex-col gap-1 rounded-xl border bg-surface-2 p-2">
+      <header className="flex items-center gap-2 px-2 py-1">
+        <TypeDot objectType={group.objectType} />
+        <span className="text-sm font-semibold">{title}</span>
+        <button
+          type="button"
+          aria-label={t('orbit.close')}
+          onClick={onClose}
+          className="ml-auto rounded-md p-1 text-fg-3 hover:bg-fg-3/10 hover:text-fg"
+        >
+          <XIcon size={14} />
+        </button>
+      </header>
+      {facts.length > 0 && (
+        <dl className="grid grid-cols-[minmax(0,auto)_minmax(0,1fr)] gap-x-4 gap-y-1 px-2 pb-1 text-sm">
+          {facts.map((fact) => (
+            <div key={fact.key} className="contents">
+              <dt className="text-fg-2">
+                {t(`schematic.goods.${fact.key}` as 'schematic.goods.mineral')}
+              </dt>
+              <dd>{fact.value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
     </section>
   );
 }

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { QuaternionSchema, Vec3Schema, type ObjectData } from '@dyingstar-admin/schemas';
 import { MonoText } from '@/components/atoms/MonoText';
+import { formatGoods, goodsOf } from '@/lib/goods';
 import type { Renderer } from '@/lib/profiles';
 import { ValueView, type ValueViewProps } from './ValueView';
 
@@ -16,8 +17,22 @@ const fixed = (n: number) => Number(n.toFixed(3)).toString();
 
 /** Property value with the type profile's renderer, generic `ValueView` otherwise (ADR 0008). */
 export function ProfileValue({ renderer, data, compact = false, ...props }: ProfileValueProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { value } = props;
+
+  if (renderer === 'goods' && value && typeof value === 'object' && !Array.isArray(value)) {
+    const goods = goodsOf(value);
+    if (goods) {
+      const mineral = t(`schematic.minerals.${goods.mineral}` as 'schematic.minerals.gold', {
+        defaultValue: goods.mineral,
+      });
+      return <span>{formatGoods(goods, mineral, i18n.language)}</span>;
+    }
+    // Keys but no mineral: not the depot's shape, shown as it is.
+    if (Object.keys(value).length === 0) {
+      return <span className="text-fg-3">{t('schematic.empty')}</span>;
+    }
+  }
 
   if (renderer === 'namedMap' && value && typeof value === 'object' && !Array.isArray(value)) {
     const entries = Object.entries(value);

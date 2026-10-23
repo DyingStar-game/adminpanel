@@ -48,3 +48,4 @@ using lightweight ADRs ([Michael Nygard format](https://cognitect.com/blog/2011/
 | [0026](./0026-mission-objective-schematics.md) | Mission objective schematics: a declarative view per objective kind | Accepted | 2026-10-23 |
 | [0027](./0027-mission-places-map.md) | A mission's places on a map | Accepted | 2026-10-23 |
 | [0028](./0028-cancelling-a-mission.md) | Cancelling a mission, and the simulation's missions in the mission views | Accepted | 2026-10-23 |
+| [0029](./0029-crate-contents.md) | What a crate holds: its page, its schematic and the contents of what carries it | Accepted | 2026-10-23 |

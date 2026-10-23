@@ -27,6 +27,22 @@ describe('ProfileValue', () => {
     expect(screen.getByText('26.538 × 12.734 m')).toBeInTheDocument();
   });
 
+  it('says what a crate holds, or that it is empty (ADR 0029)', () => {
+    render(
+      <ProfileValue
+        {...base}
+        renderer="goods"
+        value={{ mineral: 'gold', ore_volume: 0.066, units: 66 }}
+      />,
+    );
+    expect(screen.getByText('Gold · 66 L · 0.066 m³')).toBeInTheDocument();
+    render(<ProfileValue {...base} renderer="goods" value={{}} />);
+    expect(screen.getByText('empty')).toBeInTheDocument();
+    // Another shape than the depot's is shown as it is.
+    render(<ProfileValue {...base} renderer="goods" value={{ water: 3 }} />);
+    expect(screen.getByText('1 key')).toBeInTheDocument();
+  });
+
   it('pairs orbital positions with rotations', () => {
     render(
       <ProfileValue
