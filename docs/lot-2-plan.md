@@ -42,6 +42,19 @@ take the person's token: they cannot follow. Gain: the real missions published b
 pre-production's simulation. E.g. `make up PREPROD_SERVICES=1`. Not started: waiting for the
 maintainer.
 
+- **Known (2026-10-23)**: `https://services-preprod.dyingstar-game.space/mission` and `…/inventory`
+  (maintainer), reachable from a developer's machine; `/api/health` answers 200 without a token,
+  `/api/internal/*` 401 without one; both serve the very `openapi.yaml` pinned from `develop`
+  (`mission` with PR #37's detail route). Pre-production's `dyingstar-admin` only redirects to
+  `https://admin-preprod.dyingstar-game.space/auth/callback` (`kubernetes` › `keycloak-managed/
+  preprod/04-realm-import.yaml`): signing the local panel in there needs a `localhost` redirect
+  the back team refused on 2026-10-08.
+- **Still to get from the back team**: either that `localhost` redirect (or a dev client) with its
+  secret and the maintainer's roles there — then the whole local panel can run on
+  pre-production —, or only a read-only service account (`mission:read`, `inventory:read`,
+  audiences `mission-api`, `inventory-api`) and its secret, `client_credentials` allowed from
+  outside; and whether pre-production's `universesimulator` publishes missions.
+
 ### 2026-10-23 — ADR 0027, a mission's places on a map, where to resume
 
 - **Branch `feature/missions`** (on `origin/develop`, with the simulation section of PR #2; the
