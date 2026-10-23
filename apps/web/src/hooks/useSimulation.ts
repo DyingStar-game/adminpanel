@@ -81,11 +81,12 @@ export interface OrderFilters {
 }
 
 /** The latest orders (up to 100) matching the filters, newest first. */
-export const useSimulationOrders = (filters: OrderFilters) =>
+export const useSimulationOrders = (filters: OrderFilters, enabled = true) =>
   useLive(
     ['orders', filters],
     `${PATH}/orders${qs({ ...filters, limit: 100 })}`,
     zListOrdersResponse,
+    enabled,
   );
 
 export const useSimulationOrder = (id: string | undefined) =>

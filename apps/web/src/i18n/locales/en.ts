@@ -741,6 +741,14 @@ export const en = {
       noSchematic: 'A kind the panel does not draw yet: its parameters as stored.',
       places: 'Places of the objective',
     },
+    simulation: {
+      title: 'Published by the simulation',
+      open: 'See the order',
+      leg_one: 'Leg {{seq}} of {{count}}:',
+      leg_other: 'Leg {{seq}} of {{count}}:',
+      carried: '{{quantity}} carried · {{reward}}',
+      order: 'Supply order',
+    },
     placesMap: {
       title: 'Places',
       label: "Map of the mission's places",

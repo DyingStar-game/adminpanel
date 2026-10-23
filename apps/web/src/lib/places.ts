@@ -148,7 +148,8 @@ export function missionPlaces(
       if (!place.poiId) continue;
       const use: PlaceUse = {
         objectiveId: objective.id,
-        step: objective.order,
+        // Counted from 1 for people, as on the objective's card.
+        step: objective.order + 1,
         title: objective.title,
         role: place.role,
       };

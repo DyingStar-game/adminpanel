@@ -23,7 +23,7 @@ describe('SimulationOrders', () => {
     expect(hops[1]).toHaveTextContent('On offer');
     expect(hops[1]).toHaveTextContent('600 l · 15 km');
     expect(hops[1]).toHaveTextContent('F0001 — Cargo depot → M0002 — Cargo depot');
-    expect(hops[1]).toHaveTextContent(simulationIds.waterMission);
+    expect(hops[1]).toHaveTextContent(simulationIds.waterMission.slice(0, 8));
     const copper = screen.getByRole('listitem', { name: '660 Copper ore for C0001' });
     expect(within(copper).getAllByRole('listitem')[0]).toHaveTextContent('reward not set yet');
   });
@@ -58,7 +58,9 @@ describe('SimulationOrders', () => {
     );
     // Closed orders offer nothing.
     expect(
-      within(await screen.findByRole('listitem', { name: FOOD })).queryByRole('button'),
+      within(await screen.findByRole('listitem', { name: FOOD })).queryByRole('button', {
+        name: 'Cancel the order',
+      }),
     ).not.toBeInTheDocument();
   });
 

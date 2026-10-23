@@ -34,6 +34,9 @@ function MissionRoute() {
           search: FIRST,
         })
       }
+      onOpenSimulationOrders={({ resource, village }) =>
+        void navigate({ to: '/simulation', search: { tab: 'orders', resource, village } })
+      }
     />
   );
 }

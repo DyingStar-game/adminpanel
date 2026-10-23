@@ -754,6 +754,14 @@ export const fr: Translations = {
         'Un type que le panneau ne dessine pas encore : ses paramètres tels que stockés.',
       places: "Lieux de l'objectif",
     },
+    simulation: {
+      title: 'Publiée par la simulation',
+      open: "Voir l'ordre",
+      leg_one: 'Étape {{seq}} sur {{count}} :',
+      leg_other: 'Étape {{seq}} sur {{count}} :',
+      carried: '{{quantity}} transportés · {{reward}}',
+      order: "Ordre d'approvisionnement",
+    },
     placesMap: {
       title: 'Lieux',
       label: 'Carte des lieux de la mission',

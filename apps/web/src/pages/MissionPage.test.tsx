@@ -14,6 +14,7 @@ const renderPage = (missionId: string, permissions?: string[]) => {
     onOpenPlayer: vi.fn(),
     onOpenCorporation: vi.fn(),
     onOpenPoliticalEntity: vi.fn(),
+    onOpenSimulationOrders: vi.fn(),
   };
   const page = <MissionPage missionId={missionId} {...props} />;
   renderWithProviders(
@@ -82,7 +83,11 @@ describe('MissionPage (ADR 0024 step O)', () => {
 
     const takers = await screen.findByRole('table', { name: 'Who took it' });
     expect(within(takers).getByText('ddurieux')).toBeInTheDocument();
-    expect(within(takers).queryByRole('button')).toBeNull();
+    expect(
+      within(takers)
+        .queryAllByRole('button')
+        .filter((b) => b.getAttribute('aria-label') !== 'Copy UUID'),
+    ).toEqual([]);
   });
 
   it('says when the mission does not exist', async () => {

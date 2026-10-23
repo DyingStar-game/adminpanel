@@ -2,16 +2,15 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Poi } from '@dyingstar-admin/contracts/inventory';
 import type { MissionObjective } from '@dyingstar-admin/contracts/mission';
-import { Chip } from '@/components/atoms/Chip';
 import { MissionReward } from '@/components/molecules/MissionReward';
 import { ObjectivePlaces } from '@/components/molecules/ObjectivePlaces';
 import { RawJson } from '@/components/molecules/RawJson';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
-import { shortId } from '@/lib/format';
 import { objectiveView, type ObjectiveView } from '@/lib/objectiveSchematics';
 import { objectiveInstruction } from '@/lib/objectiveSchematics/instruction';
+import { EntityLink } from '@/components/molecules/EntityLink';
 
 interface MissionObjectivesProps {
   objectives: MissionObjective[];
@@ -96,66 +95,67 @@ function ObjectiveCard({
         selected && 'border-primary ring-1 ring-primary',
       )}
     >
-      <header className="flex flex-wrap items-center gap-2">
-        <span className="text-xs text-fg-3 tabular-nums">
-          {t('missions.objectiveDetail.step', { step: o.order })}
+      <header className="flex items-start gap-3">
+        {/* Steps are counted from 1 for people; `mission` stores them from 0. */}
+        <span
+          aria-label={t('missions.objectiveDetail.step', { step: o.order + 1 })}
+          className="grid size-6 shrink-0 place-items-center rounded-full border text-xs font-semibold tabular-nums"
+        >
+          {o.order + 1}
         </span>
-        <h3 className="text-sm font-semibold">{o.title}</h3>
-        <Badge variant="outline">
-          {t(`missions.objectiveTypes.${o.type}` as never, { defaultValue: o.type })}
-        </Badge>
-        <Badge variant="outline">{t(`missions.objectiveStatus.${o.status}`)}</Badge>
-        {o.isBonus && <Badge variant="secondary">{t('missions.detail.bonus')}</Badge>}
-        {o.isBonus && o.bonusReward && <MissionReward rewards={[o.bonusReward]} />}
-        {!o.isBonus && o.weight !== 1 && (
-          <span className="text-xs text-fg-3">
-            {t('missions.detail.weight', { count: o.weight })}
-          </span>
-        )}
-        {placed && onSelect && (
-          <Button
-            variant={selected ? 'secondary' : 'outline'}
-            size="xs"
-            className="ml-auto"
-            aria-pressed={selected}
-            onClick={() => onSelect(!selected)}
-          >
-            {t('missions.placesMap.showOnMap')}
-          </Button>
-        )}
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-sm font-semibold">{o.title}</h3>
+            <Badge variant="outline">
+              {t(`missions.objectiveTypes.${o.type}` as never, { defaultValue: o.type })}
+            </Badge>
+            {o.isBonus && <Badge variant="secondary">{t('missions.detail.bonus')}</Badge>}
+            {o.isBonus && o.bonusReward && (
+              <span className="text-xs">
+                <MissionReward rewards={[o.bonusReward]} />
+              </span>
+            )}
+            {!o.isBonus && o.weight !== 1 && (
+              <span className="text-xs text-fg-3">
+                {t('missions.detail.weight', { count: o.weight })}
+              </span>
+            )}
+          </div>
+          {o.description && <p className="text-xs text-fg-3">{o.description}</p>}
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <Badge variant="outline">{t(`missions.objectiveStatus.${o.status}`)}</Badge>
+          {placed && onSelect && (
+            <Button
+              variant={selected ? 'secondary' : 'outline'}
+              size="xs"
+              aria-pressed={selected}
+              onClick={() => onSelect(!selected)}
+            >
+              {t('missions.placesMap.showOnMap')}
+            </Button>
+          )}
+        </div>
       </header>
-      {o.description && <p className="text-xs text-fg-3">{o.description}</p>}
       {view ? (
-        <>
+        <div className="flex flex-col gap-2.5 pl-9">
           <p className="text-sm">
             {objectiveInstruction(t, o, view, { language: i18n.language, players })}
           </p>
           {view.playerId && (
             <span className="flex items-center gap-2 text-sm">
               <span className="text-xs text-fg-3">{t('missions.objectivePlaces.passenger')}</span>
-              {onOpenPlayer ? (
-                <Chip
-                  variant="link"
-                  title={view.playerId}
-                  onClick={() => view.playerId && onOpenPlayer(view.playerId)}
-                >
-                  {players[view.playerId] ?? shortId(view.playerId)}
-                </Chip>
-              ) : (
-                <span title={view.playerId}>
-                  {players[view.playerId] ?? shortId(view.playerId)}
-                </span>
-              )}
+              <EntityLink id={view.playerId} label={players[view.playerId]} onOpen={onOpenPlayer} />
             </span>
           )}
           <ObjectivePlaces places={view.places} loaded={view.loaded} />
           <ObjectiveProgress objective={o} view={view} />
-        </>
+        </div>
       ) : (
-        <p className="text-sm text-fg-3">{t('missions.objectiveDetail.noSchematic')}</p>
+        <p className="pl-9 text-sm text-fg-3">{t('missions.objectiveDetail.noSchematic')}</p>
       )}
       {hasParams && (
-        <details className="text-sm" open={!view}>
+        <details className="pl-9 text-sm" open={!view}>
           <summary className="cursor-pointer text-xs text-fg-3">
             {t('missions.objectiveDetail.parameters')}
           </summary>
@@ -190,11 +190,8 @@ function ObjectiveProgress({
   const number = new Intl.NumberFormat(i18n.language);
   const value = `${number.format(o.currentProgress)} / ${number.format(o.targetQuantity)}${o.unit ? ` ${o.unit}` : ''}`;
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-baseline justify-between gap-2 text-xs">
-        <span className="text-fg-3">{t(`missions.objectiveProgress.${mode}`)}</span>
-        <span className="tabular-nums">{value}</span>
-      </div>
+    <div className="flex items-center gap-3 text-xs">
+      <span className="shrink-0 text-fg-3">{t(`missions.objectiveProgress.${mode}`)}</span>
       <div
         role="progressbar"
         aria-label={o.title}
@@ -202,10 +199,11 @@ function ObjectiveProgress({
         aria-valuemax={100}
         aria-valuenow={percent}
         aria-valuetext={value}
-        className="h-1.5 overflow-hidden rounded-full bg-fg-3/25"
+        className="h-1.5 flex-1 overflow-hidden rounded-full bg-fg-3/25"
       >
         <div className="h-full rounded-full bg-primary" style={{ width: `${percent}%` }} />
       </div>
+      <span className="shrink-0 tabular-nums">{value}</span>
     </div>
   );
 }

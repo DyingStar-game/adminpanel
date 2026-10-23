@@ -50,6 +50,9 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 ## Conventions
 
 - Commit messages: Conventional Commits with the step as scope (`feat(bff): …`).
+- An id on screen goes through `molecules/IdLabel` (short, whole in its title, copy button) or,
+  when it is a way to a page, `molecules/EntityLink` (persistence references: `UuidLink`): never a
+  bare `shortId`.
 - TypeScript strict; code, comments and contributor docs in English; UI strings in both `en` and
   `fr` (`apps/web/src/i18n/locales/`).
 - Tests next to the code (Vitest, Testing Library, MSW) — ADR 0013.

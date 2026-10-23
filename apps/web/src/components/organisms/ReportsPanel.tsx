@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import type { EscalationLevel, ReportStatus, ReportView } from '@dyingstar-admin/contracts/social';
-import { Chip } from '@/components/atoms/Chip';
 import { DataTable } from '@/components/molecules/DataTable';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { Pagination } from '@/components/molecules/Pagination';
@@ -11,6 +10,7 @@ import { formatDateTime } from '@/lib/format';
 import { MODERATION_PAGE_SIZE, type ModerationSearch } from '@/lib/moderationSearch';
 import { moderationErrorKey } from '@/lib/moderationErrors';
 import { ReportDetail } from './ReportDetail';
+import { EntityLink } from '@/components/molecules/EntityLink';
 
 const STATUSES: ReportStatus[] = ['open', 'reviewing', 'resolved', 'dismissed'];
 const LEVELS: EscalationLevel[] = ['moderator', 'admin', 'supervisor'];
@@ -33,16 +33,7 @@ export function ReportsPanel({ search, onSearchChange, onOpenPlayer }: ReportsPa
   const reasonLabel = (r: ReportView['reason']) => t(`moderation.reason.${r}`);
   const name = (id: string | null, label: string | null) =>
     id ? (
-      <Chip
-        variant="link"
-        title={id}
-        onClick={(event) => {
-          event.stopPropagation();
-          onOpenPlayer(id);
-        }}
-      >
-        {label ?? id.slice(0, 8)}
-      </Chip>
+      <EntityLink id={id} label={label} onOpen={onOpenPlayer} />
     ) : (
       <span className="text-fg-3">{t('moderation.system')}</span>
     );

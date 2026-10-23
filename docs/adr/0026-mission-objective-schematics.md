@@ -121,6 +121,21 @@ the card lists its places as text.
 - **POIs on the body map** (ADR 0018): a place could open the map centred on it. Kept for a
   follow-up once POIs are read; the latitude / longitude are computed the same way.
 
+### Update (2026-10-23): the card rearranged, steps from 1, the simulation's missions
+
+At the maintainer's request ("this objective card is messy"): a step bubble counted **from 1**
+(`mission` stores them from 0; the map's titles count the same way), the title with its kind,
+bonus and weight, the status and "On the map" on the right; under them the sentence, the places
+**in a column** (each role's bubble joined to the next by a dotted line, the distance along the
+surface beside it), a place's details (body, position, altitude, zone, id) on a click on its
+name, then the progress on one line and the parameters folded.
+
+Missions published by `universesimulator` (ADR 0025: one per leg of a supply order) are linked
+both ways: a leg's mission opens its page from the Simulation's orders, for who reads `mission`;
+a mission's page shows the order and leg it carries (kind, status, resource, villages, quantity,
+reward) with a way to the order, for who holds `simulation.view`, found among the latest 100
+orders (its API filters no order by mission).
+
 ## Consequences
 
 - Adding a kind = one data file, its instruction in `en` / `fr` and one line in the index; a

@@ -1,12 +1,11 @@
 import { useTranslation } from 'react-i18next';
 import type { MissionAssignment } from '@dyingstar-admin/contracts/mission';
-import { Chip } from '@/components/atoms/Chip';
-import { MonoText } from '@/components/atoms/MonoText';
 import { DataTable } from '@/components/molecules/DataTable';
 import { MissionReward } from '@/components/molecules/MissionReward';
 import { Badge } from '@/components/ui/badge';
 import { formatBps } from '@/lib/economy';
-import { formatDateTime, shortId } from '@/lib/format';
+import { formatDateTime } from '@/lib/format';
+import { EntityLink } from '@/components/molecules/EntityLink';
 
 interface MissionAssignmentsTableProps {
   assignments: MissionAssignment[];
@@ -34,18 +33,11 @@ export function MissionAssignmentsTable({
       return (
         <span className="flex items-center gap-2">
           <Badge variant="outline">{t('missions.detail.npc')}</Badge>
-          {name ?? <MonoText title={a.playerId}>{shortId(a.playerId)}</MonoText>}
+          <EntityLink id={a.playerId} label={name} />
         </span>
       );
     }
-    const label = name ?? <MonoText>{shortId(a.playerId)}</MonoText>;
-    return onOpenPlayer ? (
-      <Chip variant="link" title={a.playerId} onClick={() => onOpenPlayer(a.playerId)}>
-        {label}
-      </Chip>
-    ) : (
-      <span title={a.playerId}>{label}</span>
-    );
+    return <EntityLink id={a.playerId} label={name} onOpen={onOpenPlayer} />;
   };
 
   return (

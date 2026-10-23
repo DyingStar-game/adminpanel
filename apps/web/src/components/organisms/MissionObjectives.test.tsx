@@ -25,6 +25,8 @@ describe('MissionObjectives (ADR 0026)', () => {
     );
 
     const [ore, bonus] = screen.getAllByRole('article');
+    // Steps are counted from 1.
+    expect(within(ore as HTMLElement).getByLabelText('Step 1')).toHaveTextContent('1');
     expect(ore).toHaveTextContent('Deliver 10 t of iron ore');
     expect(ore).toHaveTextContent('Deliver goods');
     expect(ore).toHaveTextContent('In progress');
@@ -55,8 +57,11 @@ describe('MissionObjectives (ADR 0026)', () => {
     ).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /ddurieux/ }));
     expect(onOpenPlayer).toHaveBeenCalledWith(socialIds.reporter);
-    // The relay station is in orbit: both objectives there stand on no body.
-    expect(screen.getAllByText('Open space')).toHaveLength(2);
+    // The relay station is in orbit: it stands on no body.
+    await userEvent.click(
+      screen.getAllByRole('button', { name: 'Relay station' })[0] as HTMLElement,
+    );
+    expect(await screen.findByText('Open space')).toBeInTheDocument();
     expect(screen.getByText('What they own now: it can go down')).toBeInTheDocument();
   });
 

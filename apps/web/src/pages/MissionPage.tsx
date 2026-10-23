@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeftIcon } from 'lucide-react';
-import { MonoText } from '@/components/atoms/MonoText';
 import { FactTiles } from '@/components/molecules/FactTiles';
 import { MissionReward } from '@/components/molecules/MissionReward';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { MissionAssignmentsTable } from '@/components/organisms/MissionAssignmentsTable';
 import { MissionObjectives } from '@/components/organisms/MissionObjectives';
 import { MissionPlacesMap } from '@/components/organisms/MissionPlacesMap';
+import { MissionSimulationOrigin } from '@/components/organisms/MissionSimulationOrigin';
 import { MissionTerms, type MissionLinks } from '@/components/organisms/MissionTerms';
 import { ServicePageLayout } from '@/components/templates/ServicePageLayout';
 import { Badge } from '@/components/ui/badge';
@@ -19,10 +19,13 @@ import { ApiError } from '@/lib/api';
 import { formatBps } from '@/lib/economy';
 import { formatDateTime } from '@/lib/format';
 import { missionErrorKey } from '@/lib/missionErrors';
+import { IdLabel } from '@/components/molecules/IdLabel';
 
 interface MissionPageProps extends Required<MissionLinks> {
   missionId: string;
   onBack: () => void;
+  /** Opens the Simulation section's orders (a mission it published, ADR 0026). */
+  onOpenSimulationOrders: (filters: { resource: string; village: string }) => void;
 }
 
 /**
@@ -36,6 +39,7 @@ export function MissionPage({
   onOpenPlayer,
   onOpenCorporation,
   onOpenPoliticalEntity,
+  onOpenSimulationOrders,
 }: MissionPageProps) {
   const { t, i18n } = useTranslation();
   const can = useCan();
@@ -81,7 +85,7 @@ export function MissionPage({
           </Badge>
           <Badge variant="outline">{t(`missions.kinds.${m.kind}`)}</Badge>
           {m.isEvent && <Badge variant="secondary">{t('missions.event')}</Badge>}
-          <MonoText tone="subtle">{m.id}</MonoText>
+          <IdLabel id={m.id} full />
           {formatDateTime(m.createdAt, i18n.language)}
         </div>
       }
@@ -117,6 +121,7 @@ export function MissionPage({
           },
         ]}
       />
+      <MissionSimulationOrigin missionId={m.id} onOpenOrders={onOpenSimulationOrders} />
       <MissionTerms
         detail={d}
         onOpenMission={onOpenMission}

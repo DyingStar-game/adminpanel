@@ -52,6 +52,11 @@ since the player sheet is where moderators look first.
   Palaka-Pital; mission titles name them. `make reset-mission` run again for it (2026-10-23);
   the eight previous POIs deleted by the seed. Checked in a browser: the transport among 780
   landmarks, by type.
+- **Card rearranged, steps from 1, simulation links** (ADR 0026 › Update): places in a column
+  joined by a dotted line, details on a click; a leg's mission opens from the Simulation's
+  orders, a mission's page shows its supply order (latest 100 orders). Ids copyable everywhere
+  (`IdLabel`, `EntityLink`). minikube's `universesimulator` has no federation yet (2026-10-23):
+  the links were checked against its mock only.
 
 ### 2026-10-23 — ADR 0026, objective schematics
 

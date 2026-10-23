@@ -5,8 +5,9 @@ import { MonoText } from '@/components/atoms/MonoText';
 import { DataTable } from '@/components/molecules/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { usePlayerNames } from '@/hooks/useModeration';
-import { formatDateTime, shortId } from '@/lib/format';
+import { formatDateTime } from '@/lib/format';
 import { activityFamily, activityPlayerId, eventTone } from '@/lib/socialActivity';
+import { EntityLink } from '@/components/molecules/EntityLink';
 
 interface ActivityTableProps {
   entries: ActivityEntry[];
@@ -42,11 +43,7 @@ export function ActivityTable({ entries, onOpenPlayer, onOpenReport }: ActivityT
     entries.flatMap((e) => [activityPlayerId(e.details), asText(e.details?.by)]),
   );
 
-  const player = (id: string) => (
-    <Chip variant="link" title={id} onClick={() => onOpenPlayer(id)}>
-      {names.get(id) ?? <MonoText>{shortId(id)}</MonoText>}
-    </Chip>
-  );
+  const player = (id: string) => <EntityLink id={id} label={names.get(id)} onOpen={onOpenPlayer} />;
 
   /** The event as a badge, and a sanction's type next to it, as in the moderation log. */
   const event = (entry: ActivityEntry) => {

@@ -48,7 +48,9 @@ describe('MissionTerms', () => {
 
     expect(screen.getByText('Refunded')).toBeInTheDocument();
     // Without a way to the player's sheet, their id.
-    expect(screen.queryByRole('button')).toBeNull();
+    expect(
+      screen.queryAllByRole('button').filter((b) => b.getAttribute('aria-label') !== 'Copy UUID'),
+    ).toEqual([]);
   });
 
   it('says when a mission to finish first no longer exists', () => {

@@ -28,7 +28,12 @@ describe('MissionAssignmentsTable', () => {
     // An NPC has no name in `social` nor a sheet.
     const npc = within(table).getByText('NPC').closest('tr') as HTMLElement;
     expect(npc).toHaveTextContent('Abandoned');
-    expect(within(npc).queryByRole('button')).toBeNull();
+    // No way to a sheet, only the id to copy.
+    expect(
+      within(npc)
+        .queryAllByRole('button')
+        .filter((b) => b.getAttribute('aria-label') !== 'Copy UUID'),
+    ).toEqual([]);
 
     await userEvent.click(within(table).getByRole('button', { name: /ddurieux/ }));
     expect(onOpenPlayer).toHaveBeenCalledWith(socialIds.reporter);
@@ -37,7 +42,11 @@ describe('MissionAssignmentsTable', () => {
   it('shows players without links when the account may not open their sheet', () => {
     renderWithProviders(<MissionAssignmentsTable assignments={delivery} players={{}} />);
     const table = screen.getByRole('table', { name: 'Who took it' });
-    expect(within(table).queryByRole('button')).toBeNull();
+    expect(
+      within(table)
+        .queryAllByRole('button')
+        .filter((b) => b.getAttribute('aria-label') !== 'Copy UUID'),
+    ).toEqual([]);
     // Without a name from `social`, the start of the id.
     expect(within(table).getByText(socialIds.griefer.slice(0, 8))).toBeInTheDocument();
   });

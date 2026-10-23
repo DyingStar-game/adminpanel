@@ -6,7 +6,9 @@ import { MonoText } from '@/components/atoms/MonoText';
 import { FactList } from '@/components/molecules/FactList';
 import { Badge } from '@/components/ui/badge';
 import { formatAmount } from '@/lib/economy';
-import { formatDateTime, shortId } from '@/lib/format';
+import { formatDateTime } from '@/lib/format';
+import { EntityLink } from '@/components/molecules/EntityLink';
+import { IdLabel } from '@/components/molecules/IdLabel';
 
 /** Ways to the pages of what a mission refers to; unset, the reference is shown as an id. */
 export interface MissionLinks {
@@ -34,14 +36,9 @@ export function MissionTerms({
   const { t, i18n } = useTranslation();
   const none = <span className="text-fg-3">{t('missions.detail.none')}</span>;
   /** An id of `social` (player, corporation, political entity), a link when it has a page. */
-  const reference = (id: string, open?: (id: string) => void) =>
-    open ? (
-      <Chip variant="link" title={id} onClick={() => open(id)}>
-        {shortId(id)}
-      </Chip>
-    ) : (
-      <MonoText title={id}>{shortId(id)}</MonoText>
-    );
+  const reference = (id: string, open?: (id: string) => void) => (
+    <EntityLink id={id} onOpen={open} />
+  );
   const holderLinks = {
     player: onOpenPlayer,
     corporation: onOpenCorporation,
@@ -66,7 +63,7 @@ export function MissionTerms({
     facts.push([
       t('missions.detail.group'),
       <span key="group" className="flex flex-wrap items-center gap-2">
-        {group?.name ?? <MonoText title={m.groupId}>{shortId(m.groupId)}</MonoText>}
+        <EntityLink id={m.groupId} label={group?.name} />
         {m.groupClaimable && (
           <span className="text-xs text-fg-3">{t('missions.detail.claimable')}</span>
         )}
@@ -88,7 +85,7 @@ export function MissionTerms({
             ) : (
               <li key={`poi:${zone.poiId}`} className="flex items-center gap-2">
                 {t('missions.detail.poi')}
-                <MonoText>{zone.poiId}</MonoText>
+                <IdLabel id={zone.poiId} />
               </li>
             ),
           )}

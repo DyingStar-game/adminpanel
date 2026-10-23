@@ -21,6 +21,7 @@ import { formatDistance } from '@/lib/bodyMap';
 import { formatAmount } from '@/lib/economy';
 import { formatDateTime } from '@/lib/format';
 import { formatQuantity, simulationErrorKey } from '@/lib/simulation';
+import { usePanel } from '@/hooks/usePanel';
 
 const ALL = 'all';
 const STATUSES: OrderStatus[] = ['planned', 'in_progress', 'completed', 'failed', 'cancelled'];
@@ -29,6 +30,8 @@ const OPEN: OrderStatus[] = ['planned', 'in_progress'];
 interface SimulationOrdersProps {
   filters: OrderFilters;
   onFiltersChange: (next: OrderFilters) => void;
+  /** Opens a leg's mission; shown as a link only for who reads `mission` (ADR 0026). */
+  onOpenMission?: ((missionId: string) => void) | undefined;
 }
 
 /**
@@ -37,10 +40,16 @@ interface SimulationOrdersProps {
  * open order can be cancelled by `simulation.manage`, after confirmation: its mission is
  * cancelled in the live game and its goods released.
  */
-export function SimulationOrders({ filters, onFiltersChange }: SimulationOrdersProps) {
+export function SimulationOrders({
+  filters,
+  onFiltersChange,
+  onOpenMission,
+}: SimulationOrdersProps) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
   const can = useCan();
+  const { services } = usePanel();
+  const opensMissions = services.includes('mission') && can('mission.read');
   const orders = useSimulationOrders(filters);
   const resources = useSimulationResources();
   const names = useSimulationNames();
@@ -153,6 +162,7 @@ export function SimulationOrders({ filters, onFiltersChange }: SimulationOrdersP
                 warehouseName={(id) => names.warehouses.get(id) ?? id}
                 statusLabel={(s) => t(`simulation.orders.legStatuses.${s}`)}
                 missionLabel={t('simulation.orders.mission')}
+                onOpenMission={opensMissions ? onOpenMission : undefined}
                 facts={(leg) =>
                   t('simulation.orders.facts', {
                     quantity: `${formatQuantity(leg.quantity, locale)} ${r?.unit ?? ''}`.trim(),

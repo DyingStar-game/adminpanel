@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Chip } from '@/components/atoms/Chip';
 import { FactTiles } from '@/components/molecules/FactTiles';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { Button } from '@/components/ui/button';
 import { useCorporationSettings } from '@/hooks/useEconomie';
 import { usePoliticalEntity } from '@/hooks/useOrganisations';
 import { formatBps } from '@/lib/economy';
-import { shortId } from '@/lib/format';
 import { moderationErrorKey } from '@/lib/moderationErrors';
 import { CorporationSettingsDialog } from './CorporationSettingsDialog';
+import { EntityLink } from '@/components/molecules/EntityLink';
 
 interface CorporationEconomySettingsProps {
   corporation: { id: string; name: string };
@@ -64,13 +63,11 @@ export function CorporationEconomySettings({
             {
               label: t('economy.settings.fiscalHome'),
               value: s.politicalEntityId ? (
-                <Chip
-                  variant="link"
-                  title={s.politicalEntityId}
-                  onClick={() => onOpenPoliticalEntity(s.politicalEntityId ?? '')}
-                >
-                  {home.data?.name ?? shortId(s.politicalEntityId)}
-                </Chip>
+                <EntityLink
+                  id={s.politicalEntityId}
+                  label={home.data?.name}
+                  onOpen={onOpenPoliticalEntity}
+                />
               ) : (
                 <span className="text-fg-3">{t('economy.settings.noFiscalHome')}</span>
               ),
