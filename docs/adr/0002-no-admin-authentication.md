@@ -1,6 +1,6 @@
 # 0002. No authentication on the admin panel
 
-- **Status:** Accepted
+- **Status:** Superseded by [ADR 0023](./0023-keycloak-authentication.md) (2026-10-24: Keycloak sign-in built and accepted)
 - **Date:** 2026-10-01
 - **Scope:** Project-wide
 

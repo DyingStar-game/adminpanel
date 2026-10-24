@@ -1,6 +1,6 @@
 # 0025. Universe simulation section: `universesimulator` in the panel
 
-- **Status:** Proposed
+- **Status:** Accepted (2026-10-24, built in PR #2)
 - **Date:** 2026-10-11 (amended 2026-10-12: configuration; villages as the nodes)
 - **Deciders:** maintainer, back team (`universesimulator`)
 - **Scope:** Game services (`universesimulator`), Frontend
