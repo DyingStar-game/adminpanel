@@ -149,18 +149,27 @@ server (catalogue) and by players or the game server (orders, demands), not by a
 
 ## Open questions (back team)
 
-Ready to post (a Discord message was drafted on 2026-10-08). Still open:
+Ready to post (a Discord message was drafted on 2026-10-08). Checked again on 2026-10-24
+(`services` `develop` `0c14db4`, `kubernetes` `main` `0065f37`, minikube): the others are still open.
 
-1. Pre-production client `dyingstar-admin` (redirect URI on the panel's URL only, client-role
-   mapper), its client roles (`persistence:*`, `social:*:write`, `economie:*`), who assigns
-   them; the panel's pre-production URL.
-2. Realm roles `admin` and `supervisor` (checked by `social` and `economie`, missing from their
-   realms); does `supervisor` have rights of its own beyond `admin`?
-3. `svc-admin`'s secret for each deployment of the panel (README › Secrets of a deployment),
-   with its capability roles kept (`social:*:write`, `economie:*`) and its audiences
-   (`social-api`, `economie-api`).
-4. `OIDC_AUDIENCE` on pre-production `social` (would need an audience mapper).
-5. Services' `OIDC_JWKS_URL` in dev-local (the `401 Invalid token` bug).
+1. ~~Pre-production client `dyingstar-admin`~~ (answered, `kubernetes` `440df45`, 2026-10-09)
+   → `keycloak-managed/preprod/06-service-clients.yaml`: one redirect URI,
+   `https://admin-preprod.dyingstar-game.space/auth/callback`, client roles `persistence:*`,
+   `social:*:write`, `economie:*` (`mission:*` / `inventory:read` in the pending patch); the
+   panel's chart deployed there. Left: who assigns these roles to people.
+2. Realm roles `admin` and `supervisor` now exist in dev and pre-production
+   (`moderator` < `admin` < `supervisor`, `04-realm-import.yaml`). Left: does `supervisor` have
+   rights of its own beyond `admin`?
+3. ~~`svc-admin`'s secret for each deployment~~ (answered) → pre-production's `svc-admin` holds
+   the 40 capability roles and the six audiences (`social-api`, `economie-api`, `inventory-api`,
+   `mission-api`, `market-api`, `universesimulator-api`); the panel's pod reads
+   `svc-admin-client-secret` (`dyingstar-admin/values-preprod.yaml`).
+4. ~~`OIDC_AUDIENCE` on pre-production `social`~~ (answered) → left unset on purpose: no audience
+   check (`service-social/values.yaml`).
+5. The `401 Invalid token` bug in dev-local: the charts leave `OIDC_JWKS_URL` unset on purpose
+   (it defaults to the issuer's, `auth.dyingstar.local`, which the pods cannot resolve). Our
+   CoreDNS workaround still carries it (checked 2026-10-24); the fix would be their local
+   scripts resolving `auth.dyingstar.local` inside the cluster.
 6. `social` refuses the reputation changes of a staff account without a profile
    (`reputation_events.actor_id` → `player_profiles`); `updateReportStatus` is not atomic (the
    report is closed and logged before the reputation change fails: report 5, 2026-10-08).
@@ -174,8 +183,8 @@ Ready to post (a Discord message was drafted on 2026-10-08). Still open:
    or an internal route)? Until then the panel does not show it.
 11. Persistence requiring a token one day (then `svc-admin` needs its audience).
 12. Access token lifetime (24 h in pre-production) for the panel's client.
-13. Minikube's `economie` has no `SOCIAL_SERVICE_CLIENT_SECRET`: its `GET /api/admin/players`
-   (wallets by pseudonym) and the names of its rankings cannot reach `social`.
+13. ~~Minikube's `economie` has no `SOCIAL_SERVICE_CLIENT_SECRET`~~ (answered) → it has one
+   now; `GET /api/admin/players?search=` finds players through `social` (checked 2026-10-24).
 14. `economie`'s OpenAPI differs from its code (the panel follows the code): `CorporationSettings`
    lacks `politicalEntityId`; the settings bodies' "one field at least" and `mintCeiling`'s
    10¹³ maximum are not written; the affiliation body's `nullable` is lost by generators
@@ -200,9 +209,10 @@ Ready to post (a Discord message was drafted on 2026-10-08). Still open:
    `allowPartial`, `autoComplete`, `requiresMissionIds`, `assignmentDeadlineHours`
    (`routes/schemas.ts`), none of which its OpenAPI lists: the panel keeps describing them in
    `code.ts`.
-20. `mission`'s `POST /api/internal/missions` accepts `isEvent` (its README and OpenAPI list it)
-   but does not store it (`createMission` leaves it out of the insert): the mission is created
-   as a non-event. The seed declares it afterwards (`POST …/:missionId/event`).
+20. ~~`mission` does not store `isEvent` on creation~~ (probably our mistake, not sent again):
+   `createMission` inserts `isEvent: input.isEvent ?? false` since `1f3a252` (2026-10-12;
+   `develop` `0c14db4`, `missions.service.ts:429`). To confirm on minikube by seeding without
+   the seed's `POST …/:missionId/event` afterwards.
 21. `inventory`'s `openapi.yaml` on `develop` (`bdee3c0`) is not valid YAML: line 816,
    `description: Internal-only: geometry fields …` holds `: ` in an unquoted value. Nothing can
    be generated from it; the panel pins it (the sync test alerts once it changes) and writes the
