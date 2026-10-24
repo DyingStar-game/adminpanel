@@ -1,10 +1,14 @@
 {
-  "extraKnownMarketplaces": {
-    "dyingstar": {
-      "source": { "source": "github", "repo": "DyingStar-game/changelog" }
-    }
-  },
   "enabledPlugins": {
     "changelog@dyingstar": true
+  },
+  "extraKnownMarketplaces": {
+    "dyingstar": {
+      "source": {
+        "source": "github",
+        "repo": "DyingStar-game/changelog"
+      },
+      "autoUpdate": true
+    }
   }
 }
