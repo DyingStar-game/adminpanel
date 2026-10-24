@@ -29,7 +29,14 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.strict,
   {
-    files: ['apps/bff/**/*.ts', 'packages/**/*.ts', '*.{js,ts}', 'apps/*/*.{js,ts}'],
+    // Node: the BFF, the packages, config files and the scripts run in minikube's pods.
+    files: [
+      'apps/bff/**/*.ts',
+      'packages/**/*.ts',
+      '*.{js,ts}',
+      'apps/*/*.{js,ts}',
+      'docker/**/*.mjs',
+    ],
     languageOptions: { globals: globals.node },
   },
   {

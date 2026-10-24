@@ -147,6 +147,29 @@ reset-mission: ## Empty minikube's mission (all its missions), restart it, then 
 	@kubectl rollout status deployment/service-mission -n dyingstar --timeout=180s
 	@$(MAKE) --no-print-directory seed-social
 
+.PHONY: seed-simulation
+seed-simulation: ## Fill minikube's universesimulator: SandBox's villages copied into its persistence, the ARES world imported, a tick (after `make up K8S=1`; safe to rerun)
+	@[ "$$(kubectl config current-context 2>/dev/null)" = minikube ] || { echo "$(RED)kubectl is not on minikube: stopping$(RESET)"; exit 1; }
+	@echo "$(CYAN)🌱 Preparing the world file and SandBox's villages...$(RESET)"
+	@$(PNPM) --filter @dyingstar-admin/contracts simulation:world
+	@echo "$(CYAN)🌱 Copying them into minikube's persistence...$(RESET)"
+	@kubectl exec -i -n dyingstar deploy/service-mission -- node --input-type=module -e "$$(cat docker/minikube/universesimulator/load-persistence.mjs)" < docker/minikube/universesimulator/.build/persistence-items.json
+	@echo "$(CYAN)🌱 Importing the world into universesimulator...$(RESET)"
+	@kubectl exec -i -n dyingstar deploy/service-universesimulator -- sh -c 'cat > /tmp/world-ares.json' < docker/minikube/universesimulator/.build/world.json
+	@kubectl exec -n dyingstar deploy/service-universesimulator -- ./universesimulator import /tmp/world-ares.json
+	@kubectl exec -n dyingstar deploy/service-universesimulator -- ./universesimulator tick
+
+.PHONY: reset-simulation
+reset-simulation: ## Empty minikube's universesimulator (its whole world, its warehouses' goods in inventory), restart it, then seed it again (after `make up K8S=1`)
+	@[ "$$(kubectl config current-context 2>/dev/null)" = minikube ] || { echo "$(RED)kubectl is not on minikube: stopping$(RESET)"; exit 1; }
+	@echo "$(YELLOW)🧹 Emptying minikube's universesimulator database...$(RESET)"
+	@kubectl exec -i -n dyingstar universesimulator-db-1 -c postgres -- psql -q -v ON_ERROR_STOP=1 -U postgres -d universesimulator < docker/minikube/service-reset.sql
+	@echo "$(YELLOW)🧹 Emptying its warehouses in minikube's inventory...$(RESET)"
+	@kubectl exec -i -n dyingstar inventory-db-1 -c postgres -- psql -q -v ON_ERROR_STOP=1 -U postgres -d inventory < docker/minikube/universesimulator/inventory-reset.sql
+	@kubectl rollout restart deployment/service-universesimulator -n dyingstar
+	@kubectl rollout status deployment/service-universesimulator -n dyingstar --timeout=180s
+	@$(MAKE) --no-print-directory seed-simulation
+
 .PHONY: image
 image: ## Build the production image (docker/Dockerfile.prod), tag with IMAGE=...
 	@echo "$(CYAN)🐳 Building production image $(IMAGE)...$(RESET)"
@@ -206,7 +229,7 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST) | grep -E "^  .{5}(start|stop) "
 	@echo ""
 	@echo "$(YELLOW)Dev Profile (Development):$(RESET)"
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST) | grep -E "^  .{5}(up|down|install|pnpm|check|seed-social|reset-social|reset-mission|image) "
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST) | grep -E "^  .{5}(up|down|install|pnpm|check|seed-social|reset-social|reset-mission|seed-simulation|reset-simulation|image) "
 	@echo ""
 	@echo "$(YELLOW)Utilities:$(RESET)"
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  $(CYAN)%-15s$(RESET) %s\n", $$1, $$2}' $(MAKEFILE_LIST) | grep -E "^  .{5}(logs|logs-app|logs-dev|shell|status|clean-volumes) "

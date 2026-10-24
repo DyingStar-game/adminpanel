@@ -1,5 +1,6 @@
--- Empties a minikube service's database before `make reset-social` / `make reset-mission`
--- restarts the service, which then recreates its tables. Same SQL as `social/scripts/reset-db.mjs`
+-- Empties a minikube service's database before `make reset-social` / `reset-mission` /
+-- `reset-simulation` restarts the service, which then recreates its tables (drizzle for `social`
+-- and `mission`, sqlx migrations for `universesimulator`). Same SQL as `social/scripts/reset-db.mjs`
 -- and `mission/scripts/reset-db.mjs` (DyingStar-game/services): every table, sequence and view of
 -- `public`, and the `drizzle` migrations schema.
 drop schema if exists drizzle cascade;

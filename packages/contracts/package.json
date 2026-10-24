@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "generate": "openapi-ts",
     "contracts:update": "tsx scripts/update.ts",
-    "social:seed": "tsx scripts/seed-social.ts"
+    "social:seed": "tsx scripts/seed-social.ts",
+    "simulation:world": "tsx scripts/simulation-world.ts"
   },
   "dependencies": {
     "zod": "^4.6.5"
