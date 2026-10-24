@@ -496,7 +496,7 @@ const MISSION_URL = process.env.MISSION_URL;
  * takes it, the issuer confirms its `manual` objective at `confirm` (index in creation order), it
  * is handed in without paying (`settle: false`, so no money moves; `partial` for its weighted
  * progress), cancelled, or declared an event with its places (`mission` ignores `isEvent` at
- * creation, question 20 of the lot 2 plan). The other kinds progress from the players' states
+ * creation, question 20 of `docs/back-team-questions.md`). The other kinds progress from the players' states
  * the game server sends, measured against `inventory`'s POIs: none here.
  */
 type Step =
@@ -511,7 +511,7 @@ type Step =
  * `inventory` as the game's (`system` owner, `inventory:poi:manage`, held by `svc-admin`) on real
  * objects of SandBox (Tarsis III) in persistence, read GET only: each POI stands where its object
  * stands, the object noted in its `metadata` (`parentId` is a parent POI in `inventory`'s code,
- * question 22 of the lot 2 plan). Found again by name on a rerun. A mission's own zones are
+ * question 22 of `docs/back-team-questions.md`). Found again by name on a rerun. A mission's own zones are
  * checked against `inventory`: none uses a POI.
  */
 const SEED_POI_KEYS = [

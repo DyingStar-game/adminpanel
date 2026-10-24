@@ -25,7 +25,7 @@ built session by session: [`lot-2-journal.md`](./lot-2-journal.md) (history only
 ## Next: O.6, `inventory`
 
 **What the panel already has** (for a mission's places, ADR 0026): its contract pinned at
-`develop` `bdee3c0` but **not generated** (invalid YAML, question 21; `zPoi` by hand in
+`develop` `bdee3c0` but **not generated** (invalid YAML, [question 21](./back-team-questions.md); `zPoi` by hand in
 `contracts/inventory/code.ts`), a BFF client reading POIs as `svc-admin` (`clients/inventory.ts`,
 a minute's cache), `inventory.read` (`inventory:read`, ADR 0023 › Inventory, both local realms),
 an MSW mock (`inventoryMock.ts`), seeded POIs.
@@ -74,11 +74,8 @@ server (catalogue) and by players or the game server (orders, demands), not by a
 
 ## Waiting on the back team
 
-- **`kubernetes`** (patch sent 2026-10-23, the maintainer has no push right there): `MISSION_URL`
-  / `INVENTORY_URL` in the `dyingstar-admin` chart, client roles `mission:read`, `mission:write`,
-  `inventory:read` on `dyingstar-admin` (dev and pre-production).
-- **`services`**: questions 21–25 below (`inventory`'s YAML and POI parent, the simulation's
-  missions refused by `mission`, `mission`'s README, the new world file).
+- **`kubernetes`** (the panel's missions and inventory, patch sent 2026-10-23) and
+  **`services`** (questions 21–25 among others): [`back-team-questions.md`](./back-team-questions.md).
 - **Pre-production** (parked by the maintainer, 2026-10-23): reading pre-production's `mission`
   and `inventory` from the local panel as `svc-admin` needs either a `localhost` redirect (or a
   dev client) on pre-production's Keycloak, or a read-only service account and its secret. Their
@@ -149,86 +146,5 @@ server (catalogue) and by players or the game server (orders, demands), not by a
 
 ## Open questions (back team)
 
-Ready to post (a Discord message was drafted on 2026-10-08). Checked again on 2026-10-24
-(`services` `develop` `0c14db4`, `kubernetes` `main` `0065f37`, minikube): the others are still open.
-
-1. ~~Pre-production client `dyingstar-admin`~~ (answered, `kubernetes` `440df45`, 2026-10-09)
-   → `keycloak-managed/preprod/06-service-clients.yaml`: one redirect URI,
-   `https://admin-preprod.dyingstar-game.space/auth/callback`, client roles `persistence:*`,
-   `social:*:write`, `economie:*` (`mission:*` / `inventory:read` in the pending patch); the
-   panel's chart deployed there. Left: who assigns these roles to people.
-2. Realm roles `admin` and `supervisor` now exist in dev and pre-production
-   (`moderator` < `admin` < `supervisor`, `04-realm-import.yaml`). Left: does `supervisor` have
-   rights of its own beyond `admin`?
-3. ~~`svc-admin`'s secret for each deployment~~ (answered) → pre-production's `svc-admin` holds
-   the 40 capability roles and the six audiences (`social-api`, `economie-api`, `inventory-api`,
-   `mission-api`, `market-api`, `universesimulator-api`); the panel's pod reads
-   `svc-admin-client-secret` (`dyingstar-admin/values-preprod.yaml`).
-4. ~~`OIDC_AUDIENCE` on pre-production `social`~~ (answered) → left unset on purpose: no audience
-   check (`service-social/values.yaml`).
-5. The `401 Invalid token` bug in dev-local: the charts leave `OIDC_JWKS_URL` unset on purpose
-   (it defaults to the issuer's, `auth.dyingstar.local`, which the pods cannot resolve). Our
-   CoreDNS workaround still carries it (checked 2026-10-24); the fix would be their local
-   scripts resolving `auth.dyingstar.local` inside the cluster.
-6. `social` refuses the reputation changes of a staff account without a profile
-   (`reputation_events.actor_id` → `player_profiles`); `updateReportStatus` is not atomic (the
-   report is closed and logged before the reputation change fails: report 5, 2026-10-08).
-7. `social` does not check the escalation level against the role (the panel enforces it).
-8. `social` records the CEO or the head as the actor of the internal API's management, not the
-   person: an "actual author" field, or the panel keeps its own log.
-9. `social`'s OpenAPI differs from its code (the panel follows the code): lifting an already
-   lifted sanction answers 404 (documented 409); escalating above `supervisor` answers 403
-   (documented 409).
-10. The organisations' activity is for members only: should moderators read it (a role bypass,
-   or an internal route)? Until then the panel does not show it.
-11. Persistence requiring a token one day (then `svc-admin` needs its audience).
-12. Access token lifetime (24 h in pre-production) for the panel's client.
-13. ~~Minikube's `economie` has no `SOCIAL_SERVICE_CLIENT_SECRET`~~ (answered) → it has one
-   now; `GET /api/admin/players?search=` finds players through `social` (checked 2026-10-24).
-14. `economie`'s OpenAPI differs from its code (the panel follows the code): `CorporationSettings`
-   lacks `politicalEntityId`; the settings bodies' "one field at least" and `mintCeiling`'s
-   10¹³ maximum are not written; the affiliation body's `nullable` is lost by generators
-   (`nullable: true` beside `format: uuid`). No Interne route lists a political entity's tax
-   debts (only an NPC's): could the panel get one, to show what an assessment booked?
-15. `economie` lets any political entity issue money (`allowMinting`), its README reserving it to
-   countries and federations: should `economie` refuse the other levels? The panel offers it to
-   those two only.
-16. Fiscal homes and political members are `economie`'s own copies, set by the game server: who
-   keeps them in step with `social` (a corporation changing its political home, a member
-   leaving)? Until then an assessment may tax according to stale data.
-17. `economie`'s `POST /api/internal/politics/:id/mint` takes no `externalId`, unlike credits and
-   debits: a resend after a lost answer issues the money twice. Could it accept one? The panel
-   only prevents a double click.
-18. ~~`mission` has no internal detail route~~ (answered) → `GET /api/internal/missions/:missionId`
-   (`mission:read`), merged into `develop` on 2026-10-22 (PR #37) and deployed on minikube; used
-   by O.5.
-19. `mission`'s OpenAPI is 3.1 but used 3.0's `nullable: true` (ignored in 3.1) → fixed by
-   PR #37 (`type: [string, 'null']`). Its schemas still list no `required` field (every
-   generated field is optional), its internal list takes `groupId`, `groupClaimable`, `isEvent`,
-   and its creation takes the objectives' `weight`, `isBonus`, `bonusReward`, the mission's
-   `allowPartial`, `autoComplete`, `requiresMissionIds`, `assignmentDeadlineHours`
-   (`routes/schemas.ts`), none of which its OpenAPI lists: the panel keeps describing them in
-   `code.ts`.
-20. ~~`mission` does not store `isEvent` on creation~~ (probably our mistake, not sent again):
-   `createMission` inserts `isEvent: input.isEvent ?? false` since `1f3a252` (2026-10-12;
-   `develop` `0c14db4`, `missions.service.ts:429`). To confirm on minikube by seeding without
-   the seed's `POST …/:missionId/event` afterwards.
-21. `inventory`'s `openapi.yaml` on `develop` (`bdee3c0`) is not valid YAML: line 816,
-   `description: Internal-only: geometry fields …` holds `: ` in an unquoted value. Nothing can
-   be generated from it; the panel pins it (the sync test alerts once it changes) and writes the
-   POI it reads from `inventory`'s code (`contracts/inventory/code.ts`). Could it be quoted?
-22. `inventory`'s POI `parentId`: its README and `db/schema/pois.ts` call it "an opaque persistence
-   object UUID (no FK)", but its code checks it is another POI (`assertParentValid`:
-   `POI_PARENT_NOT_FOUND`, `POI_PARENT_CYCLE`). Which one is meant? The seed notes the
-   persistence object in `metadata.persistence` meanwhile.
-23. `universesimulator`'s publisher (`build_mission`, `develop` `0c14db4`) sends `transport`
-   objectives with `params: { itemId }`, which `mission`'s strict `transport` kind refuses
-   (`goodType`, `source`, `zone`), and mining legs as `deliver_items`, a kind `mission` no longer
-   has: no simulation mission can be published today (sent 2026-10-23).
-24. `mission`'s README still lists `…/objectives/:objectiveId/progress` (player and Interne)
-   while its code dropped both routes (sent 2026-10-23).
-25. A richer world file for `universesimulator` (30 resources; farm, factory, railway and
-   spaceport villages; `processes`, `pushTo`, `villages.hubs`, `routes.links` with rail) was
-   shared on 2026-10-23: `develop`'s importer (`src/import/mod.rs`, `deny_unknown_fields`)
-   refuses those four keys. Which version reads it, and when is it pushed?
-
+In [`back-team-questions.md`](./back-team-questions.md), apart so the back team can follow them
+alone; their numbers are unchanged.

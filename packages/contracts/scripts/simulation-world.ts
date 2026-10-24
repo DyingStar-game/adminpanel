@@ -7,7 +7,7 @@
  *   refuses unknown keys (`src/import/mod.rs`, `deny_unknown_fields`, `develop` `0c14db4`): the
  *   copy leaves out what that importer does not know (listed in `UNKNOWN`), and its federation
  *   stands on the persistence planet the panel reads (`SANDBOX`). Drop a key from `UNKNOWN` once
- *   `develop` reads it (lot 2 plan, question 25).
+ *   `develop` reads it (`docs/back-team-questions.md`, question 25).
  * - Minikube's persistence is empty: the planet, its `poi_village` and `cargo_depot` objects are
  *   read GET only from `PERSISTENCE_URL` (the test server), with their UUIDs, to be upserted into
  *   minikube's persistence by `docker/minikube/universesimulator/load-persistence.mjs`.

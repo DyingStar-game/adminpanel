@@ -74,8 +74,9 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 ## Where we are
 
 **Lot 2 (sign-in, game services) is in progress: read
-[`docs/lot-2-plan.md`](./docs/lot-2-plan.md) first** (status, "where to resume", local setup,
-open questions for the back team), then the ADR index. Done: sign-in, `social` (moderation,
+[`docs/lot-2-plan.md`](./docs/lot-2-plan.md) first** (status, "where to resume", local setup),
+then the ADR index. Questions to the back team: [`docs/back-team-questions.md`](./docs/back-team-questions.md)
+(stable numbers; a new one takes the next, an answered one moves to its Answered section). Done: sign-in, `social` (moderation,
 players, report actions, organisations read and managed), one game server per panel, `economie`
 reading (O.1), settings (O.2: corporations, political taxes, assessments) and money movements
 (O.3: credit, debit, mint), `mission`'s catalogue (O.4) and a mission's page (O.5, checked live on
