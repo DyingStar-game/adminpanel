@@ -79,8 +79,8 @@ open questions for the back team), then the ADR index. Done: sign-in, `social` (
 players, report actions, organisations read and managed), one game server per panel, `economie`
 reading (O.1), settings (O.2: corporations, political taxes, assessments) and money movements
 (O.3: credit, debit, mint), `mission`'s catalogue (O.4) and a mission's page (O.5, checked live on
-minikube). **Next: `inventory`**, same
-pattern. Much was not tried live yet: the plan says what. Lot 1 (persistence items) is done:
+minikube), cancelling a mission (ADR 0028), crates (ADR 0029). **Next: `inventory`**, then
+`market`, same pattern. Much was not tried live yet: the plan says what. Lot 1 (persistence items) is done:
 [`docs/lot-1-plan.md`](./docs/lot-1-plan.md).
 Contributor docs: `ONBOARDING.md`, `ARCHITECTURE.md`, `docs/bff-api.md` (keep them in step when
 routes, services or the setup change).
