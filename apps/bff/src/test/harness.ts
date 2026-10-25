@@ -6,7 +6,9 @@ import {
   createEconomieMock,
   createSocialMock,
   createUniversesimulatorMock,
+  createNpcMock,
   ECONOMIE_URL,
+  NPC_URL,
   PERSISTENCE_URL,
   SOCIAL_URL,
   UNIVERSESIMULATOR_URL,
@@ -16,6 +18,7 @@ import type { Item } from '@dyingstar-admin/schemas';
 import { createApp, type AppOptions } from '../app';
 import type { AuditEntry } from '../lib/audit';
 import { createEconomieClient } from '../clients/economie';
+import { createNpcClient } from '../clients/npc';
 import { createUniversesimulatorClient } from '../clients/universesimulator';
 import { createSocialClient } from '../clients/social';
 import { createDefinitionsService } from '../services/definitions';
@@ -48,7 +51,7 @@ export const githubDefinitionsHandlers = [
 ];
 
 /**
- * Builds an app wired to fresh persistence, `social`, `economie` and `universesimulator` mocks; returns them, with
+ * Builds an app wired to fresh persistence, `social`, `economie`, `universesimulator` and `npc` mocks; returns them, with
  * the record of writes to the game services.
  */
 export function buildApp(
@@ -60,12 +63,14 @@ export function buildApp(
   const social = createSocialMock(options.socialData);
   const economie = createEconomieMock();
   const universesimulator = createUniversesimulatorMock();
+  const npc = createNpcMock();
   const audited: AuditEntry[] = [];
   mswServer.use(
     ...persistence.handlers,
     ...social.handlers,
     ...economie.handlers,
     ...universesimulator.handlers,
+    ...npc.handlers,
     ...githubDefinitionsHandlers,
   );
   const app = createApp({
@@ -94,6 +99,7 @@ export function buildApp(
       baseUrl: UNIVERSESIMULATOR_URL,
       timeoutMs: 1000,
     }),
+    npc: createNpcClient({ baseUrl: NPC_URL, timeoutMs: 1000 }),
     audit: (entry) => audited.push(entry),
     ...options,
   });
@@ -104,5 +110,5 @@ export function buildApp(
       headers: { 'Content-Type': 'application/json', ...init.headers },
     });
 
-  return { app, persistence, social, economie, universesimulator, audited, request };
+  return { app, persistence, social, economie, universesimulator, npc, audited, request };
 }

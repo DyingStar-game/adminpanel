@@ -43,6 +43,10 @@ export const Permission = {
   simulationView: 'simulation.view',
   /** Pausing, resuming or ticking the simulation, cancelling an order (its Admin writes). */
   simulationManage: 'simulation.manage',
+  /** The `npc` service's views: roster, an NPC's routine, tasks, logs and events (ADR 0026). */
+  npcView: 'npc.view',
+  /** Its Admin writes: global switch, create, spawn, edit, tasks, schedules, workplaces. */
+  npcManage: 'npc.manage',
 } as const;
 export type Permission = (typeof Permission)[keyof typeof Permission];
 
@@ -92,6 +96,10 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
   // them itself on the person's token.
   [Permission.simulationView]: ['moderator', 'admin', 'supervisor'],
   [Permission.simulationManage]: ['admin', 'supervisor'],
+  // Mirror of the `npc` service's Admin API (ADR 0026), same model as universesimulator's
+  // (`src/auth/mod.rs` › `MODERATION`, `Caller::require_admin`), checked on the person's token.
+  [Permission.npcView]: ['moderator', 'admin', 'supervisor'],
+  [Permission.npcManage]: ['admin', 'supervisor'],
 };
 
 /** Permission needed to change the status of, or escalate, a report at each escalation level. */

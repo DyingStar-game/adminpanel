@@ -1,5 +1,6 @@
 import {
   BookOpenIcon,
+  BotIcon,
   BoxesIcon,
   Building2Icon,
   CoinsIcon,
@@ -32,6 +33,7 @@ export type NavId =
   | 'organisations'
   | 'economy'
   | 'simulation'
+  | 'npcs'
   | 'settings';
 
 interface SidebarProps {
@@ -67,6 +69,7 @@ const SECTIONS: {
       { id: 'explorer', icon: BoxesIcon },
       { id: 'import', icon: UploadIcon },
       { id: 'simulation', icon: NetworkIcon },
+      { id: 'npcs', icon: BotIcon },
     ],
   },
   {
@@ -102,6 +105,7 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
     if (id === 'simulation') {
       return services.includes('universesimulator') && can('simulation.view');
     }
+    if (id === 'npcs') return services.includes('npc') && can('npc.view');
     return true;
   };
   // A group left without any entry the account may see is hidden altogether.

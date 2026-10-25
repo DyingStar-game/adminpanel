@@ -111,7 +111,7 @@ make check   # format, lint, typecheck, test, format check
 The first `make up` or `make start` creates `.env.local` from [`.env.sample`](./.env.sample).
 One panel serves one environment and its one game server (ADR 0023, 0024): set its name
 (`GAME_SERVER_NAME`), the URLs of the game services it manages (`PERSISTENCE_URL`,
-`SOCIAL_URL`, `ECONOMIE_URL`; unset, the service is hidden), its Keycloak (`OIDC_*`) and where object type
+`SOCIAL_URL`, `ECONOMIE_URL`, `UNIVERSESIMULATOR_URL`, `NPC_URL`; unset, the service is hidden), its Keycloak (`OIDC_*`) and where object type
 definitions are read from (`DEFINITIONS_*`).
 
 #### Migrating from `SERVERS` (2026-10-08)

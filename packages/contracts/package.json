@@ -7,7 +7,8 @@
   "exports": {
     "./social": "./src/social/index.ts",
     "./economie": "./src/economie/index.ts",
-    "./universesimulator": "./src/universesimulator/index.ts"
+    "./universesimulator": "./src/universesimulator/index.ts",
+    "./npc": "./src/npc/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

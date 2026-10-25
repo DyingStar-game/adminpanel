@@ -20,11 +20,13 @@ describe('economie routes (ADR 0024 step O, reading)', () => {
         'economie',
         'economie-wallets',
         'universesimulator',
+        'npc',
       ],
     });
     const without = await buildApp({
       economie: undefined,
       universesimulator: undefined,
+      npc: undefined,
       social: createSocialClient({ baseUrl: 'http://social.test', timeoutMs: 1000 }),
     }).request('/api/panel');
     expect(await without.json()).toMatchObject({ services: ['persistence', 'social'] });

@@ -1,0 +1,8 @@
+{
+  "repo": "DyingStar-game/services",
+  "ref": "develop",
+  "path": "npc/openapi.yaml",
+  "commit": null,
+  "date": null,
+  "note": "Not on GitHub yet: copied from the back team's working copy (branch feature/NPC, sha256 666adac6df89ba6cd6fe04f5dbf26743bac4a8cf5344332a818030e389981891, 2026-10-25, API version 0.2.0). `make contracts-update` records the commit once the file is pushed to develop."
+}

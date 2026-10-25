@@ -15,6 +15,7 @@ import {
 } from './auth/auth';
 import type { EconomieClient } from './clients/economie';
 import type { SocialClient } from './clients/social';
+import type { NpcClient } from './clients/npc';
 import type { UniversesimulatorClient } from './clients/universesimulator';
 import { createPersistenceClient } from './clients/persistence';
 import { ApiError } from './lib/errors';
@@ -23,6 +24,7 @@ import { bodiesRoutes } from './routes/bodies';
 import { auditWrites, type AuditEntry } from './lib/audit';
 import { economieRoutes } from './routes/economie';
 import { itemsRoutes } from './routes/items';
+import { npcRoutes } from './routes/npc';
 import { socialRoutes } from './routes/social';
 import { universesimulatorRoutes } from './routes/universesimulator';
 import type { DefinitionsService } from './services/definitions';
@@ -62,6 +64,11 @@ export interface AppOptions {
    * hides the simulation.
    */
   universesimulator?: UniversesimulatorClient | undefined;
+  /**
+   * The `npc` service of this environment (ADR 0026); unset, its routes answer 404 and the SPA
+   * hides the NPCs.
+   */
+  npc?: NpcClient | undefined;
   definitions: DefinitionsService;
   persistenceTimeoutMs?: number;
   readCacheTtlMs?: number;
@@ -80,6 +87,7 @@ export function createApp({
   social,
   economie,
   universesimulator,
+  npc,
   definitions,
   persistenceTimeoutMs = 5000,
   readCacheTtlMs = 500,
@@ -125,6 +133,7 @@ export function createApp({
           // Wallets, through `svc-admin` (ADR 0023 › Economie).
           ...(economie?.readsWallets ? ['economie-wallets'] : []),
           ...(universesimulator ? ['universesimulator'] : []),
+          ...(npc ? ['npc'] : []),
         ],
       }),
     )
@@ -160,6 +169,11 @@ export function createApp({
       requirePermission('simulation.view'),
     );
     api.route('/simulation', universesimulatorRoutes(universesimulator, items || undefined));
+  }
+  if (npc) {
+    // The user's token on its Admin API (ADR 0026).
+    api.use('/npc/*', auditWrites('npc', audit), requirePermission('npc.view'));
+    api.route('/npc', npcRoutes(npc));
   }
   app.route('/api', api);
   // Registered after the API routes and before the SPA fallback, so unknown API paths never
