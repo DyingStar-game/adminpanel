@@ -153,4 +153,42 @@ describe('Sidebar', () => {
     await within(nav).findByRole('button', { name: 'Persistence — Items' });
     expect(within(nav).queryByRole('button', { name: 'Simulation' })).not.toBeInTheDocument();
   });
+
+  it('shows the NPCs in the game world to a moderator when the npc service is configured', async () => {
+    useInProcessBff();
+    const onNavigate = vi.fn();
+    renderWithProviders(
+      <PermissionsContext.Provider value={['npc.view']}>
+        <Sidebar active="npcs" onNavigate={onNavigate} onHome={vi.fn()} version="0.1.0" />
+      </PermissionsContext.Provider>,
+    );
+    const nav = screen.getByRole('complementary', { name: 'Navigation' });
+
+    const entry = await within(nav).findByRole('button', { name: 'NPCs' });
+    expect(entry).toHaveAttribute('aria-current', 'page');
+    expect(within(nav).queryByRole('button', { name: 'Simulation' })).not.toBeInTheDocument();
+    await userEvent.click(entry);
+    expect(onNavigate).toHaveBeenCalledWith('npcs');
+  });
+
+  it('hides the NPCs without npc.view, or when the npc service is not configured', async () => {
+    useInProcessBff();
+    const { unmount } = renderWithProviders(
+      <PermissionsContext.Provider value={['simulation.view']}>
+        <Sidebar active="simulation" onNavigate={vi.fn()} onHome={vi.fn()} version="0.1.0" />
+      </PermissionsContext.Provider>,
+    );
+    let nav = screen.getByRole('complementary', { name: 'Navigation' });
+    await within(nav).findByRole('button', { name: 'Simulation' });
+    expect(within(nav).queryByRole('button', { name: 'NPCs' })).not.toBeInTheDocument();
+    unmount();
+
+    servesPersistence();
+    renderWithProviders(
+      <Sidebar active="explorer" onNavigate={vi.fn()} onHome={vi.fn()} version="0.1.0" />,
+    );
+    nav = screen.getByRole('complementary', { name: 'Navigation' });
+    await within(nav).findByRole('button', { name: 'Persistence — Items' });
+    expect(within(nav).queryByRole('button', { name: 'NPCs' })).not.toBeInTheDocument();
+  });
 });

@@ -41,6 +41,7 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
       Permission.socialModerate,
       Permission.economieDashboard,
       Permission.simulationView,
+      Permission.npcView,
     ]);
     expect(permissionsOf(['admin'])).toEqual([
       Permission.socialModerate,
@@ -50,6 +51,8 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
       Permission.economieDashboard,
       Permission.simulationView,
       Permission.simulationManage,
+      Permission.npcView,
+      Permission.npcManage,
     ]);
     expect(permissionsOf(['supervisor'])).toEqual([
       Permission.socialModerate,
@@ -60,6 +63,8 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
       Permission.economieDashboard,
       Permission.simulationView,
       Permission.simulationManage,
+      Permission.npcView,
+      Permission.npcManage,
     ]);
   });
 
@@ -70,6 +75,14 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     expect(simulation(['admin'])).toEqual([Permission.simulationView, Permission.simulationManage]);
     expect(simulation(['supervisor'])).toEqual(simulation(['admin']));
     expect(simulation(['player', 'persistence:write', 'economie:money:issue'])).toEqual([]);
+  });
+
+  it("mirrors the npc service's Admin API: reads moderator+, writes admin+ (ADR 0026)", () => {
+    const npc = (roles: string[]) => permissionsOf(roles).filter((p) => p.startsWith('npc.'));
+    expect(npc(['moderator'])).toEqual([Permission.npcView]);
+    expect(npc(['admin'])).toEqual([Permission.npcView, Permission.npcManage]);
+    expect(npc(['supervisor'])).toEqual(npc(['admin']));
+    expect(npc(['player', 'npc', 'persistence:write'])).toEqual([]);
   });
 
   it('handles a report at its escalation level, or above', () => {

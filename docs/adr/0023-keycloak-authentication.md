@@ -313,6 +313,34 @@ policies are gone), from `src/routes/admin.rs` (`require_admin` on every write).
 roles open nothing here; the BFF reads persistence itself only to place the villages on the
 planet's map.
 
+#### NPC (proposed 2026-10-25, ADR 0026)
+
+The `npc` service is not one of the services planned in ADR 0024; ADR 0026 adds it. The panel
+uses its **Admin API** (`/api/admin/*`, its only API besides `/healthz`), **with the person's
+token**: the service checks the moderation realm roles itself, reads for any of them, every write
+for `admin` or `supervisor`. NPCs themselves are Keycloak users with the realm role `npc`, which
+opens nothing in the panel.
+
+**Source: the `npc` service's README** (§ Admin REST: "needs a staff token
+(moderator/admin/supervisor; writes admin or supervisor), as forwarded by the adminpanel BFF")
+and its code, `src/auth/mod.rs` (`MODERATION`, `Caller::require_admin`, ported from
+universesimulator) and `src/admin/router.rs`, read 2026-10-25 from the back team's working copy
+(branch `feature/NPC`, not on GitHub `develop` yet: no commit to cite, to be added when it is
+pushed). No role is invented: the panel's permissions (`npc.view`, `npc.manage`,
+`permissions.ts`) only mirror these.
+
+| Action (route of `npc`) | Panel permission | `moderator` | `admin` ¹ | `supervisor` ¹ | Sent as |
+|---|---|---|---|---|---|
+| Switch and counts, roster, an NPC, its logs, events and tasks, every event, task kinds, patterns, activity mapping, legend, villages (`GET /api/admin/settings`, `/npcs…`, `/events`, `/task-kinds`, `/schedule/…`, `/villages`) | `npc.view` | ✅ | ✅ | ✅ | their token |
+| Global switch (`PUT /api/admin/settings`) | `npc.manage` | ❌ | ✅ | ✅ | their token |
+| Create, bulk spawn / despawn / delete, edit, delete, spawn, despawn, reassign, reset the password (`POST /npcs`, `/npcs/bulk`, `PATCH`·`DELETE /npcs/:id`, `POST /npcs/:id/spawn\|despawn\|reassign\|reset-credentials`) | `npc.manage` | ❌ | ✅ | ✅ | their token |
+| Give a task, cancel one (`POST /npcs/:id/tasks`, `DELETE /npcs/:id/tasks/:taskId`) | `npc.manage` | ❌ | ✅ | ✅ | their token |
+| Create, change, delete a pattern, import schedules, change the activity mapping (`POST`·`PUT`·`DELETE /schedule/patterns…`, `POST /schedule/import`, `PUT /schedule/activity-actions`) | `npc.manage` | ❌ | ✅ | ✅ | their token |
+| Set or clear a village's workplace (`PUT`·`DELETE /villages/:code/workplace`) | `npc.manage` | ❌ | ✅ | ✅ | their token |
+
+Its debug routes (`/debug/…`) and Keycloak report (`/health/keycloak`) are not used by the panel:
+❓. The persistence roles open nothing here.
+
 #### Inventory, mission, market — later lots (sent as `svc-admin`)
 
 One table per service, written when the service is integrated, from its OpenAPI and its

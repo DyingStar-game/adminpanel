@@ -17,4 +17,9 @@ export default defineConfig([
     output: { path: './src/universesimulator/generated', postProcess: ['prettier'] },
     plugins: ['@hey-api/typescript', 'zod'],
   },
+  {
+    input: './src/npc/openapi.yaml',
+    output: { path: './src/npc/generated', postProcess: ['prettier'] },
+    plugins: ['@hey-api/typescript', 'zod'],
+  },
 ]);

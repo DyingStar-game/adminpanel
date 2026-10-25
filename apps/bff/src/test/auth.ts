@@ -52,7 +52,10 @@ export const setup = (
     clientId: 'dyingstar-admin',
     onSignIn: registerStaffInSocial(createSocialClient({ baseUrl: SOCIAL_URL, timeoutMs: 1000 })),
   });
-  const { app, social, economie, universesimulator, audited } = buildApp({ ...options, auth });
+  const { app, social, economie, universesimulator, npc, audited } = buildApp({
+    ...options,
+    auth,
+  });
   const call = (path: string, init: RequestInit & { cookie?: string } = {}) =>
     app.request(`${ORIGIN}${path}`, {
       ...init,
@@ -61,7 +64,7 @@ export const setup = (
         ...init.headers,
       },
     });
-  return { ...provider, call, social, economie, universesimulator, audited };
+  return { ...provider, call, social, economie, universesimulator, npc, audited };
 };
 
 export const cookieValue = (res: Response, name: string) =>

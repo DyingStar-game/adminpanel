@@ -4,6 +4,7 @@ import { createAuth } from './auth/auth';
 import { createOidcProvider } from './auth/oidc';
 import { createServiceTokenSource } from './auth/serviceToken';
 import { createEconomieClient } from './clients/economie';
+import { createNpcClient } from './clients/npc';
 import { createSocialClient, registerStaffInSocial } from './clients/social';
 import { createUniversesimulatorClient } from './clients/universesimulator';
 import { authEnv, loadEnv } from './env';
@@ -36,6 +37,9 @@ const universesimulator = env.UNIVERSESIMULATOR_URL
       timeoutMs: env.SERVICE_TIMEOUT_MS,
     })
   : undefined;
+const npc = env.NPC_URL
+  ? createNpcClient({ baseUrl: env.NPC_URL, timeoutMs: env.SERVICE_TIMEOUT_MS })
+  : undefined;
 const app = createApp({
   environment: env.ENVIRONMENT,
   gameServerName: env.GAME_SERVER_NAME,
@@ -43,6 +47,7 @@ const app = createApp({
   social,
   economie,
   universesimulator,
+  npc,
   auth: createAuth({
     provider: createOidcProvider({ issuer, discoveryUrl, clientId, clientSecret }),
     clientId,
@@ -71,6 +76,7 @@ serve({ fetch: app.fetch, port: env.PORT }, (info) => {
   console.log(
     `Universesimulator: ${env.UNIVERSESIMULATOR_URL ?? 'not configured (simulation hidden)'}`,
   );
+  console.log(`NPC service: ${env.NPC_URL ?? 'not configured (NPCs hidden)'}`);
   console.log(
     `Organisation management: ${social?.manages ? env.SVC_ADMIN_CLIENT_ID : 'off (no SVC_ADMIN_CLIENT_SECRET)'}`,
   );

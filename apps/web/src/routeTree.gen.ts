@@ -16,6 +16,8 @@ import { Route as EconomyIndexRouteImport } from './routes/economy.index'
 import { Route as ItemsUuidRouteImport } from './routes/items.$uuid'
 import { Route as MapUuidRouteImport } from './routes/map.$uuid'
 import { Route as ModerationIndexRouteImport } from './routes/moderation.index'
+import { Route as NpcsIndexRouteImport } from './routes/npcs.index'
+import { Route as NpcsNpcIdRouteImport } from './routes/npcs.$npcId'
 import { Route as OrbitUuidRouteImport } from './routes/orbit.$uuid'
 import { Route as OrganisationsIndexRouteImport } from './routes/organisations.index'
 import { Route as PlayersIndexRouteImport } from './routes/players.index'
@@ -57,6 +59,16 @@ const MapUuidRoute = MapUuidRouteImport.update({
 const ModerationIndexRoute = ModerationIndexRouteImport.update({
   id: '/moderation/',
   path: '/moderation/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NpcsIndexRoute = NpcsIndexRouteImport.update({
+  id: '/npcs/',
+  path: '/npcs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NpcsNpcIdRoute = NpcsNpcIdRouteImport.update({
+  id: '/npcs/$npcId',
+  path: '/npcs/$npcId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrbitUuidRoute = OrbitUuidRouteImport.update({
@@ -103,10 +115,12 @@ export interface FileRoutesByFullPath {
   '/import': typeof ImportRoute
   '/items/$uuid': typeof ItemsUuidRoute
   '/map/$uuid': typeof MapUuidRoute
+  '/npcs/$npcId': typeof NpcsNpcIdRoute
   '/orbit/$uuid': typeof OrbitUuidRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/economy/': typeof EconomyIndexRoute
   '/moderation/': typeof ModerationIndexRoute
+  '/npcs/': typeof NpcsIndexRoute
   '/organisations/': typeof OrganisationsIndexRoute
   '/players/': typeof PlayersIndexRoute
   '/simulation/': typeof SimulationIndexRoute
@@ -119,10 +133,12 @@ export interface FileRoutesByTo {
   '/import': typeof ImportRoute
   '/items/$uuid': typeof ItemsUuidRoute
   '/map/$uuid': typeof MapUuidRoute
+  '/npcs/$npcId': typeof NpcsNpcIdRoute
   '/orbit/$uuid': typeof OrbitUuidRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/economy': typeof EconomyIndexRoute
   '/moderation': typeof ModerationIndexRoute
+  '/npcs': typeof NpcsIndexRoute
   '/organisations': typeof OrganisationsIndexRoute
   '/players': typeof PlayersIndexRoute
   '/simulation': typeof SimulationIndexRoute
@@ -136,10 +152,12 @@ export interface FileRoutesById {
   '/import': typeof ImportRoute
   '/items/$uuid': typeof ItemsUuidRoute
   '/map/$uuid': typeof MapUuidRoute
+  '/npcs/$npcId': typeof NpcsNpcIdRoute
   '/orbit/$uuid': typeof OrbitUuidRoute
   '/players/$playerId': typeof PlayersPlayerIdRoute
   '/economy/': typeof EconomyIndexRoute
   '/moderation/': typeof ModerationIndexRoute
+  '/npcs/': typeof NpcsIndexRoute
   '/organisations/': typeof OrganisationsIndexRoute
   '/players/': typeof PlayersIndexRoute
   '/simulation/': typeof SimulationIndexRoute
@@ -154,10 +172,12 @@ export interface FileRouteTypes {
     | '/import'
     | '/items/$uuid'
     | '/map/$uuid'
+    | '/npcs/$npcId'
     | '/orbit/$uuid'
     | '/players/$playerId'
     | '/economy/'
     | '/moderation/'
+    | '/npcs/'
     | '/organisations/'
     | '/players/'
     | '/simulation/'
@@ -170,10 +190,12 @@ export interface FileRouteTypes {
     | '/import'
     | '/items/$uuid'
     | '/map/$uuid'
+    | '/npcs/$npcId'
     | '/orbit/$uuid'
     | '/players/$playerId'
     | '/economy'
     | '/moderation'
+    | '/npcs'
     | '/organisations'
     | '/players'
     | '/simulation'
@@ -186,10 +208,12 @@ export interface FileRouteTypes {
     | '/import'
     | '/items/$uuid'
     | '/map/$uuid'
+    | '/npcs/$npcId'
     | '/orbit/$uuid'
     | '/players/$playerId'
     | '/economy/'
     | '/moderation/'
+    | '/npcs/'
     | '/organisations/'
     | '/players/'
     | '/simulation/'
@@ -203,10 +227,12 @@ export interface RootRouteChildren {
   ImportRoute: typeof ImportRoute
   ItemsUuidRoute: typeof ItemsUuidRoute
   MapUuidRoute: typeof MapUuidRoute
+  NpcsNpcIdRoute: typeof NpcsNpcIdRoute
   OrbitUuidRoute: typeof OrbitUuidRoute
   PlayersPlayerIdRoute: typeof PlayersPlayerIdRoute
   EconomyIndexRoute: typeof EconomyIndexRoute
   ModerationIndexRoute: typeof ModerationIndexRoute
+  NpcsIndexRoute: typeof NpcsIndexRoute
   OrganisationsIndexRoute: typeof OrganisationsIndexRoute
   PlayersIndexRoute: typeof PlayersIndexRoute
   SimulationIndexRoute: typeof SimulationIndexRoute
@@ -263,6 +289,20 @@ declare module '@tanstack/react-router' {
       path: '/moderation'
       fullPath: '/moderation/'
       preLoaderRoute: typeof ModerationIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/npcs/': {
+      id: '/npcs/'
+      path: '/npcs'
+      fullPath: '/npcs/'
+      preLoaderRoute: typeof NpcsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/npcs/$npcId': {
+      id: '/npcs/$npcId'
+      path: '/npcs/$npcId'
+      fullPath: '/npcs/$npcId'
+      preLoaderRoute: typeof NpcsNpcIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/orbit/$uuid': {
@@ -323,10 +363,12 @@ const rootRouteChildren: RootRouteChildren = {
   ImportRoute: ImportRoute,
   ItemsUuidRoute: ItemsUuidRoute,
   MapUuidRoute: MapUuidRoute,
+  NpcsNpcIdRoute: NpcsNpcIdRoute,
   OrbitUuidRoute: OrbitUuidRoute,
   PlayersPlayerIdRoute: PlayersPlayerIdRoute,
   EconomyIndexRoute: EconomyIndexRoute,
   ModerationIndexRoute: ModerationIndexRoute,
+  NpcsIndexRoute: NpcsIndexRoute,
   OrganisationsIndexRoute: OrganisationsIndexRoute,
   PlayersIndexRoute: PlayersIndexRoute,
   SimulationIndexRoute: SimulationIndexRoute,

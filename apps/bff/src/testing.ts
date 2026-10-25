@@ -12,7 +12,9 @@ import {
   createEconomieMock,
   createSocialMock,
   createUniversesimulatorMock,
+  createNpcMock,
   ECONOMIE_URL,
+  NPC_URL,
   PERSISTENCE_URL,
   SOCIAL_URL,
   UNIVERSESIMULATOR_URL,
@@ -20,6 +22,7 @@ import {
 } from '@dyingstar-admin/testing';
 import { createApp } from './app';
 import { createEconomieClient } from './clients/economie';
+import { createNpcClient } from './clients/npc';
 import { createUniversesimulatorClient } from './clients/universesimulator';
 import { createSocialClient } from './clients/social';
 import fallback from './definitions/fallback.json';
@@ -48,6 +51,7 @@ export function createInProcessBff({
   const social = createSocialMock(socialData);
   const economie = createEconomieMock();
   const universesimulator = createUniversesimulatorMock();
+  const npc = createNpcMock();
   const app = createApp({
     auth: false,
     gameServerName: 'Universe Testing',
@@ -69,6 +73,7 @@ export function createInProcessBff({
       baseUrl: UNIVERSESIMULATOR_URL,
       timeoutMs: 1000,
     }),
+    npc: createNpcClient({ baseUrl: NPC_URL, timeoutMs: 1000 }),
     // The record of writes stays out of the test output.
     audit: () => undefined,
   });
@@ -82,11 +87,13 @@ export function createInProcessBff({
     social,
     economie,
     universesimulator,
+    npc,
     handlers: [
       ...persistence.handlers,
       ...social.handlers,
       ...economie.handlers,
       ...universesimulator.handlers,
+      ...npc.handlers,
       http.all('*/api/*', forward),
       http.get('*/health', forward),
     ],

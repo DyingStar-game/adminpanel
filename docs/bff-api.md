@@ -16,14 +16,14 @@ are in `apps/bff/src/app.ts` and `apps/bff/src/routes/`.
 - **Origin**: writes coming from another origin than the panel's (`PUBLIC_URL`, else the
   request's own) are refused: `403 FORBIDDEN_ORIGIN`.
 - **A service not configured** (`PERSISTENCE_URL`, `SOCIAL_URL`, `ECONOMIE_URL`,
-  `UNIVERSESIMULATOR_URL` unset) has no
+  `UNIVERSESIMULATOR_URL`, `NPC_URL` unset) has no
   routes: they answer `404 NOT_FOUND`, like any unknown `/api/*` path.
 - **Errors** are `{ error, message, details? }`, `error` among `ErrorCode`
   (`packages/schemas/src/common.ts`): `VALIDATION_ERROR` (400, with the Zod issues),
   `NOT_FOUND`, `ALREADY_EXISTS`, `EDIT_CONFLICT`, `UNKNOWN_OBJECT_TYPE`, `UPSTREAM_REJECTED`
   (the service refused: its status and message are passed on), `UPSTREAM_ERROR`,
   `UPSTREAM_TIMEOUT`, `UPSTREAM_UNREACHABLE`…
-- **Writes to the game services** (`social`, `economie`, `universesimulator`) are each recorded as a JSON line on
+- **Writes to the game services** (`social`, `economie`, `universesimulator`, `npc`) are each recorded as a JSON line on
   stdout, refused ones included: who, route, status (`lib/audit.ts`).
 
 ## Health and sign-in
@@ -173,3 +173,43 @@ left in `villages` — and `projectionIssue` says why: `noBody` (no `body` given
 `noFrame` (no positioned item on the body). One without a cached position is left out of
 `positions`. The SPA passes the planet from the URL, or the persistence parent of the villages'
 POIs when the person may read persistence.
+
+## `npc` (NPCs)
+
+Shown when `NPC_URL` is set ([ADR 0026](./adr/0026-npc-section.md)). Every route calls the
+service's Admin API (`/api/admin/*`) **with the person's token**: the service checks the
+moderation role itself (reads `moderator`+, writes `admin` or `supervisor`); the panel mirrors it
+with `npc.view` (the whole section) and `npc.manage` (the writes). Inputs are validated with the
+pinned contract (and `contracts/npc/code.ts`) before any call (400 `VALIDATION_ERROR`); the
+service's own refusals keep their status (403, 404, 409 — a pattern in use, a task no longer open,
+a name taken —, 502 when Keycloak fails; a 400 of its own comes back as `400 UPSTREAM_REJECTED`
+with its message). Task, event and current-action ids are `int64`: sent as numbers.
+
+| Method | Route | Permission | Notes |
+|--------|-------|------------|-------|
+| GET | `/api/npc/settings` | `npc.view` | Global switch (`npcsEnabled`, who changed it) and counts: total, enabled, running, connected |
+| PUT | `/api/npc/settings` | `npc.manage` | `{ npcsEnabled }`: connects or disconnects every enabled NPC |
+| GET | `/api/npc/npcs?village&role&enabled&online&q&limit&offset` | `npc.view` | The roster with live status, oldest first; `total` counts the matches before `online` |
+| POST | `/api/npc/npcs` | `npc.manage` | 201; `{ count 1–50, role unassigned·villager·custom, enabled, schedulePattern?, actionProfile?, firstName?/lastName? (count 1) }`; `{ created, errors }` |
+| POST | `/api/npc/npcs/bulk` | `npc.manage` | `{ action spawn·despawn·delete, ids \| count 1–1000, village?, role? }`, ids or count; by count, spawn picks the oldest disabled, despawn and delete the most recent enabled (storekeepers last); `{ affected, errors }` |
+| GET | `/api/npc/npcs/:id` | `npc.view` | The NPC, its routine (pattern grid, planetary day and hour, activity, allowed actions), recent tasks, FSM state, workplace |
+| PATCH | `/api/npc/npcs/:id` | `npc.manage` | The contract's fields only, one at least; `null` clears a nullable field |
+| DELETE | `/api/npc/npcs/:id` | `npc.manage` | 204; its runtime, Keycloak user and row |
+| POST | `/api/npc/npcs/:id/spawn` · `/despawn` · `/reassign` | `npc.manage` | Enable, disable, back to the automatic assignment |
+| POST | `/api/npc/npcs/:id/reset-credentials` | `npc.manage` | 204; a new random Keycloak password |
+| GET | `/api/npc/npcs/:id/logs?since&level` | `npc.view` | Log lines after `since` (in the service's memory), at `level` or above; `lastSeq` to poll on |
+| GET | `/api/npc/npcs/:id/events?kind&before&limit` · `/api/npc/events?…` | `npc.view` | Key events, newest first (an NPC's, or every one's and the service-wide ones); `before` an event id |
+| GET | `/api/npc/npcs/:id/tasks` | `npc.view` | Open tasks first, then the most recent |
+| POST | `/api/npc/npcs/:id/tasks` | `npc.manage` | 201; `go_to_position {position, uuid?, hold_s?, timeout_s?}`, `run_action {action, config?, duration_s?}`, `wait {seconds}` (seconds ≤ 3600), `forceOnline?` |
+| DELETE | `/api/npc/npcs/:id/tasks/:taskId` | `npc.manage` | Cancels an open task; 409 once finished |
+| GET | `/api/npc/task-kinds` | `npc.view` | Task kinds and their parameters, the actions run by hand, their config fields |
+| GET · POST | `/api/npc/schedule/patterns` | `npc.view` / `npc.manage` | Shift patterns; create `{ name [a-z0-9_]{1,64}, description?, days 1–14 of the same width, letters T t r a . l }` (201, 409 when it exists) |
+| GET · PUT · DELETE | `/api/npc/schedule/patterns/:name` | `npc.view` / `npc.manage` | One pattern; PUT `{ description?, days }`; DELETE 204, 409 while NPCs follow it |
+| POST | `/api/npc/schedule/import` | `npc.manage` | `{ mode missing·overwrite, yaml? }` (absent: the service's `config/schedules.yaml`); `{ report: created, updated, skipped, errors }` |
+| GET · PUT | `/api/npc/schedule/activity-actions` | `npc.view` / `npc.manage` | Activity → actions (`work`, `transmission`, `meal`, `mandatory`, `off`, `always`); PUT replaces the activities given |
+| GET | `/api/npc/schedule/legend` | `npc.view` | Hours per day and the meaning of each grid letter |
+| GET | `/api/npc/villages` | `npc.view` | Mining villages (NPCs, storekeepers / slots, workplace, Factory) and Factory villages |
+| PUT · DELETE | `/api/npc/villages/:code/workplace` | `npc.manage` | Set by hand `{ warehouseId, warehouseCode?, scenename? }`; DELETE 204 (resolved again at the next assignment) |
+
+The service's debug routes (`/debug/world`, `/debug/routes/…`) and its Keycloak consistency
+report (`/health/keycloak`) are not used by the panel.

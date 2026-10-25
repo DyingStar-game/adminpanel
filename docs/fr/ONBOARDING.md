@@ -50,6 +50,10 @@ make seed-social   # joueurs, organisations, signalements, portefeuilles de test
 make pnpm dev
 ```
 
+Le service `npc` n'a pas de route Traefik sur minikube : pour voir la section PNJ, rendez-le
+joignable (par ex. `kubectl port-forward -n dyingstar svc/service-npc 9400:9400 --address 0.0.0.0`)
+puis lancez `NPC_URL=http://<adresse vue du conteneur dev>:9400 make up K8S=1` (ADR 0026).
+
 `make reset-social` vide le `social` de minikube puis le remplit à nouveau. Après être passé de
 `make up` à `make up K8S=1` (ou l'inverse), relancez `make pnpm dev`.
 

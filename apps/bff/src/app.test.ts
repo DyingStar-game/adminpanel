@@ -33,6 +33,7 @@ describe('BFF app', () => {
         'economie',
         'economie-wallets',
         'universesimulator',
+        'npc',
       ],
     });
     expect(JSON.stringify(body)).not.toContain('http');
