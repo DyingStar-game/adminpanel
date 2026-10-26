@@ -29,7 +29,7 @@ import {
 } from '@/lib/npcs';
 
 /**
- * Adds NPCs to the servers (ADR 0026): creates N new ones (generated names, a Keycloak account
+ * Adds NPCs to the servers (ADR 0031): creates N new ones (generated names, a Keycloak account
  * each; spawned at once or not) and / or spawns N existing disabled ones, the oldest first.
  * Both counts are optional, one is needed. The service's partial failures are reported.
  */

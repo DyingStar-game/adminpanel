@@ -1,0 +1,1983 @@
+openapi: 3.1.0
+info:
+  title: DyingStar Mission API
+  version: 0.1.0
+  description: >
+    Mission API of DyingStar: dynamic and scripted missions with verifiable objectives
+    (material delivery, A→B transport, visits), player lifecycle (accept, progress,
+    complete, abandon) and economic or item rewards.
+
+    Three kinds of callers:
+
+    * **Players** send a Keycloak JWT (`Authorization: Bearer`). The player id is the
+      `sub` claim. With `AUTH_DEV_BYPASS=true` (never in production) the `X-Player-Id` /
+      `X-Player-Name` / `X-Player-Roles` headers are accepted instead.
+    * **The game server** and trusted services authenticate with a Keycloak
+      service-account token (`client_credentials`, `Authorization: Bearer`) whose `azp`
+      is an allowed client and whose `aud` targets `mission-api`. Each `/api/internal/*`
+      route requires a capability role (e.g. `mission:write`). Dev only
+      (`INTERNAL_DEV_BYPASS=true`): the legacy `X-Internal-Key` header is accepted.
+    * Economic rewards are paid to the Economy service internal API
+      (`POST /api/internal/players/{playerId}/wallet/credit`) with an idempotency key, so
+      a reward is never credited twice.
+
+    Every error is `{ "error": "CODE", "message": "...", "status": 4xx }`.
+
+
+    Language: every response honours the standard `Accept-Language: fr|en` header
+    (default `en`) for error messages; zod validation messages stay in English.
+    Technical identifiers (codes, kind names, fields, `{params}`) are never translated.
+servers:
+  - url: http://localhost:3000
+    description: Local development
+
+tags:
+  - name: public
+    description: Unauthenticated endpoints
+  - name: me
+    description: The authenticated player's own missions
+  - name: missions
+    description: Browse, accept, progress and complete missions
+  - name: internal
+    description: Game-server integration (Keycloak service accounts, capability roles)
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ── Public ─────────────────────────────────────────────────────────────────
+  /api/health:
+    get:
+      tags: [public]
+      summary: Liveness check
+      security: []
+      responses:
+        '200':
+          description: API is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  service: { type: string, example: mission }
+                  version: { type: string, example: 0.1.0 }
+
+  /openapi.yaml:
+    get:
+      tags: [public]
+      summary: This service's OpenAPI document
+      security: []
+      responses:
+        '200':
+          description: OpenAPI 3.1 document (YAML)
+          content:
+            application/yaml:
+              schema: { type: string }
+
+  /api/openapi.yaml:
+    get:
+      tags: [public]
+      summary: This service's OpenAPI document (alias under /api)
+      security: []
+      responses:
+        '200':
+          description: OpenAPI 3.1 document (YAML)
+          content:
+            application/yaml:
+              schema: { type: string }
+
+  # ── Me ─────────────────────────────────────────────────────────────────────
+  /api/me/missions:
+    get:
+      tags: [me]
+      summary: The caller's missions (assignments joined with their mission)
+      parameters:
+        - $ref: '#/components/parameters/AssignmentStatus'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Player missions
+          content:
+            application/json:
+              schema:
+                properties:
+                  limit:
+                    default: 20
+                    maximum: 100
+                    minimum: 1
+                    type: integer
+                  missions:
+                    items:
+                      $ref: '#/components/schemas/PlayerMission'
+                    type: array
+                  offset:
+                    default: 0
+                    minimum: 0
+                    type: integer
+                  total:
+                    minimum: 0
+                    type: integer
+                required:
+                - missions
+                - total
+                - limit
+                - offset
+                type: object
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/me/missions-created:
+    get:
+      tags: [me]
+      summary: The missions created by the caller
+      description: >
+        Every mission whose `createdBy` is the calling player, all statuses, with no zone,
+        group or free-slot filtering — the creator's management view, unlike the browse.
+      parameters:
+        - $ref: '#/components/parameters/MissionStatus'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Missions created by the caller
+          content:
+            application/json:
+              schema:
+                properties:
+                  limit:
+                    default: 20
+                    maximum: 100
+                    minimum: 1
+                    type: integer
+                  missions:
+                    items:
+                      $ref: '#/components/schemas/Mission'
+                    type: array
+                  offset:
+                    default: 0
+                    minimum: 0
+                    type: integer
+                  total:
+                    minimum: 0
+                    type: integer
+                required:
+                - missions
+                - total
+                - limit
+                - offset
+                type: object
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  # ── Missions ───────────────────────────────────────────────────────────────
+  /api/missions:
+    get:
+      tags: [missions]
+      summary: Browse missions with a free slot (defaults to `available` + `active`)
+      description: >
+        Missions without a free assignee slot (`maxAssignees` reached) are hidden, missions
+        shared with a group are only listed to that group's members, and zoned missions
+        only to players inside one of their zones (unknown location → only global
+        missions; a Social outage degrades to "no group, no location").
+      parameters:
+        - $ref: '#/components/parameters/MissionStatus'
+        - $ref: '#/components/parameters/MissionKind'
+        - $ref: '#/components/parameters/MissionCategory'
+        - $ref: '#/components/parameters/IssuerType'
+        - $ref: '#/components/parameters/IssuerId'
+        - $ref: '#/components/parameters/Visibility'
+        - $ref: '#/components/parameters/GroupId'
+        - $ref: '#/components/parameters/GroupClaimable'
+        - $ref: '#/components/parameters/IsEvent'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Missions
+          content:
+            application/json:
+              schema:
+                properties:
+                  limit:
+                    default: 20
+                    maximum: 100
+                    minimum: 1
+                    type: integer
+                  missions:
+                    items:
+                      $ref: '#/components/schemas/Mission'
+                    type: array
+                  offset:
+                    default: 0
+                    minimum: 0
+                    type: integer
+                  total:
+                    minimum: 0
+                    type: integer
+                required:
+                - missions
+                - total
+                - limit
+                - offset
+                type: object
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      tags: [missions]
+      summary: Create a player-sponsored mission (economic reward escrowed from the caller)
+      description: >
+        Reward components are escrowed until settlement or refund: items are held from the
+        creator's inventory, and the credits component is debited either from the creator's
+        wallet (`escrowSource: creator`, default) or from the issuing organization's
+        treasury (`escrowSource: issuer` — corporation or political entity, requires the
+        `mission:treasury:commit` action decided by Social: CEO/head, or the
+        `manage_corporation` / `manage_treasury` permission).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePlayerMission' }
+      responses:
+        '201':
+          description: Created mission and objectives (escrow held)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mission: { $ref: '#/components/schemas/Mission' }
+                  objectives:
+                    type: array
+                    items: { $ref: '#/components/schemas/Objective' }
+        '400':
+          description: >
+            Validation failed (`VALIDATION_ERROR`, including the issuer/`escrowSource`
+            refines) or `ESCROW_SOURCE_INVALID`
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: >
+            Not allowed (`NOT_CORPORATION_MEMBER` or `TREASURY_FORBIDDEN` when funding an
+            organization treasury without its permission)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                treasury:
+                  value: { error: TREASURY_FORBIDDEN, message: 'Requires the CEO role or the manage_corporation permission', status: 403 }
+        '409':
+          description: Escrow refused (insufficient funds)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                broke:
+                  value: { error: INSUFFICIENT_FUNDS, message: Insufficient balance for the mission escrow, status: 409 }
+        '502':
+          description: Economy or Social is unreachable
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/missions/kinds:
+    get:
+      tags: [missions]
+      summary: Discovery catalogue for mission builders (categories, objective/prerequisite kinds, reward shape)
+      responses:
+        '200':
+          description: Catalogue
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MissionKindsCatalog' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/missions/validate:
+    post:
+      tags: [missions]
+      summary: Dry-run a mission spec (no persistence, no escrow)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ValidateMission' }
+      responses:
+        '200':
+          description: Spec is valid (normalized)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ValidatedSpec' }
+        '400':
+          description: >
+            Spec rejected (`MISSING_OBJECTIVES`, `REWARD_REQUIRED`, `UNKNOWN_OBJECTIVE_KIND`,
+            `INVALID_OBJECTIVE_PARAMS`, `UNKNOWN_PREREQ_KIND`, `INVALID_PREREQUISITE_PARAMS`,
+            `ITEM_REWARD_NOT_SPLITABLE`, `OBJECTIVE_NOT_IN_CATEGORY`, `PREREQ_NOT_IN_CATEGORY`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '503':
+          description: Item rewards require the Inventory service (`INVENTORY_NOT_CONFIGURED`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/missions/{missionId}:
+    get:
+      tags: [missions]
+      summary: Mission detail with its objectives and the caller's assignment
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      responses:
+        '200':
+          description: Mission, objectives and assignment
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [mission, objectives]
+                properties:
+                  mission: { $ref: '#/components/schemas/Mission' }
+                  objectives:
+                    type: array
+                    items: { $ref: '#/components/schemas/Objective' }
+                  assignment:
+                    oneOf:
+                      - { $ref: '#/components/schemas/Assignment' }
+                      - { type: 'null' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+    delete:
+      tags: [missions]
+      summary: Cancel a mission you created (escrow refunded, assignees dropped)
+      description: >
+        Only the creator (or a member of the issuing corporation) may cancel. Active
+        assignments are abandoned and every escrow (credits and items) is refunded.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      responses:
+        '200':
+          description: Cancelled mission
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mission' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Only the creator of the mission can cancel it
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: A completed mission cannot be cancelled
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/missions/{missionId}/accept:
+    post:
+      tags: [missions]
+      summary: Accept a mission (creates the caller's assignment)
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      responses:
+        '201':
+          description: Assignment created
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [assignment, mission, objectives]
+                properties:
+                  assignment: { $ref: '#/components/schemas/Assignment' }
+                  mission: { $ref: '#/components/schemas/Mission' }
+                  objectives:
+                    type: array
+                    items: { $ref: '#/components/schemas/Objective' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: >
+            Not allowed (`NOT_CORPORATION_MEMBER`, `NOT_GROUP_MEMBER`, `NO_GROUP`,
+            `GROUP_ALREADY_CLAIMED`, `PREREQ_FAILED`, `OUT_OF_ZONE`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                prereq:
+                  value: { error: PREREQ_FAILED, message: 'Prerequisite min_standing failed: standing 45 < 100 (general)', status: 403 }
+                outOfZone:
+                  value: { error: OUT_OF_ZONE, message: You are not in a zone where this mission is available, status: 403 }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Mission not open, already assigned/completed, or full
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                full:
+                  value: { error: MISSION_FULL, message: Mission has no free slot, status: 409 }
+
+  /api/missions/{missionId}/abandon:
+    post:
+      tags: [missions]
+      summary: Abandon the caller's active assignment
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      responses:
+        '200':
+          description: Updated assignment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assignment: { $ref: '#/components/schemas/Assignment' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Assignment is not active
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/missions/{missionId}/verify:
+    post:
+      tags: [missions]
+      summary: Re-measure the mission's service objectives
+      description: >
+        Measures every `service` objective for the caller's assignment and persists the
+        result. Physical objectives (`visit`, `deliver_material`, `transport`,
+        `transport_passenger`) read the player-state store (place + carried) and use a
+        **high-water mark** (progress never regresses). `owns_items` reads Inventory and
+        may regress. Auto-completes the mission when every required objective is done.
+        The player can only verify their own assignment.
+
+        This is the **explicit** re-measure: with `MISSION_AUTO_MEASURE` (the default) the
+        player-state push already measures on its own, so calling this is only needed for
+        an immediate answer, or when auto-measure is disabled. Calling it on top of an
+        automatic measurement is harmless (the high-water mark makes it a no-op).
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      responses:
+        '200':
+          description: Measured objectives
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VerifyResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Mission not open, assignment not active
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '502':
+          description: Inventory/Economy unreachable
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '503':
+          description: Service not configured (`INVENTORY_NOT_CONFIGURED`, `ECONOMY_NOT_CONFIGURED`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/missions/{missionId}/objectives/{objectiveId}/confirm:
+    post:
+      tags: [missions]
+      summary: Confirm an issuer-verified objective (`manual` kind) — mission creator only
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+        - $ref: '#/components/parameters/ObjectiveId'
+      responses:
+        '200':
+          description: Confirmed objective
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConfirmResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Caller is not the mission creator (`NOT_MISSION_ISSUER`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Mission not open, objective not confirmable, or locked by scenario order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                notConfirmable:
+                  value: { error: OBJECTIVE_NOT_CONFIRMABLE, message: Only issuer-confirmed objectives can be confirmed, status: 409 }
+
+  /api/missions/{missionId}/complete:
+    post:
+      tags: [missions]
+      summary: Complete the mission and settle every reward component
+      description: >
+        Re-measures the service objectives before paying. With `partial`, hands the
+        mission in proportionally to the weighted progress of its required objectives
+        (`allowPartial` missions only): the caller receives the matching credits share,
+        never any item, and the assignment becomes terminal.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                partial:
+                  type: boolean
+                  default: false
+                  description: Hand in proportionally (missions with `allowPartial` only)
+      responses:
+        '200':
+          description: Completed assignment, mission and settlement outcome
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [assignment, mission]
+                properties:
+                  assignment: { $ref: '#/components/schemas/Assignment' }
+                  mission: { $ref: '#/components/schemas/Mission' }
+                  settlement: { $ref: '#/components/schemas/Settlement' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Objectives incomplete or assignment not active
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '502':
+          description: Economy rejected the reward credit (assignment completed, reward unsettled)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/missions/{missionId}/share:
+    post:
+      tags: [missions]
+      summary: Share the mission with a group
+      description: >
+        Restricts the mission to the members of the target group: they are the only ones
+        to see and accept it, and it counts as taken by that group. Possible on any
+        mission (public or corporation) by its creator or a member of the issuing
+        corporation. Rejected while the mission has active assignees.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ShareMission' }
+      responses:
+        '200':
+          description: Updated mission
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mission' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Only the creator or a corporation member can share the mission
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '404':
+          description: Mission or target group not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: Mission has active assignees
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                assigned:
+                  value: { error: MISSION_HAS_ASSIGNEES, message: A mission with active assignees cannot be shared, status: 409 }
+        '502':
+          description: Social is unreachable
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    delete:
+      tags: [missions]
+      summary: Remove the group share of the mission
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      responses:
+        '200':
+          description: Updated mission (back to public/corporation access)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mission' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Mission has active assignees
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/missions/{missionId}/event:
+    post:
+      tags: [missions]
+      summary: Declare (or lift) the "big event" flag on a corporation mission
+      description: >
+        Events are the exception to the capacity cap: they allow up to 1000 assignees and
+        stay listed as long as they have a free slot. Requires the `mission:event:manage`
+        action in the issuing corporation (decided by Social: CEO or
+        `manage_corporation`). Lifting the flag requires `maxAssignees` ≤ 100.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventFlag' }
+      responses:
+        '200':
+          description: Updated mission
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mission' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Not a corporation mission, not a member, or missing permission
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                forbidden:
+                  value: { error: EVENT_FORBIDDEN, message: 'Requires the mission:event:manage permission', status: 403 }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ── Internal ───────────────────────────────────────────────────────────────
+  /api/internal/missions:
+    post:
+      tags: [internal]
+      summary: Create a mission (system, IA corporation/city or scenario)
+      description: >
+        Requires the `mission:write` service role. With `escrow`, the caller must also hold
+        `mission:escrow:politics`: the credits reward is debited from the political
+        entity's treasury at creation (`escrowStatus: held`, key
+        `mission-escrow:<missionId>`), refunded there on cancel/expire
+        (`mission-refund:<missionId>`) and marked `claimed` once settled. A refused debit
+        leaves no mission behind.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateMission' }
+      responses:
+        '201':
+          description: Created mission and objectives
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mission: { $ref: '#/components/schemas/Mission' }
+                  objectives:
+                    type: array
+                    items: { $ref: '#/components/schemas/Objective' }
+        '400':
+          description: >
+            Validation error, or an escrow spec the treasury cannot fund
+            (`ESCROW_ITEM_REWARD_UNSUPPORTED`: item rewards with `escrow`;
+            `ESCROW_CREDITS_REQUIRED`: `escrow` without a credits reward)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                items:
+                  value: { error: ESCROW_ITEM_REWARD_UNSUPPORTED, message: 'Item rewards cannot be escrowed from a treasury: only the credits component is funded', status: 400 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: Missing `mission:write`, or `mission:escrow:politics` when `escrow` is set
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                escrowRole:
+                  value: { error: FORBIDDEN, message: 'Requires service role mission:escrow:politics', status: 403 }
+        '409':
+          description: >
+            A mission with this `scriptId` already exists, or the treasury cannot fund the
+            escrow (`INSUFFICIENT_FUNDS`, nothing persisted)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                duplicate:
+                  value: { error: DUPLICATE_SCRIPT_ID, message: A mission with this scriptId already exists, status: 409 }
+                broke:
+                  value: { error: INSUFFICIENT_FUNDS, message: Insufficient balance for the mission escrow, status: 409 }
+        '502':
+          description: Economy is unreachable or refused the escrow debit (`ECONOMY_DEBIT_FAILED`)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    get:
+      tags: [internal]
+      summary: Full mission catalogue (all statuses)
+      description: Requires the `mission:read` service role.
+      parameters:
+        - $ref: '#/components/parameters/MissionStatus'
+        - $ref: '#/components/parameters/MissionKind'
+        - $ref: '#/components/parameters/MissionCategory'
+        - $ref: '#/components/parameters/IssuerType'
+        - $ref: '#/components/parameters/IssuerId'
+        - $ref: '#/components/parameters/Visibility'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Missions
+          content:
+            application/json:
+              schema:
+                properties:
+                  limit:
+                    default: 20
+                    maximum: 100
+                    minimum: 1
+                    type: integer
+                  missions:
+                    items:
+                      $ref: '#/components/schemas/Mission'
+                    type: array
+                  offset:
+                    default: 0
+                    minimum: 0
+                    type: integer
+                  total:
+                    minimum: 0
+                    type: integer
+                required:
+                - total
+                - limit
+                - offset
+                type: object
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/internal/missions/expire:
+    post:
+      tags: [internal]
+      summary: Expire every mission and assignment past its deadline
+      description: >
+        Requires the `mission:write` service role. Idempotent: replayable by hand, and run
+        by the built-in sweep (`MISSION_EXPIRE_INTERVAL_SECONDS`).
+      responses:
+        '200':
+          description: Number of expired missions and assignments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  expired: { type: integer }
+                  expiredAssignments: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/internal/missions/player-states:
+    put:
+      tags: [internal]
+      summary: Batch player-state push (zone matching + physical objective evaluation)
+      description: >
+        Requires the `mission:write` service role. Called by the game server on a heartbeat
+        (every ~10s). States older than **30s** are treated as "outside every zone"
+        (fail-closed). Used for zone matching (`zones[]`) and physical objective
+        evaluation (`visit`, `deliver_material`, `transport`, `transport_passenger`).
+
+        With `MISSION_AUTO_MEASURE` (the default) this push is also what **drives the
+        measurement** of the `service` objectives: it is the only signal that a player's
+        place or carried goods changed, so a `visit` or a delivery progresses without
+        anyone calling `/verify`. The response is sent first — the push is a heartbeat and
+        must not wait for measurements — and the pass runs best-effort: a measurement
+        error is logged and swallowed, never fails the push, and is retried on the next
+        one. Its cost is bounded (one indexed query when none of the pushed players holds
+        an active assignment, one state query for the whole batch, and a per-pass budget
+        on remote Inventory/Economy reads).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlayerStatesBody' }
+      responses:
+        '200':
+          description: Number of states upserted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated: { type: integer }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/internal/missions/{missionId}:
+    get:
+      tags: [internal]
+      summary: Full detail of one mission (objectives, assignments, assignee names, group)
+      description: >
+        Requires the `mission:read` service role. Unlike the player route, no visibility
+        filter applies: a mission shared with a group reads back here for any allowed
+        service. Assignee display names and the group name come from Social and are
+        best-effort (an outage degrades them to ids, never to an error).
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      responses:
+        '200':
+          description: Mission, ordered objectives, every assignment and Social enrichment
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MissionDetail' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [internal]
+      summary: Update a mission's mutable fields
+      description: Requires the `mission:write` service role.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateMission' }
+      responses:
+        '200':
+          description: Updated mission
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mission' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/internal/missions/{missionId}/cancel:
+    post:
+      tags: [internal]
+      summary: Cancel a mission and its active assignments
+      description: Requires the `mission:write` service role.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      responses:
+        '200':
+          description: Cancelled mission
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mission' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: Mission already completed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/internal/missions/{missionId}/share:
+    post:
+      tags: [internal]
+      summary: Share a mission with a group (game server, trusted)
+      description: Requires the `mission:write` service role. Skips the creator/corporation check.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ShareMission' }
+      responses:
+        '200':
+          description: Updated mission
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mission' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404':
+          description: Mission or target group not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409':
+          description: Mission has active assignees
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    delete:
+      tags: [internal]
+      summary: Remove the group share of a mission (game server, trusted)
+      description: Requires the `mission:write` service role.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      responses:
+        '200':
+          description: Updated mission
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mission' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Mission has active assignees
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/internal/missions/{missionId}/event:
+    post:
+      tags: [internal]
+      summary: Declare (or lift) the "big event" flag on a mission (game server)
+      description: Requires the `mission:write` service role. No corporation membership check.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventFlag' }
+      responses:
+        '200':
+          description: Updated mission
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Mission' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/internal/missions/{missionId}/objectives/{objectiveId}/confirm:
+    post:
+      tags: [internal]
+      summary: Confirm an issuer-verified objective (`manual` kind) on the game server's behalf
+      description: Requires the `mission:progress` service role.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+        - $ref: '#/components/parameters/ObjectiveId'
+      responses:
+        '200':
+          description: Confirmed objective
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ConfirmResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Mission not open, objective not confirmable, or locked by scenario order
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/internal/missions/{missionId}/verify:
+    post:
+      tags: [internal]
+      summary: Re-measure service objectives for a holder
+      description: >
+        Requires the `mission:progress` service role. Measures every `service` objective
+        for the given holder. Physical objectives (`visit`, `deliver_material`,
+        `transport`, `transport_passenger`) read the player-state store and use a
+        **high-water mark**. `owns_items` reads Inventory and may regress.
+
+        The explicit re-measure: with `MISSION_AUTO_MEASURE` (the default) the
+        player-state push measures on its own, so this is an on-demand re-check.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [playerId]
+              properties:
+                playerId: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Measured objectives
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VerifyResult' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Mission not open, assignment not active
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/internal/missions/{missionId}/assign:
+    post:
+      tags: [internal]
+      summary: Assign a mission to a holder (player or NPC)
+      description: Requires the `mission:write` service role.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [playerId]
+              properties:
+                playerId: { type: string, format: uuid, description: Assignee id (player id or NPC id) }
+                holderType: { $ref: '#/components/schemas/AssigneeHolderType' }
+      responses:
+        '201':
+          description: The assignment, mission and objectives
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assignment: { $ref: '#/components/schemas/Assignment' }
+                  mission: { $ref: '#/components/schemas/Mission' }
+                  objectives:
+                    type: array
+                    items: { $ref: '#/components/schemas/Objective' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Mission closed, full or already accepted
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/internal/missions/{missionId}/complete:
+    post:
+      tags: [internal]
+      summary: Complete a player's mission and settle its reward
+      description: Requires the `mission:complete` service role.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [playerId]
+              properties:
+                playerId: { type: string, format: uuid }
+                force: { type: boolean, description: Skip the objective verification }
+                settle: { type: boolean, description: Settle the reward now (default true) }
+                partial:
+                  type: boolean
+                  default: false
+                  description: Hand in proportionally (missions with `allowPartial` only)
+      responses:
+        '200':
+          description: Completed assignments, mission and settlements
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assignment: { $ref: '#/components/schemas/Assignment' }
+                  assignments:
+                    type: array
+                    items: { $ref: '#/components/schemas/Assignment' }
+                  mission: { $ref: '#/components/schemas/Mission' }
+                  settlement: { $ref: '#/components/schemas/Settlement' }
+                  settlements:
+                    type: array
+                    items: { $ref: '#/components/schemas/Settlement' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Objectives incomplete or assignment not active
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/internal/missions/{missionId}/settle:
+    post:
+      tags: [internal]
+      summary: Replay unsettled reward shares (idempotent)
+      description: Requires the `mission:complete` service role.
+      parameters:
+        - $ref: '#/components/parameters/MissionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [playerId]
+              properties:
+                playerId: { type: string, format: uuid }
+      responses:
+        '200':
+          description: One settlement outcome per completed assignment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  settlements:
+                    type: array
+                    items: { $ref: '#/components/schemas/Settlement' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Assignment is not completed
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/internal/players/{playerId}/missions:
+    get:
+      tags: [internal]
+      summary: All of a player's assignments (with their missions)
+      description: Requires the `mission:read` service role.
+      parameters:
+        - $ref: '#/components/parameters/PlayerId'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: Assignments and their missions
+          content:
+            application/json:
+              schema:
+                properties:
+                  limit:
+                    default: 20
+                    maximum: 100
+                    minimum: 1
+                    type: integer
+                  missions:
+                    items:
+                      $ref: '#/components/schemas/PlayerMission'
+                    type: array
+                  offset:
+                    default: 0
+                    minimum: 0
+                    type: integer
+                  total:
+                    minimum: 0
+                    type: integer
+                required:
+                - total
+                - limit
+                - offset
+                type: object
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/internal/poi-usage:
+    post:
+      tags: [internal]
+      summary: Which POIs are locked by a mission with an active assignee
+      description: >
+        Inventory calls this before letting a player move a POI (`PATCH /api/me/pois/{poiId}`).
+        A POI referenced by a mission whose assignment is **active** may not move, so the
+        destination of an accepted contract never changes under the acceptor's feet. A mission
+        created but never accepted (or whose only assignments are terminal) does not lock.
+        Both references count: an availability zone (`missions.zones[].poiId`) and an objective
+        target (`params.zone.poiId`, plus `params.source.poiId` for `transport`).
+        Requires the `mission:read` service role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [poiIds]
+              properties:
+                poiIds:
+                  type: array
+                  maxItems: 200
+                  items: { type: string, format: uuid }
+            example:
+              poiIds: ["3f1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d"]
+      responses:
+        '200':
+          description: >
+            Map of `poiId` → mission ids locking it. A POI absent from the map is free to move.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: array
+                  items: { type: string, format: uuid }
+              example:
+                "3f1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d":
+                  - "9a0b1c2d-3e4f-4a5b-8c6d-7e8f9a0b1c2d"
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    MissionId:
+      name: missionId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ObjectiveId:
+      name: objectiveId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    PlayerId:
+      name: playerId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+    MissionStatus:
+      name: status
+      in: query
+      schema: { $ref: '#/components/schemas/MissionStatus' }
+    MissionKind:
+      name: kind
+      in: query
+      schema: { $ref: '#/components/schemas/MissionKind' }
+    MissionCategory:
+      name: category
+      in: query
+      schema: { $ref: '#/components/schemas/MissionCategory' }
+    IssuerType:
+      name: issuerType
+      in: query
+      schema: { $ref: '#/components/schemas/IssuerType' }
+    IssuerId:
+      name: issuerId
+      in: query
+      schema: { type: string, format: uuid }
+    Visibility:
+      name: visibility
+      in: query
+      schema: { $ref: '#/components/schemas/MissionVisibility' }
+    GroupId:
+      name: groupId
+      in: query
+      schema: { type: string, format: uuid }
+    GroupClaimable:
+      name: groupClaimable
+      in: query
+      schema: { type: boolean }
+    IsEvent:
+      name: isEvent
+      in: query
+      schema: { type: boolean }
+    AssignmentStatus:
+      name: status
+      in: query
+      schema: { $ref: '#/components/schemas/AssignmentStatus' }
+
+    Offset:
+      in: query
+      name: offset
+      schema:
+        default: 0
+        minimum: 0
+        type: integer
+  responses:
+    Unauthorized:
+      description: Missing or invalid credentials
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Authenticated but missing the required role
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          examples:
+            invalid:
+              value: { error: VALIDATION_ERROR, message: 'objectives: Array must contain at least 1 element(s)', status: 400 }
+
+  schemas:
+    MissionStatus:
+      type: string
+      enum: [available, active, completed, cancelled, expired]
+    MissionKind:
+      type: string
+      enum: [dynamic, scenario, player]
+    MissionCategory:
+      type: string
+      enum: [delivery, transport, mining, exploration, divers]
+    MissionVisibility:
+      type: string
+      enum: [public, corporation]
+    EscrowStatus:
+      type: string
+      enum: [none, pending, held, refunded, claimed]
+    IssuerType:
+      type: string
+      enum: [system, corporation, city, politics, player, npc]
+    ObjectiveType:
+      type: string
+      description: >
+        Objective kind name, validated against the kind registry
+        (`GET /api/missions/kinds`)
+      example: deliver_material
+    ObjectiveStatus:
+      type: string
+      enum: [pending, in_progress, completed, failed]
+    AssignmentStatus:
+      type: string
+      enum: [active, partially_completed, completed, abandoned, expired, failed]
+    AssigneeHolderType:
+      type: string
+      enum: [player, npc]
+      default: player
+      description: Whether the assignee is a player or an NPC (drives reward routing)
+
+    RewardComponent:
+      description: >
+        One reward component of the mission's reward list (at most one credits component,
+        distinct item components, distinct standing domains). Immutable after creation.
+      oneOf:
+        - type: object
+          required: [type, amount]
+          properties:
+            type: { const: credits }
+            currency: { type: string, default: credits }
+            amount: { type: integer, minimum: 1 }
+        - type: object
+          required: [type, itemId, quantity]
+          properties:
+            type: { const: item }
+            itemId: { type: string, description: Inventory good type }
+            quantity: { type: integer, minimum: 1 }
+            instanceId: { type: string, format: uuid, description: Unique-instance reward (single assignee only) }
+        - type: object
+          required: [type, domain, amount]
+          properties:
+            type: { const: standing }
+            domain:
+              type: string
+              description: >
+                Standing domain — one of the mission categories (score held by Social).
+                `general` is derived (RMS of the five categories) and is never granted.
+              enum: [delivery, transport, mining, exploration, divers]
+            amount:
+              type: integer
+              minimum: -100000
+              maximum: 100000
+              description: Signed non-zero delta granted to each full completion (never split, never paid on a partial hand-in)
+
+    Prerequisite:
+      description: A gate checked when a player accepts the mission (kind registry-validated)
+      type: object
+      required: [kind]
+      properties:
+        kind:
+          type: string
+          description: Prerequisite kind name (`min_standing`, `min_reputation`, `owns_items`)
+          example: min_standing
+        params:
+          type: object
+          additionalProperties: true
+          description: Kind-specific structured params (schemas served by GET /api/missions/kinds)
+
+    MissionZone:
+      description: >
+        One availability zone, matched against the player's place reported by the game
+        server via the player-state store (`PUT /api/internal/missions/player-states`).
+        A `system` zone matches the star system. A `poi` zone references a point of
+        interest in the Inventory service and inherits its geometry **wholesale**: a zone
+        carries **no radius of its own** (the POI is the only geometric source, so
+        availability and an objective's target share the same disc). In every branch, the
+        player's `scene` must be **compatible** with the POI's `scene` (equal or one is a
+        segment prefix of the other: `tarsis_1` matches `tarsis_1/new-paris`, never
+        `tarsis_10`); a POI whose scene is `null` never matches (fail-closed: no frame to
+        compare in). A POI with a `radius` matches the area around its centre; a POI with
+        a scene and no radius matches its hierarchical scene subtree. A POI that cannot be
+        resolved never matches (fail-closed), and creating a zone on an unknown POI is
+        rejected with `POI_NOT_FOUND`.
+        Coordinates are metres in the local frame of the body named by `scene`.
+      oneOf:
+        - type: object
+          required: [kind, system]
+          additionalProperties: false
+          properties:
+            kind: { const: system }
+            system: { type: string, maxLength: 64, description: Star system }
+        - type: object
+          required: [kind, poiId]
+          additionalProperties: false
+          properties:
+            kind: { const: poi }
+            poiId: { type: string, format: uuid, description: POI id owned by the Inventory service }
+
+    Mission:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: [string, 'null'] }
+        kind: { $ref: '#/components/schemas/MissionKind' }
+        category: { $ref: '#/components/schemas/MissionCategory' }
+        issuerType: { $ref: '#/components/schemas/IssuerType' }
+        issuerId: { type: [string, 'null'], format: uuid }
+        status: { $ref: '#/components/schemas/MissionStatus' }
+        rewards:
+          type: [array, 'null']
+          description: Reward components (immutable after creation; null/empty for reputation-only missions)
+          items: { $ref: '#/components/schemas/RewardComponent' }
+        prerequisites:
+          type: array
+          description: Gates checked at acceptance (immutable after creation)
+          items: { $ref: '#/components/schemas/Prerequisite' }
+        visibility: { $ref: '#/components/schemas/MissionVisibility' }
+        groupId:
+          type: [string, 'null']
+          format: uuid
+          description: >
+            Group the mission is shared with / claimed by (opaque id owned by Social).
+            When set, only its members can see and accept the mission.
+        groupClaimable:
+          type: boolean
+          description: >
+            Limited to a single group: the first group to accept claims the mission, then
+            only its members may join (until `maxAssignees`).
+        isEvent:
+          type: boolean
+          description: Big event mission declared by the game server or a corporation (open multijoueur)
+        zones:
+          type: array
+          description: >
+            Availability zones matched against the player's presence location; empty =
+            global (available everywhere)
+          items: { $ref: '#/components/schemas/MissionZone' }
+        maxAssignees: { type: integer }
+        escrowStatus: { $ref: '#/components/schemas/EscrowStatus' }
+        escrowAmount: { type: [integer, 'null'] }
+        escrowCurrency: { type: [string, 'null'] }
+        escrowPayerId: { type: [string, 'null'], format: uuid }
+        escrowPayerType:
+          type: string
+          enum: [player, corporation, politics]
+          description: Holder kind of `escrowPayerId` (refund target on cancel/expire)
+        escrowItemStatus:
+          type: string
+          enum: [none, held, claimed, released]
+          description: Item escrow lifecycle (all item reward components)
+        escrowItemHoldIds:
+          type: [array, 'null']
+          description: Inventory hold ids of the item components (aligned with the item rewards)
+          items: { type: string }
+        scriptId: { type: [string, 'null'] }
+        expiresAt: { type: [string, 'null'], format: date-time }
+        autoComplete:
+          type: boolean
+          description: >
+            Complete and settle on its own once every required objective is done (no
+            explicit `complete` call needed)
+        allowPartial:
+          type: boolean
+          description: >
+            Assignees may hand in a partial mission and are paid proportionally to the
+            weighted progress of the required objectives (items are never paid on a partial)
+        requiresMissionIds:
+          type: array
+          description: Missions that must be fully completed before this one can be accepted
+          items: { type: string, format: uuid }
+        assignmentDeadlineHours:
+          type: [integer, 'null']
+          description: >
+            When set, each assignment expires this many hours after acceptance (capped by
+            `expiresAt`); null = assignments live as long as the mission
+        createdBy: { type: [string, 'null'] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Objective:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        missionId: { type: string, format: uuid }
+        type: { $ref: '#/components/schemas/ObjectiveType' }
+        title: { type: string }
+        description: { type: [string, 'null'] }
+        targetQuantity: { type: integer }
+        unit: { type: [string, 'null'] }
+        locationFrom: { type: [object, 'null'], additionalProperties: true, description: 'Legacy opaque payload (game server). Deprecated — the POI reference lives in `params.zone` / `params.source`.' }
+        locationTo: { type: [object, 'null'], additionalProperties: true, description: 'Legacy opaque payload (game server). Deprecated — the POI reference lives in `params.zone`.' }
+        order: { type: integer }
+        weight:
+          type: integer
+          description: >
+            Weight of this objective in the partial-completion ratio (1 = equal share);
+            required objectives only
+        isBonus:
+          type: boolean
+          description: >
+            Optional objective: never blocks nor is blocked by scenario ordering, left out
+            of the completion gate and of the partial ratio
+        bonusReward: { $ref: '#/components/schemas/RewardComponent' }
+        status: { $ref: '#/components/schemas/ObjectiveStatus' }
+        currentProgress: { type: integer }
+        params:
+          type: [object, 'null']
+          additionalProperties: true
+          description: Kind-specific structured params (validated by the kind's params schema)
+        payload: { type: [object, 'null'], additionalProperties: true, description: 'Free-form extras owned by the game server (script step, NPC id, …)' }
+        state: { type: [object, 'null'], additionalProperties: true, description: 'Service-owned internal state (latched facts like `pickedUpAt`). Written by the service during evaluation, not by the game.' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    Assignment:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        missionId: { type: string, format: uuid }
+        playerId: { type: string, format: uuid }
+        holderType: { $ref: '#/components/schemas/AssigneeHolderType' }
+        status: { $ref: '#/components/schemas/AssignmentStatus' }
+        acceptedAt: { type: string, format: date-time }
+        deadlineAt: { type: [string, 'null'], format: date-time }
+        completedAt: { type: [string, 'null'], format: date-time }
+        rewardShares:
+          type: [array, 'null']
+          description: Frozen share of every reward component, fixed at completion
+          items: { $ref: '#/components/schemas/RewardComponent' }
+        rewardAmount:
+          type: [integer, 'null']
+          description: Frozen credits share at completion (used by escrow refund math)
+        completionRatio:
+          type: integer
+          description: >
+            Weighted share of the required objectives at hand-in, in basis points
+            (10000 = full completion, frozen so a settlement retry pays the same amounts)
+        rewardSettled: { type: boolean, description: Credits phase settled }
+        rewardExternalId: { type: string }
+        rewardSettledAt: { type: [string, 'null'], format: date-time }
+        rewardDetails: { type: [object, 'null'], additionalProperties: true }
+        settledComponents:
+          type: array
+          description: Item components already granted (`item:<itemId>`), each at most once
+          items: { type: string }
+
+    PlayerMission:
+      type: object
+      properties:
+        assignment: { $ref: '#/components/schemas/Assignment' }
+        mission:
+          oneOf:
+            - { $ref: '#/components/schemas/Mission' }
+            - { type: 'null' }
+
+    MissionSummary:
+      type: object
+      description: Per-participant counters and the weighted progress of a mission
+      properties:
+        assignments: { type: integer }
+        active: { type: integer }
+        completed: { type: integer }
+        partial: { type: integer }
+        abandoned: { type: integer }
+        expired: { type: integer }
+        progressBp:
+          type: integer
+          description: Weighted progress of the required objectives, in basis points (10000 = all done)
+
+    MissionChainEntry:
+      type: object
+      description: One mission that must be completed before the mission can be accepted
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        status: { type: string, description: Status of the required mission, or `unknown` when it no longer exists }
+
+    MissionDetail:
+      type: object
+      description: Internal mission detail served by `GET /api/internal/missions/{missionId}`
+      required: [mission, objectives, assignments]
+      properties:
+        mission: { $ref: '#/components/schemas/Mission' }
+        objectives:
+          type: array
+          description: Every objective, in declaration order
+          items: { $ref: '#/components/schemas/Objective' }
+        assignments:
+          type: array
+          description: Every assignment of the mission, whatever its status (who took it)
+          items: { $ref: '#/components/schemas/Assignment' }
+        players:
+          type: object
+          description: Assignee id → display name (empty when Social is unreachable)
+          additionalProperties: { type: string }
+        group:
+          description: The group this mission is shared with / claimed by, or null
+          oneOf:
+            - { $ref: '#/components/schemas/MissionGroup' }
+            - { type: 'null' }
+        chain:
+          type: array
+          description: Missions that must be completed before this one can be accepted
+          items: { $ref: '#/components/schemas/MissionChainEntry' }
+        summary: { $ref: '#/components/schemas/MissionSummary' }
+
+    MissionGroup:
+      type: object
+      description: Group a mission is shared with / claimed by (resolved through Social)
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+
+    Settlement:
+      type: object
+      properties:
+        settled: { type: boolean }
+        skipped: { type: boolean }
+        reason: { type: string, example: credited }
+        assignment: { $ref: '#/components/schemas/Assignment' }
+
+    CreateMission:
+      type: object
+      required: [title, objectives]
+      properties:
+        title: { type: string, maxLength: 200 }
+        description: { type: string, maxLength: 4000 }
+        kind: { $ref: '#/components/schemas/MissionKind' }
+        category: { $ref: '#/components/schemas/MissionCategory' }
+        issuerType: { $ref: '#/components/schemas/IssuerType' }
+        issuerId: { type: [string, 'null'], format: uuid }
+        rewards:
+          type: array
+          description: Reward components (empty/omitted for reputation-only missions)
+          items: { $ref: '#/components/schemas/RewardComponent' }
+        prerequisites:
+          type: array
+          maxItems: 20
+          items: { $ref: '#/components/schemas/Prerequisite' }
+        maxAssignees: { type: integer, minimum: 1, maximum: 1000, default: 1 }
+        groupClaimable:
+          type: boolean
+          default: false
+          description: 'Limited to a single group: the first group to accept claims it'
+        isEvent:
+          type: boolean
+          default: false
+          description: Big event mission (open multijoueur)
+        zones:
+          type: array
+          description: Availability zones (empty = global)
+          items: { $ref: '#/components/schemas/MissionZone' }
+        scriptId: { type: [string, 'null'] }
+        expiresAt: { type: [string, 'null'], format: date-time }
+        objectives:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items: { $ref: '#/components/schemas/CreateObjective' }
+        escrow:
+          type: object
+          description: >
+            Internal API only. Funds the credits reward from a treasury instead of the
+            faucet (requires `mission:escrow:politics`). Requires a credits reward and no
+            item reward.
+          required: [payerType, payerId]
+          additionalProperties: false
+          properties:
+            payerType: { type: string, enum: [politics], description: Political entity (commune … federation, owned by Social) }
+            payerId: { type: string, format: uuid, description: Political entity id whose treasury is debited }
+
+    CreateObjective:
+      type: object
+      required: [type, title]
+      properties:
+        type:
+          type: string
+          description: Objective kind (registry-validated, see GET /api/missions/kinds)
+          example: deliver_material
+        title: { type: string, maxLength: 200 }
+        description: { type: string, maxLength: 2000 }
+        targetQuantity: { type: integer, minimum: 1, description: Quantity target (ignored by non-quantity kinds) }
+        unit: { type: string }
+        locationFrom: { type: object, additionalProperties: true }
+        locationTo: { type: object, additionalProperties: true }
+        order: { type: integer, minimum: 0 }
+        params:
+          type: object
+          additionalProperties: true
+          description: >
+            Kind-specific structured params (validated by the kind's params schema). For
+            `visit`: `{ zone: { kind: "poi", poiId } }`. For `deliver_material`:
+            `{ goodType, zone: { kind: "poi", poiId } }`. For `transport`:
+            `{ goodType, source: { kind: "poi", poiId }, zone: { kind: "poi", poiId } }`.
+            For `transport_passenger`: `{ passengerId, zone: { kind: "poi", poiId } }`.
+        payload: { type: object, additionalProperties: true }
+
+    UpdateMission:
+      type: object
+      minProperties: 1
+      description: >
+        Presentation fields only: the spec (objectives, prerequisites, rewards, capacity)
+        is immutable after creation. `zones` is mutable (no escrow impact): the game
+        re-zones live events through the internal API.
+      properties:
+        title: { type: string, maxLength: 200 }
+        description: { type: [string, 'null'], maxLength: 4000 }
+        expiresAt: { type: [string, 'null'], format: date-time }
+        isEvent:
+          type: boolean
+          description: Declare (or lift) the big event flag (game server only)
+        zones:
+          type: array
+          items: { $ref: '#/components/schemas/MissionZone' }
+
+    ValidateMission:
+      type: object
+      required: [mission]
+      description: Dry-run of a mission spec (no persistence, no escrow)
+      properties:
+        mode:
+          type: string
+          enum: [player, internal]
+          default: internal
+          description: '`player` also enforces the reward-required and escrowed-item rules'
+        mission: { $ref: '#/components/schemas/CreateMission' }
+
+    ValidatedSpec:
+      type: object
+      properties:
+        valid: { type: boolean, const: true }
+        spec:
+          type: object
+          description: Normalized spec (kind params parsed, defaults applied)
+          properties:
+            objectives:
+              type: array
+              items: { $ref: '#/components/schemas/CreateObjective' }
+            prerequisites:
+              type: array
+              items: { $ref: '#/components/schemas/Prerequisite' }
+            rewards:
+              type: array
+              items: { $ref: '#/components/schemas/RewardComponent' }
+
+    CreatePlayerMission:
+      type: object
+      required: [title, rewards, objectives]
+      properties:
+        title: { type: string, maxLength: 200 }
+        description: { type: string, maxLength: 4000 }
+        category: { $ref: '#/components/schemas/MissionCategory' }
+        visibility: { $ref: '#/components/schemas/MissionVisibility' }
+        corporationId:
+          type: [string, 'null']
+          format: uuid
+          description: Required when `visibility` is `corporation`
+        politicalEntityId:
+          type: [string, 'null']
+          format: uuid
+          description: Alternative issuer (political entity); mutually exclusive with corporationId
+        escrowSource:
+          type: string
+          enum: [creator, issuer]
+          default: creator
+          description: >
+            `creator` debits the creator's wallet (default); `issuer` debits the issuing
+            organization's treasury (corporation or political entity — requires the
+            `mission:treasury:commit` action: CEO/head, or `manage_corporation` /
+            `manage_treasury`)
+        rewards:
+          type: array
+          minItems: 1
+          description: >
+            Reward components escrowed from the creator: the credits component is debited
+            from their wallet, each item component is held in their inventory.
+          items: { $ref: '#/components/schemas/RewardComponent' }
+        prerequisites:
+          type: array
+          maxItems: 20
+          items: { $ref: '#/components/schemas/Prerequisite' }
+        maxAssignees: { type: integer, minimum: 1, maximum: 100, default: 1 }
+        groupClaimable:
+          type: boolean
+          default: false
+          description: 'Limited to a single group: the first group to accept claims it'
+        zones:
+          type: array
+          description: Availability zones (empty = global)
+          items: { $ref: '#/components/schemas/MissionZone' }
+        expiresAt: { type: [string, 'null'], format: date-time }
+        objectives:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items: { $ref: '#/components/schemas/CreateObjective' }
+
+    VerifyResult:
+      type: object
+      properties:
+        objectives:
+          type: array
+          items: { $ref: '#/components/schemas/Objective' }
+        allComplete: { type: boolean }
+
+    ConfirmResult:
+      type: object
+      properties:
+        objective: { $ref: '#/components/schemas/Objective' }
+        objectives:
+          type: array
+          items: { $ref: '#/components/schemas/Objective' }
+        allComplete: { type: boolean }
+
+    MissionKindsCatalog:
+      type: object
+      description: Discovery catalogue consumed by mission builders
+      properties:
+        categories:
+          type: array
+          items: { $ref: '#/components/schemas/MissionCategory' }
+        objectiveKinds:
+          type: array
+          items:
+            type: object
+            properties:
+              kind: { type: string }
+              name: { type: string, description: 'Short localized label for mission builders (from `Accept-Language`, default `en`)' }
+              evaluation:
+                type: string
+                enum: [service, issuer]
+                description: '`service`: measured by this service against player-state + inventory, `issuer`: confirmed by the mission creator. There is deliberately **no** `game` mode — the game server never certifies an objective.'
+              quantity: { type: boolean, description: Uses targetQuantity/currentProgress accumulation }
+              progress:
+                type: string
+                enum: [snapshot, highWater]
+                description: >
+                  `snapshot`: stored progress = measured value (can regress, e.g. `owns_items`);
+                  `highWater`: stored = max(stored, measured), never regresses (delivery,
+                  transport, visit, passenger).
+              summary: { type: string, description: 'Localized from the ambient language (`Accept-Language`); `{name}` field references stay literal' }
+              categories:
+                description: Mission categories this kind may be used on (`all` = every category)
+                oneOf:
+                  - type: string
+                    const: all
+                  - type: array
+                    items: { $ref: '#/components/schemas/MissionCategory' }
+              params: { type: object, additionalProperties: true, description: JSON Schema of the kind's params }
+        prerequisiteKinds:
+          type: array
+          items:
+            type: object
+            properties:
+              kind: { type: string }
+              name: { type: string, description: 'Short localized label for mission builders (from `Accept-Language`, default `en`)' }
+              summary: { type: string }
+              categories:
+                description: Mission categories this prerequisite may be used on (`all` = every category)
+                oneOf:
+                  - type: string
+                    const: all
+                  - type: array
+                    items: { $ref: '#/components/schemas/MissionCategory' }
+              params: { type: object, additionalProperties: true }
+        rewards: { type: object, additionalProperties: true, description: JSON Schema of the reward component list }
+
+    Place:
+      type: object
+      description: >
+        A player's position, relative to the body named by `scene` (local frame, metres
+        from its centre). In open space (`scene: "space"`) the frame is the system itself.
+        `system` is always a system name in practice.
+      properties:
+        system: { type: string, maxLength: 64, description: 'Star system' }
+        scene: { type: string, maxLength: 128, description: 'Body or sub-scene in the system; `"space"` = open space (frame of the system)' }
+        x: { type: number, description: Metres from the centre of the body named by scene }
+        y: { type: number, description: Metres in the frame of the body named by scene }
+        z: { type: number, description: Metres in the frame of the body named by scene }
+
+    PlayerStateEntry:
+      type: object
+      description: One player's state, pushed by the game server on a heartbeat
+      required: [playerId]
+      properties:
+        playerId: { type: string, format: uuid }
+        place: { oneOf: [{ $ref: '#/components/schemas/Place' }, { type: 'null' }], description: 'Player position; `null` when unknown (outside every zone)' }
+        onFoot: { type: boolean, default: true, description: True when the player is on foot (not seated in a vehicle) }
+        passenger: { type: boolean, default: false, description: True when the player is seated in a **non-driver** seat (excluded from passenger transport objectives)
+        }
+        carried:
+          type: object
+          description: Carried-goods snapshot (goodType → quantity). Not a delta — a full snapshot.
+          additionalProperties: { type: integer, minimum: 0 }
+
+    PlayerStatesBody:
+      type: object
+      required: [players]
+      properties:
+        players:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items: { $ref: '#/components/schemas/PlayerStateEntry' }
+
+    ShareMission:
+      type: object
+      required: [groupId]
+      properties:
+        groupId:
+          type: string
+          format: uuid
+          description: Target group (must exist in Social)
+
+    EventFlag:
+      type: object
+      required: [enabled]
+      properties:
+        enabled: { type: boolean, description: Whether the mission is a big event mission }
+        maxAssignees:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          description: Optional new capacity (events allow up to 1000)
+
+    Error:
+      type: object
+      required: [error, message, status]
+      properties:
+        error: { type: string, example: VALIDATION_ERROR }
+        message: { type: string }
+        status: { type: integer, example: 400 }

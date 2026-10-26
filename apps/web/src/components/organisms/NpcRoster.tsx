@@ -45,7 +45,7 @@ interface NpcRosterProps {
 }
 
 /**
- * The roster of NPCs (ADR 0026), filtered by name or login, village, role, enabled and
+ * The roster of NPCs (ADR 0031), filtered by name or login, village, role, enabled and
  * connected, a page at a time: role (and storekeeper slot), village, live state, current action
  * (a manual task marked), last seen. Rows can be selected for a bulk spawn, despawn or
  * deletion; `npc.manage` spawns or despawns one from its row.

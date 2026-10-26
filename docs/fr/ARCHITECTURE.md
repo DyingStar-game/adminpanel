@@ -18,7 +18,9 @@ sont ceux de l'équipe back, déployés depuis leur dépôt
 | `social` | Modération (signalements, sanctions, réputation), joueurs, organisations | `SOCIAL_URL` |
 | `economie` | Tableau de bord, portefeuilles et trésoreries, réglages et impôts, mouvements d'argent | `ECONOMIE_URL` |
 | `universesimulator` | Simulation de l'économie d'une fédération par village (ADR 0025) | `UNIVERSESIMULATOR_URL` |
-| `npc` | PNJ sur les serveurs : interrupteur global, ajout et retrait (création, apparition, disparition, suppression), liste avec état en direct, routine d'un PNJ, tâches manuelles, journaux, événements et configuration, plannings et actions par activité, lieux de travail des villages (ADR 0026) | `NPC_URL` |
+| `npc` | PNJ sur les serveurs : interrupteur global, ajout et retrait (création, apparition, disparition, suppression), liste avec état en direct, routine d'un PNJ, tâches manuelles, journaux, événements et configuration, plannings et actions par activité, lieux de travail des villages (ADR 0031) | `NPC_URL` |
+| `mission` | Le catalogue des missions, tous statuts, la page d'une mission et son annulation (ADR 0026–0028 ; demande `svc-admin`) | `MISSION_URL` |
+| `inventory` | Les noms des lieux d'une mission, ses POI (ADR 0026 ; demande `svc-admin`) | `INVENTORY_URL` |
 | Keycloak | Connexion et rôles ; le compte de service `svc-admin` pour les API internes des services | `OIDC_*`, `SVC_ADMIN_*` |
 | GitHub | Définitions des types d'objets (`*_def.json` de `horizonserver`), avec une copie embarquée | `DEFINITIONS_*` |
 
@@ -39,7 +41,7 @@ il sert aussi la SPA buildée : le panneau est **une image, un port** (3000).
                                      │      │      │      │
                          persistence ◄┘      │      │      └► Keycloak (OIDC, svc-admin)
                          (REST /items)       │      │
-                                    social ◄─┘      └─► economie
+                                    social ◄─┘      └─► economie, universesimulator, npc, mission, inventory
                   jeton de la personne : API Admin · svc-admin : API Interne
 ```
 
@@ -61,7 +63,8 @@ il sert aussi la SPA buildée : le panneau est **une image, un port** (3000).
   changé la même clé entre-temps), refuse les types d'objets inconnus et mutualise les lectures
   identiques (ADR 0009, 0015).
 - **Le live** est du polling (ADR 0009) : l'item ouvert toutes les 5 s, les listes toutes les
-  5 s, les compteurs toutes les 15 s. Le jeu enregistre un item environ toutes les 60 s : le
+  5 s, les compteurs toutes les 15 s, un PNJ à l'écran et ses lignes de journal toutes les 3 s
+  (ADR 0031). Le jeu enregistre un item environ toutes les 60 s : le
   panneau ne peut pas être plus frais.
 
 Toutes les routes, avec leur permission : [docs/bff-api.md](../bff-api.md).
@@ -83,14 +86,15 @@ Toutes les routes, avec leur permission : [docs/bff-api.md](../bff-api.md).
 │   └── bff/                  # BFF Hono
 │       └── src/
 │           ├── auth/         # OIDC, sessions, contrôles de permission, jeton svc-admin
-│           ├── clients/      # persistence, social, economie (upstream.ts : délais, erreurs)
+│           ├── clients/      # persistence, social, economie, universesimulator, npc, mission, inventory
+│           │                 #   (upstream.ts : délais, erreurs)
 │           ├── services/     # items (fusion, contrôles, duplication, carte), définitions
-│           ├── routes/       # items, bodies, social, economie
+│           ├── routes/       # items, bodies, social, economie, universesimulator (/api/simulation), npc, mission
 │           └── definitions/  # fallback.json (copie des définitions)
 ├── packages/
 │   ├── schemas/              # Zod : contrat de persistance, API du BFF, permissions, géométrie
 │   ├── contracts/            # OpenAPI figées des services de jeu et Zod généré
-│   └── testing/              # fixtures et mocks MSW (persistence, social, economie)
+│   └── testing/              # fixtures et mocks MSW (persistence, social, economie, universesimulator, npc, mission, inventory)
 ├── docker/                   # compose (dev, app, keycloak), Dockerfile.prod, keycloak/
 ├── docs/                     # adr/, design/, fr/, plans des lots, bff-api.md
 └── Makefile                  # toutes les commandes (Docker ou Podman, Node et pnpm figés)

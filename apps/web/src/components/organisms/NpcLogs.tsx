@@ -26,7 +26,7 @@ const compact = (fields: Record<string, unknown>) =>
     .join(' ');
 
 /**
- * An NPC's log lines as they come (ADR 0026): the service keeps them in memory (lost when it
+ * An NPC's log lines as they come (ADR 0031): the service keeps them in memory (lost when it
  * restarts); the new ones are read every 3 s and appended, at a minimum level. The view follows
  * the last line unless auto-scroll is off; it can be emptied without stopping.
  */

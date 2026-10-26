@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeftIcon, GavelIcon, TrendingUpIcon } from 'lucide-react';
 import type { Sanction } from '@dyingstar-admin/contracts/social';
 import { CopyButton } from '@/components/atoms/CopyButton';
-import { MonoText } from '@/components/atoms/MonoText';
 import { FactTiles } from '@/components/molecules/FactTiles';
 import { PlayerIdentity } from '@/components/molecules/PlayerIdentity';
 import { PlayerOrganisations } from '@/components/molecules/PlayerOrganisations';
@@ -28,6 +27,7 @@ import { ApiError } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
 import { moderationErrorKey } from '@/lib/moderationErrors';
 import { activeSanctions } from '@/lib/sanctions';
+import { IdLabel } from '@/components/molecules/IdLabel';
 
 interface PlayerRecordPageProps {
   playerId: string;
@@ -110,7 +110,7 @@ export function PlayerRecordPage({
               {t(`moderation.player.status.${profile.status}`)}
             </Badge>
           )}
-          <MonoText tone="subtle">{player.playerId}</MonoText>
+          <IdLabel id={player.playerId} full />
           <CopyButton value={player.playerId} />
         </div>
       }

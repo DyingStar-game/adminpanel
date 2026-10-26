@@ -1,7 +1,8 @@
-# 0026. NPCs section: the `npc` service in the panel
+# 0031. NPCs section: the `npc` service in the panel
 
 - **Status:** Proposed
-- **Date:** 2026-10-25
+- **Date:** 2026-10-25 (written as 0026; renumbered 0031 on 2026-10-26, 0026 being taken by
+  the mission objective schematics)
 - **Deciders:** maintainer, back team (`npc`)
 - **Scope:** Game services (`npc`), Frontend
 - **Builds on:** [ADR 0024](./0024-game-services-social-first.md) (the per-service pattern),

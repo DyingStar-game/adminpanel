@@ -31,7 +31,7 @@ interface NpcPageProps {
 }
 
 /**
- * An NPC (ADR 0026): its overview and actions, routine, manual tasks, log lines, events and
+ * An NPC (ADR 0031): its overview and actions, routine, manual tasks, log lines, events and
  * configuration, each a tab of the URL; polled every 3 s while on screen (ADR 0009).
  */
 export function NpcPage({

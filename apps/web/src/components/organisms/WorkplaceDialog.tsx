@@ -37,7 +37,7 @@ interface WorkplaceDialogProps {
 }
 
 /**
- * Sets by hand the cargo depot a mining village's storekeepers work at (ADR 0026): a
+ * Sets by hand the cargo depot a mining village's storekeepers work at (ADR 0031): a
  * persistence UUID, with its code and scene when known; it wins over the automatic sources
  * (universesimulator, the world data). Clearing it lets the next assignment resolve it again.
  */

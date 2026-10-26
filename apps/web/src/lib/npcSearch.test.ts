@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { NpcSearchSchema, NpcsSearchSchema } from './npcSearch';
 
-describe('NPCs URL state (ADR 0026)', () => {
+describe('NPCs URL state (ADR 0031)', () => {
   it('opens on the roster, first page', () => {
     expect(NpcsSearchSchema.parse({})).toEqual({ tab: 'roster', page: 1 });
   });

@@ -7,7 +7,7 @@ import { useInProcessBff } from '@/test/bff';
 import { renderWithProviders } from '@/test/render';
 import { NpcsPage } from './NpcsPage';
 
-describe('NpcsPage (ADR 0026)', () => {
+describe('NpcsPage (ADR 0031)', () => {
   it('opens on the roster under the switch, and changes tab through the URL state', async () => {
     useInProcessBff();
     const onSearchChange = vi.fn();

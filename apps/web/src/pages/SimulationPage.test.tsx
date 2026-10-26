@@ -11,7 +11,11 @@ describe('SimulationPage (ADR 0025)', () => {
     useInProcessBff();
     const onSearchChange = vi.fn();
     renderWithProviders(
-      <SimulationPage search={{ tab: 'overview' }} onSearchChange={onSearchChange} />,
+      <SimulationPage
+        search={{ tab: 'overview' }}
+        onSearchChange={onSearchChange}
+        onOpenMission={vi.fn()}
+      />,
     );
 
     expect(await screen.findByRole('heading', { name: 'Simulation' })).toBeInTheDocument();
@@ -26,7 +30,13 @@ describe('SimulationPage (ADR 0025)', () => {
 
   it('shows the tab of the URL', async () => {
     useInProcessBff();
-    renderWithProviders(<SimulationPage search={{ tab: 'treasury' }} onSearchChange={vi.fn()} />);
+    renderWithProviders(
+      <SimulationPage
+        search={{ tab: 'treasury' }}
+        onSearchChange={vi.fn()}
+        onOpenMission={vi.fn()}
+      />,
+    );
 
     expect(
       await screen.findByRole('table', { name: 'Money issued into the treasury' }),
@@ -41,6 +51,7 @@ describe('SimulationPage (ADR 0025)', () => {
         <SimulationPage
           search={{ tab: 'network', village: sim.m0002, body: ids.planet }}
           onSearchChange={vi.fn()}
+          onOpenMission={vi.fn()}
         />
       </div>,
     );

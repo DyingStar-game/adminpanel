@@ -5,10 +5,22 @@ Guidance for Claude Code when working in this repository.
 ## Golden rule — Git
 
 - **Never commit, amend, tag or push on your own.** The maintainer creates every commit.
-- Exception granted by the maintainer: commits are allowed **only on the working branch
-  `feature/manage-persistence`**, under the maintainer's git identity. Never on any other branch,
-  never amend, never push.
+- Exception granted by the maintainer: commits are allowed **only on the working branches
+  `feature/manage-persistence` and `feature/missions`** (the latter from 2026-10-23, on top of
+  `origin/develop`, for a PR the maintainer opens once satisfied), under the maintainer's git
+  identity. Never on any other branch, never amend, never push.
 - Never add `Co-Authored-By` or any AI attribution to commits or PR descriptions.
+- **PR descriptions follow the organisation's template** (`DyingStar-game/.github` ›
+  `.github/PULL_REQUEST_TEMPLATE.md`, which `gh pr create --body-file` does not apply): fill it,
+  never hand-roll the body. `## Description`: one line, then a `### <topic> (ADR nnnn)` section
+  per topic, bullets with a **bold lead**, a `### Other`, and whether `make check` passes (model:
+  `DyingStar-game/launcher` PR #44). `## Changelog`: the admin panel is not a component of the
+  player-facing changelog (maintainer, 2026-10-23: staff only, not in `components.json`), so its
+  `CHANGELOG_EN` / `CHANGELOG_FR` blocks are deleted, as ADR 0001 of `DyingStar-game/changelog`
+  says for "no player-visible change"; the skill `changelog-entry` (plugin
+  `changelog@dyingstar`, `.claude/settings.json`) holds those rules. Keep the description
+  current on each push; `gh pr edit` fails here (Projects classic deprecation): update it with
+  `gh api -X PATCH repos/DyingStar-game/adminpanel/pulls/<n> -F body=@<file>`.
 - Allowed otherwise: creating/switching branches and read-only commands (`git status`, `git diff`,
   `git log`).
 
@@ -24,8 +36,9 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 | Install dependencies | `make install` |
 | Any pnpm command | `make pnpm <cmd>` — flags go through `ARGS`, e.g. `make pnpm add zod ARGS="--filter @dyingstar-admin/web"` |
 | Dev servers (Vite :5173 + BFF :3000) | `make pnpm dev` |
-| Test data in minikube's `social` and `economie` (after each reset) | `make seed-social` (`make up K8S=1`, Keycloak import done; replays skipped); `make reset-social` empties `social` first |
-| Re-pin the game services' OpenAPI, regenerate their Zod schemas | `make contracts-update` |
+| Test data in minikube's `social` and `economie` (after each reset) | `make seed-social` (`make up K8S=1`, Keycloak import done; replays skipped); `make reset-social` empties `social` first, `make reset-mission` `mission` |
+| Minikube's `universesimulator` (empty otherwise) | `make seed-simulation` (SandBox's villages copied into minikube's persistence, the ARES world `docker/minikube/universesimulator/world-ares.json` imported, a tick; rerun-safe); `make reset-simulation` empties it (and its warehouses in `inventory`) first |
+| Re-pin the game services' OpenAPI, regenerate their Zod schemas | `make contracts-update` (one service: `SERVICE=mission`) |
 | Checks before committing | `make check` (format, lint, typecheck, test, format check); commit only when it passes |
 | Testers profile (build + serve on :3000) | `make start` / `make stop` |
 | Production image | `make image` |
@@ -41,14 +54,17 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
   and `src/pages`; import rules are enforced by ESLint (ADR 0014).
 - `apps/bff` — Hono BFF; the only component holding internal URLs. Serves the built SPA in production.
 - `packages/schemas` — shared Zod schemas (persistence contract, BFF API, permissions).
-- `packages/contracts` — the game services' pinned OpenAPI (`social`, `economie`) and their
-  generated Zod schemas; `packages/testing` — fixtures and MSW mocks (persistence, `social`,
-  `economie`).
+- `packages/contracts` — the game services' pinned OpenAPI (`social`, `economie`,
+  `universesimulator`, `npc`, `mission`, `inventory`) and their generated Zod schemas;
+  `packages/testing` — fixtures and MSW mocks (persistence and the same services).
 - `docker/` — compose file (`app`, `dev` services) and `Dockerfile.prod`.
 
 ## Conventions
 
 - Commit messages: Conventional Commits with the step as scope (`feat(bff): …`).
+- An id on screen goes through `molecules/IdLabel` (short, whole in its title, copy button) or,
+  when it is a way to a page, `molecules/EntityLink` (persistence references: `UuidLink`): never a
+  bare `shortId`.
 - TypeScript strict; code, comments and contributor docs in English; UI strings in both `en` and
   `fr` (`apps/web/src/i18n/locales/`).
 - Tests next to the code (Vitest, Testing Library, MSW) — ADR 0013.
@@ -58,12 +74,14 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 ## Where we are
 
 **Lot 2 (sign-in, game services) is in progress: read
-[`docs/lot-2-plan.md`](./docs/lot-2-plan.md) first** (status, "where to resume", local setup,
-open questions for the back team), then the ADR index. Done: sign-in, `social` (moderation,
+[`docs/lot-2-plan.md`](./docs/lot-2-plan.md) first** (status, "where to resume", local setup),
+then the ADR index. Questions to the back team: [`docs/back-team-questions.md`](./docs/back-team-questions.md)
+(stable numbers; a new one takes the next, an answered one moves to its Answered section). Done: sign-in, `social` (moderation,
 players, report actions, organisations read and managed), one game server per panel, `economie`
 reading (O.1), settings (O.2: corporations, political taxes, assessments) and money movements
-(O.3: credit, debit, mint). **Next: `inventory`**, same pattern. Much was not
-tried live yet: the plan says what. Lot 1 (persistence items) is done:
+(O.3: credit, debit, mint), `mission`'s catalogue (O.4) and a mission's page (O.5, checked live on
+minikube), cancelling a mission (ADR 0028), crates (ADR 0029). **Next: `inventory`**, then
+`market`, same pattern. Much was not tried live yet: the plan says what. Lot 1 (persistence items) is done:
 [`docs/lot-1-plan.md`](./docs/lot-1-plan.md).
 Contributor docs: `ONBOARDING.md`, `ARCHITECTURE.md`, `docs/bff-api.md` (keep them in step when
 routes, services or the setup change).
@@ -140,15 +158,16 @@ Views adapt to the data through declarative files, validated with Zod at load ti
 
 - **Type profile — per `object_type`** ([ADR 0008](./docs/adr/0008-combined-navigation-type-aware-views.md)),
   `apps/web/src/lib/profiles/<type>.ts`, registered in `lib/profiles/index.ts`: table columns,
-  headline facts, labelled relations, renderers (`namedMap`, `inlineList`, `angle`,
-  `orbitalSamples`), children order, spawn distance / height, map flags (`map.body`,
+  headline facts, labelled relations, renderers (`namedMap`, `inlineList`, `angle`, `size`,
+  `orbitalSamples`, `goods` — what a crate holds, ADR 0029), children order, spawn distance / height, map flags (`map.body`,
   `map.hidden`). Fields: `lib/profiles/schema.ts`.
 - **Scene schematic — per model `scenename`** ([ADR 0016](./docs/adr/0016-scene-schematics.md)),
-  a top-view drawing of one model bound to live data (the truck today). To add one:
+  a top-view drawing of one model bound to live data (the truck, the crates). To add one:
   1. Look at real items of that model first (`GET /items?scenename=…`) to get the paths.
   2. Create `apps/web/src/lib/schematics/<model>.ts` on the model of `truck.ts`: exact
      `scenename` (or a `*` pattern within one path segment), grid `size`, then `shapes`
-     (`body`, `cargo`, `battery` — a charge bar in kWh, `celestial` — a planet, moon or star from its wiki facts), `seats`, `bays` (with an optional access `hatch`, drawn like a door),
+     (`body`, `cargo` — with `contents` (the children it carries) or `goods` (the item's own
+     load, a crate's `content`, ADR 0029), `battery` — a charge bar in kWh, `celestial` — a planet, moon or star from its wiki facts), `seats`, `bays` (with an optional access `hatch`, drawn like a door),
      `lights` (a lens on the body's edge, a small cone when its boolean is true),
      `doors` (a door hinges at its front end and swings out on its side of the drawing) and
      `readouts` (`gauge`, `toggle`, `value`, `energy`). Component kinds and tiers (engine,
@@ -162,10 +181,23 @@ Views adapt to the data through declarative files, validated with Zod at load ti
 The generic organism `SchematicCard` draws any schematic on the object page; nothing else to
 wire.
 
+- **Objective schematic — per `mission` objective kind** ([ADR 0026](./docs/adr/0026-mission-objective-schematics.md)),
+  `apps/web/src/lib/objectiveSchematics/<kind>.ts`, registered in its `index.ts`: the kind's
+  `places` (POI paths in `params` and their role `pickup` / `dropoff` / `target`), `good`,
+  `player`, `pooled`, `loaded` (a path in `state`) and how its `progress` reads; then its
+  "what to do" sentence in `en.ts` and `fr.ts` (`missions.objectiveKinds.<kind>.instruction`),
+  following the kind's code in `mission`'s `src/kinds/objectives/`. A test checks each file
+  against a fixture objective of its kind (`packages/testing`, `missionMock.ts`). The POIs are
+  named from `inventory` by the BFF for who holds `inventory:read`; `MissionObjectives` draws
+  every objective, and `MissionPlacesMap` puts the places of every objective on one map
+  ([ADR 0027](./docs/adr/0027-mission-places-map.md), `lib/places.ts` › `missionPlaces`), among
+  the planet's fixed landmarks (`LANDMARK_TYPES`) for who reads persistence.
+
 - **Game service — per service** ([ADR 0024](./docs/adr/0024-game-services-social-first.md)),
-  `social` and `economie` being the models: pin its OpenAPI in `packages/contracts`
-  (`SERVICES` in `src/services.ts`, its entry in `openapi-ts.config.ts` and `package.json`
-  exports, `make contracts-update`; a GitHub sync test alerts on drift), a client in
+  `social`, `economie` and `mission` being the models: pin its OpenAPI in `packages/contracts`
+  (`SERVICES` and its branch in `SOURCE_REFS`, `src/services.ts`, its entry in
+  `openapi-ts.config.ts` and `package.json` exports, `make contracts-update`; a GitHub sync test
+  alerts on drift), a client in
   `apps/bff/src/clients/<service>.ts` on the shared `clients/upstream.ts` (timeouts, errors,
   `svc-admin`), curated routes `/api/<service>/…` guarded by a permission
   (`packages/schemas/src/permissions.ts`), its URL (`<SERVICE>_URL`, listed in `GET /api/panel`

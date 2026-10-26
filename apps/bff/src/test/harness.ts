@@ -4,11 +4,15 @@ import {
   createDataset,
   createPersistenceMock,
   createEconomieMock,
+  createInventoryMock,
+  createMissionMock,
   createSocialMock,
   createUniversesimulatorMock,
   createNpcMock,
   ECONOMIE_URL,
   NPC_URL,
+  INVENTORY_URL,
+  MISSION_URL,
   PERSISTENCE_URL,
   SOCIAL_URL,
   UNIVERSESIMULATOR_URL,
@@ -20,6 +24,8 @@ import type { AuditEntry } from '../lib/audit';
 import { createEconomieClient } from '../clients/economie';
 import { createNpcClient } from '../clients/npc';
 import { createUniversesimulatorClient } from '../clients/universesimulator';
+import { createInventoryClient } from '../clients/inventory';
+import { createMissionClient } from '../clients/mission';
 import { createSocialClient } from '../clients/social';
 import { createDefinitionsService } from '../services/definitions';
 
@@ -51,7 +57,8 @@ export const githubDefinitionsHandlers = [
 ];
 
 /**
- * Builds an app wired to fresh persistence, `social`, `economie`, `universesimulator` and `npc` mocks; returns them, with
+ * Builds an app wired to fresh persistence, `social`, `economie`, `universesimulator`, `npc`,
+ * `mission` and `inventory` mocks; returns them, with
  * the record of writes to the game services.
  */
 export function buildApp(
@@ -64,6 +71,8 @@ export function buildApp(
   const economie = createEconomieMock();
   const universesimulator = createUniversesimulatorMock();
   const npc = createNpcMock();
+  const mission = createMissionMock();
+  const inventory = createInventoryMock();
   const audited: AuditEntry[] = [];
   mswServer.use(
     ...persistence.handlers,
@@ -71,6 +80,8 @@ export function buildApp(
     ...economie.handlers,
     ...universesimulator.handlers,
     ...npc.handlers,
+    ...mission.handlers,
+    ...inventory.handlers,
     ...githubDefinitionsHandlers,
   );
   const app = createApp({
@@ -100,6 +111,16 @@ export function buildApp(
       timeoutMs: 1000,
     }),
     npc: createNpcClient({ baseUrl: NPC_URL, timeoutMs: 1000 }),
+    mission: createMissionClient({
+      baseUrl: MISSION_URL,
+      timeoutMs: 1000,
+      serviceToken: () => Promise.resolve('svc-admin-token'),
+    }),
+    inventory: createInventoryClient({
+      baseUrl: INVENTORY_URL,
+      timeoutMs: 1000,
+      serviceToken: () => Promise.resolve('svc-admin-token'),
+    }),
     audit: (entry) => audited.push(entry),
     ...options,
   });
@@ -110,5 +131,16 @@ export function buildApp(
       headers: { 'Content-Type': 'application/json', ...init.headers },
     });
 
-  return { app, persistence, social, economie, universesimulator, npc, audited, request };
+  return {
+    app,
+    persistence,
+    social,
+    economie,
+    universesimulator,
+    npc,
+    mission,
+    inventory,
+    audited,
+    request,
+  };
 }

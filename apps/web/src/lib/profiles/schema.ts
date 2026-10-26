@@ -12,6 +12,8 @@ export const RendererSchema = z.enum([
   'size',
   /** `positions[]` paired with `rotations[]`: table of orbital samples. */
   'orbitalSamples',
+  /** What a crate holds, `{ mineral, units, ore_volume }` (ADR 0029): "Gold · 66 L · 0.066 m³". */
+  'goods',
 ]);
 export type Renderer = z.infer<typeof RendererSchema>;
 

@@ -41,7 +41,7 @@ interface NpcPatternEditorProps {
 }
 
 /**
- * Edits a shift pattern (ADR 0026): its name (new ones), description and grid, days ×
+ * Edits a shift pattern (ADR 0031): its name (new ones), description and grid, days ×
  * planetary hours, painted with the letter picked in the legend; days added or removed (1 to
  * 14). Read only without `npc.manage`. Deleting it is confirmed (the service refuses while NPCs
  * follow it). Every write reloads the schedules of the running NPCs.

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import type { PlayerProfile } from '@dyingstar-admin/contracts/social';
 import { formatDateTime } from '@/lib/format';
 import { BBCodeText } from './BBCodeText';
+import { FactList } from './FactList';
 
 /**
  * What a player says of themselves: faction, role, biography, RP sheet; the biography and the
@@ -24,16 +25,7 @@ export function PlayerIdentity({ player }: { player: PlayerProfile }) {
   return (
     <section className="flex flex-col gap-2">
       <h2 className="text-sm font-semibold">{t('moderation.player.identity')}</h2>
-      {facts.length > 0 && (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
-          {facts.map(([label, value]) => (
-            <div key={label} className="contents">
-              <dt className="text-fg-3">{label}</dt>
-              <dd>{value}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
+      {facts.length > 0 && <FactList facts={facts} />}
       {player.biography && <BBCodeText text={player.biography} labels={bbcode} />}
       {story && (
         <div className="flex flex-col gap-1">

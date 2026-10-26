@@ -1,13 +1,12 @@
 import { useTranslation } from 'react-i18next';
 import type { Sanction } from '@dyingstar-admin/contracts/social';
-import { Chip } from '@/components/atoms/Chip';
-import { MonoText } from '@/components/atoms/MonoText';
 import { DataTable } from '@/components/molecules/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { usePlayerNames } from '@/hooks/useModeration';
 import { activeSanctions } from '@/lib/sanctions';
-import { formatDateTime, shortId } from '@/lib/format';
+import { formatDateTime } from '@/lib/format';
+import { EntityLink } from '@/components/molecules/EntityLink';
 
 interface SanctionsTableProps {
   sanctions: Sanction[];
@@ -49,9 +48,7 @@ export function SanctionsTable({
                 key: 'player',
                 header: t('moderation.columns.player'),
                 cell: (s: Sanction) => (
-                  <Chip variant="link" title={s.playerId} onClick={() => onOpenPlayer(s.playerId)}>
-                    {names.get(s.playerId) ?? <MonoText>{shortId(s.playerId)}</MonoText>}
-                  </Chip>
+                  <EntityLink id={s.playerId} label={names.get(s.playerId)} onOpen={onOpenPlayer} />
                 ),
               },
             ]

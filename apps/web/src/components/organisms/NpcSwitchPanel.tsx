@@ -11,7 +11,7 @@ import { formatDateTime } from '@/lib/format';
 import { writeError } from '@/lib/npcs';
 
 /**
- * The global switch of the NPCs on the servers (ADR 0026) and the counts: total, enabled,
+ * The global switch of the NPCs on the servers (ADR 0031) and the counts: total, enabled,
  * running, connected to Horizon. Turning it on or off is confirmed (it connects or disconnects
  * every enabled NPC), for `npc.manage` only; the others see its state.
  */

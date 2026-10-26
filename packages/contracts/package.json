@@ -8,13 +8,16 @@
     "./social": "./src/social/index.ts",
     "./economie": "./src/economie/index.ts",
     "./universesimulator": "./src/universesimulator/index.ts",
-    "./npc": "./src/npc/index.ts"
+    "./npc": "./src/npc/index.ts",
+    "./mission": "./src/mission/index.ts",
+    "./inventory": "./src/inventory/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "generate": "openapi-ts",
-    "contracts:update": "tsx scripts/update.ts && openapi-ts",
-    "social:seed": "tsx scripts/seed-social.ts"
+    "contracts:update": "tsx scripts/update.ts",
+    "social:seed": "tsx scripts/seed-social.ts",
+    "simulation:world": "tsx scripts/simulation-world.ts"
   },
   "dependencies": {
     "zod": "^4.6.5"

@@ -12,6 +12,8 @@ import { SIMULATION_TABS, type SimulationSearch } from '@/lib/simulationSearch';
 interface SimulationPageProps {
   search: SimulationSearch;
   onSearchChange: (next: SimulationSearch) => void;
+  /** Opens the mission a leg was published as (ADR 0026), for who may read missions. */
+  onOpenMission: (missionId: string) => void;
 }
 
 /**
@@ -19,7 +21,7 @@ interface SimulationPageProps {
  * treasury, each a tab of the URL. Only the tab on screen is mounted, so only its data is polled
  * (ADR 0009).
  */
-export function SimulationPage({ search, onSearchChange }: SimulationPageProps) {
+export function SimulationPage({ search, onSearchChange, onOpenMission }: SimulationPageProps) {
   const { t } = useTranslation();
   const set = (next: Partial<SimulationSearch>) => onSearchChange({ ...search, ...next });
   return (
@@ -68,6 +70,7 @@ export function SimulationPage({ search, onSearchChange }: SimulationPageProps) 
               village: search.village,
             }}
             onFiltersChange={(filters) => set(filters)}
+            onOpenMission={onOpenMission}
           />
         </TabsContent>
         <TabsContent value="prices" className="pt-4">

@@ -8,6 +8,7 @@ import {
   NetworkIcon,
   PanelLeftCloseIcon,
   PanelLeftOpenIcon,
+  ScrollTextIcon,
   ServerIcon,
   SettingsIcon,
   ShieldAlertIcon,
@@ -34,6 +35,7 @@ export type NavId =
   | 'economy'
   | 'simulation'
   | 'npcs'
+  | 'missions'
   | 'settings';
 
 interface SidebarProps {
@@ -79,6 +81,7 @@ const SECTIONS: {
       { id: 'moderation', icon: ShieldAlertIcon },
       { id: 'organisations', icon: Building2Icon },
       { id: 'economy', icon: CoinsIcon },
+      { id: 'missions', icon: ScrollTextIcon },
     ],
   },
   { title: 'configuration', items: [{ id: 'settings', icon: SettingsIcon, soon: true }] },
@@ -106,6 +109,7 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
       return services.includes('universesimulator') && can('simulation.view');
     }
     if (id === 'npcs') return services.includes('npc') && can('npc.view');
+    if (id === 'missions') return services.includes('mission') && can('mission.read');
     return true;
   };
   // A group left without any entry the account may see is hidden altogether.

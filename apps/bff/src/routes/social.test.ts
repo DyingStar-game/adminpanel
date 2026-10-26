@@ -22,6 +22,8 @@ describe('social moderation routes (ADR 0024)', () => {
         'economie-wallets',
         'universesimulator',
         'npc',
+        'mission',
+        'inventory',
       ],
     });
     // Without svc-admin's secret, organisations stay readable but not managed.
@@ -30,6 +32,8 @@ describe('social moderation routes (ADR 0024)', () => {
       economie: undefined,
       universesimulator: undefined,
       npc: undefined,
+      mission: undefined,
+      inventory: undefined,
     }).request('/api/panel');
     expect(await reading.json()).toMatchObject({ services: ['persistence', 'social'] });
 
@@ -38,6 +42,8 @@ describe('social moderation routes (ADR 0024)', () => {
       economie: undefined,
       universesimulator: undefined,
       npc: undefined,
+      mission: undefined,
+      inventory: undefined,
     }).request('/api/panel');
     expect(await without.json()).toMatchObject({ services: ['persistence'] });
     const alone = await buildApp({ persistenceUrl: undefined }).request('/api/panel');
@@ -49,6 +55,8 @@ describe('social moderation routes (ADR 0024)', () => {
         'economie-wallets',
         'universesimulator',
         'npc',
+        'mission',
+        'inventory',
       ],
     });
   });

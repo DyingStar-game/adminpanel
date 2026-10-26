@@ -35,7 +35,7 @@ interface NpcRemoveDialogProps {
 }
 
 /**
- * Removes NPCs from the servers (ADR 0026): despawns them (they stay in the roster, disabled)
+ * Removes NPCs from the servers (ADR 0031): despawns them (they stay in the roster, disabled)
  * or deletes them (runtime, Keycloak account and row, for good), either the rows selected or a
  * count picked by the service (the most recent enabled ones, storekeepers last), optionally in
  * one village. A deletion needs a typed confirmation.

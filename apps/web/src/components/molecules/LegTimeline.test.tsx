@@ -30,6 +30,9 @@ describe('LegTimeline', () => {
     expect(hops[1]).toHaveTextContent('F0001');
     expect(hops[1]).toHaveTextContent('M0002');
     expect(hops[1]).toHaveTextContent('F0001 depot → M0002 depot');
-    expect(within(hops[1] as HTMLElement).getByText(ids.waterMission)).toBeInTheDocument();
+    // The mission's short id, the whole one copied.
+    expect(within(hops[1] as HTMLElement).getByTitle(ids.waterMission)).toHaveTextContent(
+      ids.waterMission.slice(0, 8),
+    );
   });
 });

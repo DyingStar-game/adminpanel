@@ -26,7 +26,7 @@ interface NpcOverviewProps {
 type Confirming = 'reassign' | 'reset' | 'delete' | null;
 
 /**
- * An NPC at a glance (ADR 0026): where it is on the servers, its FSM status and current action,
+ * An NPC at a glance (ADR 0031): where it is on the servers, its FSM status and current action,
  * its role, village, slot and workplace, its Keycloak account, its dates. `npc.manage` spawns
  * or despawns it, sends it back to the automatic assignment, resets its password (both
  * confirmed) or deletes it (typed confirmation).

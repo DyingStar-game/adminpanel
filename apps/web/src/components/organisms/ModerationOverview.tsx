@@ -1,16 +1,14 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Chip } from '@/components/atoms/Chip';
-import { MonoText } from '@/components/atoms/MonoText';
 import { DataTable } from '@/components/molecules/DataTable';
 import { FactTiles } from '@/components/molecules/FactTiles';
 import { Pagination } from '@/components/molecules/Pagination';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { useModerationLog, usePlayerNames, useSocialStats } from '@/hooks/useModeration';
-import { shortId } from '@/lib/format';
 import { MODERATION_PAGE_SIZE } from '@/lib/moderationSearch';
 import { ModerationLogTable } from './ModerationLogTable';
 import { moderationErrorKey } from '@/lib/moderationErrors';
+import { EntityLink } from '@/components/molecules/EntityLink';
 
 /** Community figures and the moderation log (ADR 0024, reading). */
 export function ModerationOverview({
@@ -32,9 +30,7 @@ export function ModerationOverview({
   const reports = data ? Object.values(data.reports).reduce((sum, n) => sum + (n ?? 0), 0) : 0;
   const player = (id: string | null) =>
     id ? (
-      <Chip variant="link" title={id} onClick={() => onOpenPlayer(id)}>
-        {names.get(id) ?? <MonoText>{shortId(id)}</MonoText>}
-      </Chip>
+      <EntityLink id={id} label={names.get(id)} onOpen={onOpenPlayer} />
     ) : (
       <span className="text-fg-3">{t('moderation.system')}</span>
     );

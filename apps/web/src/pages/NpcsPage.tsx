@@ -20,7 +20,7 @@ interface NpcsPageProps {
 }
 
 /**
- * The `npc` service (ADR 0026): the global switch and counts, adding and removing NPCs, then
+ * The `npc` service (ADR 0031): the global switch and counts, adding and removing NPCs, then
  * the roster, the shift schedules, the events and the mining villages, each a tab of the URL.
  * Only the tab on screen is mounted, so only its data is polled (ADR 0009).
  */

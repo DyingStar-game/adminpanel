@@ -1,6 +1,6 @@
 /**
  * Contract of the `universesimulator` service (ADR 0025): Zod schemas and types generated from
- * the pinned `openapi.yaml` (`source.json` says where it comes from; not on GitHub yet).
+ * the pinned `openapi.yaml` (`source.json` says where it comes from).
  * Regenerate with `make contracts-update`.
  */
 export * from './generated/zod.gen';

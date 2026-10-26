@@ -10,7 +10,7 @@ import type {
   Workplace,
 } from '@dyingstar-admin/contracts/npc';
 
-/** Base URL used by tests for the mocked `npc` service (ADR 0026). */
+/** Base URL used by tests for the mocked `npc` service (ADR 0031). */
 export const NPC_URL = 'http://npc.test';
 
 /**

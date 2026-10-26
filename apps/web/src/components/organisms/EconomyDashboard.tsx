@@ -1,14 +1,13 @@
 import { useTranslation } from 'react-i18next';
 import type { EconomyStats } from '@dyingstar-admin/contracts/economie';
-import { Chip } from '@/components/atoms/Chip';
 import { DataTable } from '@/components/molecules/DataTable';
 import { FactTiles } from '@/components/molecules/FactTiles';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { useCorporationNames, useEconomyStats } from '@/hooks/useEconomie';
 import { usePlayerNames } from '@/hooks/useModeration';
 import { currencyName, formatAmount } from '@/lib/economy';
-import { shortId } from '@/lib/format';
 import { moderationErrorKey } from '@/lib/moderationErrors';
+import { EntityLink } from '@/components/molecules/EntityLink';
 
 type Holder = EconomyStats['richestPlayers'][number];
 type Day = EconomyStats['series'][number];
@@ -58,9 +57,11 @@ export function EconomyDashboard({ days, onOpenPlayer, onOpenCorporation }: Econ
             key: 'holder',
             header: t('players.columns.name'),
             cell: (h) => (
-              <Chip variant="link" title={h.holderId} onClick={() => open(h.holderId)}>
-                {h.displayName ?? names.get(h.holderId) ?? shortId(h.holderId)}
-              </Chip>
+              <EntityLink
+                id={h.holderId}
+                label={h.displayName ?? names.get(h.holderId)}
+                onOpen={open}
+              />
             ),
           },
           {

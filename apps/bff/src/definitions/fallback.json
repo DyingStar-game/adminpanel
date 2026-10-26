@@ -1,5 +1,5 @@
 {
-  "source": "DyingStar-game/horizonserver ds_genericprops/props @ develop b1d4f6a",
+  "source": "DyingStar-game/horizonserver ds_genericprops/props @ develop 3f54dc1",
   "definitions": [
     {
       "type": "box",
@@ -74,7 +74,9 @@
             "max_distance_to_reception",
             "pnj_zones",
             "is_pnj_workplace",
-            "terrain_settled"
+            "terrain_settled",
+            "shelves_spawned",
+            "poi_uuid"
           ]
         }
       ]
@@ -110,6 +112,23 @@
           "distance": 150,
           "frequency": 3,
           "properties": ["scenename", "content"]
+        }
+      ]
+    },
+    {
+      "type": "food",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 150,
+          "frequency": 30,
+          "properties": ["position", "rotation", "scenename", "parent_id", "weight"]
+        },
+        {
+          "zone": 6,
+          "distance": 150,
+          "frequency": 3,
+          "properties": ["scenename"]
         }
       ]
     },
@@ -163,7 +182,8 @@
             "blocs",
             "ore_seed",
             "mineral_id",
-            "host_rock_id"
+            "host_rock_id",
+            "ground_color"
           ]
         }
       ]
@@ -243,11 +263,15 @@
             "head_yaw",
             "stance",
             "floating",
+            "thrusting",
             "seat",
             "perforating",
             "carrying",
             "flashlight",
+            "datapad",
             "carry_prompt",
+            "screen_event",
+            "mining_tool",
             "scenename",
             "name",
             "parent_id",
@@ -340,14 +364,14 @@
             "floors",
             "spawn_point",
             "apartments",
-            "poi_uuid"
+            "furniture"
           ]
         },
         {
           "zone": 6,
           "distance": 10001,
           "frequency": 3,
-          "properties": ["scenename", "name", "terrain_settled"]
+          "properties": ["scenename", "name", "terrain_settled", "poi_uuid"]
         }
       ]
     },
@@ -420,6 +444,23 @@
       ]
     },
     {
+      "type": "tool",
+      "channels": [
+        {
+          "zone": 0,
+          "distance": 150,
+          "frequency": 30,
+          "properties": ["position", "rotation", "scenename", "parent_id", "weight"]
+        },
+        {
+          "zone": 6,
+          "distance": 150,
+          "frequency": 3,
+          "properties": ["scenename"]
+        }
+      ]
+    },
+    {
       "type": "vehicle",
       "channels": [
         {
@@ -444,6 +485,8 @@
             "speed",
             "velocity_local",
             "wheel_kmh",
+            "grounded",
+            "power",
             "handbrake",
             "headlights",
             "engine",
@@ -451,7 +494,11 @@
             "seats",
             "components",
             "limiter_on",
-            "limiter_kmh"
+            "limiter_kmh",
+            "cruise_on",
+            "cruise_kmh",
+            "rear_screen",
+            "chart_view"
           ]
         },
         {
@@ -459,6 +506,12 @@
           "distance": 100,
           "frequency": 1,
           "properties": ["horn", "horn_special", "mass", "cargo_mass", "suspension", "odometer_km"]
+        },
+        {
+          "zone": 2,
+          "distance": 200,
+          "frequency": 30,
+          "properties": ["suspension_shocks"]
         },
         {
           "zone": 6,
@@ -498,7 +551,7 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 400,
+          "distance": 5400,
           "frequency": 30,
           "lod": [
             {
@@ -508,6 +561,10 @@
             {
               "distance": 300,
               "frequency": 10
+            },
+            {
+              "distance": 1200,
+              "frequency": 2
             }
           ],
           "properties": [
@@ -521,7 +578,7 @@
         },
         {
           "zone": 6,
-          "distance": 403,
+          "distance": 5403,
           "frequency": 1,
           "properties": [
             "scenename",
@@ -530,6 +587,8 @@
             "acceleration",
             "guide_z_offset",
             "descent_depth",
+            "notch_length_m",
+            "notch_width_m",
             "name"
           ]
         }
@@ -540,7 +599,7 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 400,
+          "distance": 5400,
           "frequency": 30,
           "lod": [
             {
@@ -550,13 +609,17 @@
             {
               "distance": 300,
               "frequency": 10
+            },
+            {
+              "distance": 1200,
+              "frequency": 10
             }
           ],
           "properties": ["position", "rotation", "parent_id", "weight_on_platform"]
         },
         {
           "zone": 6,
-          "distance": 403,
+          "distance": 5403,
           "frequency": 1,
           "properties": ["scenename"]
         }
@@ -567,7 +630,7 @@
       "channels": [
         {
           "zone": 0,
-          "distance": 400,
+          "distance": 5400,
           "frequency": 30,
           "lod": [
             {
@@ -577,13 +640,17 @@
             {
               "distance": 300,
               "frequency": 10
+            },
+            {
+              "distance": 1200,
+              "frequency": 10
             }
           ],
           "properties": ["position", "rotation", "parent_id"]
         },
         {
           "zone": 6,
-          "distance": 403,
+          "distance": 5403,
           "frequency": 1,
           "properties": ["scenename", "is_platform_spawned"]
         }

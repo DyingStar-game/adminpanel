@@ -427,7 +427,17 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
           total: (placed[i] ?? []).filter((item) => parents.has(item.object_data.parent_id ?? ''))
             .length,
         })).filter((c) => c.total > 0);
-        return { ...map, counts: [...counts, ...placedCounts], omitted: omitted.sort() };
+        // A type can be both: players standing on the body and players housed in a building or
+        // a vehicle on it make one count, one legend entry.
+        const merged = new Map<string, number>();
+        for (const { object_type, total } of [...counts, ...placedCounts]) {
+          merged.set(object_type, (merged.get(object_type) ?? 0) + total);
+        }
+        return {
+          ...map,
+          counts: [...merged].map(([object_type, total]) => ({ object_type, total })),
+          omitted: omitted.sort(),
+        };
       });
     },
 

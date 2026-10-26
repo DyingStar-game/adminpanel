@@ -20,7 +20,7 @@ import {
 import { ApiError } from '@/lib/api';
 
 /**
- * Helpers and forms of the NPCs section (ADR 0026): live state, the shift grids, the dialogs'
+ * Helpers and forms of the NPCs section (ADR 0031): live state, the shift grids, the dialogs'
  * and the configuration's fields. Error messages of the forms are codes, translated under
  * `npcs.errors.*`; the rules are the service's (`contracts/npc/code.ts`).
  */

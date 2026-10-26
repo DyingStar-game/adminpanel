@@ -28,7 +28,7 @@ import {
 } from '@/hooks/useOrganisations';
 import { usePanel } from '@/hooks/usePanel';
 import { ApiError } from '@/lib/api';
-import { formatDateTime, shortId } from '@/lib/format';
+import { formatDateTime } from '@/lib/format';
 import { moderationErrorKey } from '@/lib/moderationErrors';
 import { MODERATION_PAGE_SIZE } from '@/lib/moderationSearch';
 import {
@@ -37,6 +37,7 @@ import {
   type OrganisationMember,
 } from '@/lib/organisations';
 import type { OrganisationSearch } from '@/lib/organisationsSearch';
+import { EntityLink } from '@/components/molecules/EntityLink';
 
 interface CorporationPageProps {
   corporationId: string;
@@ -151,11 +152,7 @@ export function CorporationPage({
           { label: t('organisations.subsidiaries'), value: c.subsidiaryCount },
           {
             label: t('organisations.ceo'),
-            value: (
-              <Chip variant="link" title={c.ceoId} onClick={() => onOpenPlayer(c.ceoId)}>
-                {ceo?.displayName ?? shortId(c.ceoId)}
-              </Chip>
-            ),
+            value: <EntityLink id={c.ceoId} label={ceo?.displayName} onOpen={onOpenPlayer} />,
           },
           {
             label: t('organisations.holding'),
@@ -172,9 +169,11 @@ export function CorporationPage({
       {c.politicalEntityId && (
         <p className="flex flex-wrap items-center gap-2 text-sm">
           {t('organisations.politicalHome')}
-          <Chip variant="link" onClick={() => onOpenPoliticalEntity(c.politicalEntityId ?? '')}>
-            {home.data?.name ?? shortId(c.politicalEntityId)}
-          </Chip>
+          <EntityLink
+            id={c.politicalEntityId}
+            label={home.data?.name}
+            onOpen={onOpenPoliticalEntity}
+          />
         </p>
       )}
       {economySettings && (

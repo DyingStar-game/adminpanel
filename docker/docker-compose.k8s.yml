@@ -15,17 +15,25 @@ services:
       # Same issuer as the browser sees; back channel through Traefik's node port.
       OIDC_ISSUER: http://auth.dyingstar.local/realms/dyingstar
       OIDC_DISCOVERY_URL: http://auth.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/realms/dyingstar
+      # The dev environment's secret of `dyingstar-admin` (the back team's realm, and
+      # keycloak/k8s-partial-import.json), whatever .env.local holds.
+      OIDC_CLIENT_SECRET: dyingstar-admin-dev-secret
       # Their `social`, through Traefik (`/social` prefix stripped), for the moderation (ADR 0024).
       SOCIAL_URL: http://services.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/social
       # Their `economie` (ADR 0024 step O), likewise.
       ECONOMIE_URL: http://services.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/economie
       # Their `universesimulator` (ADR 0025), likewise; the person's token only.
       UNIVERSESIMULATOR_URL: http://services.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/universesimulator
-      # Their `npc` service (ADR 0026) has no Traefik route (internal only, `service-npc:9400` in
+      # Their `npc` service (ADR 0031) has no Traefik route (internal only, `service-npc:9400` in
       # the cluster): give a reachable address, e.g. a `kubectl port-forward`, as NPC_URL when
       # running `make up K8S=1`; unset, the NPCs section is hidden.
       NPC_URL: ${NPC_URL:-}
-      # svc-admin, for the services' internal APIs (social, economie): read by the Makefile.
+      # Their `mission`, likewise (its catalogue needs svc-admin).
+      MISSION_URL: http://services.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/mission
+      # Their `inventory`, likewise: the POIs of a mission's objectives (ADR 0026).
+      INVENTORY_URL: http://services.dyingstar.local:${TRAEFIK_NODE_PORT:-31085}/inventory
+      # svc-admin, for the services' internal APIs (social, economie, mission, inventory): read by the
+      # Makefile.
       SVC_ADMIN_CLIENT_SECRET: ${SVC_ADMIN_CLIENT_SECRET:-}
 
 networks:

@@ -64,6 +64,18 @@
         {
           "name": "economie:money:issue",
           "description": "Issue money into political treasuries through economie's internal API (ADR 0023)"
+        },
+        {
+          "name": "mission:read",
+          "description": "Read missions through mission's internal API (ADR 0023)"
+        },
+        {
+          "name": "mission:write",
+          "description": "Cancel missions that are not the simulation's through mission's internal API (ADR 0028)"
+        },
+        {
+          "name": "inventory:read",
+          "description": "Name the POIs of mission objectives through inventory's internal API (ADR 0026)"
         }
       ]
     }
@@ -76,7 +88,7 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,
-      "secret": "dyingstar-admin-local",
+      "secret": "dyingstar-admin-dev-secret",
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
@@ -198,7 +210,10 @@
           "economie:politics:manage",
           "economie:wallet:credit",
           "economie:wallet:debit",
-          "economie:money:issue"
+          "economie:money:issue",
+          "mission:read",
+          "mission:write",
+          "inventory:read"
         ]
       },
       "groups": ["/staff"]
@@ -232,7 +247,10 @@
           "economie:politics:manage",
           "economie:wallet:credit",
           "economie:wallet:debit",
-          "economie:money:issue"
+          "economie:money:issue",
+          "mission:read",
+          "mission:write",
+          "inventory:read"
         ]
       },
       "groups": ["/staff"]

@@ -25,7 +25,7 @@ const STATUS_VARIANT = {
 } as const;
 
 /**
- * An NPC's manual tasks (ADR 0026), open ones first: kind, parameters, status (and why it
+ * An NPC's manual tasks (ADR 0031), open ones first: kind, parameters, status (and why it
  * failed), who gave it and when it ran. `npc.manage` gives it a new one or cancels an open one
  * (aborted when running), after confirmation.
  */

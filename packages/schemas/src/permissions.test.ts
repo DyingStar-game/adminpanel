@@ -77,7 +77,7 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     expect(simulation(['player', 'persistence:write', 'economie:money:issue'])).toEqual([]);
   });
 
-  it("mirrors the npc service's Admin API: reads moderator+, writes admin+ (ADR 0026)", () => {
+  it("mirrors the npc service's Admin API: reads moderator+, writes admin+ (ADR 0031)", () => {
     const npc = (roles: string[]) => permissionsOf(roles).filter((p) => p.startsWith('npc.'));
     expect(npc(['moderator'])).toEqual([Permission.npcView]);
     expect(npc(['admin'])).toEqual([Permission.npcView, Permission.npcManage]);
@@ -133,5 +133,19 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     expect(permissionsOf(['supervisor', 'economie:wallet:read'])).not.toContain(
       Permission.economieWalletCredit,
     );
+  });
+
+  it("opens missions with mission's capability roles only, writing implying reading", () => {
+    expect(permissionsOf(['mission:read'])).toEqual([Permission.missionRead]);
+    expect(permissionsOf(['mission:write'])).toEqual([
+      Permission.missionRead,
+      Permission.missionWrite,
+    ]);
+    expect(permissionsOf(['supervisor', 'mission:read'])).not.toContain(Permission.missionWrite);
+  });
+
+  it("names the POIs with inventory's capability role only (ADR 0026)", () => {
+    expect(permissionsOf(['inventory:read'])).toEqual([Permission.inventoryRead]);
+    expect(permissionsOf(['supervisor', 'mission:read'])).not.toContain(Permission.inventoryRead);
   });
 });

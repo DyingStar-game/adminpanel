@@ -2,7 +2,6 @@
   "repo": "DyingStar-game/services",
   "ref": "develop",
   "path": "universesimulator/openapi.yaml",
-  "commit": null,
-  "date": null,
-  "note": "Not on GitHub yet: copied from the back team's working copy (sha256 d92781f24674956519d7132bda7ff44115c067cd40be9abe604d1e478818356a, 2026-10-12, villages as nodes: the service's ADR 0013). `make contracts-update` records the commit once the file is pushed to develop."
+  "commit": "a863c0097e3c0c4e2e27271d56f473150438bf90",
+  "date": "2026-10-12T11:38:33Z"
 }

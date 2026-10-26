@@ -44,13 +44,18 @@ export function useForceTick() {
   });
 }
 
-/** Cancels an open order: its mission, its inventory hold, the order itself. */
+/**
+ * Cancels an open order: its mission, its inventory hold, the order itself. The missions are
+ * read again too: the order's mission is cancelled (ADR 0028).
+ */
 export function useCancelOrder() {
+  const queryClient = useQueryClient();
   const afterAction = useAfterAction();
   return useMutation({
     mutationFn: (id: string) =>
       apiSend('POST', `/api/simulation/orders/${encodeURIComponent(id)}/cancel`),
-    onSuccess: afterAction,
+    onSuccess: () =>
+      Promise.all([afterAction(), queryClient.invalidateQueries({ queryKey: ['mission'] })]),
   });
 }
 

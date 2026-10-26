@@ -5,8 +5,9 @@ import { MonoText } from '@/components/atoms/MonoText';
 import { DataTable } from '@/components/molecules/DataTable';
 import { Badge } from '@/components/ui/badge';
 import { usePlayerNames } from '@/hooks/useModeration';
-import { formatDateTime, shortId } from '@/lib/format';
+import { formatDateTime } from '@/lib/format';
 import { eventTone } from '@/lib/socialActivity';
+import { EntityLink } from '@/components/molecules/EntityLink';
 
 interface ModerationLogTableProps {
   entries: ModerationLogEntry[];
@@ -46,9 +47,7 @@ export function ModerationLogTable({
 
   const player = (id: string | null) =>
     id ? (
-      <Chip variant="link" title={id} onClick={() => onOpenPlayer(id)}>
-        {names.get(id) ?? <MonoText>{shortId(id)}</MonoText>}
-      </Chip>
+      <EntityLink id={id} label={names.get(id)} onOpen={onOpenPlayer} />
     ) : (
       <span className="text-fg-3">{t('moderation.system')}</span>
     );

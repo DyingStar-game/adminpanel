@@ -68,29 +68,36 @@ function RootLayout() {
               ? 'simulation'
               : location.pathname.startsWith('/npcs')
                 ? 'npcs'
-                : 'explorer';
+                : location.pathname.startsWith('/missions')
+                  ? 'missions'
+                  : 'explorer';
   // Pages of a service the account may not open say so instead of failing call by call.
   const social =
     activeNav === 'moderation' || activeNav === 'players' || activeNav === 'organisations';
   const economy = activeNav === 'economy';
   const simulation = activeNav === 'simulation';
   const npcs = activeNav === 'npcs';
+  const missions = activeNav === 'missions';
   const allowed = npcs
     ? can('npc.view')
     : simulation
       ? can('simulation.view')
-      : economy
-        ? can('economie.dashboard')
-        : social
-          ? can('social.moderate')
-          : can('persistence.read');
+      : missions
+        ? can('mission.read')
+        : economy
+          ? can('economie.dashboard')
+          : social
+            ? can('social.moderate')
+            : can('persistence.read');
   const deniedKey = npcs
     ? 'npcs.forbidden'
     : simulation
       ? 'simulation.forbidden'
-      : social || economy
-        ? 'moderation.forbidden'
-        : 'session.noReadRight';
+      : missions
+        ? 'missions.forbidden'
+        : social || economy
+          ? 'moderation.forbidden'
+          : 'session.noReadRight';
 
   /** Level on screen: the item being viewed, or the listed explorer level. */
   const levelOnScreen = () => {
@@ -197,7 +204,9 @@ function RootLayout() {
                           ? void navigate({ to: '/simulation', search: { tab: 'overview' } })
                           : id === 'npcs'
                             ? void navigate({ to: '/npcs', search: { tab: 'roster', page: 1 } })
-                            : void navigate({ to: '/explorer', search: ROOTS })
+                            : id === 'missions'
+                              ? void navigate({ to: '/missions', search: { page: 1 } })
+                              : void navigate({ to: '/explorer', search: ROOTS })
             }
             onHome={() => void navigate({ to: '/' })}
             version={APP_VERSION}

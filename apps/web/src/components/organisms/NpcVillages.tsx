@@ -13,7 +13,7 @@ import { npcErrorKey } from '@/lib/npcs';
 import { WorkplaceDialog } from './WorkplaceDialog';
 
 /**
- * The mining villages of the NPC service's world data (ADR 0026): their NPCs, storekeepers out
+ * The mining villages of the NPC service's world data (ADR 0031): their NPCs, storekeepers out
  * of the slots, the cargo depot the storekeepers work at (and where it was found: universe
  * simulation, world data, or set by hand) and the Factory their drivers go to. `npc.manage`
  * sets or clears a workplace by hand.

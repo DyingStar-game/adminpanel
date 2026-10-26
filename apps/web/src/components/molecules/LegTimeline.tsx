@@ -1,7 +1,8 @@
+import type { ReactNode } from 'react';
 import { ArrowRightIcon } from 'lucide-react';
 import type { Leg } from '@dyingstar-admin/contracts/universesimulator';
-import { MonoText } from '@/components/atoms/MonoText';
 import { Badge } from '@/components/ui/badge';
+import { EntityLink } from './EntityLink';
 
 const STATUS_VARIANT: Record<Leg['status'], 'default' | 'secondary' | 'outline' | 'destructive'> = {
   waiting: 'outline',
@@ -24,6 +25,13 @@ interface LegTimelineProps {
   /** The facts of a leg, formatted by the caller (quantity, distance, reward). */
   facts: (leg: Leg) => string;
   missionLabel: string;
+  /** Opens the leg's mission (ADR 0026); unset, its id only. */
+  onOpenMission?: ((missionId: string) => void) | undefined;
+  /**
+   * The leg's mission as the caller draws it (its title and status, ADR 0028); unset, or
+   * `undefined` for a leg, its id.
+   */
+  mission?: ((leg: Leg) => ReactNode) | undefined;
 }
 
 /**
@@ -38,6 +46,8 @@ export function LegTimeline({
   statusLabel,
   facts,
   missionLabel,
+  onOpenMission,
+  mission,
 }: LegTimelineProps) {
   return (
     <ol className="flex flex-col gap-0">
@@ -76,8 +86,9 @@ export function LegTimeline({
                   </span>
                 )}
                 {leg.missionId && (
-                  <span>
-                    {missionLabel} <MonoText tone="muted">{leg.missionId}</MonoText>
+                  <span className="inline-flex items-center gap-1.5">
+                    {missionLabel}
+                    {mission?.(leg) ?? <EntityLink id={leg.missionId} onOpen={onOpenMission} />}
                   </span>
                 )}
               </div>

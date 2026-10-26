@@ -9,6 +9,9 @@ function SimulationRoute() {
     <SimulationPage
       search={search}
       onSearchChange={(next) => void navigate({ search: next, replace: true })}
+      onOpenMission={(missionId) =>
+        void navigate({ to: '/missions/$missionId', params: { missionId } })
+      }
     />
   );
 }

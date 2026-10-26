@@ -5,6 +5,8 @@ import { createOidcProvider } from './auth/oidc';
 import { createServiceTokenSource } from './auth/serviceToken';
 import { createEconomieClient } from './clients/economie';
 import { createNpcClient } from './clients/npc';
+import { createInventoryClient } from './clients/inventory';
+import { createMissionClient } from './clients/mission';
 import { createSocialClient, registerStaffInSocial } from './clients/social';
 import { createUniversesimulatorClient } from './clients/universesimulator';
 import { authEnv, loadEnv } from './env';
@@ -40,6 +42,20 @@ const universesimulator = env.UNIVERSESIMULATOR_URL
 const npc = env.NPC_URL
   ? createNpcClient({ baseUrl: env.NPC_URL, timeoutMs: env.SERVICE_TIMEOUT_MS })
   : undefined;
+const mission = env.MISSION_URL
+  ? createMissionClient({
+      baseUrl: env.MISSION_URL,
+      timeoutMs: env.SERVICE_TIMEOUT_MS,
+      serviceToken,
+    })
+  : undefined;
+const inventory = env.INVENTORY_URL
+  ? createInventoryClient({
+      baseUrl: env.INVENTORY_URL,
+      timeoutMs: env.SERVICE_TIMEOUT_MS,
+      serviceToken,
+    })
+  : undefined;
 const app = createApp({
   environment: env.ENVIRONMENT,
   gameServerName: env.GAME_SERVER_NAME,
@@ -48,6 +64,8 @@ const app = createApp({
   economie,
   universesimulator,
   npc,
+  mission,
+  inventory,
   auth: createAuth({
     provider: createOidcProvider({ issuer, discoveryUrl, clientId, clientSecret }),
     clientId,
@@ -77,6 +95,12 @@ serve({ fetch: app.fetch, port: env.PORT }, (info) => {
     `Universesimulator: ${env.UNIVERSESIMULATOR_URL ?? 'not configured (simulation hidden)'}`,
   );
   console.log(`NPC service: ${env.NPC_URL ?? 'not configured (NPCs hidden)'}`);
+  console.log(
+    `Mission: ${env.MISSION_URL ?? 'not configured'}${mission && !mission.readsCatalogue ? ' (hidden: no SVC_ADMIN_CLIENT_SECRET)' : mission ? '' : ' (missions hidden)'}`,
+  );
+  console.log(
+    `Inventory: ${env.INVENTORY_URL ?? 'not configured'}${inventory && !inventory.readsPois ? ' (POIs not named: no SVC_ADMIN_CLIENT_SECRET)' : inventory ? '' : ' (POIs not named)'}`,
+  );
   console.log(
     `Organisation management: ${social?.manages ? env.SVC_ADMIN_CLIENT_ID : 'off (no SVC_ADMIN_CLIENT_SECRET)'}`,
   );

@@ -14,6 +14,8 @@ import {
   type SessionContext,
 } from './auth/auth';
 import type { EconomieClient } from './clients/economie';
+import type { InventoryClient } from './clients/inventory';
+import type { MissionClient } from './clients/mission';
 import type { SocialClient } from './clients/social';
 import type { NpcClient } from './clients/npc';
 import type { UniversesimulatorClient } from './clients/universesimulator';
@@ -25,6 +27,7 @@ import { auditWrites, type AuditEntry } from './lib/audit';
 import { economieRoutes } from './routes/economie';
 import { itemsRoutes } from './routes/items';
 import { npcRoutes } from './routes/npc';
+import { missionRoutes } from './routes/mission';
 import { socialRoutes } from './routes/social';
 import { universesimulatorRoutes } from './routes/universesimulator';
 import type { DefinitionsService } from './services/definitions';
@@ -65,10 +68,20 @@ export interface AppOptions {
    */
   universesimulator?: UniversesimulatorClient | undefined;
   /**
-   * The `npc` service of this environment (ADR 0026); unset, its routes answer 404 and the SPA
+   * The `npc` service of this environment (ADR 0031); unset, its routes answer 404 and the SPA
    * hides the NPCs.
    */
   npc?: NpcClient | undefined;
+  /**
+   * `mission` of this environment (ADR 0024); without it or without `svc-admin`, its routes
+   * answer 404 and the SPA hides it.
+   */
+  mission?: MissionClient | undefined;
+  /**
+   * `inventory` of this environment (ADR 0026): the POIs named on a mission's page; without it or
+   * without `svc-admin`, the objectives show POI ids.
+   */
+  inventory?: InventoryClient | undefined;
   definitions: DefinitionsService;
   persistenceTimeoutMs?: number;
   readCacheTtlMs?: number;
@@ -88,6 +101,8 @@ export function createApp({
   economie,
   universesimulator,
   npc,
+  mission,
+  inventory,
   definitions,
   persistenceTimeoutMs = 5000,
   readCacheTtlMs = 500,
@@ -134,6 +149,10 @@ export function createApp({
           ...(economie?.readsWallets ? ['economie-wallets'] : []),
           ...(universesimulator ? ['universesimulator'] : []),
           ...(npc ? ['npc'] : []),
+          // Its catalogue is its internal API only: nothing to show without `svc-admin`.
+          ...(mission?.readsCatalogue ? ['mission'] : []),
+          // Its POIs, read through `svc-admin` too (ADR 0026).
+          ...(inventory?.readsPois ? ['inventory'] : []),
         ],
       }),
     )
@@ -171,9 +190,13 @@ export function createApp({
     api.route('/simulation', universesimulatorRoutes(universesimulator, items || undefined));
   }
   if (npc) {
-    // The user's token on its Admin API (ADR 0026).
+    // The user's token on its Admin API (ADR 0031).
     api.use('/npc/*', auditWrites('npc', audit), requirePermission('npc.view'));
     api.route('/npc', npcRoutes(npc));
+  }
+  if (mission?.readsCatalogue) {
+    api.use('/mission/*', auditWrites('mission', audit));
+    api.route('/mission', missionRoutes(mission, inventory));
   }
   app.route('/api', api);
   // Registered after the API routes and before the SPA fallback, so unknown API paths never

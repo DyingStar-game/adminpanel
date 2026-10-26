@@ -1,13 +1,14 @@
 import { SchematicSchema, type Schematic } from './schema';
 import { battery } from './battery';
 import { celestial, star } from './celestial';
+import { crate, haulingBox } from './crate';
 import { truck } from './truck';
 
 export type { Schematic } from './schema';
 
 /** Every schematic, validated at load time: a typo in a file fails early (and in tests). */
-export const SCHEMATICS: Schematic[] = [truck, battery, celestial, star].map((raw) =>
-  SchematicSchema.parse(raw),
+export const SCHEMATICS: Schematic[] = [truck, battery, celestial, star, crate, haulingBox].map(
+  (raw) => SchematicSchema.parse(raw),
 );
 
 const matches = (pattern: string, scenename: string) => {
@@ -33,14 +34,20 @@ export const schematicFor = (scenename: unknown): Schematic | null =>
 /** Top-level keys of `object_data` a schematic shows: the page does not repeat them. */
 export function schematicKeys(schematic: Schematic): Set<string> {
   const paths = [
-    ...schematic.shapes.flatMap((s) => (s.value ? [s.value.path] : [])),
+    ...schematic.shapes.flatMap((s) => [
+      ...(s.value ? [s.value.path] : []),
+      ...(s.goods ? [s.goods] : []),
+    ]),
     ...schematic.lights.map((l) => l.path),
     ...schematic.readouts.flatMap((r) => ('path' in r ? [r.path] : [])),
   ];
   return new Set(paths.filter((path) => !path.includes('.')));
 }
 
-/** Whether a schematic lists the item's contents (a `cargo` shape with `contents`). */
+/**
+ * Whether a schematic lists the item's children it carries (a `cargo` shape with `contents`);
+ * a shape with `goods` draws the item's own load instead.
+ */
 export const hasContents = (schematic: Schematic) =>
   schematic.shapes.some((shape) => shape.contents);
 

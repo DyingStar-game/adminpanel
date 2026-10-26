@@ -17,6 +17,7 @@ import {
   zNetwork,
   type OrderStatus,
 } from '@dyingstar-admin/contracts/universesimulator';
+import { simulationLegOf, type MissionObjective } from '@dyingstar-admin/contracts/mission';
 import { SimulationNetworkExtrasSchema } from '@dyingstar-admin/schemas';
 import { apiGet } from '@/lib/api';
 import { useLiveInterval } from './useLive';
@@ -81,11 +82,12 @@ export interface OrderFilters {
 }
 
 /** The latest orders (up to 100) matching the filters, newest first. */
-export const useSimulationOrders = (filters: OrderFilters) =>
+export const useSimulationOrders = (filters: OrderFilters, enabled = true) =>
   useLive(
     ['orders', filters],
     `${PATH}/orders${qs({ ...filters, limit: 100 })}`,
     zListOrdersResponse,
+    enabled,
   );
 
 export const useSimulationOrder = (id: string | undefined) =>
@@ -161,4 +163,27 @@ export function useSimulationNames() {
     villages: new Map(villages.map((v) => [v.id, v.name])),
     warehouses: new Map(villages.flatMap((v) => v.warehouses.map((w) => [w.id, w.name] as const))),
   };
+}
+
+/**
+ * The supply order and leg a mission of the simulation carries (ADR 0028): the order its
+ * objectives' `payload` names, else the one of the latest 100 whose leg holds the mission.
+ * Nothing while `enabled` is false, for another mission, or before the order arrives.
+ */
+export function useMissionOrder(
+  missionId: string,
+  objectives: readonly Pick<MissionObjective, 'payload'>[],
+  enabled: boolean,
+) {
+  const named = simulationLegOf(objectives);
+  const order = useSimulationOrder(enabled && named ? named.orderId : undefined);
+  const latest = useSimulationOrders({}, enabled && !named);
+  if (!enabled) return undefined;
+  if (named) {
+    const leg = order.data?.legs?.find((l) => l.id === named.legId);
+    return order.data && leg ? { order: order.data, leg } : undefined;
+  }
+  return (latest.data?.items ?? []).flatMap((o) =>
+    (o.legs ?? []).filter((l) => l.missionId === missionId).map((leg) => ({ order: o, leg })),
+  )[0];
 }

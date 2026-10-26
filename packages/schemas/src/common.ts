@@ -35,6 +35,8 @@ export const ErrorCode = {
   accessDenied: 'ACCESS_DENIED',
   forbidden: 'FORBIDDEN',
   forbiddenOrigin: 'FORBIDDEN_ORIGIN',
+  /** A mission published by `universesimulator`: cancelled through its order (ADR 0028). */
+  simulationMission: 'SIMULATION_MISSION',
   internal: 'INTERNAL_ERROR',
 } as const;
 

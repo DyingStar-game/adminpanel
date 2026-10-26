@@ -120,7 +120,7 @@ make check   # formatage, lint, typecheck, tests, vérification du format
 Le premier `make up` ou `make start` crée `.env.local` à partir de [`.env.sample`](../../.env.sample).
 Un panneau sert un environnement et son unique serveur de jeu (ADR 0023, 0024) : son nom
 (`GAME_SERVER_NAME`), les URL des services de jeu qu'il gère (`PERSISTENCE_URL`, `SOCIAL_URL`,
-`ECONOMIE_URL`, `UNIVERSESIMULATOR_URL`, `NPC_URL` ; non renseignée, le service est masqué), son Keycloak (`OIDC_*`) et l'origine
+`ECONOMIE_URL`, `UNIVERSESIMULATOR_URL`, `NPC_URL`, `MISSION_URL` ; non renseignée, le service est masqué), son Keycloak (`OIDC_*`) et l'origine
 des définitions de types d'objets (`DEFINITIONS_*`).
 
 `SERVERS` et l'en-tête `X-Server-Id` n'existent plus (2026-10-08) : le BFF refuse de démarrer

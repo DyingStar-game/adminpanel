@@ -25,11 +25,12 @@ import {
 import { usePanel } from '@/hooks/usePanel';
 import { ApiError } from '@/lib/api';
 import { MINTING_LEVELS } from '@/lib/economy';
-import { formatDateTime, shortId } from '@/lib/format';
+import { formatDateTime } from '@/lib/format';
 import { moderationErrorKey } from '@/lib/moderationErrors';
 import { MODERATION_PAGE_SIZE } from '@/lib/moderationSearch';
 import { organisationRoles, politicalMembers } from '@/lib/organisations';
 import type { OrganisationSearch } from '@/lib/organisationsSearch';
+import { EntityLink } from '@/components/molecules/EntityLink';
 
 interface PoliticalEntityPageProps {
   entityId: string;
@@ -130,9 +131,7 @@ export function PoliticalEntityPage({
           {
             label: t('organisations.head'),
             value: e.headId ? (
-              <Chip variant="link" title={e.headId} onClick={() => onOpenPlayer(e.headId ?? '')}>
-                {head?.displayName ?? shortId(e.headId)}
-              </Chip>
+              <EntityLink id={e.headId} label={head?.displayName} onOpen={onOpenPlayer} />
             ) : (
               <span className="text-fg-3">—</span>
             ),

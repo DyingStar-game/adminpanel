@@ -98,6 +98,8 @@ const player = (playerId: string, displayName: string, reputation: number): Play
   biography: null,
   role: null,
   reputation,
+  // `db/schema/profiles.ts` › `standing`: jsonb, `{}` by default (per mission domain).
+  standing: {},
   playtimeSeconds: 3600,
   rpSheet: null,
   createdAt: at(0),

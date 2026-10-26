@@ -22,6 +22,10 @@ export const ids = {
   rock: '35ac67f7-c1cf-20c0-1424-af07889a5c77',
   /** A rock laid in the truck's bed (child of the vehicle). */
   loadedRock: '12749ffc-adda-4847-8600-a403d201cea5',
+  /** A crate of gold a mining depot packed, loaded in the truck's bed (ADR 0029). */
+  haulingCrate: '90b295dd-2388-42f0-9e33-611a94a39aa6',
+  /** One of the empty crates laid on the planet. */
+  emptyCrate: '9cdc0367-9777-87b7-6a41-f7a3c23ddc50',
 } as const;
 
 const star: Item = {
@@ -214,6 +218,42 @@ export const loadedRock: Item = {
     weight: 114.3,
     position: { x: 0.255, y: 0.355, z: 1.055 },
     rotation: { x: 0, y: 1.21, z: 0 },
+  },
+};
+
+/**
+ * A crate a mining depot packed (`hauling_box.tscn`, the test server's `90b295dd…` on
+ * 2026-10-23), loaded in the truck's bed: `content` is one mineral, in litres and m³ (ADR 0029).
+ * Kept out of `createDataset`, like `loadedRock`.
+ */
+export const haulingCrate: Item = {
+  object_type: 'crate_container',
+  object_uuid: ids.haulingCrate,
+  object_data: {
+    content: { mineral: 'gold', ore_volume: 0.066, units: 66 },
+    parent_id: ids.vehicle,
+    position: { x: 0.31, y: 0.42, z: 1.2 },
+    rotation: { x: 0.3, y: -0.545, z: -1.115 },
+    scenename: 'scenes/_universe/props/containers/hauling_box.tscn',
+    type: 'crate_container',
+    uuid: ids.haulingCrate,
+    weight: 50,
+  },
+};
+
+/** One of the 108 crates laid on the test server's planet: named, `content` empty. */
+export const emptyCrate: Item = {
+  object_type: 'crate_container',
+  object_uuid: ids.emptyCrate,
+  object_data: {
+    content: {},
+    name: 'CrateContainer5',
+    parent_id: ids.planet,
+    position: { x: 4457495.72036904, y: 2645977.09630498, z: 3687809.39918231 },
+    rotation: { x: -0.317812621819458, y: 2.60144323290555, z: 1.11757013790599 },
+    scenename: 'scenes/_universe/props/containers/crate_container.tscn',
+    type: 'crate_container',
+    uuid: ids.emptyCrate,
   },
 };
 

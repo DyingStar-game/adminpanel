@@ -65,7 +65,7 @@ const eventsQuery = ({ before, ...query }: EventsQuery): Query => ({
 
 /**
  * HTTP client for the `npc` service (contract pinned in `@dyingstar-admin/contracts/npc`, ADR
- * 0026). The panel uses its Admin API only (`/api/admin/*`), always with the person's token: the
+ * 0031). The panel uses its Admin API only (`/api/admin/*`), always with the person's token: the
  * service checks the moderation role itself (reads `moderator`+, writes `admin` or
  * `supervisor`), as `universesimulator` does. NPCs are Keycloak users of group `npcs`; the
  * service connects the enabled ones to Horizon while its global switch is on.
