@@ -27,7 +27,7 @@ import { NPC_PAGE_SIZE } from '@/lib/npcSearch';
 import { useLiveInterval } from './useLive';
 
 /**
- * Reads of the NPCs section (ADR 0026), through `/api/npc`. What the runtime changes (the
+ * Reads of the NPCs section (ADR 0031), through `/api/npc`. What the runtime changes (the
  * switch's counts, the roster, an NPC, its tasks, its logs, the events) is polled (ADR 0009,
  * paused with the live switch): lists every 5 s, the NPC on screen and its logs every 3 s; the
  * catalogue (task kinds, legend) is read once, the schedules and villages when opened.

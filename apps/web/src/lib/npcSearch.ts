@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { zRole } from '@dyingstar-admin/contracts/npc';
 
-/** Tabs of the NPCs section (ADR 0026). */
+/** Tabs of the NPCs section (ADR 0031). */
 export const NPCS_TABS = ['roster', 'routines', 'activity', 'villages'] as const;
 export type NpcsTab = (typeof NPCS_TABS)[number];
 
@@ -16,7 +16,7 @@ const flag = z.enum(['true', 'false']).optional().catch(undefined);
 const text = (max: number) => z.string().trim().max(max).optional().catch(undefined);
 
 /**
- * NPCs section state carried by the URL (ADR 0024, 0026), so every view is shareable: the tab;
+ * NPCs section state carried by the URL (ADR 0024, 0031), so every view is shareable: the tab;
  * the roster's filters (village, role, enabled, connected, name or login) and page; the pattern
  * open in the routines editor (`new` for a new one); the event kind of the activity feed.
  */

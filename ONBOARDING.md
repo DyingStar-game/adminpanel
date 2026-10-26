@@ -49,7 +49,7 @@ make pnpm dev
 
 The `npc` service has no Traefik route on minikube: to see the NPCs section, make it reachable
 (e.g. `kubectl port-forward -n dyingstar svc/service-npc 9400:9400 --address 0.0.0.0`) and run
-`NPC_URL=http://<address seen from the dev container>:9400 make up K8S=1` (ADR 0026).
+`NPC_URL=http://<address seen from the dev container>:9400 make up K8S=1` (ADR 0031).
 
 `make reset-social` empties minikube's `social` and seeds it again; `make reset-mission` does the
 same for `mission`. After switching between

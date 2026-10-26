@@ -9,7 +9,7 @@ const json = (method: string, body?: unknown) => ({
   ...(body === undefined ? {} : { body: JSON.stringify(body) }),
 });
 
-describe('npc routes (ADR 0026)', () => {
+describe('npc routes (ADR 0031)', () => {
   it('lists npc among the services when configured, and has no routes otherwise', async () => {
     const res = await buildApp().request('/api/panel');
     expect(((await res.json()) as { services: string[] }).services).toContain('npc');

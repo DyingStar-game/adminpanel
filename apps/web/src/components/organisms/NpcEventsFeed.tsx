@@ -25,7 +25,7 @@ interface NpcEventsFeedProps {
 }
 
 /**
- * Key events of the NPCs, newest first (ADR 0026): spawns, connections, role assignments,
+ * Key events of the NPCs, newest first (ADR 0031): spawns, connections, role assignments,
  * actions and tasks, the switch and bulk actions; filtered by kind (`spawned`, `task_failed`…),
  * older ones loaded on demand. Polled with the lists.
  */

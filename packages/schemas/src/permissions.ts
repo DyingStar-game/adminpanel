@@ -39,11 +39,11 @@ export const Permission = {
   economieWalletDebit: 'economie.walletDebit',
   /** Issuing money into a political treasury, likewise. */
   economieMoneyIssue: 'economie.moneyIssue',
-  /** `universesimulator`'s views: dashboard, network, stocks, orders, prices (ADR 0026). */
+  /** `universesimulator`'s views: dashboard, network, stocks, orders, prices (ADR 0025). */
   simulationView: 'simulation.view',
   /** Pausing, resuming or ticking the simulation, cancelling an order (its Admin writes). */
   simulationManage: 'simulation.manage',
-  /** The `npc` service's views: roster, an NPC's routine, tasks, logs and events (ADR 0026). */
+  /** The `npc` service's views: roster, an NPC's routine, tasks, logs and events (ADR 0031). */
   npcView: 'npc.view',
   /** Its Admin writes: global switch, create, spawn, edit, tasks, schedules, workplaces. */
   npcManage: 'npc.manage',
@@ -97,12 +97,12 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
   [Permission.economieWalletCredit]: ['economie:wallet:credit'],
   [Permission.economieWalletDebit]: ['economie:wallet:debit'],
   [Permission.economieMoneyIssue]: ['economie:money:issue'],
-  // Mirror of `universesimulator`'s Admin API (ADR 0026): its reads need a moderation role, its
+  // Mirror of `universesimulator`'s Admin API (ADR 0025): its reads need a moderation role, its
   // writes `admin` or `supervisor` (`src/auth/mod.rs` › `MODERATION`, `require_admin`); it checks
   // them itself on the person's token.
   [Permission.simulationView]: ['moderator', 'admin', 'supervisor'],
   [Permission.simulationManage]: ['admin', 'supervisor'],
-  // Mirror of the `npc` service's Admin API (ADR 0026), same model as universesimulator's
+  // Mirror of the `npc` service's Admin API (ADR 0031), same model as universesimulator's
   // (`src/auth/mod.rs` › `MODERATION`, `Caller::require_admin`), checked on the person's token.
   [Permission.npcView]: ['moderator', 'admin', 'supervisor'],
   [Permission.npcManage]: ['admin', 'supervisor'],

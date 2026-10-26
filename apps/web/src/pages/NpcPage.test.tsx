@@ -13,7 +13,7 @@ const handlers = () => ({
   onEditPattern: vi.fn(),
 });
 
-describe('NpcPage (ADR 0026)', () => {
+describe('NpcPage (ADR 0031)', () => {
   it('heads with the NPC and opens on its overview; tabs go through the URL state', async () => {
     useInProcessBff();
     const props = handlers();

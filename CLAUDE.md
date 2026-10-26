@@ -54,9 +54,9 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
   and `src/pages`; import rules are enforced by ESLint (ADR 0014).
 - `apps/bff` — Hono BFF; the only component holding internal URLs. Serves the built SPA in production.
 - `packages/schemas` — shared Zod schemas (persistence contract, BFF API, permissions).
-- `packages/contracts` — the game services' pinned OpenAPI (`social`, `economie`) and their
-  generated Zod schemas; `packages/testing` — fixtures and MSW mocks (persistence, `social`,
-  `economie`).
+- `packages/contracts` — the game services' pinned OpenAPI (`social`, `economie`,
+  `universesimulator`, `npc`, `mission`, `inventory`) and their generated Zod schemas;
+  `packages/testing` — fixtures and MSW mocks (persistence and the same services).
 - `docker/` — compose file (`app`, `dev` services) and `Dockerfile.prod`.
 
 ## Conventions

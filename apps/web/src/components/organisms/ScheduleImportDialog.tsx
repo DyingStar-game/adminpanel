@@ -35,7 +35,7 @@ type ImportForm = z.infer<typeof ImportFormSchema>;
 const REPORT_KEYS = ['created', 'updated', 'skipped', 'errors'] as const;
 
 /**
- * Imports shift schedules (ADR 0026): the service's own `config/schedules.yaml`, or YAML pasted
+ * Imports shift schedules (ADR 0031): the service's own `config/schedules.yaml`, or YAML pasted
  * in that format; `missing` only adds the patterns and mapping rows that are absent (edits made
  * here are kept), `overwrite` replaces them. Then the service's report: created, updated,
  * skipped, refused (with why).

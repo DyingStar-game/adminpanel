@@ -16,8 +16,9 @@ repository:
 | `social` | Moderation (reports, sanctions, reputation), players, organisations | `SOCIAL_URL` |
 | `economie` | Economy dashboard, wallets and treasuries, settings and taxes, money movements | `ECONOMIE_URL` |
 | `universesimulator` | Simulation of a federation's economy by village: overview and controls, network map, village stocks and warehouses, thresholds, capacities and flows, supply orders and missions, prices, treasury (ADR 0025) | `UNIVERSESIMULATOR_URL` |
-| `npc` | NPCs on the servers: global switch, add / remove (create, spawn, despawn, delete), roster with live status, an NPC's routine, manual tasks, logs, events and configuration, shift patterns and their activity mapping, villages' workplaces (ADR 0026) | `NPC_URL` |
-| `mission` | The mission catalogue, every status, and a mission's page (read only; needs `svc-admin`) | `MISSION_URL` |
+| `npc` | NPCs on the servers: global switch, add / remove (create, spawn, despawn, delete), roster with live status, an NPC's routine, manual tasks, logs, events and configuration, shift patterns and their activity mapping, villages' workplaces (ADR 0031) | `NPC_URL` |
+| `mission` | The mission catalogue, every status, a mission's page and cancelling one (ADR 0026–0028; needs `svc-admin`) | `MISSION_URL` |
+| `inventory` | The names of a mission's places, its POIs (ADR 0026; needs `svc-admin`) | `INVENTORY_URL` |
 | Keycloak | Sign-in and roles; the `svc-admin` service account for the services' internal APIs | `OIDC_*`, `SVC_ADMIN_*` |
 | GitHub | Object type definitions (`*_def.json` of `horizonserver`), with a bundled fallback | `DEFINITIONS_*` |
 
@@ -38,7 +39,7 @@ serves the built SPA, so the panel is **one image, one port** (3000).
                                   │      │      │      │
                       persistence ◄┘      │      │      └► Keycloak (OIDC, svc-admin)
                       (REST /items)       │      │
-                                 social ◄─┘      └─► economie, universesimulator, npc
+                                 social ◄─┘      └─► economie, universesimulator, npc, mission, inventory
                        person's token: Admin API · svc-admin: Interne API
 ```
 
@@ -56,7 +57,7 @@ serves the built SPA, so the panel is **one image, one port** (3000).
   create, a field-level merge on save (409 when the game changed the same key meanwhile),
   refuses unknown object types and coalesces identical reads (ADR 0009, 0015).
 - **Live** is polling (ADR 0009): the open item every 5 s, lists every 5 s, counts every 15 s,
-  an NPC on screen and its log lines every 3 s (ADR 0026).
+  an NPC on screen and its log lines every 3 s (ADR 0031).
   The game saves an item about every 60 s, so the panel cannot be fresher than that.
 
 Every route, with its permission: [docs/bff-api.md](./docs/bff-api.md).
@@ -78,14 +79,14 @@ Every route, with its permission: [docs/bff-api.md](./docs/bff-api.md).
 │   └── bff/                  # Hono BFF
 │       └── src/
 │           ├── auth/         # OIDC, sessions, permission guards, svc-admin token
-│           ├── clients/      # persistence, social, economie, universesimulator, npc (upstream.ts)
+│           ├── clients/      # persistence, social, economie, universesimulator, npc, mission, inventory (upstream.ts)
 │           ├── services/     # items (merge, checks, duplicate, map), definitions
-│           ├── routes/       # items, bodies, social, economie, universesimulator (/api/simulation), npc
+│           ├── routes/       # items, bodies, social, economie, universesimulator (/api/simulation), npc, mission
 │           └── definitions/  # fallback.json (definitions snapshot)
 ├── packages/
 │   ├── schemas/              # Zod: persistence contract, BFF API, permissions, geometry
 │   ├── contracts/            # game services' pinned OpenAPI and generated Zod
-│   └── testing/              # fixtures and MSW mocks (persistence, social, economie, universesimulator, npc)
+│   └── testing/              # fixtures and MSW mocks (persistence, social, economie, universesimulator, npc, mission, inventory)
 ├── docker/                   # compose (dev, app, keycloak), Dockerfile.prod, keycloak/
 ├── docs/                     # adr/, design/, fr/, lot plans, bff-api.md
 └── Makefile                  # every command (Docker or Podman, pinned Node and pnpm)

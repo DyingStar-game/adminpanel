@@ -36,7 +36,7 @@ interface NpcTaskDialogProps {
 }
 
 /**
- * Gives an NPC a task by hand (ADR 0026), which pre-empts its schedule: walk to a position
+ * Gives an NPC a task by hand (ADR 0031), which pre-empts its schedule: walk to a position
  * (local to an object, or its own frame) and stay there, focus on one action (with overrides of
  * its config, offered from the fields the service lists), or wait. Empty optional fields keep
  * the service's defaults; `forceOnline` connects it even off shift.

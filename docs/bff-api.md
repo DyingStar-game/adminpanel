@@ -40,7 +40,7 @@ are in `apps/bff/src/app.ts` and `apps/bff/src/routes/`.
 | Method | Route | Permission | Notes |
 |--------|-------|------------|-------|
 | GET | `/api/me` | session | The person, their roles and permissions, `access` |
-| GET | `/api/panel` | session | `environment`, `gameServerName`, `services` (`persistence`, `social`, `social-management`, `economie`, `economie-wallets`, `universesimulator`, `mission`, `inventory`): the SPA shows the modules listed |
+| GET | `/api/panel` | session | `environment`, `gameServerName`, `services` (`persistence`, `social`, `social-management`, `economie`, `economie-wallets`, `universesimulator`, `npc`, `mission`, `inventory`): the SPA shows the modules listed |
 | GET | `/api/definitions` | session | Object type definitions (`*_def.json`, ADR 0006) |
 | GET | `/api/definitions/:type` | session | One definition, 404 if unknown |
 
@@ -176,7 +176,7 @@ POIs when the person may read persistence.
 
 ## `npc` (NPCs)
 
-Shown when `NPC_URL` is set ([ADR 0026](./adr/0026-npc-section.md)). Every route calls the
+Shown when `NPC_URL` is set ([ADR 0031](./adr/0031-npc-section.md)). Every route calls the
 service's Admin API (`/api/admin/*`) **with the person's token**: the service checks the
 moderation role itself (reads `moderator`+, writes `admin` or `supervisor`); the panel mirrors it
 with `npc.view` (the whole section) and `npc.manage` (the writes). Inputs are validated with the

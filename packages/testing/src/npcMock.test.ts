@@ -48,7 +48,7 @@ const valid = async (res: Response, schema: z.ZodType, label: string) => {
   expect(schema.safeParse(await res.json()).error, label).toBeUndefined();
 };
 
-describe('npc mock (ADR 0026)', () => {
+describe('npc mock (ADR 0031)', () => {
   it('answers as the contract says', async () => {
     const checks: [string, z.ZodType][] = [
       ['/settings', zGetSettingsResponse],

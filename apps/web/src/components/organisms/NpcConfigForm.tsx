@@ -31,7 +31,7 @@ const ROLES: Role[] = ['unassigned', 'storekeeper', 'villager', 'custom'];
 const NONE = '__none__';
 
 /**
- * An NPC's configuration (ADR 0026), hot-pushed to its runtime: names (the in-game name follows
+ * An NPC's configuration (ADR 0031), hot-pushed to its runtime: names (the in-game name follows
  * at its next connection), enabled, role (set by hand it is locked unless `unassigned`),
  * village and storekeeper slot, shift pattern, action profile, its four places (an object's
  * UUID and a position local to it), per-action timing and config as JSON. Only the fields

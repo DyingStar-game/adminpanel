@@ -68,7 +68,7 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     ]);
   });
 
-  it("mirrors universesimulator's Admin API: reads moderator+, writes admin+ (ADR 0026)", () => {
+  it("mirrors universesimulator's Admin API: reads moderator+, writes admin+ (ADR 0025)", () => {
     const simulation = (roles: string[]) =>
       permissionsOf(roles).filter((p) => p.startsWith('simulation.'));
     expect(simulation(['moderator'])).toEqual([Permission.simulationView]);
@@ -77,7 +77,7 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     expect(simulation(['player', 'persistence:write', 'economie:money:issue'])).toEqual([]);
   });
 
-  it("mirrors the npc service's Admin API: reads moderator+, writes admin+ (ADR 0026)", () => {
+  it("mirrors the npc service's Admin API: reads moderator+, writes admin+ (ADR 0031)", () => {
     const npc = (roles: string[]) => permissionsOf(roles).filter((p) => p.startsWith('npc.'));
     expect(npc(['moderator'])).toEqual([Permission.npcView]);
     expect(npc(['admin'])).toEqual([Permission.npcView, Permission.npcManage]);

@@ -29,7 +29,7 @@ const PatternPath = zDeletePatternPath;
 const NpcPath = zGetNpcPath;
 
 /**
- * The `npc` service (ADR 0026): its Admin API, always with the person's token, which it checks
+ * The `npc` service (ADR 0031): its Admin API, always with the person's token, which it checks
  * itself (reads `moderator`+, writes `admin` or `supervisor`). The panel's `npc.view` opens the
  * section (checked where it is mounted), `npc.manage` its writes; inputs are validated with the
  * pinned contract (and `code.ts`) before any call. Task, event and current-action ids are `int64`:

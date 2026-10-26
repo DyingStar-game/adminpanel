@@ -19,7 +19,7 @@ interface NpcRoutineCardProps {
 }
 
 /**
- * An NPC's routine (ADR 0026): the planetary time on its planet, its pattern's week as a grid
+ * An NPC's routine (ADR 0031): the planetary time on its planet, its pattern's week as a grid
  * with the cell of now outlined (the rota day wraps over the pattern's days), the activity now
  * and the actions it allows. `npc.manage` changes the pattern (or clears it: no schedule
  * gating); the pattern opens in the routines editor.

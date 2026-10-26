@@ -9,7 +9,7 @@ export const LIVE_INTERVALS = {
   list: 5000,
   /** Child counts cost one full scan per known type on the service. */
   counts: 15000,
-  /** An NPC on screen and its log lines: its runtime changes within seconds (ADR 0026). */
+  /** An NPC on screen and its log lines: its runtime changes within seconds (ADR 0031). */
   npc: 3000,
 } as const;
 

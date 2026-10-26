@@ -63,12 +63,12 @@ export interface AppOptions {
   /** `economie` of this environment (ADR 0024); unset, its routes answer 404 and the SPA hides it. */
   economie?: EconomieClient | undefined;
   /**
-   * `universesimulator` of this environment (ADR 0026); unset, its routes answer 404 and the SPA
+   * `universesimulator` of this environment (ADR 0025); unset, its routes answer 404 and the SPA
    * hides the simulation.
    */
   universesimulator?: UniversesimulatorClient | undefined;
   /**
-   * The `npc` service of this environment (ADR 0026); unset, its routes answer 404 and the SPA
+   * The `npc` service of this environment (ADR 0031); unset, its routes answer 404 and the SPA
    * hides the NPCs.
    */
   npc?: NpcClient | undefined;
@@ -190,7 +190,7 @@ export function createApp({
     api.route('/simulation', universesimulatorRoutes(universesimulator, items || undefined));
   }
   if (npc) {
-    // The user's token on its Admin API (ADR 0026).
+    // The user's token on its Admin API (ADR 0031).
     api.use('/npc/*', auditWrites('npc', audit), requirePermission('npc.view'));
     api.route('/npc', npcRoutes(npc));
   }

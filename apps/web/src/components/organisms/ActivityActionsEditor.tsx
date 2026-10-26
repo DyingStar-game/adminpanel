@@ -31,7 +31,7 @@ const toMapping = (items: Record<string, string[]>): Mapping =>
   Object.fromEntries(ACTIVITY_KEYS.map((k) => [k, [...(items[k] ?? [])]])) as Mapping;
 
 /**
- * The activity → actions mapping of the shift schedules (ADR 0026): for each activity (work,
+ * The activity → actions mapping of the shift schedules (ADR 0031): for each activity (work,
  * handoff, meal, mandatory activities, off; `always` = in every activity), the actions an NPC
  * may run during it, toggled among the actions the service runs by hand and those already
  * mapped. Only the activities changed are sent. Read only without `npc.manage`.

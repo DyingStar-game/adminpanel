@@ -30,7 +30,7 @@ const EnvSchema = z.object({
   ECONOMIE_URL: optionalString,
   /** `universesimulator` without `/api` (ADR 0025): the Simulation section. */
   UNIVERSESIMULATOR_URL: optionalString,
-  /** The `npc` service without `/api` (ADR 0026): the NPCs section. */
+  /** The `npc` service without `/api` (ADR 0031): the NPCs section. */
   NPC_URL: optionalString,
   MISSION_URL: optionalString,
   INVENTORY_URL: optionalString,

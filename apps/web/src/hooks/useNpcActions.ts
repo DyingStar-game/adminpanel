@@ -26,7 +26,7 @@ import {
 import { apiSend } from '@/lib/api';
 
 /**
- * Writes of the NPCs section (ADR 0026, `admin` or `supervisor`). Every NPC view is refreshed
+ * Writes of the NPCs section (ADR 0031, `admin` or `supervisor`). Every NPC view is refreshed
  * after a write: the roster, the counts, the routine, the tasks and the events may all change.
  */
 function useAfterAction() {

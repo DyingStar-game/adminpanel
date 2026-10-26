@@ -8,7 +8,7 @@ const DOT: Record<LiveState, string> = {
 };
 
 /**
- * Where an NPC is on the servers (ADR 0026): connected to Horizon, running but off shift, or
+ * Where an NPC is on the servers (ADR 0031): connected to Horizon, running but off shift, or
  * stopped; its colour always named. Pure.
  */
 export function NpcLiveBadge({ state, label }: { state: LiveState; label: string }) {

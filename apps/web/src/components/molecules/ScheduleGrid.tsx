@@ -22,7 +22,7 @@ interface ScheduleGridProps {
 }
 
 /**
- * A shift pattern as a grid (ADR 0026): rota-days in rows, planetary hours in columns, each cell
+ * A shift pattern as a grid (ADR 0031): rota-days in rows, planetary hours in columns, each cell
  * coloured by its letter and named for screen readers. Read only, or painted with the pointer
  * (click, or sweep with the button held). Pure: the caller holds the grid.
  */

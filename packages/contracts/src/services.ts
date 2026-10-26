@@ -1,4 +1,4 @@
-/** Game services whose contract the panel pins (ADR 0024, 0025, 0026), and where they come from. */
+/** Game services whose contract the panel pins (ADR 0024, 0025, 0031), and where they come from. */
 export const SERVICES = [
   'social',
   'economie',

@@ -71,11 +71,11 @@ The rules applied every day: [0010](./0010-frontend-stack.md) (frontend stack, f
 |---|---------|-------|--------|------|
 | [0024](./0024-game-services-social-first.md) | all, `social` | Game services in the panel, social moderation first | Accepted | 2026-10-08 |
 | [0025](./0025-universe-simulation-section.md) | `universesimulator` | Universe simulation section: `universesimulator` in the panel | Accepted | 2026-10-11 |
-| [0026](./0026-npc-section.md) | `npc` | NPCs section: the `npc` service in the panel | Proposed | 2026-10-25 |
 | [0026](./0026-mission-objective-schematics.md) | `mission` | Mission objective schematics: a declarative view per objective kind | Accepted | 2026-10-23 |
 | [0027](./0027-mission-places-map.md) | `mission` | A mission's places on a map | Accepted | 2026-10-23 |
 | [0028](./0028-cancelling-a-mission.md) | `mission` | Cancelling a mission, and the simulation's missions in the mission views | Accepted | 2026-10-23 |
 | [0030](./0030-holder-inventory.md) | `inventory` | What a holder owns: reading `inventory` where the panel shows the holder | Proposed | 2026-10-24 |
+| [0031](./0031-npc-section.md) | `npc` | NPCs section: the `npc` service in the panel | Proposed | 2026-10-25 |
 
 `social` and `economie` have no ADR of their own: their steps follow 0023 (rights) and 0024.
 

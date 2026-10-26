@@ -313,9 +313,9 @@ policies are gone), from `src/routes/admin.rs` (`require_admin` on every write).
 roles open nothing here; the BFF reads persistence itself only to place the villages on the
 planet's map.
 
-#### NPC (proposed 2026-10-25, ADR 0026)
+#### NPC (proposed 2026-10-25, ADR 0031)
 
-The `npc` service is not one of the services planned in ADR 0024; ADR 0026 adds it. The panel
+The `npc` service is not one of the services planned in ADR 0024; ADR 0031 adds it. The panel
 uses its **Admin API** (`/api/admin/*`, its only API besides `/healthz`), **with the person's
 token**: the service checks the moderation realm roles itself, reads for any of them, every write
 for `admin` or `supervisor`. NPCs themselves are Keycloak users with the realm role `npc`, which

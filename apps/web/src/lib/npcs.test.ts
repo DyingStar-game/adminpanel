@@ -24,7 +24,7 @@ import {
 const data = createNpcDataset();
 const npc = (id: string) => zNpc.parse(data.npcs.find((n) => n.id === id));
 
-describe('NPC helpers (ADR 0026)', () => {
+describe('NPC helpers (ADR 0031)', () => {
   it('tells the live state', () => {
     expect(liveState({ running: true, connected: true })).toBe('connected');
     expect(liveState({ running: true, connected: false })).toBe('running');

@@ -21,7 +21,7 @@ interface NpcRoutinesProps {
 }
 
 /**
- * The NPCs' shift schedules (ADR 0026): the patterns (grids of planetary hours per rota-day),
+ * The NPCs' shift schedules (ADR 0031): the patterns (grids of planetary hours per rota-day),
  * the one picked open in the grid editor (or a new one), the activity → actions mapping, and
  * the import of the service's `schedules.yaml`.
  */

@@ -12,7 +12,7 @@ import {
 } from './generated/zod.gen';
 
 /**
- * What the panel sends to the `npc` service's Admin writes (ADR 0026), stricter than its OpenAPI
+ * What the panel sends to the `npc` service's Admin writes (ADR 0031), stricter than its OpenAPI
  * where its code is (`src/admin/npcs.rs`, `schedule.rs`, `misc.rs`, `actions/manual.rs`,
  * `schedule.rs` › `validate_pattern`, read 2026-10-25 from the back team's working copy).
  * Hand-written, kept apart from the generated files.
