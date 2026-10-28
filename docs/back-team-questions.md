@@ -8,8 +8,8 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
   next number; an answered one moves to [Answered](#answered), keeping its number.
 - Each question says where it was seen. Where a README or an OpenAPI differs from the code, the
   panel follows the code meanwhile.
-- Last checked: **2026-10-24**, against `services` `develop` `0c14db4`, `kubernetes` `main`
-  `0065f37` and the dev-local minikube stack.
+- Last checked: **2026-10-28**, against `services` `develop` `b3c3553`, `kubernetes` `main`
+  `6e9f014` and the dev-local minikube stack.
 
 ## Pending changes
 
@@ -17,7 +17,9 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
   `feat/admin-panel-missions`, commit `2cb5c50`; the maintainer has no push right there):
   `MISSION_URL` / `INVENTORY_URL` in the `dyingstar-admin` chart, client roles `mission:read`,
   `mission:write`, `inventory:read` on the `dyingstar-admin` client (dev and pre-production).
-  Not in `main` yet.
+  `MISSION_URL` reached `main` on 2026-10-27 (`6e9f014`); **`INVENTORY_URL` is still missing**:
+  pre-production's panel names no mission place ("the places were not read from the
+  inventory"), whatever the mission. The client roles are not in `main` either.
 
 ## Open
 
@@ -79,6 +81,16 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
 24. The README still lists `…/objectives/:objectiveId/progress` (player and Interne) while the
     code dropped both routes (sent 2026-10-23).
 
+26. **A POI id that persistence made is refused.** The objective kinds' `poiZone`
+    (`kinds/objectives/transport.ts`, `deliverMaterial.ts`, `transportPassenger.ts`,
+    `visit.ts`) and `routes/schemas.ts` (zones) check `poiId: z.string().uuid()`, which Zod 4
+    reads as an RFC UUID (version and variant digits). The ids Godot makes for persistence's
+    objects are not (`8276a47f-c581-27a0-e40a-58bdb7e7b27b`, a cargo depot), so a mission
+    pointing at one fails with `400 INVALID_OBJECTIVE_PARAMS … poiId: Invalid UUID`.
+    `inventory` takes them (`uuidSchema = z.guid()`). Could `mission` take `z.guid()` too?
+    Tried locally on minikube (2026-10-28): the five lines changed, the simulation's missions
+    are created. **PR [#40](https://github.com/DyingStar-game/services/pull/40)** (2026-10-28).
+
 ### `services` › `inventory`
 
 21. `openapi.yaml` is not valid YAML: line 816, `description: Internal-only: geometry fields …`
@@ -93,11 +105,39 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
 23. The publisher (`build_mission`) sends `transport` objectives with `params: { itemId }`, which
     `mission`'s strict `transport` kind refuses (it takes `goodType`, `source`, `zone`), and
     mining legs as `deliver_items`, a kind `mission` no longer has: no simulation mission can be
-    published today (sent 2026-10-23).
+    published today (sent 2026-10-23). Tried locally on minikube (2026-10-28):
+    `transport` with `params: { goodType, source: { kind: 'poi', poiId }, zone: { kind: 'poi',
+    poiId } }` and mining as `deliver_material` with `params: { goodType, zone }` are accepted;
+    the leg is published. The `poiId`s raise question 27. **PR
+    [#41](https://github.com/DyingStar-game/services/pull/41)** (2026-10-28, with question 27).
 25. The richer world file shared on 2026-10-23 (30 resources; farm, factory, railway and spaceport
     villages) uses `federation.railSpeedKmh`, `villages.hubs`, `processes`, policies with
     `pushTo` and `routes.links`, which `develop`'s importer refuses (`src/import/mod.rs`,
-    `deny_unknown_fields`). Which version reads it, and when is it pushed?
+    `deny_unknown_fields`). Which version reads it, and when is it pushed? Without it, the
+    imported ARES world never creates an order (minikube, 2026-10-27): every village is below its
+    food and water thresholds but none produces them ("no supplier reachable", 192 times a tick),
+    and no village has a threshold on an ore, so its 16 mineral sources are never mined.
+27. **A warehouse is not a POI.** The publisher puts the warehouse's id, its `cargo_depot`'s
+    persistence UUID, as the objectives' `poiId`, but no POI has that id: `inventory` makes up
+    its own POI ids (`POST /api/internal/pois` takes none). `mission` resolves its places in
+    `inventory` to measure progress, so a published simulation mission can never be completed,
+    and the panel shows its places as unknown. Who should create the depots' POIs: the game
+    server, the world import, or `universesimulator`? Tried locally (2026-10-28):
+    `universesimulator` creates one the first time a mission points at a warehouse (owner the
+    federation's political entity, `scene` its `planet_internal_name`, the depot's position,
+    radius 40 m, `metadata.persistence` the depot's UUID, `parentId` being a POI only, question
+    22), keeps it in `warehouses.inventory_poi_id` (migration `0004`) and publishes it; its 37
+    tests pass, and on minikube the mission is published with both POIs. It needs **`inventory:poi:manage` on `svc-universesimulator`**, which
+    `keycloak-managed/*/06-service-clients.yaml` does not give it (dev and pre-production).
+    **PR [#41](https://github.com/DyingStar-game/services/pull/41)** (2026-10-28), as a proposal;
+    the role is still to add in `kubernetes`.
+28. **A tick can keep its lock forever.** On minikube (2026-10-27) the tick's advisory lock
+    (`pg_try_advisory_lock` on a pooled connection, `simulation/mod.rs` › `tick`) stayed held by
+    an idle connection after a tick that never logged its end: every later tick, timed or
+    forced, failed with `a tick is already running` until the connection was terminated. A
+    session lock outlives a tick that stops before `pg_advisory_unlock` (an error or a dropped
+    future between the two). Could the tick take a transaction-scoped lock
+    (`pg_try_advisory_xact_lock`), or release it whatever happens?
 
 ## Answered
 

@@ -15,4 +15,11 @@ describe('FactList', () => {
     expect(screen.getByText('Faction').nextElementSibling).toHaveTextContent('Free miners');
     expect(screen.getByText('Role').nextElementSibling).toHaveTextContent('Pilot');
   });
+
+  it('puts two pairs a row on wider screens when asked', () => {
+    render(<FactList columns={2} facts={[['Quantity', '600 l']]} />);
+    expect(screen.getByText('Quantity').closest('dl')).toHaveClass(
+      'sm:grid-cols-[auto_1fr_auto_1fr]',
+    );
+  });
 });

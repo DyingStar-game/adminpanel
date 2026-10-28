@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { INVENTORY_URL, MISSION_URL, missionIds, poiIds } from '@dyingstar-admin/testing';
 import { createInventoryClient } from '../clients/inventory';
 import { createMissionClient } from '../clients/mission';
+import { objectivePoiIds } from './mission';
 import { fakeProvider, ORIGIN, setup, signIn, tokens } from '../test/auth';
 import { buildApp, mswServer } from '../test/harness';
 
@@ -92,6 +93,17 @@ describe('mission routes (ADR 0024 step O, reading)', () => {
 
     await request(`/api/mission/missions/${missionIds.delivery}`);
     expect(inventory.tokens).toHaveLength(2);
+  });
+
+  it("takes persistence's Godot-made ids as POIs (a simulation mission's warehouses)", () => {
+    // No RFC version or variant, as SandBox's cargo depots.
+    const depot = '8276a47f-c581-27a0-e40a-58bdb7e7b27b';
+    const objective = { params: { source: { kind: 'poi', poiId: depot }, goodType: 'water' } };
+    expect(
+      objectivePoiIds({ objectives: [objective] } as unknown as Parameters<
+        typeof objectivePoiIds
+      >[0]),
+    ).toEqual([depot]);
   });
 
   it('serves the page without places when inventory is silent or not configured', async () => {

@@ -21,8 +21,15 @@ describe('SimulationOrders', () => {
     expect(hops).toHaveLength(2);
     expect(hops[1]).toHaveTextContent('F0001');
     expect(hops[1]).toHaveTextContent('On offer');
-    expect(hops[1]).toHaveTextContent('600 l · 15 km');
-    expect(hops[1]).toHaveTextContent('F0001 — Cargo depot → M0002 — Cargo depot');
+    // Each fact under its label, as a mission's objective.
+    const fact = (hop: HTMLElement | undefined, label: string) =>
+      within(hop as HTMLElement).getByText(label).nextElementSibling;
+    expect(fact(hops[1], 'Quantity')).toHaveTextContent('600 l');
+    expect(fact(hops[1], 'Distance')).toHaveTextContent('15 km');
+    expect(fact(hops[1], 'Warehouses')).toHaveTextContent(
+      'F0001 — Cargo depot → M0002 — Cargo depot',
+    );
+    expect(within(water).getByText('Trigger').nextElementSibling).toHaveTextContent('Shortage');
     // The mission on offer by its title and status from `mission` (ADR 0028).
     const mission = within(hops[1] as HTMLElement);
     expect(mission.getByTitle(simulationIds.waterMission)).toBeInTheDocument();
@@ -31,7 +38,9 @@ describe('SimulationOrders', () => {
     // A leg whose mission is done keeps its id.
     expect(hops[0]).toHaveTextContent('a7e50000');
     const copper = screen.getByRole('listitem', { name: '660 Copper ore for C0001' });
-    expect(within(copper).getAllByRole('listitem')[0]).toHaveTextContent('reward not set yet');
+    expect(fact(within(copper).getAllByRole('listitem')[0], 'Reward')).toHaveTextContent(
+      'Not set yet',
+    );
   });
 
   it('filters by status', async () => {

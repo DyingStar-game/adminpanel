@@ -4,7 +4,7 @@ import { createUniversesimulatorDataset, simulationIds as ids } from '@dyingstar
 import { LegTimeline } from './LegTimeline';
 
 describe('LegTimeline', () => {
-  it('lists the hops between villages in order, with their warehouses, status and mission', () => {
+  it('lists the hops between villages in order, each with its status and labelled facts', () => {
     const order = createUniversesimulatorDataset().orders.find((o) => o.id === ids.waterOrder);
     const villages: Record<string, string> = {
       [ids.c0001]: 'C0001',
@@ -15,10 +15,11 @@ describe('LegTimeline', () => {
       <LegTimeline
         legs={[...(order?.legs ?? [])].reverse()}
         placeName={(id) => (id ? (villages[id] ?? id) : 'Mine')}
-        warehouseName={(id) => (id === ids.f0001Main ? 'F0001 depot' : 'M0002 depot')}
         statusLabel={(s) => s.toUpperCase()}
-        facts={(leg) => `${leg.quantity} l`}
-        missionLabel="Mission"
+        facts={(leg) => [
+          ['Quantity', `${leg.quantity} l`],
+          ['Mission', leg.missionId ?? '—'],
+        ]}
       />,
     );
 
@@ -27,12 +28,9 @@ describe('LegTimeline', () => {
       'COMPLETED',
       'PUBLISHED',
     ]);
-    expect(hops[1]).toHaveTextContent('F0001');
-    expect(hops[1]).toHaveTextContent('M0002');
-    expect(hops[1]).toHaveTextContent('F0001 depot → M0002 depot');
-    // The mission's short id, the whole one copied.
-    expect(within(hops[1] as HTMLElement).getByTitle(ids.waterMission)).toHaveTextContent(
-      ids.waterMission.slice(0, 8),
-    );
+    const second = within(hops[1] as HTMLElement);
+    expect(second.getByRole('heading')).toHaveTextContent('F0001M0002');
+    expect(second.getByText('Quantity').nextElementSibling).toHaveTextContent('600 l');
+    expect(second.getByText('Mission').nextElementSibling).toHaveTextContent(ids.waterMission);
   });
 });

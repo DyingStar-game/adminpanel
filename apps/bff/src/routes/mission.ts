@@ -15,8 +15,12 @@ import { fromQuery, validate } from '../lib/validate';
 
 const IdParams = z.object({ id: z.uuid() });
 
-/** A POI as `mission`'s objective kinds take it in their `params` (`{ kind: 'poi', poiId }`). */
-const PoiRef = z.object({ kind: z.literal('poi'), poiId: z.uuid() });
+/**
+ * A POI as `mission`'s objective kinds take it in their `params` (`{ kind: 'poi', poiId }`). A
+ * GUID, not a strict UUID: `universesimulator`'s missions point at warehouses, whose ids are the
+ * Godot-made UUIDs of persistence (no RFC version or variant), as `inventory` takes them.
+ */
+const PoiRef = z.object({ kind: z.literal('poi'), poiId: z.guid() });
 
 /** The POIs a mission's objectives point at (`zone`, `source`…), each once. */
 export function objectivePoiIds(detail: MissionDetailAsServed): string[] {
