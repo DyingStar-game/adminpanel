@@ -36,7 +36,7 @@ Run everything through `make` (Docker / podman, pinned Node and pnpm); do not ca
 | Install dependencies | `make install` |
 | Any pnpm command | `make pnpm <cmd>` — flags go through `ARGS`, e.g. `make pnpm add zod ARGS="--filter @dyingstar-admin/web"` |
 | Dev servers (Vite :5173 + BFF :3000) | `make pnpm dev` |
-| Test data in minikube's `social` and `economie` (after each reset) | `make seed-social` (`make up K8S=1`, Keycloak import done; replays skipped); `make reset-social` empties `social` first, `make reset-mission` `mission` |
+| Test data in minikube's `social` and `economie` (after each reset) | `make seed-social` (`make up K8S=1`, realm synced; replays skipped); `make reset-social` empties `social` first, `make reset-mission` `mission` |
 | Minikube's `universesimulator` (empty otherwise) | `make seed-simulation` (SandBox's villages copied into minikube's persistence, the ARES world `docker/minikube/universesimulator/world-ares.json` imported, a tick; rerun-safe); `make reset-simulation` empties it (and its warehouses in `inventory`) first |
 | Re-pin the game services' OpenAPI, regenerate their Zod schemas | `make contracts-update` (one service: `SERVICE=mission`) |
 | Checks before committing | `make check` (format, lint, typecheck, test, format check); commit only when it passes |

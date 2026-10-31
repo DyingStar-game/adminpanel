@@ -58,32 +58,27 @@ one at each start, and their service account roles are not assigned.
 When the back team changes their dev realm, convert `spec.realm` again and re-apply the
 additions above.
 
-## Adding the panel to the back team's minikube Keycloak
+## The panel in the back team's minikube Keycloak
 
 The client `dyingstar-admin` (with the redirect URIs of `localhost:5173`, `localhost:3000` and
 `admin.dyingstar.local`), its client roles and the realm roles `admin` and `supervisor` are in the
-back team's `kubernetes` repository (`keycloak-managed/dev/`, 2026-10-09): their Keycloak has
-them after a sync, with the client's secret `dyingstar-admin-dev-secret` (the one decided for the
-dev environment, maintainer 2026-10-23), which `docker-compose.k8s.yml` hands the BFF; our compose
-Keycloak keeps `dyingstar-admin-local`. A client role added since (`inventory:read`, ADR 0026) is
-not there yet: it was created by hand on minikube on 2026-10-23 (admin API) and given to `ynotna`
-and `dev-admin`. `k8s-partial-import.json` still brings the test users (`dev-*`, `player-*`)
-and, for a Keycloak synced before that, the same client and roles, to the back team's dev-local
-Keycloak (`http://auth.dyingstar.local/admin`, realm `dyingstar`): Realm settings › Action ›
-Partial import, "Skip" if a resource exists (an existing user keeps its roles: a new role is
-given by hand). Imported users live in that Keycloak's database only: lost when the back team's
-stack recreates it (the commands to redo it:
-[After the back team's stack is recreated](#after-the-back-teams-stack-is-recreated)).
-Regenerate it whenever `dyingstar-realm.json` changes.
+back team's `kubernetes` repository (`keycloak-managed/dev/`), with the client's secret
+`dyingstar-admin-dev-secret` (the one decided for the dev environment, maintainer 2026-10-23),
+which `docker-compose.k8s.yml` hands the BFF; our compose Keycloak keeps `dyingstar-admin-local`.
+Since `kubernetes` #48 (2026-10-31), the realm's bootstrap job
+(`keycloak-managed/dev/07-role-bootstrap-job.yaml`) also creates the test accounts at each
+ArgoCD sync: `dev-reader`, `dev-editor`, `dev-moderator`, `dev-admin` and the `player-*` (fixed
+ids, password = user name), and re-asserts their `dyingstar-admin` client roles (add only).
+**`ynotna` is not there** (the account of a real person): on minikube, sign in as `dev-admin`.
+
+`k8s-partial-import.json` is now only for a realm older than #48: Realm settings › Action ›
+Partial import on `http://auth.dyingstar.local/admin` (realm `dyingstar`), "Skip" if a resource
+exists. Regenerate it whenever `dyingstar-realm.json` changes. A new client role of the panel
+goes into `kubernetes` (`06-service-clients.yaml` and the bootstrap job's list), not only here.
 
 Then `make up K8S=1` (their stack running, `minikube tunnel` on) recreates the dev container on
 minikube's network and points the BFF at `http://auth.dyingstar.local/realms/dyingstar`
 (`docker/docker-compose.k8s.yml`); `make up` goes back to the local Keycloak.
-
-**Partial import and existing users:** with "Skip", users already in the realm keep their roles.
-After a change of roles here (e.g. `social:*:write`), either recreate their Keycloak (reset) or
-give the roles by hand: Users › the user › Role mapping › Assign role › Filter by clients ›
-`dyingstar-admin`.
 
 ### Organisation management on minikube
 
@@ -94,10 +89,10 @@ need the same roles on `dyingstar-admin` (above) and a moderation role to open t
 
 ## Test players in minikube's `social`
 
-The back team's stack recreates `social`'s database with everything else. Once the partial import
-above is done (it holds the `player-*` users), `make seed-social` (container started with
+The back team's stack recreates `social`'s database with everything else. Once the realm holds
+the `player-*` users (above), `make seed-social` (container started with
 `make up K8S=1`) signs each player in through the realm's public `dyingstar-dev` client, which
-registers them in `social` (the staff accounts `dev-moderator`, `dev-admin`, `ynotna` too: without a profile, `social` refuses their reputation changes), then fills it: profiles, friendships (one request left pending),
+registers them in `social` (the staff accounts `dev-moderator` and `dev-admin` too: without a profile, `social` refuses their reputation changes), then fills it: profiles, friendships (one request left pending),
 organisations (a country and its commune, three corporations, one the subsidiary of another), open reports against `player-dax` and `player-pell` (and one back), a warning and a mute on
 `player-dax` by `dev-moderator`, a 72 h suspension on `player-pell` by `dev-admin`. Run it again
 after every reset; on a filled database it skips what exists. `make reset-social` goes back to
@@ -106,72 +101,39 @@ the start: it empties `social`'s database (`docker/minikube/service-reset.sql`, 
 `make reset-mission` does the same for `mission` (its missions come back on the seed's POIs). The data lives in
 `packages/contracts/scripts/seed-social.ts`.
 
-## Workaround: services rejecting every token in minikube (`401 Invalid token`)
+## Services rejecting every token in minikube (`401 Invalid token`)
 
 The back team's services read Keycloak's keys at `http://auth.dyingstar.local/…/certs` (no
-`OIDC_JWKS_URL` in their `values-dev`), so the pods must resolve `auth.dyingstar.local`. The
-cluster's DNS forwards unknown names to the host's resolver: with WSL + Docker Desktop it reads
-the **Windows hosts file**, where `auth.dyingstar.local` is `127.0.0.1` (needed by the browser),
-which inside a pod is the pod itself (`ECONNREFUSED`). Reported to the back team on 2026-10-08;
-their fix: `OIDC_JWKS_URL=http://keycloak.keycloak.svc.cluster.local:8080/realms/dyingstar/protocol/openid-connect/certs`.
+`OIDC_JWKS_URL` in their `values-dev`, lot 2 question 5), so the pods must resolve
+`auth.dyingstar.local` to Traefik. On **native Linux** (the maintainer's setup since
+2026-10-31) they do: the cluster's DNS forwards unknown names to the host, whose `/etc/hosts`
+maps them to Traefik's external IP. Check:
 
-Until then, tell CoreDNS that these names lead to Traefik inside the cluster (local, reversible,
-lost when minikube is recreated; applied here on 2026-10-08):
+```sh
+kubectl exec deploy/service-social -n dyingstar -- node -e "fetch('http://auth.dyingstar.local/realms/dyingstar/protocol/openid-connect/certs').then(r=>console.log(r.status))"
+```
+
+answers `200`. With **WSL + Docker Desktop** it did not: the host's resolver read the Windows
+hosts file (`127.0.0.1`, the pod itself). The workaround then was a CoreDNS line mapping these
+names to Traefik's ClusterIP, lost when minikube is recreated:
 
 ```sh
 TIP=$(kubectl get svc traefik -n traefik -o jsonpath='{.spec.clusterIP}')
-kubectl -n kube-system edit configmap coredns
-#   in the `hosts { … }` block, after `host.minikube.internal`, add:
-#   <TIP> auth.dyingstar.local services.dyingstar.local
+kubectl -n kube-system get configmap coredns -o json | python3 -c '
+import json, sys
+cm, line = json.load(sys.stdin), sys.argv[1] + " auth.dyingstar.local services.dyingstar.local"
+cf = cm["data"]["Corefile"]
+if "auth.dyingstar.local" not in cf:
+    cf = cf.replace("host.minikube.internal\n", "host.minikube.internal\n       " + line + "\n", 1)
+cm["data"]["Corefile"] = cf
+json.dump(cm, sys.stdout)' "$TIP" | kubectl replace -f -
 kubectl -n kube-system rollout restart deployment coredns
 ```
 
-Check: `kubectl exec deploy/service-social -n dyingstar -- node -e "fetch('http://auth.dyingstar.local/realms/dyingstar/protocol/openid-connect/certs').then(r=>console.log(r.status))"`
-answers `200`. To undo: remove the line and restart CoreDNS again. Not needed any more once the
-back team sets `OIDC_JWKS_URL`. Without an editor: [After the back team's stack is
-recreated](#after-the-back-teams-stack-is-recreated), step 1.
-
 ## After the back team's stack is recreated
 
-A restart of their stack may recreate minikube's realm and CoreDNS (done on 2026-10-21): our
-additions are lost. Signs: `make seed-social` stops on `Keycloak refused dev-moderator (400 …
-Invalid user credentials)`, the services answer `401 Invalid token` / `Invalid service token`
-even to `svc-admin`, the realm holds only `devplayer`. Redo, in this order, from WSL (stack
-running, `minikube tunnel` on):
-
-1. **CoreDNS** (the workaround above), without an editor; it does nothing when the line is there:
-
-   ```sh
-   TIP=$(kubectl get svc traefik -n traefik -o jsonpath='{.spec.clusterIP}')
-   kubectl -n kube-system get configmap coredns -o json | python3 -c '
-   import json, sys
-   cm, line = json.load(sys.stdin), sys.argv[1] + " auth.dyingstar.local services.dyingstar.local"
-   cf = cm["data"]["Corefile"]
-   if "auth.dyingstar.local" not in cf:
-       cf = cf.replace("host.minikube.internal\n", "host.minikube.internal\n       " + line + "\n", 1)
-   cm["data"]["Corefile"] = cf
-   json.dump(cm, sys.stdout)' "$TIP" | kubectl replace -f -
-   kubectl -n kube-system rollout restart deployment coredns
-   kubectl -n kube-system rollout status deployment coredns
-   ```
-
-   Then the check above answers `200`.
-
-2. **Keycloak's partial import** (the panel's client roles and the test users), through the admin
-   API instead of the console, `ifResourceExists` = Skip (dev-local admin `admin` / `devpass`):
-
-   ```sh
-   ADMIN_TOKEN=$(curl -s -d grant_type=password -d client_id=admin-cli -d username=admin \
-     -d password=devpass http://auth.dyingstar.local/realms/master/protocol/openid-connect/token \
-     | python3 -c 'import json, sys; print(json.load(sys.stdin)["access_token"])')
-   python3 -c 'import json, sys; d = json.load(open(sys.argv[1])); d["ifResourceExists"] = "SKIP"; json.dump(d, sys.stdout)' \
-     docker/keycloak/k8s-partial-import.json \
-     | curl -s -X POST -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' \
-       --data @- http://auth.dyingstar.local/admin/realms/dyingstar/partialImport
-   ```
-
-   It answers `{"added": …, "skipped": …}`: the users come back with the roles of the file, an
-   existing user keeps its own (see "Partial import and existing users" above).
-
-3. **Sign in again** to the panel (the accounts are new), then `make seed-social`: it registers
-   the players in `social` and refills `social`, `economie` and `mission`.
+Their realm comes back with the panel's client and test accounts (above); the services'
+databases come back empty. Sign in again to the panel, then `make seed-social` (it registers the
+players in `social` and refills `social`, `economie` and `mission`) and `make seed-simulation`.
+If `make seed-social` stops on `Keycloak refused dev-moderator (400 … Invalid user
+credentials)`, the bootstrap job has not run yet: wait for ArgoCD's sync of `keycloak`.

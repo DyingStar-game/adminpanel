@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { INVENTORY_URL, MISSION_URL, missionIds, poiIds } from '@dyingstar-admin/testing';
 import { createInventoryClient } from '../clients/inventory';
 import { createMissionClient } from '../clients/mission';
+import { objectivePoiIds } from './mission';
 import { fakeProvider, ORIGIN, setup, signIn, tokens } from '../test/auth';
 import { buildApp, mswServer } from '../test/harness';
 
@@ -92,6 +93,20 @@ describe('mission routes (ADR 0024 step O, reading)', () => {
 
     await request(`/api/mission/missions/${missionIds.delivery}`);
     expect(inventory.tokens).toHaveLength(2);
+  });
+
+  it('takes only RFC 9562 uuids as POI ids, as mission does', () => {
+    const poi = (poiId: string) => ({ kind: 'poi', poiId });
+    // A v4 POI made by inventory, then an id with no RFC version or variant digits.
+    const valid = '149cb396-6b0e-4c1a-9f2d-3a8e5b7c1d20';
+    const objective = {
+      params: { source: poi(valid), zone: poi('8276a47f-c581-27a0-e40a-58bdb7e7b27b') },
+    };
+    expect(
+      objectivePoiIds({ objectives: [objective] } as unknown as Parameters<
+        typeof objectivePoiIds
+      >[0]),
+    ).toEqual([valid]);
   });
 
   it('serves the page without places when inventory is silent or not configured', async () => {

@@ -8,8 +8,8 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
   next number; an answered one moves to [Answered](#answered), keeping its number.
 - Each question says where it was seen. Where a README or an OpenAPI differs from the code, the
   panel follows the code meanwhile.
-- Last checked: **2026-10-24**, against `services` `develop` `0c14db4`, `kubernetes` `main`
-  `0065f37` and the dev-local minikube stack.
+- Last checked: **2026-10-28**, against `services` `develop` `b3c3553`, `kubernetes` `main`
+  `6e9f014` and the dev-local minikube stack.
 
 ## Pending changes
 
@@ -17,7 +17,9 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
   `feat/admin-panel-missions`, commit `2cb5c50`; the maintainer has no push right there):
   `MISSION_URL` / `INVENTORY_URL` in the `dyingstar-admin` chart, client roles `mission:read`,
   `mission:write`, `inventory:read` on the `dyingstar-admin` client (dev and pre-production).
-  Not in `main` yet.
+  `MISSION_URL` reached `main` on 2026-10-27 (`6e9f014`); **`INVENTORY_URL` is still missing**:
+  pre-production's panel names no mission place ("the places were not read from the
+  inventory"), whatever the mission. The client roles are not in `main` either.
 
 ## Open
 
@@ -31,7 +33,8 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
    defaults to the issuer's (`http://auth.dyingstar.local/…/certs`), which the pods cannot
    resolve: every service rejects every token. Locally, a CoreDNS line mapping
    `auth.dyingstar.local` and `services.dyingstar.local` to Traefik works around it (lost when
-   minikube is recreated). Could the dev scripts set it up?
+   minikube is recreated). Could the dev scripts set it up? Seen with WSL + Docker Desktop only:
+   on native Linux (2026-10-31) the pods resolve these names through the host's `/etc/hosts`.
 11. **Persistence and tokens**: will persistence require a token one day? Then `svc-admin` needs
     its audience.
 12. **Token lifetime**: pre-production's access tokens last 24 h (realm `accessTokenLifespan`
@@ -93,11 +96,42 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
 23. The publisher (`build_mission`) sends `transport` objectives with `params: { itemId }`, which
     `mission`'s strict `transport` kind refuses (it takes `goodType`, `source`, `zone`), and
     mining legs as `deliver_items`, a kind `mission` no longer has: no simulation mission can be
-    published today (sent 2026-10-23).
+    published today (sent 2026-10-23). Tried locally on minikube (2026-10-28):
+    `transport` with `params: { goodType, source: { kind: 'poi', poiId }, zone: { kind: 'poi',
+    poiId } }` and mining as `deliver_material` with `params: { goodType, zone }` are accepted;
+    the leg is published. The `poiId`s raise question 27. **PR
+    [#41](https://github.com/DyingStar-game/services/pull/41)** (2026-10-28, with question 27);
+    it does not need #40 (question 26).
 25. The richer world file shared on 2026-10-23 (30 resources; farm, factory, railway and spaceport
     villages) uses `federation.railSpeedKmh`, `villages.hubs`, `processes`, policies with
     `pushTo` and `routes.links`, which `develop`'s importer refuses (`src/import/mod.rs`,
-    `deny_unknown_fields`). Which version reads it, and when is it pushed?
+    `deny_unknown_fields`). Which version reads it, and when is it pushed? Without it, the
+    imported ARES world never creates an order (minikube, 2026-10-27): every village is below its
+    food and water thresholds but none produces them ("no supplier reachable", 192 times a tick),
+    and no village has a threshold on an ore, so its 16 mineral sources are never mined.
+27. **A warehouse is not a POI.** The publisher puts the warehouse's id, its `cargo_depot`'s
+    persistence UUID, as the objectives' `poiId`, but no POI has that id: `inventory` makes up
+    its own POI ids (`POST /api/internal/pois` takes none). `mission` resolves its places in
+    `inventory` to measure progress, so a published simulation mission can never be completed,
+    and the panel shows its places as unknown. Who should create the depots' POIs: the game
+    server, the world import, or `universesimulator`? Tried locally (2026-10-28):
+    `universesimulator` creates one the first time a mission points at a warehouse (owner the
+    federation's political entity, `scene` its `planet_internal_name`, the depot's position,
+    radius 40 m, `metadata.persistence` the depot's UUID, `parentId` being a POI only, question
+    22), keeps it in `warehouses.inventory_poi_id` (migration `0004`) and publishes it; its 37
+    tests pass, and on minikube the mission is published with both POIs. It needs **`inventory:poi:manage` on `svc-universesimulator`**, which
+    `keycloak-managed/*/06-service-clients.yaml` does not give it (dev and pre-production).
+    **PR [#41](https://github.com/DyingStar-game/services/pull/41)** (2026-10-28), as a proposal;
+    the role is still to add in `kubernetes`. Its POIs are made by `inventory` (v4 UUIDs), so it
+    never needed #40; after each world's persistence reset (DyingStar#455, question 26) the
+    depots take new ids, and so do their warehouses and POIs.
+28. **A tick can keep its lock forever.** On minikube (2026-10-27) the tick's advisory lock
+    (`pg_try_advisory_lock` on a pooled connection, `simulation/mod.rs` › `tick`) stayed held by
+    an idle connection after a tick that never logged its end: every later tick, timed or
+    forced, failed with `a tick is already running` until the connection was terminated. A
+    session lock outlives a tick that stops before `pg_advisory_unlock` (an error or a dropped
+    future between the two). Could the tick take a transaction-scoped lock
+    (`pg_try_advisory_xact_lock`), or release it whatever happens?
 
 ## Answered
 
@@ -117,3 +151,9 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
   (`mission:read`), PR #37 (2026-10-22).
 - **20.** `isEvent` not stored on creation → probably the panel's mistake: `createMission` stores
   it since `1f3a252` (2026-10-12). Not sent again; to confirm on minikube.
+- **26.** `mission` refusing the POI ids persistence made → fixed at the source, not in
+  `mission`: [DyingStar#455](https://github.com/DyingStar-game/DyingStar/pull/455) (merged
+  2026-10-30) makes Godot's stable ids RFC 9562 version 5 UUIDs, which `mission`'s
+  `z.string().uuid()` takes; `services` PR #40 is no longer needed. The old ids stay in each
+  world's persistence until it is reset (the back team's call; the test server still held
+  3,117 of them on 2026-10-31).

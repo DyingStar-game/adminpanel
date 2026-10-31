@@ -144,8 +144,9 @@ export const useSimulationResources = () =>
   });
 
 /** Political entities mirrored from `social` (read once); a village is a commune. */
-export const useSimulationEntities = () =>
+export const useSimulationEntities = (enabled = true) =>
   useQuery({
+    enabled,
     queryKey: ['simulation', 'entities'],
     queryFn: () => apiGet(`${PATH}/entities`, zListEntitiesResponse),
     staleTime: 5 * 60_000,

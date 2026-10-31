@@ -37,8 +37,9 @@ export const useCorporations = (search: string, page: number, enabled = true) =>
   });
 
 /** A corporation's page: ranks, parent, first members and subsidiaries. */
-export const useCorporation = (id: string) =>
+export const useCorporation = (id: string, enabled = true) =>
   useQuery({
+    enabled,
     queryKey: ['social', 'corporation', id],
     queryFn: () => apiGet(corporationPath(id), zGetCorporationResponse),
   });

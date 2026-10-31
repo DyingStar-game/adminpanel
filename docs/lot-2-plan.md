@@ -6,7 +6,7 @@ permissions, one panel per environment) and [ADR 0024](./adr/0024-game-services-
 new decision gets an ADR first. **Read it first when starting a session on lot 2.** What was
 built session by session: [`lot-2-journal.md`](./lot-2-journal.md) (history only).
 
-## Status (2026-10-23)
+## Status (2026-10-28)
 
 | Step | Status |
 |------|--------|
@@ -18,7 +18,8 @@ built session by session: [`lot-2-journal.md`](./lot-2-journal.md) (history only
 | M. Final roles × actions matrix (ADR 0023): persistence's 🟡 cells left | The maintainer's call |
 | O.1–O.3. `economie`: reading, settings, money movements | **Done**, O.3 to try live |
 | Simulation (`universesimulator`, ADR 0025) | **Done** (PR #2) |
-| O.4–O.5. `mission`: catalogue, a mission's page (ADR 0026, 0027); cancelling a mission (ADR 0028); crates in persistence (ADR 0029) | **Done**, branch `feature/missions`, **PR #3** to `develop` open |
+| O.4–O.5. `mission`: catalogue, a mission's page (ADR 0026, 0027); cancelling a mission (ADR 0028); crates in persistence (ADR 0029) | **Done**, PR #3 merged |
+| Polish: supply orders laid out as a mission's objectives, issuer and escrow payer named | **Done**, branch `feature/simulation-orders-layout`, PR to `develop` open; needs `services` PR #41 for simulation missions |
 | **O.6. `inventory`** | **Next** (below) |
 | O.7. `market` | Then (below) |
 
@@ -89,15 +90,16 @@ server (catalogue) and by players or the game server (orders, demands), not by a
   (`services.dyingstar.local/social`, `/economie`) and `svc-admin`'s secret read from the
   cluster. After changing mode or `docker/docker-compose*.yml`, recreate the container (`make up
   …`) then `make pnpm dev`.
-- Minikube stack: `~/www/kubernetes`, `./scripts_linux/start-dev.sh`, `minikube tunnel`;
-  `*.dyingstar.local` → `127.0.0.1` in WSL's `/etc/hosts` **and** Windows' hosts file.
+- Minikube stack (native Linux since 2026-10-31): `~/www/kubernetes`,
+  `./scripts_linux/start-dev.sh`, `minikube tunnel`; `*.dyingstar.local` → Traefik's external IP
+  in `/etc/hosts`, which the pods resolve the same way.
 - Test users (password = user name): `devplayer`, `dev-reader`, `dev-editor`,
-  `dev-moderator`, `dev-admin`, `ynotna` (`admin`, id `19dd218f-9cbd-484f-9a3b-cff5285eaa93`,
-  the maintainer's real pre-production player), test players `player-*`. List and roles:
-  `docker/keycloak/README.md`.
-- Minikube Keycloak loses our client and users when its database is recreated: re-import
-  `docker/keycloak/k8s-partial-import.json` (Realm settings › Action › Partial import); with
-  "Skip", existing users keep their roles (give new ones by hand).
+  `dev-moderator`, `dev-admin`, test players `player-*`; `ynotna` (`admin`, id
+  `19dd218f-9cbd-484f-9a3b-cff5285eaa93`, the maintainer's real pre-production player) only in
+  our compose Keycloak. List and roles: `docker/keycloak/README.md`.
+- Minikube's realm recreates the panel's client, roles and test users itself at each ArgoCD sync
+  (`kubernetes` #48, bootstrap job); `docker/keycloak/k8s-partial-import.json` is only for a
+  realm older than that.
 - Test data: `make seed-social` (players, friendships, organisations, reports, sanctions in
   `social`; wallets, treasuries, taxes and minting in `economie`; missions in `mission` and their
   POIs in `inventory`, on real SandBox objects; replays skipped); `make reset-social` empties
@@ -115,8 +117,8 @@ server (catalogue) and by players or the game server (orders, demands), not by a
 - Browser checks against minikube: Playwright with `--network container:dyingstar-admin-dev-1`
   and `--host-resolver-rules=MAP auth.dyingstar.local:80 <minikube ip>:<traefik node port>`
   (`--network host` does not reach minikube; read the node port from `kubectl`).
-- Services rejecting every token (`401 Invalid token`) in minikube: CoreDNS workaround in
-  `docker/keycloak/README.md` until the back team sets `OIDC_JWKS_URL` (reported 2026-10-08).
+- Services rejecting every token (`401 Invalid token`) in minikube: only seen with WSL + Docker
+  Desktop (CoreDNS workaround in `docker/keycloak/README.md`, question 5); not on native Linux.
 - Staff accounts are registered in `social` at sign-in (its reputation changes need a profile).
 - `make contracts-update` re-pins every service's OpenAPI (`SERVICE=<name>` for one) and
   regenerates their Zod schemas; `packages/contracts/src/github-sync.test.ts` fails when one

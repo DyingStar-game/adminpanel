@@ -46,7 +46,8 @@ since `bdee3c0`), section by section:
   (`inventory:carried:write`), a route and role the README does not list;
 - an unknown holder is **not** a 404: it answers an empty inventory (`stacks: []`,
   `instancesTotal: 0`). Only a single stack answers 404;
-- ids are any 8-4-4-4-12 hex (`z.guid()`): persistence UUIDs lack the RFC version bits;
+- ids are any 8-4-4-4-12 hex (`z.guid()`), which took the game's former stable ids (no RFC
+  version bits; real version 5 UUIDs since DyingStar#455);
 - its `openapi.yaml` is still **not valid YAML** (lot 2 question 21): nothing can be generated,
   so the panel describes these answers by hand from the code, as it does for the POI.
 
