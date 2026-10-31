@@ -1,4 +1,4 @@
-import type { z } from 'zod';
+import { z } from 'zod';
 import { Permission } from '@dyingstar-admin/schemas';
 import {
   zAdjustReputationResponse,
@@ -21,6 +21,7 @@ import {
   zGetPoliticalEntityResponse,
   zGetProfileResponse,
   zGetReportResponse,
+  zInternalRecordActivityResponse,
   zIssueSanctionResponse,
   zListCorporationMembersResponse,
   zListCorporationsResponse,
@@ -36,6 +37,7 @@ import {
   type AdjustReputationData,
   type InternalCreateCorporationData,
   type InternalCreatePoliticalEntityData,
+  type InternalRecordActivityData,
   type InternalUpdateCorporationData,
   type InternalUpdatePoliticalEntityData,
   type IssueSanctionData,
@@ -44,6 +46,28 @@ import {
 import type { ServiceTokenSource } from '../auth/serviceToken';
 import type { Session } from '../auth/auth';
 import { createUpstream, type Query } from './upstream';
+
+/**
+ * `POST /api/internal/players/:playerId/notifications` (`social:notify:write`): in `social`'s
+ * code (`routes/internal.routes.ts`, `routes/schemas.ts` › `notificationBody`,
+ * `services/notifications.service.ts`, read 2026-10-31 at `develop` `7106778`) but neither in its
+ * README nor its OpenAPI (`docs/back-team-questions.md`): written from the code, as ADR 0024
+ * allows. A live push to the player's MQTT channel when they are online, nothing stored.
+ */
+export const zNotifyPlayerBody = z.object({
+  type: z.string().trim().min(1).max(64),
+  title: z.string().trim().max(120).optional(),
+  body: z.string().trim().max(500).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
+});
+export type NotifyPlayerBody = z.infer<typeof zNotifyPlayerBody>;
+
+/** Its answer: an offline player is not an error (`delivered: false, reason: 'offline'`). */
+export const zNotifyPlayerResponse = z.object({
+  delivered: z.boolean(),
+  reason: z.string().optional(),
+});
+export type NotifyPlayerResponse = z.infer<typeof zNotifyPlayerResponse>;
 
 export interface SocialClientOptions {
   /** `social`'s base URL, without `/api` (e.g. `http://service-social:3000`). */
@@ -227,6 +251,23 @@ export function createSocialClient({ baseUrl, timeoutMs, serviceToken }: SocialC
       internal('POST', `${politics(id)}/transfer`, zInternalTransferPoliticalHeadResponse, {
         playerId,
       }),
+    // A player told something by the panel (ADR 0032), as `svc-admin` too.
+    /** Live, when they are online (`social:notify:write`). */
+    notifyPlayer: (playerId: string, body: NotifyPlayerBody) =>
+      internal(
+        'POST',
+        `/players/${encodeURIComponent(playerId)}/notifications`,
+        zNotifyPlayerResponse,
+        zNotifyPlayerBody.parse(body),
+      ),
+    /** In their activity history (`social:player:write`); `social` answers 204. */
+    recordActivity: (playerId: string, body: InternalRecordActivityData['body']) =>
+      internal(
+        'POST',
+        `/players/${encodeURIComponent(playerId)}/activity`,
+        zInternalRecordActivityResponse,
+        body,
+      ),
     /** Whether organisation management is configured (`svc-admin`'s secret). */
     manages: hasServiceToken,
   };

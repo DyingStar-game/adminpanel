@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ExplorerRouteImport } from './routes/explorer'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as EconomyIndexRouteImport } from './routes/economy.index'
+import { Route as ExplorationNamesRouteImport } from './routes/exploration.names'
 import { Route as ItemsUuidRouteImport } from './routes/items.$uuid'
 import { Route as MapUuidRouteImport } from './routes/map.$uuid'
 import { Route as MissionsIndexRouteImport } from './routes/missions.index'
@@ -46,6 +47,11 @@ const ImportRoute = ImportRouteImport.update({
 const EconomyIndexRoute = EconomyIndexRouteImport.update({
   id: '/economy/',
   path: '/economy/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExplorationNamesRoute = ExplorationNamesRouteImport.update({
+  id: '/exploration/names',
+  path: '/exploration/names',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ItemsUuidRoute = ItemsUuidRouteImport.update({
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/explorer': typeof ExplorerRoute
   '/import': typeof ImportRoute
+  '/exploration/names': typeof ExplorationNamesRoute
   '/items/$uuid': typeof ItemsUuidRoute
   '/map/$uuid': typeof MapUuidRoute
   '/missions/$missionId': typeof MissionsMissionIdRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/explorer': typeof ExplorerRoute
   '/import': typeof ImportRoute
+  '/exploration/names': typeof ExplorationNamesRoute
   '/items/$uuid': typeof ItemsUuidRoute
   '/map/$uuid': typeof MapUuidRoute
   '/missions/$missionId': typeof MissionsMissionIdRoute
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/explorer': typeof ExplorerRoute
   '/import': typeof ImportRoute
+  '/exploration/names': typeof ExplorationNamesRoute
   '/items/$uuid': typeof ItemsUuidRoute
   '/map/$uuid': typeof MapUuidRoute
   '/missions/$missionId': typeof MissionsMissionIdRoute
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
     | '/'
     | '/explorer'
     | '/import'
+    | '/exploration/names'
     | '/items/$uuid'
     | '/map/$uuid'
     | '/missions/$missionId'
@@ -208,6 +218,7 @@ export interface FileRouteTypes {
     | '/'
     | '/explorer'
     | '/import'
+    | '/exploration/names'
     | '/items/$uuid'
     | '/map/$uuid'
     | '/missions/$missionId'
@@ -228,6 +239,7 @@ export interface FileRouteTypes {
     | '/'
     | '/explorer'
     | '/import'
+    | '/exploration/names'
     | '/items/$uuid'
     | '/map/$uuid'
     | '/missions/$missionId'
@@ -249,6 +261,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ExplorerRoute: typeof ExplorerRoute
   ImportRoute: typeof ImportRoute
+  ExplorationNamesRoute: typeof ExplorationNamesRoute
   ItemsUuidRoute: typeof ItemsUuidRoute
   MapUuidRoute: typeof MapUuidRoute
   MissionsMissionIdRoute: typeof MissionsMissionIdRoute
@@ -294,6 +307,13 @@ declare module '@tanstack/react-router' {
       path: '/economy'
       fullPath: '/economy/'
       preLoaderRoute: typeof EconomyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exploration/names': {
+      id: '/exploration/names'
+      path: '/exploration/names'
+      fullPath: '/exploration/names'
+      preLoaderRoute: typeof ExplorationNamesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/items/$uuid': {
@@ -401,6 +421,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExplorerRoute: ExplorerRoute,
   ImportRoute: ImportRoute,
+  ExplorationNamesRoute: ExplorationNamesRoute,
   ItemsUuidRoute: ItemsUuidRoute,
   MapUuidRoute: MapUuidRoute,
   MissionsMissionIdRoute: MissionsMissionIdRoute,

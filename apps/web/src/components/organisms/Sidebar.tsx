@@ -4,6 +4,7 @@ import {
   BoxesIcon,
   Building2Icon,
   CoinsIcon,
+  CompassIcon,
   LayoutDashboardIcon,
   NetworkIcon,
   PanelLeftCloseIcon,
@@ -36,6 +37,7 @@ export type NavId =
   | 'simulation'
   | 'npcs'
   | 'missions'
+  | 'placeNames'
   | 'settings';
 
 interface SidebarProps {
@@ -55,7 +57,7 @@ interface NavItem {
 }
 
 const SECTIONS: {
-  title: 'supervision' | 'gameWorld' | 'administration' | 'configuration';
+  title: 'supervision' | 'gameWorld' | 'exploration' | 'administration' | 'configuration';
   items: NavItem[];
 }[] = [
   {
@@ -74,6 +76,8 @@ const SECTIONS: {
       { id: 'npcs', icon: BotIcon },
     ],
   },
+  // Places players discover and name (ADR 0032); later: every discovery, the discoverers.
+  { title: 'exploration', items: [{ id: 'placeNames', icon: CompassIcon }] },
   {
     title: 'administration',
     items: [
@@ -110,6 +114,8 @@ export function Sidebar({ active, onNavigate, onHome, version }: SidebarProps) {
     }
     if (id === 'npcs') return services.includes('npc') && can('npc.view');
     if (id === 'missions') return services.includes('mission') && can('mission.read');
+    // Discoveries are persistence items: deciding needs more, checked on the page.
+    if (id === 'placeNames') return services.includes('persistence') && can('persistence.read');
     return true;
   };
   // A group left without any entry the account may see is hidden altogether.

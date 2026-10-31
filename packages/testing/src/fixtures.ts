@@ -1,4 +1,5 @@
 import type { Item } from '@dyingstar-admin/schemas';
+import { poiIds } from './inventoryMock';
 
 /**
  * Fictional dataset reproducing the shapes observed on the live persistence service
@@ -26,6 +27,15 @@ export const ids = {
   haulingCrate: '90b295dd-2388-42f0-9e33-611a94a39aa6',
   /** One of the empty crates laid on the planet. */
   emptyCrate: '9cdc0367-9777-87b7-6a41-f7a3c23ddc50',
+  /** Caves (`cave` props, StarGrotte) on the planet, and their discoveries (ADR 0032). */
+  caveEcho: 'a3c1e5f0-1d2b-5c3d-8e4f-000000000c01',
+  caveFang: 'a3c1e5f0-1d2b-5c3d-8e4f-000000000c02',
+  caveHollow: 'a3c1e5f0-1d2b-5c3d-8e4f-000000000c03',
+  caveSpire: 'a3c1e5f0-1d2b-5c3d-8e4f-000000000c04',
+  discoveryEcho: 'd15c0e1f-7a2b-5c3d-9e4f-000000000d01',
+  discoveryFang: 'd15c0e1f-7a2b-5c3d-9e4f-000000000d02',
+  discoveryHollow: 'd15c0e1f-7a2b-5c3d-9e4f-000000000d03',
+  discoverySpire: 'd15c0e1f-7a2b-5c3d-9e4f-000000000d04',
 } as const;
 
 const star: Item = {
@@ -256,6 +266,120 @@ export const emptyCrate: Item = {
     uuid: ids.emptyCrate,
   },
 };
+
+/** The social player ids of the discoverers (`socialIds` of `socialMock`: griefer42, ddurieux). */
+const DISCOVERERS = {
+  griefer: { id: '5b1d3c1e-0000-4000-8000-0000000000b2', name: 'griefer42' },
+  ddurieux: { id: ids.player, name: 'ddurieux' },
+} as const;
+
+/** A StarGrotte cave on the planet (`cave` prop, its placement fields flat in `object_data`). */
+const cave = (uuid: string, placementId: string, longitude: number, latitude: number): Item => ({
+  object_type: 'cave',
+  object_uuid: uuid,
+  object_data: {
+    type: 'cave',
+    uuid,
+    parent_id: ids.planet,
+    scenename: 'scenes/planet/cave/cave_site.tscn',
+    placement_id: placementId,
+    planet_name: 'tarsis_3',
+    longitude_deg: longitude,
+    latitude_deg: latitude,
+    seed: 4242,
+    position: { x: 0, y: 0, z: 0 },
+    rotation: { x: 0, y: 0, z: 0 },
+  },
+});
+
+/** Discovered on 2026-10-29 and later (unix seconds). */
+const DISCOVERED_AT = 1_793_260_800;
+
+/**
+ * A discovery as the game writes it (`Discovery.record`, `server/discoveries.gd`): a child of the
+ * place's item, no geometry, then the fields the proposal and the decision fill.
+ */
+const discovery = (
+  uuid: string,
+  caveUuid: string,
+  placementId: string,
+  discoverer: { id: string; name: string },
+  minutes: number,
+  fields: Record<string, unknown>,
+): Item => ({
+  object_type: 'discovery',
+  object_uuid: uuid,
+  object_data: {
+    type: 'discovery',
+    uuid,
+    scenename: 'scenes/exploration/discovery.tscn',
+    parent_id: caveUuid,
+    position: { x: 0, y: 0, z: 0 },
+    rotation: { x: 0, y: 0, z: 0 },
+    place_kind: 'cave',
+    place_id: placementId,
+    place_uuid: caveUuid,
+    planet_name: 'tarsis_3',
+    discoverer_id: discoverer.id,
+    discoverer_name: discoverer.name,
+    discovered_at: DISCOVERED_AT + minutes * 60,
+    status: 'unnamed',
+    proposed_name: '',
+    proposed_at: 0,
+    approved_name: '',
+    refusal_reason: '',
+    decided_at: 0,
+    poi_id: '',
+    ...fields,
+  },
+});
+
+/**
+ * Four caves and their discoveries (ADR 0032): two names awaiting review (the older one by an
+ * online player with a POI, the newer one by an offline player without), one approved, one
+ * refused. Kept out of `createDataset`, like `loadedRock`: add them when needed.
+ */
+export function createDiscoveries(): Item[] {
+  const at = (minutes: number) => DISCOVERED_AT + minutes * 60;
+  return structuredClone([
+    cave(ids.caveEcho, 'tarsis_3_cave_017', 37.62, -12.4),
+    cave(ids.caveFang, 'tarsis_3_cave_021', 38.05, -11.9),
+    cave(ids.caveHollow, 'tarsis_3_cave_008', 36.9, -13.1),
+    cave(ids.caveSpire, 'tarsis_3_cave_030', 39.4, -10.2),
+    discovery(ids.discoveryEcho, ids.caveEcho, 'tarsis_3_cave_017', DISCOVERERS.griefer, 0, {
+      status: 'pending',
+      proposed_name: "L'Antre des Échos",
+      proposed_at: at(12),
+      poi_id: poiIds.caveEcho,
+    }),
+    discovery(ids.discoveryFang, ids.caveFang, 'tarsis_3_cave_021', DISCOVERERS.ddurieux, 90, {
+      status: 'pending',
+      proposed_name: 'Fang Hollow',
+      proposed_at: at(95),
+    }),
+    discovery(
+      ids.discoveryHollow,
+      ids.caveHollow,
+      'tarsis_3_cave_008',
+      DISCOVERERS.ddurieux,
+      -600,
+      {
+        status: 'approved',
+        proposed_name: 'Deep Hollow',
+        proposed_at: at(-590),
+        approved_name: 'Deep Hollow',
+        decided_at: at(-300),
+      },
+    ),
+    discovery(ids.discoverySpire, ids.caveSpire, 'tarsis_3_cave_030', DISCOVERERS.griefer, -400, {
+      status: 'refused',
+      proposed_name: 'Griefer Was Here',
+      proposed_at: at(-395),
+      refusal_reason: 'Names may not advertise a player.',
+      decided_at: at(-200),
+    }),
+  ]);
+}
 
 /** Returns a fresh deep copy of the dataset, safe to mutate in a test. */
 export function createDataset(): Item[] {

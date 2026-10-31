@@ -76,6 +76,7 @@ The rules applied every day: [0010](./0010-frontend-stack.md) (frontend stack, f
 | [0028](./0028-cancelling-a-mission.md) | `mission` | Cancelling a mission, and the simulation's missions in the mission views | Accepted | 2026-10-23 |
 | [0030](./0030-holder-inventory.md) | `inventory` | What a holder owns: reading `inventory` where the panel shows the holder | Proposed | 2026-10-24 |
 | [0031](./0031-npc-section.md) | `npc` | NPCs section: the `npc` service in the panel | Proposed | 2026-10-25 |
+| [0032](./0032-exploration-place-names.md) | persistence, `social`, `inventory` | Exploration section: reviewing the names players give the places they discover | Accepted | 2026-10-31 |
 
 `social` and `economie` have no ADR of their own: their steps follow 0023 (rights) and 0024.
 

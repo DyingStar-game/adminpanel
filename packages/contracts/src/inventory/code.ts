@@ -84,3 +84,21 @@ export const zCreatePoi = z.object({
   metadata: z.record(z.string(), z.unknown()).optional(),
 });
 export type CreatePoi = z.infer<typeof zCreatePoi>;
+
+/**
+ * `PATCH /api/internal/pois/:poiId` (`inventory:poi:manage`, ADR 0032), its `updatePoiBody`
+ * (`routes/schemas.ts`, `services/pois.service.ts` › `updatePoi`, read 2026-10-31 at `develop`
+ * `7106778`), the fields the panel sends: each optional, at least one. `metadata` replaces the
+ * stored one whole. Answers the POI.
+ */
+export const zUpdatePoi = z
+  .object({
+    name: z.string().trim().min(1).max(128).optional(),
+    description: z.string().trim().max(2000).nullish(),
+    visibility: z.enum(['private', 'public']).optional(),
+    metadata: z.record(z.string(), z.unknown()).nullish(),
+  })
+  .refine((value) => Object.values(value).some((field) => field !== undefined), {
+    message: 'at least one field is required',
+  });
+export type UpdatePoi = z.infer<typeof zUpdatePoi>;

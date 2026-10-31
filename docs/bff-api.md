@@ -22,8 +22,9 @@ are in `apps/bff/src/app.ts` and `apps/bff/src/routes/`.
   (`packages/schemas/src/common.ts`): `VALIDATION_ERROR` (400, with the Zod issues),
   `NOT_FOUND`, `ALREADY_EXISTS`, `EDIT_CONFLICT`, `UNKNOWN_OBJECT_TYPE`, `UPSTREAM_REJECTED`
   (the service refused: its status and message are passed on), `UPSTREAM_ERROR`,
-  `UPSTREAM_TIMEOUT`, `UPSTREAM_UNREACHABLE`, `SIMULATION_MISSION`…
-- **Writes to the game services** (`social`, `economie`, `universesimulator`, `npc`, `mission`) are each recorded as a JSON line on
+  `UPSTREAM_TIMEOUT`, `UPSTREAM_UNREACHABLE`, `SIMULATION_MISSION`, `DISCOVERY_NOT_PENDING`…
+- **Writes to the game services** (`social`, `economie`, `universesimulator`, `npc`, `mission`,
+  and the Exploration's decisions, recorded as `persistence`) are each recorded as a JSON line on
   stdout, refused ones included: who, route, status (`lib/audit.ts`).
 
 ## Health and sign-in
@@ -66,6 +67,23 @@ together are coalesced for `READ_CACHE_TTL_MS` (ADR 0009).
 | PUT | `/api/items/:uuid` | `{ object_type, base, changes, removed, force }`: re-read and field-level merge, **409 `EDIT_CONFLICT`** with the keys the game changed meanwhile (ADR 0009); 404 if unknown (no upsert) |
 | DELETE | `/api/items/:uuid` | 204; persistence does not notify the game |
 | GET | `/api/bodies/:uuid/map` | Everything placed on a celestial body (ADR 0018); `hide` (types counted, not loaded), `include` (one item loaded anyway) |
+
+## Exploration (names of discovered places)
+
+Shown when `PERSISTENCE_URL` is set (ADR 0032). The game writes one `discovery` item per place a
+player discovered first (a child of the place's item); the panel reviews the names proposed for
+them. Persistence cannot filter on a field: every `discovery` is read (by its exact
+`object_type`, defined or not yet) and filtered in the BFF. A decision is the item's update
+(field-level merge, ADR 0009); renaming the discoverer's POI in `inventory` and telling them
+through `social` follow, as `svc-admin`, each best effort: a failure, an offline player, a service
+not configured or without `svc-admin`, or a person without the matching permission is reported
+`false` in the answer, never undoing the decision.
+
+| Method | Route | Permission | Notes |
+|--------|-------|------------|-------|
+| GET | `/api/exploration/discoveries` | `persistence.read` | `status` (`pending` by default, `approved`, `refused`, `unnamed`), `kind` (a `place_kind`), `page`, `page_size` (1–100, 20) → `{ discoveries: [{ uuid, object_data }], total, page, page_size, kinds }`; pending ones oldest proposal first, the others most recent decision first; `kinds`: every `place_kind` met |
+| POST | `/api/exploration/discoveries/:uuid/approve` | `persistence.write` + `social.notify` | `{ base, name? }`: `name` (the proposal by default) under the game's rule (3–40 characters, letters, digits, spaces, `'`, `-`) → `{ item, poiRenamed, notified, recorded }`. Sets `status: approved`, `approved_name`, `decided_at`; then renames the POI `poi_id` with `metadata.uncharted: false` (`PATCH /api/internal/pois/:id`, for `inventory.poiManage`), notifies the discoverer (`place_name_approved`, `{ kind, name, discoveryId }`) and records it in their activity (for `social.playerWrite`). 404 when not a discovery; **409 `DISCOVERY_NOT_PENDING`** when not awaiting review; **409 `EDIT_CONFLICT`** when its status or proposal changed since `base` |
+| POST | `/api/exploration/discoveries/:uuid/refuse` | `persistence.write` + `social.notify` | `{ base, reason }` (1–500 characters) → `{ item, notified, recorded }`. Sets `status: refused`, `refusal_reason`, `decided_at`; then tells the discoverer the same two ways (`place_name_refused`, `{ kind, name, reason, discoveryId }`). Same errors |
 
 ## `social`
 

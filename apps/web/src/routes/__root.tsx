@@ -70,8 +70,11 @@ function RootLayout() {
                 ? 'npcs'
                 : location.pathname.startsWith('/missions')
                   ? 'missions'
-                  : 'explorer';
-  // Pages of a service the account may not open say so instead of failing call by call.
+                  : location.pathname.startsWith('/exploration')
+                    ? 'placeNames'
+                    : 'explorer';
+  // Pages of a service the account may not open say so instead of failing call by call. The
+  // Exploration section reads persistence, as the explorer.
   const social =
     activeNav === 'moderation' || activeNav === 'players' || activeNav === 'organisations';
   const economy = activeNav === 'economy';
@@ -206,7 +209,12 @@ function RootLayout() {
                             ? void navigate({ to: '/npcs', search: { tab: 'roster', page: 1 } })
                             : id === 'missions'
                               ? void navigate({ to: '/missions', search: { page: 1 } })
-                              : void navigate({ to: '/explorer', search: ROOTS })
+                              : id === 'placeNames'
+                                ? void navigate({
+                                    to: '/exploration/names',
+                                    search: { status: 'pending', page: 1 },
+                                  })
+                                : void navigate({ to: '/explorer', search: ROOTS })
             }
             onHome={() => void navigate({ to: '/' })}
             version={APP_VERSION}
