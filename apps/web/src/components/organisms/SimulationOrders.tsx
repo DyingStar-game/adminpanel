@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import type { Order, OrderStatus } from '@dyingstar-admin/contracts/universesimulator';
+import { EntityLink } from '@/components/molecules/EntityLink';
+import { FactList } from '@/components/molecules/FactList';
+import { IdLabel } from '@/components/molecules/IdLabel';
 import { LegTimeline } from '@/components/molecules/LegTimeline';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
@@ -36,8 +39,8 @@ interface SimulationOrdersProps {
 }
 
 /**
- * Supply orders (ADR 0025): each order with its hops as a timeline (status, quantity, distance,
- * reward, mission), filtered by status, resource and village (one the order goes through). An
+ * Supply orders (ADR 0025): each order, its facts, and its hops as a timeline laid out as a
+ * mission's objectives (status, quantity, distance, reward, warehouses, mission), filtered by status, resource and village (one the order goes through). An
  * open order can be cancelled by `simulation.manage`, after confirmation: its mission is
  * cancelled in the live game and its goods released.
  */
@@ -134,22 +137,12 @@ export function SimulationOrders({
               className="flex flex-col gap-3 rounded-lg border p-4"
             >
               <div className="flex flex-wrap items-start justify-between gap-2">
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-wrap items-center gap-2">
                   <h3 className="text-sm font-semibold">{heading}</h3>
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-fg-3">
-                    <Badge variant={OPEN.includes(order.status) ? 'default' : 'secondary'}>
-                      {t(`simulation.orders.statuses.${order.status}`)}
-                    </Badge>
-                    <Badge variant="outline">{t(`simulation.orders.kinds.${order.kind}`)}</Badge>
-                    <span>{t(`simulation.orders.triggers.${order.trigger}`)}</span>
-                    <span>{formatDateTime(order.createdAt, locale)}</span>
-                    {order.totalReward > 0 && (
-                      <span>
-                        {t('simulation.orders.reward', { amount: credits(order.totalReward) })}
-                      </span>
-                    )}
-                  </div>
-                  {order.lastError && <p className="text-xs text-destructive">{order.lastError}</p>}
+                  <Badge variant={OPEN.includes(order.status) ? 'default' : 'secondary'}>
+                    {t(`simulation.orders.statuses.${order.status}`)}
+                  </Badge>
+                  <Badge variant="outline">{t(`simulation.orders.kinds.${order.kind}`)}</Badge>
                 </div>
                 {can('simulation.manage') && OPEN.includes(order.status) && (
                   <Button variant="destructive" size="sm" onClick={() => setCancelling(order)}>
@@ -157,29 +150,70 @@ export function SimulationOrders({
                   </Button>
                 )}
               </div>
+              <FactList
+                columns={2}
+                facts={[
+                  [
+                    t('simulation.orders.trigger'),
+                    t(`simulation.orders.triggers.${order.trigger}`),
+                  ],
+                  [t('simulation.orders.created'), formatDateTime(order.createdAt, locale)],
+                  ...(order.totalReward > 0
+                    ? [
+                        [t('simulation.orders.totalReward'), credits(order.totalReward)] as [
+                          string,
+                          ReactNode,
+                        ],
+                      ]
+                    : []),
+                  [t('simulation.orders.order'), <IdLabel key="id" id={order.id} />],
+                ]}
+              />
+              {order.lastError && <p className="text-xs text-destructive">{order.lastError}</p>}
               <LegTimeline
                 legs={order.legs ?? []}
                 placeName={placeName}
-                warehouseName={(id) => names.warehouses.get(id) ?? id}
                 statusLabel={(s) => t(`simulation.orders.legStatuses.${s}`)}
-                missionLabel={t('simulation.orders.mission')}
-                onOpenMission={opensMissions ? onOpenMission : undefined}
-                // The missions on offer by their title and status; the others by their id.
-                mission={(leg) =>
-                  opensMissions && leg.status === 'published' && leg.missionId ? (
-                    <LegMission missionId={leg.missionId} onOpenMission={onOpenMission} />
-                  ) : undefined
-                }
-                facts={(leg) =>
-                  t('simulation.orders.facts', {
-                    quantity: `${formatQuantity(leg.quantity, locale)} ${r?.unit ?? ''}`.trim(),
-                    distance: formatDistance(leg.distanceM),
-                    reward:
-                      leg.rewardAmount != null
-                        ? credits(leg.rewardAmount)
-                        : t('simulation.orders.noReward'),
-                  })
-                }
+                facts={(leg) => {
+                  const facts: [string, ReactNode][] = [
+                    [
+                      t('simulation.orders.quantity'),
+                      `${formatQuantity(leg.quantity, locale)} ${r?.unit ?? ''}`.trim(),
+                    ],
+                    [t('simulation.orders.distance'), formatDistance(leg.distanceM)],
+                    [
+                      t('simulation.orders.legReward'),
+                      leg.rewardAmount != null ? (
+                        credits(leg.rewardAmount)
+                      ) : (
+                        <span className="text-fg-3">{t('simulation.orders.rewardNotSet')}</span>
+                      ),
+                    ],
+                  ];
+                  if (leg.fromWarehouseId || leg.toWarehouseId) {
+                    facts.push([
+                      t('simulation.orders.warehouses'),
+                      [leg.fromWarehouseId, leg.toWarehouseId]
+                        .map((id) => (id ? (names.warehouses.get(id) ?? id) : '…'))
+                        .join(' → '),
+                    ]);
+                  }
+                  if (leg.missionId) {
+                    // The missions on offer by their title and status; the others by their id.
+                    facts.push([
+                      t('simulation.orders.mission'),
+                      opensMissions && leg.status === 'published' ? (
+                        <LegMission missionId={leg.missionId} onOpenMission={onOpenMission} />
+                      ) : (
+                        <EntityLink
+                          id={leg.missionId}
+                          onOpen={opensMissions ? onOpenMission : undefined}
+                        />
+                      ),
+                    ]);
+                  }
+                  return facts;
+                }}
               />
             </li>
           );

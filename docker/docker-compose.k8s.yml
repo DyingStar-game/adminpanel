@@ -1,8 +1,9 @@
 # Minikube mode (`make up K8S=1`): the panel signs in to the back team's dev Keycloak and reaches
 # their services, running on minikube (`kubernetes` repository, `scripts_linux/start-dev.sh`).
 # The dev container joins minikube's Docker network and reaches Traefik on the node port; the
-# browser keeps going through `minikube tunnel` (`*.dyingstar.local` → 127.0.0.1 in the hosts
-# files). The panel's client must exist in their realm: docker/keycloak/README.md.
+# browser keeps going through `minikube tunnel` (`*.dyingstar.local` → Traefik's external IP in
+# /etc/hosts, as their script writes it). The panel's client is in their realm:
+# docker/keycloak/README.md.
 services:
   dev:
     networks:

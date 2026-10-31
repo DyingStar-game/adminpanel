@@ -9,6 +9,7 @@ import { formatAmount } from '@/lib/economy';
 import { formatDateTime } from '@/lib/format';
 import { EntityLink } from '@/components/molecules/EntityLink';
 import { IdLabel } from '@/components/molecules/IdLabel';
+import { HolderLink } from './HolderLink';
 
 /** Ways to the pages of what a mission refers to; unset, the reference is shown as an id. */
 export interface MissionLinks {
@@ -19,7 +20,8 @@ export interface MissionLinks {
 }
 
 interface MissionTermsProps extends MissionLinks {
-  detail: Pick<MissionDetailAsServed, 'mission' | 'group' | 'chain'>;
+  detail: Pick<MissionDetailAsServed, 'mission' | 'group' | 'chain'> &
+    Partial<Pick<MissionDetailAsServed, 'players'>>;
 }
 
 /**
@@ -27,7 +29,7 @@ interface MissionTermsProps extends MissionLinks {
  * it takes, how long, how it ends, its escrow, and the missions to finish before it.
  */
 export function MissionTerms({
-  detail: { mission: m, group, chain },
+  detail: { mission: m, group, chain, players },
   onOpenMission,
   onOpenPlayer,
   onOpenCorporation,
@@ -35,18 +37,18 @@ export function MissionTerms({
 }: MissionTermsProps) {
   const { t, i18n } = useTranslation();
   const none = <span className="text-fg-3">{t('missions.detail.none')}</span>;
-  /** An id of `social` (player, corporation, political entity), a link when it has a page. */
-  const reference = (id: string, open?: (id: string) => void) => (
-    <EntityLink id={id} onOpen={open} />
-  );
   const holderLinks = {
     player: onOpenPlayer,
     corporation: onOpenCorporation,
     politics: onOpenPoliticalEntity,
   } as const;
-  const issuerLink =
+  /** A player, corporation or political entity of `social`: its name, a link when it has a page. */
+  const holder = (type: keyof typeof holderLinks, id: string) => (
+    <HolderLink type={type} id={id} players={players} onOpen={holderLinks[type]} />
+  );
+  const issuerType =
     m.issuerType === 'player' || m.issuerType === 'corporation' || m.issuerType === 'politics'
-      ? holderLinks[m.issuerType]
+      ? m.issuerType
       : undefined;
 
   const facts: [string, ReactNode][] = [
@@ -54,7 +56,8 @@ export function MissionTerms({
       t('missions.detail.issuer'),
       <span key="issuer" className="flex flex-wrap items-center gap-2">
         {t(`missions.issuers.${m.issuerType}`)}
-        {m.issuerId && reference(m.issuerId, issuerLink)}
+        {m.issuerId &&
+          (issuerType ? holder(issuerType, m.issuerId) : <EntityLink id={m.issuerId} />)}
       </span>,
     ],
     [t('missions.detail.visibility'), t(`missions.visibility.${m.visibility}`)],
@@ -137,7 +140,7 @@ export function MissionTerms({
               amount: formatAmount(m.escrowAmount, m.escrowCurrency ?? 'credits', i18n.language),
               payer: t(`missions.issuers.${m.escrowPayerType}`),
             })}
-            {reference(m.escrowPayerId, holderLinks[m.escrowPayerType])}
+            {holder(m.escrowPayerType, m.escrowPayerId)}
           </span>
         )}
         {m.escrowItemStatus !== 'none' && (
