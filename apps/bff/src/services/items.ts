@@ -283,6 +283,13 @@ export function createItemsService({ client, definitions, readCacheTtlMs }: Item
 
     get: getOrThrow,
 
+    /**
+     * Every item of a type, page by page, whether the type has a definition or not (persistence
+     * filters on the exact `object_type`): the exploration's discoveries (ADR 0032).
+     */
+    allOfType: (objectType: string) =>
+      read(`type:${objectType}`, () => listAll({ object_type: objectType })),
+
     /** Ancestors from the root down to the direct parent. */
     async ancestors(uuid: string): Promise<AncestorsResponse> {
       const item = await getOrThrow(uuid);

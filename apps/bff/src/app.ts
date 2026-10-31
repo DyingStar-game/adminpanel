@@ -25,6 +25,7 @@ import { withPersistence } from './middleware/persistence';
 import { bodiesRoutes } from './routes/bodies';
 import { auditWrites, type AuditEntry } from './lib/audit';
 import { economieRoutes } from './routes/economie';
+import { explorationRoutes } from './routes/exploration';
 import { itemsRoutes } from './routes/items';
 import { npcRoutes } from './routes/npc';
 import { missionRoutes } from './routes/mission';
@@ -78,8 +79,9 @@ export interface AppOptions {
    */
   mission?: MissionClient | undefined;
   /**
-   * `inventory` of this environment (ADR 0026): the POIs named on a mission's page; without it or
-   * without `svc-admin`, the objectives show POI ids.
+   * `inventory` of this environment (ADR 0026): the POIs named on a mission's page, a
+   * discoverer's POI renamed (ADR 0032); without it or without `svc-admin`, the objectives show
+   * POI ids and the POI keeps its name.
    */
   inventory?: InventoryClient | undefined;
   definitions: DefinitionsService;
@@ -171,6 +173,14 @@ export function createApp({
     api.route('/items', itemsRoutes);
     api.use('/bodies/*', requirePersistencePermission, persistence);
     api.route('/bodies', bodiesRoutes);
+    // Names of discovered places (ADR 0032): persistence's `discovery` items, the discoverer told
+    // through `social` and their POI renamed in `inventory` when those are set.
+    api.use(
+      '/exploration/*',
+      auditWrites('persistence', audit),
+      requirePermission('persistence.read'),
+    );
+    api.route('/exploration', explorationRoutes(items, { social, inventory }));
   }
   if (social) {
     api.use('/social/*', auditWrites('social', audit), requirePermission('social.moderate'));

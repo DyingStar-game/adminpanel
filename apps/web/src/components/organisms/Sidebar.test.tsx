@@ -211,4 +211,26 @@ describe('Sidebar', () => {
     await within(nav).findByRole('button', { name: 'Persistence — Items' });
     expect(within(nav).queryByRole('button', { name: 'NPCs' })).not.toBeInTheDocument();
   });
+
+  it('opens the Exploration section to who reads persistence (ADR 0032)', async () => {
+    const { onNavigate } = renderSidebar();
+    const nav = screen.getByRole('complementary', { name: 'Navigation' });
+
+    expect(await within(nav).findByText('Exploration')).toBeInTheDocument();
+    await userEvent.click(within(nav).getByRole('button', { name: 'Names to review' }));
+    expect(onNavigate).toHaveBeenCalledWith('placeNames');
+  });
+
+  it('hides the Exploration section from an account that may not read persistence', async () => {
+    useInProcessBff();
+    renderWithProviders(
+      <PermissionsContext.Provider value={['social.moderate', 'social.notify']}>
+        <Sidebar active="moderation" onNavigate={vi.fn()} onHome={vi.fn()} version="0.1.0" />
+      </PermissionsContext.Provider>,
+    );
+    const nav = screen.getByRole('complementary', { name: 'Navigation' });
+    await within(nav).findByRole('button', { name: 'Moderation' });
+
+    expect(within(nav).queryByText('Exploration')).not.toBeInTheDocument();
+  });
 });

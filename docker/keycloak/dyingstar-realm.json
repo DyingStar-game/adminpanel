@@ -195,6 +195,18 @@
         {
           "name": "inventory:read",
           "description": "Name the POIs of mission objectives through inventory's internal API (ADR 0026)"
+        },
+        {
+          "name": "social:notify:write",
+          "description": "Tell a discoverer the decision on their place name, live, through social's internal API (ADR 0032)"
+        },
+        {
+          "name": "social:player:write",
+          "description": "Record that decision in the discoverer's activity history through social's internal API (ADR 0032)"
+        },
+        {
+          "name": "inventory:poi:manage",
+          "description": "Rename a discoverer's POI with the approved name through inventory's internal API (ADR 0032)"
         }
       ]
     }
@@ -314,7 +326,10 @@
           "economie:money:issue",
           "mission:read",
           "mission:write",
-          "inventory:read"
+          "inventory:read",
+          "social:notify:write",
+          "social:player:write",
+          "inventory:poi:manage"
         ]
       },
       "groups": ["/staff"]
@@ -351,7 +366,10 @@
           "economie:money:issue",
           "mission:read",
           "mission:write",
-          "inventory:read"
+          "inventory:read",
+          "social:notify:write",
+          "social:player:write",
+          "inventory:poi:manage"
         ]
       },
       "groups": ["/staff"]

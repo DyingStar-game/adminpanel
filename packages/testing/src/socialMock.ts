@@ -468,6 +468,8 @@ const UPHELD_REPORT_PENALTY = 10;
 const OPEN_STATUSES = new Set<ReportView['status']>(['open', 'reviewing']);
 const ESCALATION_LEVELS: ReportView['escalation'][] = ['moderator', 'admin', 'supervisor'];
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const conflict = (message: string) =>
   HttpResponse.json({ error: 'CONFLICT', message, status: 409 }, { status: 409 });
 
@@ -923,6 +925,42 @@ export function createSocialMock(
       if (former && below) former.officeId = below.id;
       Object.assign(found, { headId: playerId, updatedAt: now() });
       return HttpResponse.json(found);
+    }),
+    // A player told something (ADR 0032), internal API: a live push when they are online, nothing
+    // stored (`notifications.service.ts`, absent from the README and the OpenAPI), and an entry in
+    // their activity history (`activity.service.ts`, 204).
+    http.post(`${internal}/players/:playerId/notifications`, async ({ request, params }) => {
+      seen(request);
+      const playerId = String(params.playerId);
+      const body = (await request.json()) as { type?: unknown };
+      writes.push({ call: `POST /internal/players/${playerId}/notifications`, body });
+      if (!UUID.test(playerId)) return badRequest('Invalid playerId');
+      if (typeof body.type !== 'string' || !body.type.trim() || body.type.length > 64) {
+        return badRequest('Invalid body');
+      }
+      return HttpResponse.json(
+        data.presence[playerId] && data.presence[playerId] !== 'offline'
+          ? { delivered: true }
+          : { delivered: false, reason: 'offline' },
+      );
+    }),
+    http.post(`${internal}/players/:playerId/activity`, async ({ request, params }) => {
+      seen(request);
+      const playerId = String(params.playerId);
+      const body = (await request.json()) as { type?: unknown; details?: Record<string, unknown> };
+      writes.push({ call: `POST /internal/players/${playerId}/activity`, body });
+      if (!UUID.test(playerId)) return badRequest('Invalid playerId');
+      if (typeof body.type !== 'string' || !body.type.trim() || body.type.length > 64) {
+        return badRequest('Invalid body');
+      }
+      data.activity.push({
+        id: nextId(data.activity),
+        playerId,
+        type: body.type,
+        details: body.details ?? null,
+        createdAt: now(),
+      });
+      return new HttpResponse(null, { status: 204 });
     }),
     // Player route: the caller's own profile, created on the first call (`getMe`). The mock does
     // not read tokens: the caller is the fixtures' moderator, as for the writes.

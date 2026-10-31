@@ -144,6 +144,22 @@ describe('permissionsOf (interim matrix, ADR 0023)', () => {
     expect(permissionsOf(['supervisor', 'mission:read'])).not.toContain(Permission.missionWrite);
   });
 
+  it("tells a discoverer with social's capability roles only (ADR 0032)", () => {
+    expect(permissionsOf(['social:notify:write'])).toEqual([Permission.socialNotify]);
+    expect(permissionsOf(['social:player:write'])).toEqual([Permission.socialPlayerWrite]);
+    for (const role of ['moderator', 'admin', 'supervisor', 'social:corporation:write']) {
+      expect(permissionsOf([role])).not.toContain(Permission.socialNotify);
+      expect(permissionsOf([role])).not.toContain(Permission.socialPlayerWrite);
+    }
+  });
+
+  it("renames a discoverer's POI with inventory's capability role only (ADR 0032)", () => {
+    expect(permissionsOf(['inventory:poi:manage'])).toEqual([Permission.inventoryPoiManage]);
+    expect(permissionsOf(['inventory:read', 'supervisor'])).not.toContain(
+      Permission.inventoryPoiManage,
+    );
+  });
+
   it("names the POIs with inventory's capability role only (ADR 0026)", () => {
     expect(permissionsOf(['inventory:read'])).toEqual([Permission.inventoryRead]);
     expect(permissionsOf(['supervisor', 'mission:read'])).not.toContain(Permission.inventoryRead);

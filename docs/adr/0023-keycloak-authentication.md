@@ -228,6 +228,14 @@ like the `persistence:*` roles.
 |---|---|
 | Create, edit, transfer, delete a corporation; change or remove a member; NPC memberships (`/api/internal/corporations…`, `/players/:id/corporation`) | `social:corporation:write` |
 | Create, edit, transfer, delete a political entity; NPC memberships (`/api/internal/politics…`, `/players/:id/politics`) | `social:politics:write` |
+| Tell a discoverer, live, the decision on their place name (`POST /api/internal/players/:playerId/notifications`, ADR 0032); required by both decision routes, with `persistence:write` | `social:notify:write` ³ |
+| Record that decision in the discoverer's activity history (`POST /api/internal/players/:playerId/activity`, ADR 0032); skipped (reported `recorded: false`) without it | `social:player:write` |
+
+³ Not in `social`'s README (› Interne) yet: the role its code asks
+(`src/middleware/auth.ts` › `SERVICE_ROLES.notifyWrite`, `src/routes/internal.routes.ts`, read at
+`develop` `7106778`, 2026-10-31; back-team question 26). `social:player:write` is the README's
+« Rôle requis » for the activity route (`develop` `d3f177b`), the same in its code
+(`SERVICE_ROLES.playerWrite`).
 
 The moderation roles add nothing here, but the organisation pages sit in the moderation section,
 opened by `social.moderate`: managing takes a moderation role and the capability role. Without
@@ -380,7 +388,10 @@ Same rule as `mission`'s (Interne section, the README's capability role held by 
 | Action (route of `inventory`) | The person needs | Sent as |
 |---|---|---|
 | Name the places of a mission's objectives: one POI, its name, body and position (`GET /api/internal/pois/:poiId`), on a mission's page (ADR 0026) | `inventory:read` (with `mission:read` for the page) | `svc-admin` |
+| Rename a discoverer's own POI with the approved place name, `metadata.uncharted: false` (`PATCH /api/internal/pois/:poiId`, ADR 0032); skipped (reported `poiRenamed: false`) without it | `inventory:poi:manage` (with `persistence:write` and `social:notify:write` for the decision) | `svc-admin` |
 
+The POI rename's role is the README's « Rôle requis » (› Interne, `develop` `d3f177b`), the
+same in its code (`SERVICE_ROLES.poiManage`, `develop` `7106778`, read 2026-10-31).
 Without `inventory:read`, a mission's page shows its objectives' POI ids only. The rest of
 `inventory` (holders' goods, holds, transfers) is for its own step.
 

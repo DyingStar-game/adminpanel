@@ -1,5 +1,5 @@
 import { LRUCache } from 'lru-cache';
-import { type Poi, zPoi } from '@dyingstar-admin/contracts/inventory';
+import { type Poi, type UpdatePoi, zPoi } from '@dyingstar-admin/contracts/inventory';
 import type { ServiceTokenSource } from '../auth/serviceToken';
 import { ApiError } from '../lib/errors';
 import { createUpstream } from './upstream';
@@ -18,7 +18,8 @@ const POI_TTL_MS = 60_000;
 /**
  * HTTP client for `inventory` (contract in `@dyingstar-admin/contracts/inventory`): the POIs a
  * mission's objectives point at, through its Interne API as `svc-admin` (`inventory:read`,
- * ADR 0026).
+ * ADR 0026), and a discoverer's POI renamed with an approved place name (`inventory:poi:manage`,
+ * ADR 0032).
  */
 export function createInventoryClient({
   baseUrl,
@@ -52,7 +53,13 @@ export function createInventoryClient({
     /** Each POI by id, `null` for an unknown one; throws when `inventory` does not answer. */
     places: async (ids: string[]) =>
       Object.fromEntries(await Promise.all(ids.map(async (id) => [id, await poi(id)] as const))),
-    /** Whether POIs can be read (`svc-admin`'s secret). */
+    /** Edits a POI (its name, metadata…); `inventory` answers 404 for an unknown one. */
+    updatePoi: async (id: string, body: UpdatePoi): Promise<Poi> => {
+      const updated = await internal('PATCH', `/pois/${encodeURIComponent(id)}`, zPoi, { body });
+      pois.delete(id);
+      return updated;
+    },
+    /** Whether POIs can be read, and edited (`svc-admin`'s secret). */
     readsPois: hasServiceToken,
   };
 }

@@ -21,6 +21,13 @@ export const Permission = {
   socialCorporationWrite: 'social.corporationWrite',
   /** Managing political entities, likewise. */
   socialPoliticsWrite: 'social.politicsWrite',
+  /**
+   * Telling a player something live through `social`'s internal API, likewise: the decision on
+   * the name of a place they discovered (ADR 0032).
+   */
+  socialNotify: 'social.notify',
+  /** Adding an entry to a player's activity history, likewise (ADR 0032). */
+  socialPlayerWrite: 'social.playerWrite',
   /** `economie`'s dashboard (its Admin API, ADR 0023 › Economie). */
   economieDashboard: 'economie.dashboard',
   /** Wallets of players, NPCs and corporations (its Interne API, as `svc-admin`). */
@@ -53,6 +60,8 @@ export const Permission = {
   missionWrite: 'mission.write',
   /** `inventory`'s POIs, named on a mission's objectives (its Interne API, as `svc-admin`). */
   inventoryRead: 'inventory.read',
+  /** Editing any POI, likewise: a discoverer's own, renamed with the approved name (ADR 0032). */
+  inventoryPoiManage: 'inventory.poiManage',
 } as const;
 export type Permission = (typeof Permission)[keyof typeof Permission];
 
@@ -81,6 +90,12 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
   // on `dyingstar-admin`; the panel then calls as `svc-admin` (ADR 0023 › Social — management).
   [Permission.socialCorporationWrite]: ['social:corporation:write'],
   [Permission.socialPoliticsWrite]: ['social:politics:write'],
+  // A place name's decision told to its discoverer (ADR 0032): `social`'s README has no row for
+  // `POST /api/internal/players/:id/notifications` yet; its code asks `social:notify:write`
+  // (`middleware/auth.ts` › `SERVICE_ROLES.notifyWrite`). Their activity history is the README's
+  // `POST /api/internal/players/:playerId/activity`, `social:player:write`.
+  [Permission.socialNotify]: ['social:notify:write'],
+  [Permission.socialPlayerWrite]: ['social:player:write'],
   // `economie`, same rule (ADR 0023 › Economie): its Admin API checks the moderation roles; its
   // Interne API is opened by the capability roles of its README held by the person.
   [Permission.economieDashboard]: ['moderator', 'admin', 'supervisor'],
@@ -113,6 +128,8 @@ export const PERMISSION_ROLES: Record<Permission, readonly string[]> = {
   [Permission.missionWrite]: ['mission:write'],
   // `inventory`, same rule (ADR 0023 › Inventory, ADR 0026).
   [Permission.inventoryRead]: ['inventory:read'],
+  // Its README's `PATCH /api/internal/pois/:poiId` (ADR 0032).
+  [Permission.inventoryPoiManage]: ['inventory:poi:manage'],
 };
 
 /** Permission needed to change the status of, or escalate, a report at each escalation level. */

@@ -39,6 +39,10 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
     its audience.
 12. **Token lifetime**: pre-production's access tokens last 24 h (realm `accessTokenLifespan`
     86400), the panel's client has no override. Is that the intended lifetime for a staff panel?
+29. **The Exploration's roles (ADR 0032)**: the client roles `social:notify:write`,
+    `social:player:write` and `inventory:poi:manage` on `dyingstar-admin`, and `svc-admin` holding
+    `social:notify:write` and `social:player:write` (it holds `inventory:poi:manage` already),
+    in dev and pre-production.
 
 ### `services` › `social`
 
@@ -54,6 +58,15 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
    escalating above `supervisor` answers 403 (documented 409).
 10. An organisation's activity is for members only: should moderators read it (a role bypass, or
     an internal route)? The panel does not show it meanwhile.
+26. `POST /api/internal/players/:playerId/notifications` (`social:notify:write`, `{type, title?,
+    body?, data?}` → `{delivered, reason?}`) is in the code (`routes/internal.routes.ts`,
+    `services/notifications.service.ts`) but neither in the README's Interne table nor in the
+    OpenAPI. Could both document it? The panel calls it through a schema written from the code to
+    tell a discoverer the decision on their place name (ADR 0032).
+27. That notification is lost when the player is offline (nothing stored): the panel also records
+    the decision in their activity (`POST …/activity`), which the game does not read back. Could
+    `social` keep undelivered notifications and send them at the next sign-in, or should the game
+    read the activity history at sign-in?
 
 ### `services` › `economie`
 
@@ -90,6 +103,13 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
     UUID (no FK)", but the code checks it is another POI (`assertParentValid`:
     `POI_PARENT_NOT_FOUND`, `POI_PARENT_CYCLE`). Which one is meant? The panel's seed notes the
     persistence object in `metadata.persistence` meanwhile.
+
+### `services` › `persistence`
+
+28. `GET /items` filters on `parent_id`, `object_type` and `scenename` only: the Exploration
+    section reads every `discovery` to list the names awaiting review (ADR 0032). Could it filter
+    on an `object_data` field (`status=pending`), with a sort? Acceptable while discoveries are a
+    few thousand.
 
 ### `services` › `universesimulator`
 

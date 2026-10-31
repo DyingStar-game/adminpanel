@@ -12,13 +12,13 @@ repository:
 
 | Service | What the panel does with it | Setting |
 |---------|-----------------------------|---------|
-| `persistence` | Items of the universe (planets, buildings, vehicles, players…): browse, edit, create, duplicate, delete, import | `PERSISTENCE_URL` |
-| `social` | Moderation (reports, sanctions, reputation), players, organisations | `SOCIAL_URL` |
+| `persistence` | Items of the universe (planets, buildings, vehicles, players…): browse, edit, create, duplicate, delete, import; the Exploration section's discovered places and their names (ADR 0032) | `PERSISTENCE_URL` |
+| `social` | Moderation (reports, sanctions, reputation), players, organisations; telling a discoverer the decision on their place name (ADR 0032; needs `svc-admin`) | `SOCIAL_URL` |
 | `economie` | Economy dashboard, wallets and treasuries, settings and taxes, money movements | `ECONOMIE_URL` |
 | `universesimulator` | Simulation of a federation's economy by village: overview and controls, network map, village stocks and warehouses, thresholds, capacities and flows, supply orders and missions, prices, treasury (ADR 0025) | `UNIVERSESIMULATOR_URL` |
 | `npc` | NPCs on the servers: global switch, add / remove (create, spawn, despawn, delete), roster with live status, an NPC's routine, manual tasks, logs, events and configuration, shift patterns and their activity mapping, villages' workplaces (ADR 0031) | `NPC_URL` |
 | `mission` | The mission catalogue, every status, a mission's page and cancelling one (ADR 0026–0028; needs `svc-admin`) | `MISSION_URL` |
-| `inventory` | The names of a mission's places, its POIs (ADR 0026; needs `svc-admin`) | `INVENTORY_URL` |
+| `inventory` | The names of a mission's places, its POIs (ADR 0026); a discoverer's POI renamed with the approved name (ADR 0032; needs `svc-admin`) | `INVENTORY_URL` |
 | Keycloak | Sign-in and roles; the `svc-admin` service account for the services' internal APIs | `OIDC_*`, `SVC_ADMIN_*` |
 | GitHub | Object type definitions (`*_def.json` of `horizonserver`), with a bundled fallback | `DEFINITIONS_*` |
 
@@ -81,7 +81,7 @@ Every route, with its permission: [docs/bff-api.md](./docs/bff-api.md).
 │           ├── auth/         # OIDC, sessions, permission guards, svc-admin token
 │           ├── clients/      # persistence, social, economie, universesimulator, npc, mission, inventory (upstream.ts)
 │           ├── services/     # items (merge, checks, duplicate, map), definitions
-│           ├── routes/       # items, bodies, social, economie, universesimulator (/api/simulation), npc, mission
+│           ├── routes/       # items, bodies, exploration, social, economie, universesimulator (/api/simulation), npc, mission
 │           └── definitions/  # fallback.json (definitions snapshot)
 ├── packages/
 │   ├── schemas/              # Zod: persistence contract, BFF API, permissions, geometry

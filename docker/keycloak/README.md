@@ -44,8 +44,9 @@ moderation roles open nothing of it.
   and `social:corporation:write`, `social:politics:write`, `economie:wallet:read`,
   `economie:politics:read`, `economie:corporation:read`, `economie:corporation:manage`,
   `economie:politics:manage`, `economie:wallet:credit`, `economie:wallet:debit`,
-  `economie:money:issue`, `mission:read`, `mission:write`, `inventory:read` (the capability roles of the services' READMEs, held by people,
-  ADR 0023);
+  `economie:money:issue`, `mission:read`, `mission:write`, `inventory:read`, `social:notify:write`,
+  `social:player:write`, `inventory:poi:manage` (the capability roles of the services' READMEs,
+  held by people, ADR 0023);
 - the realm roles `admin` and `supervisor`, checked by `social` but missing from the back
   team's realms;
 - the users `dev-reader`, `dev-editor`, `dev-moderator`, `dev-admin`, and `ynotna` with a fixed

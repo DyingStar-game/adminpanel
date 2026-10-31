@@ -37,6 +37,8 @@ export const ErrorCode = {
   forbiddenOrigin: 'FORBIDDEN_ORIGIN',
   /** A mission published by `universesimulator`: cancelled through its order (ADR 0028). */
   simulationMission: 'SIMULATION_MISSION',
+  /** A discovery whose name is not awaiting review: already decided, or nothing proposed (ADR 0032). */
+  discoveryNotPending: 'DISCOVERY_NOT_PENDING',
   internal: 'INTERNAL_ERROR',
 } as const;
 

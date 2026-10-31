@@ -1,6 +1,7 @@
 export * from './api';
 export * from './common';
 export * from './definitions';
+export * from './discoveries';
 export * from './geometry';
 export * from './health';
 export * from './import';

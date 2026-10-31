@@ -263,4 +263,44 @@ describe('social mock', () => {
       mock.data.corporations.find((c) => c.id === organisationIds.mining)?.politicalEntityId,
     ).toBeNull();
   });
+
+  it('tells a player live when online, and records their activity, as social does', async () => {
+    const send = async (path: string, body: unknown) => {
+      const res = await fetch(`${SOCIAL_URL}/api/internal/players${path}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      return {
+        status: res.status,
+        body: res.status === 204 ? null : ((await res.json()) as unknown),
+      };
+    };
+    const event = { type: 'place_name_approved', data: { kind: 'cave', name: 'Echo' } };
+
+    expect(await send(`/${socialIds.griefer}/notifications`, event)).toEqual({
+      status: 200,
+      body: { delivered: true },
+    });
+    expect(await send(`/${socialIds.reporter}/notifications`, event)).toEqual({
+      status: 200,
+      body: { delivered: false, reason: 'offline' },
+    });
+    expect((await send(`/${socialIds.griefer}/notifications`, { type: '' })).status).toBe(400);
+
+    const recorded = await send(`/${socialIds.reporter}/activity`, {
+      type: 'place_name_approved',
+      details: event.data,
+    });
+    expect(recorded.status).toBe(204);
+    expect(mock.data.activity.at(-1)).toMatchObject({
+      playerId: socialIds.reporter,
+      type: 'place_name_approved',
+      details: event.data,
+    });
+    expect(mock.writes.at(-1)).toEqual({
+      call: `POST /internal/players/${socialIds.reporter}/activity`,
+      body: { type: 'place_name_approved', details: event.data },
+    });
+  });
 });
