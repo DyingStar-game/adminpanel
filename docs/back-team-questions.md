@@ -81,16 +81,6 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
 24. The README still lists `…/objectives/:objectiveId/progress` (player and Interne) while the
     code dropped both routes (sent 2026-10-23).
 
-26. **A POI id that persistence made is refused.** The objective kinds' `poiZone`
-    (`kinds/objectives/transport.ts`, `deliverMaterial.ts`, `transportPassenger.ts`,
-    `visit.ts`) and `routes/schemas.ts` (zones) check `poiId: z.string().uuid()`, which Zod 4
-    reads as an RFC UUID (version and variant digits). The ids Godot makes for persistence's
-    objects are not (`8276a47f-c581-27a0-e40a-58bdb7e7b27b`, a cargo depot), so a mission
-    pointing at one fails with `400 INVALID_OBJECTIVE_PARAMS … poiId: Invalid UUID`.
-    `inventory` takes them (`uuidSchema = z.guid()`). Could `mission` take `z.guid()` too?
-    Tried locally on minikube (2026-10-28): the five lines changed, the simulation's missions
-    are created. **PR [#40](https://github.com/DyingStar-game/services/pull/40)** (2026-10-28).
-
 ### `services` › `inventory`
 
 21. `openapi.yaml` is not valid YAML: line 816, `description: Internal-only: geometry fields …`
@@ -109,7 +99,8 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
     `transport` with `params: { goodType, source: { kind: 'poi', poiId }, zone: { kind: 'poi',
     poiId } }` and mining as `deliver_material` with `params: { goodType, zone }` are accepted;
     the leg is published. The `poiId`s raise question 27. **PR
-    [#41](https://github.com/DyingStar-game/services/pull/41)** (2026-10-28, with question 27).
+    [#41](https://github.com/DyingStar-game/services/pull/41)** (2026-10-28, with question 27);
+    it does not need #40 (question 26).
 25. The richer world file shared on 2026-10-23 (30 resources; farm, factory, railway and spaceport
     villages) uses `federation.railSpeedKmh`, `villages.hubs`, `processes`, policies with
     `pushTo` and `routes.links`, which `develop`'s importer refuses (`src/import/mod.rs`,
@@ -130,7 +121,9 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
     tests pass, and on minikube the mission is published with both POIs. It needs **`inventory:poi:manage` on `svc-universesimulator`**, which
     `keycloak-managed/*/06-service-clients.yaml` does not give it (dev and pre-production).
     **PR [#41](https://github.com/DyingStar-game/services/pull/41)** (2026-10-28), as a proposal;
-    the role is still to add in `kubernetes`.
+    the role is still to add in `kubernetes`. Its POIs are made by `inventory` (v4 UUIDs), so it
+    never needed #40; after each world's persistence reset (DyingStar#455, question 26) the
+    depots take new ids, and so do their warehouses and POIs.
 28. **A tick can keep its lock forever.** On minikube (2026-10-27) the tick's advisory lock
     (`pg_try_advisory_lock` on a pooled connection, `simulation/mod.rs` › `tick`) stayed held by
     an idle connection after a tick that never logged its end: every later tick, timed or
@@ -157,3 +150,9 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
   (`mission:read`), PR #37 (2026-10-22).
 - **20.** `isEvent` not stored on creation → probably the panel's mistake: `createMission` stores
   it since `1f3a252` (2026-10-12). Not sent again; to confirm on minikube.
+- **26.** `mission` refusing the POI ids persistence made → fixed at the source, not in
+  `mission`: [DyingStar#455](https://github.com/DyingStar-game/DyingStar/pull/455) (merged
+  2026-10-30) makes Godot's stable ids RFC 9562 version 5 UUIDs, which `mission`'s
+  `z.string().uuid()` takes; `services` PR #40 is no longer needed. The old ids stay in each
+  world's persistence until it is reset (the back team's call; the test server still held
+  3,117 of them on 2026-10-31).

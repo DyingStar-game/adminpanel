@@ -19,7 +19,7 @@ built session by session: [`lot-2-journal.md`](./lot-2-journal.md) (history only
 | O.1–O.3. `economie`: reading, settings, money movements | **Done**, O.3 to try live |
 | Simulation (`universesimulator`, ADR 0025) | **Done** (PR #2) |
 | O.4–O.5. `mission`: catalogue, a mission's page (ADR 0026, 0027); cancelling a mission (ADR 0028); crates in persistence (ADR 0029) | **Done**, PR #3 merged |
-| Polish: supply orders laid out as a mission's objectives, issuer and escrow payer named, persistence-made POI ids read by the BFF (`z.guid()`) | **Done**, branch `feature/simulation-orders-layout`, PR to `develop` open; needs `services` PR #40 for persistence-made POI ids and #41 for simulation missions |
+| Polish: supply orders laid out as a mission's objectives, issuer and escrow payer named | **Done**, branch `feature/simulation-orders-layout`, PR to `develop` open; needs `services` PR #41 for simulation missions |
 | **O.6. `inventory`** | **Next** (below) |
 | O.7. `market` | Then (below) |
 
