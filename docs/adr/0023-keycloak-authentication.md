@@ -411,12 +411,13 @@ Two ways to sign in locally, side by side:
   `localhost:8080`, the BFF as `keycloak:8080` (`OIDC_DISCOVERY_URL`).
 - **Minikube mode (`make up K8S=1`)**: the back team's full game stack on minikube + ArgoCD
   (`kubernetes` repository, `scripts_linux/start-dev.sh`: Keycloak, persistence, every service,
-  Horizon, Godot; 10 to 25 minutes to start, `minikube tunnel`, `*.dyingstar.local` → `127.0.0.1`
-  in the hosts files of WSL **and** Windows). `docker/docker-compose.k8s.yml` puts the dev
+  Horizon, Godot; 10 to 25 minutes to start, `minikube tunnel`, `*.dyingstar.local` → Traefik's
+  external IP in `/etc/hosts`; under WSL, `127.0.0.1` in the hosts files of WSL **and** Windows). `docker/docker-compose.k8s.yml` puts the dev
   container on minikube's Docker network and points the BFF at
   `http://auth.dyingstar.local/realms/dyingstar` (back channel through Traefik's node port).
-  The panel's additions exist in their realm only through a manual partial import
-  (`docker/keycloak/k8s-partial-import.json`), lost when their Keycloak database is recreated.
+  The panel's client, roles and test users are in their realm (`keycloak-managed/dev/`), its
+  bootstrap job recreating the test users at each sync since `kubernetes` #48 (2026-10-31);
+  before that, a manual partial import (`docker/keycloak/k8s-partial-import.json`).
   This is the mode for working on the services, which only accept their own Keycloak's tokens.
 
 **Our compose Keycloak stays for now (maintainer's decision, 2026-10-08) and must be

@@ -33,7 +33,8 @@ questions are here; the panel's own plan is [`lot-2-plan.md`](./lot-2-plan.md).
    defaults to the issuer's (`http://auth.dyingstar.local/…/certs`), which the pods cannot
    resolve: every service rejects every token. Locally, a CoreDNS line mapping
    `auth.dyingstar.local` and `services.dyingstar.local` to Traefik works around it (lost when
-   minikube is recreated). Could the dev scripts set it up?
+   minikube is recreated). Could the dev scripts set it up? Seen with WSL + Docker Desktop only:
+   on native Linux (2026-10-31) the pods resolve these names through the host's `/etc/hosts`.
 11. **Persistence and tokens**: will persistence require a token one day? Then `svc-admin` needs
     its audience.
 12. **Token lifetime**: pre-production's access tokens last 24 h (realm `accessTokenLifespan`

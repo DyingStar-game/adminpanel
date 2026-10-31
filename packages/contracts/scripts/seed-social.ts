@@ -4,8 +4,9 @@
  * what already exists (profile, friendship, organisation, report, sanction) is kept and reported
  * as skipped.
  *
- * The players are Keycloak users of `docker/keycloak/k8s-partial-import.json` (`player-*`, fixed
- * ids, password = user name): import it first. Each one signs in through the realm's public
+ * The players are Keycloak users that the dev realm's bootstrap job creates (`kubernetes` ›
+ * `keycloak-managed/dev/07-role-bootstrap-job.yaml`; `player-*`, fixed ids, password = user name),
+ * as `docker/keycloak/k8s-partial-import.json` does for an older realm. Each one signs in through the realm's public
  * `dyingstar-dev` client (password grant), which registers them in `social` (`GET /api/me`).
  */
 import {
@@ -135,7 +136,7 @@ async function token(username: string): Promise<string> {
   });
   if (!res.ok) {
     throw new Error(
-      `Keycloak refused ${username} (${res.status} ${await res.text()}): import docker/keycloak/k8s-partial-import.json first.`,
+      `Keycloak refused ${username} (${res.status} ${await res.text()}): let ArgoCD sync the realm's bootstrap job, or import docker/keycloak/k8s-partial-import.json.`,
     );
   }
   const { access_token } = (await res.json()) as { access_token: string };
@@ -186,8 +187,8 @@ function expect(what: string, status: number, data: unknown, ok: number[], skip:
 
 const ids = new Map<string, string>();
 
-/** The moderation accounts of `k8s-partial-import.json` (password = user name). */
-const STAFF = ['dev-moderator', 'dev-admin', 'ynotna'];
+/** The dev realm's moderation accounts (password = user name); `ynotna` is not in that realm. */
+const STAFF = ['dev-moderator', 'dev-admin'];
 
 await waitForSocial();
 
