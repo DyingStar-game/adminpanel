@@ -255,7 +255,7 @@ export const zLeg = z.object({
 
 export const zOrder = z.object({
   id: zUuid,
-  kind: z.enum(['transport', 'mining']),
+  kind: z.enum(['transport', 'mining', 'mining_transport']),
   federationId: zUuid,
   resourceId: zUuid,
   quantity: z.int(),
@@ -292,7 +292,7 @@ export const zOrderInput = z.object({
 export const zActiveLeg = z.object({
   legId: zUuid,
   orderId: zUuid,
-  kind: z.enum(['transport', 'mining']),
+  kind: z.enum(['transport', 'mining', 'mining_transport']),
   resourceId: zUuid,
   fromVillageId: z
     .string()
@@ -735,7 +735,7 @@ export const zListOrdersQuery = z.object({
     .regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)
     .optional(),
   status: zOrderStatus.optional(),
-  kind: z.enum(['transport', 'mining']).optional(),
+  kind: z.enum(['transport', 'mining', 'mining_transport']).optional(),
   resource: z
     .string()
     .regex(/^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/)

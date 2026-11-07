@@ -1391,7 +1391,7 @@ export const fr: Translations = {
       created: 'Créée le',
       totalReward: 'Récompense totale',
       order: 'Commande',
-      kinds: { transport: 'Transport', mining: 'Minage' },
+      kinds: { transport: 'Transport', mining: 'Minage', mining_transport: 'Minage et transport' },
       triggers: { auto_shortage: 'Pénurie', auto_mining: 'Minage', manual: 'Manuelle' },
       statuses: {
         planned: 'Planifiée',

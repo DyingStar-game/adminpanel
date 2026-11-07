@@ -1370,7 +1370,7 @@ export const en = {
       created: 'Created',
       totalReward: 'Total reward',
       order: 'Order',
-      kinds: { transport: 'Transport', mining: 'Mining' },
+      kinds: { transport: 'Transport', mining: 'Mining', mining_transport: 'Mining and transport' },
       triggers: { auto_shortage: 'Shortage', auto_mining: 'Mining', manual: 'Manual' },
       statuses: {
         planned: 'Planned',
