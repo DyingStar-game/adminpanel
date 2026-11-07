@@ -269,7 +269,7 @@ export type Leg = {
 
 export type Order = {
   id: Uuid;
-  kind: 'transport' | 'mining';
+  kind: 'transport' | 'mining' | 'mining_transport';
   federationId: Uuid;
   resourceId: Uuid;
   quantity: number;
@@ -306,7 +306,7 @@ export type OrderInput = {
 export type ActiveLeg = {
   legId: Uuid;
   orderId: Uuid;
-  kind: 'transport' | 'mining';
+  kind: 'transport' | 'mining' | 'mining_transport';
   resourceId: Uuid;
   fromVillageId?: string | null;
   toVillageId: Uuid;
@@ -851,7 +851,7 @@ export type ListOrdersData = {
      */
     federation?: string;
     status?: OrderStatus;
-    kind?: 'transport' | 'mining';
+    kind?: 'transport' | 'mining' | 'mining_transport';
     resource?: string;
     /**
      * Orders whose path goes through this village
