@@ -5,6 +5,7 @@ import { SimulationOverview } from '@/components/organisms/SimulationOverview';
 import { SimulationPrices } from '@/components/organisms/SimulationPrices';
 import { SimulationStocks } from '@/components/organisms/SimulationStocks';
 import { SimulationTreasury } from '@/components/organisms/SimulationTreasury';
+import { SimulationWorld } from '@/components/organisms/SimulationWorld';
 import { ServicePageLayout } from '@/components/templates/ServicePageLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SIMULATION_TABS, type SimulationSearch } from '@/lib/simulationSearch';
@@ -18,7 +19,7 @@ interface SimulationPageProps {
 
 /**
  * `universesimulator` (ADR 0025): overview, network map, stocks, transits and missions, prices,
- * treasury, each a tab of the URL. Only the tab on screen is mounted, so only its data is polled
+ * treasury and world, each a tab of the URL. Only the tab on screen is mounted, so only its data is polled
  * (ADR 0009).
  */
 export function SimulationPage({ search, onSearchChange, onOpenMission }: SimulationPageProps) {
@@ -81,6 +82,9 @@ export function SimulationPage({ search, onSearchChange, onOpenMission }: Simula
         </TabsContent>
         <TabsContent value="treasury" className="pt-4">
           <SimulationTreasury />
+        </TabsContent>
+        <TabsContent value="world" className="pt-4">
+          <SimulationWorld />
         </TabsContent>
       </Tabs>
     </ServicePageLayout>

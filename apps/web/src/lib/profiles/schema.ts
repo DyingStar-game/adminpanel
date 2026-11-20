@@ -31,6 +31,11 @@ export const TypeProfileSchema = z.object({
   relations: z.array(
     z.object({ path: z.string().min(1), target: z.string().min(1), label: z.string().min(1) }),
   ),
+  /**
+   * A reference of the item (a top-level property holding a UUID) whose target names it further
+   * where many of the type stand side by side under one name: `cargo_depot (M0001)`.
+   */
+  labelSuffix: z.string().min(1).optional(),
   /** Children types shown first (others follow alphabetically). */
   childrenFirst: z.array(z.string()),
   renderers: z.record(z.string(), RendererSchema),

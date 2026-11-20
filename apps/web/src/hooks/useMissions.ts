@@ -8,15 +8,15 @@ import { apiGet, apiSend } from '@/lib/api';
 import { MISSIONS_PAGE_SIZE, type MissionsSearch } from '@/lib/missionsSearch';
 
 /** `mission`'s catalogue, any status, newest first, by pages (ADR 0024 step O). */
-export const useMissions = ({ status, category, kind, page }: MissionsSearch) =>
+export const useMissions = ({ status, category, kind, q, sort, page }: MissionsSearch) =>
   useQuery({
-    queryKey: ['mission', 'missions', status, category, kind, page],
+    queryKey: ['mission', 'missions', status, category, kind, q, sort, page],
     queryFn: () => {
       const params = new URLSearchParams({
         limit: String(MISSIONS_PAGE_SIZE),
         offset: String((page - 1) * MISSIONS_PAGE_SIZE),
       });
-      for (const [key, value] of Object.entries({ status, category, kind })) {
+      for (const [key, value] of Object.entries({ status, category, kind, q, sort })) {
         if (value) params.set(key, value);
       }
       return apiGet(`/api/mission/missions?${params}`, zMissionCatalogue);

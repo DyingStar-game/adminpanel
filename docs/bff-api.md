@@ -178,6 +178,12 @@ default.
 | POST | `/api/simulation/flows` | `simulation.manage` | 201; `{ villageId, resourceId, ratePerHour, source?, label? }`, negative rate = consumption, source `population` · `industry` · `manual` (default), label trimmed, 1–128 characters |
 | PUT | `/api/simulation/flows/:id` | `simulation.manage` | `{ ratePerHour?, label? }`, at least one; `label: null` clears it |
 | DELETE | `/api/simulation/flows/:id` | `simulation.manage` | 204 |
+| GET | `/api/simulation/travel-routes` | `simulation.view` | The routes between villages, the planner's graph → `{ items }` (`auto: false`: written by an admin) |
+| PUT | `/api/simulation/travel-routes` | `simulation.manage` | 201; `{ fromVillageId, toVillageId, distanceM, cost?, bidirectional?, active? }`, two different villages, `distanceM` > 0 (`code.ts` › `zPanelRoute`); the route is then out of the import's pruning |
+| DELETE | `/api/simulation/travel-routes/:id` | `simulation.manage` | 204 |
+| GET | `/api/simulation/mineral-sources` | `simulation.view` | Where each village mines → `{ items }`; `?village=<uuid>` for one village |
+| PUT | `/api/simulation/mineral-sources` | `simulation.manage` | `{ villageId, resourceId, maxUnitsPerMission, remainingUnits }`: whole numbers, `maxUnitsPerMission` ≥ 1, `remainingUnits` ≥ 0 or `null` for a source without an end (`code.ts` › `zPanelMineralSource`); both values are written each time |
+| POST | `/api/simulation/import` | `simulation.manage` | A world file (the service's `WorldFile`), passed whole: refused here only without `federation.code`, `.name` and `.planetInternalName` (`zPanelWorldFile`) → the service's import report (villages, warehouses, routes made and removed…) |
 
 **Positions on the map.** `?body=<planet persistence UUID>` places each village's and each of
 its warehouses' cached position (`x`, `y`, `z`, relative to the planet centre like any POI
@@ -241,6 +247,6 @@ mission (ADR 0028).
 
 | Method | Route | Permission | Notes |
 |--------|-------|------------|-------|
-| GET | `/api/mission/missions` | `mission.read` | Every mission, any status, newest first: `status`, `category`, `kind`, `limit` (1–100), `offset` → `{ missions, total, limit, offset }` |
+| GET | `/api/mission/missions` | `mission.read` | Every mission, any status, newest first: `status`, `category`, `kind`, `limit` (1–100), `offset` → `{ missions, total, limit, offset }`. `q` (words in the title) and `sort` (`newest`, `oldest`, `title`, `rewardHigh`, `rewardLow`) are the BFF's: `mission` has neither, so the whole filtered catalogue is read (5 000 missions at most), searched and sorted here, and `total` is what was found |
 | GET | `/api/mission/missions/:id` | `mission.read` | One mission whatever its visibility → `{ mission, objectives, assignments, players, group, chain, summary, places? }`; 404 if unknown. `places`: its objectives' POIs from `inventory` by id (`null`: unknown to `inventory`), for `inventory.read` (ADR 0026); left out without it, when `INVENTORY_URL` is unset or when `inventory` does not answer |
 | POST | `/api/mission/missions/:id/cancel` | `mission.write` | Cancels a mission and its active assignments, its escrow refunded → the mission; 404 if unknown, 409 (passed on) when completed. **409 `SIMULATION_MISSION`** for a mission of `universesimulator` (`scriptId` `usim:leg:…`), cancelled through its order (`POST /api/simulation/orders/:id/cancel`), never here |

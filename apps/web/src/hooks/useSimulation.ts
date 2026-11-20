@@ -9,10 +9,12 @@ import {
   zGetStockHistoryResponse,
   zGetVillageResponse,
   zListEntitiesResponse,
+  zListMineralSourcesResponse,
   zListMintEventsResponse,
   zListOrdersResponse,
   zListPricesResponse,
   zListResourcesResponse,
+  zListTravelRoutesResponse,
   zListVillagesResponse,
   zNetwork,
   type OrderStatus,
@@ -66,6 +68,14 @@ export const useSimulationNetwork = (body: string | undefined) =>
 
 /** Villages with their aggregated stocks and warehouse counts. */
 export const useVillages = () => useLive(['villages'], `${PATH}/villages`, zListVillagesResponse);
+
+/** Where each village mines: what is left, and the most one mining order asks for. */
+export const useMineralSources = () =>
+  useLive(['mineral-sources'], `${PATH}/mineral-sources`, zListMineralSourcesResponse);
+
+/** The routes between villages: the planner's graph (ADR 0025 › The world). */
+export const useTravelRoutes = () =>
+  useLive(['travel-routes'], `${PATH}/travel-routes`, zListTravelRoutesResponse);
 
 /**
  * A village: aggregated stocks, its warehouses with their own stocks (the main one marked),

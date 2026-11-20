@@ -32,6 +32,8 @@ export const KNOWN_RELATIONS: Record<string, KnownRelation[]> = {
     },
   ],
   player: [{ path: 'spawn_appartment_id', target: 'spawnbuilding', label: 'spawn apartment' }],
+  // A depot is the warehouse of its village (universesimulator reads the same `poi_uuid`).
+  cargo_depot: [{ path: 'poi_uuid', target: 'poi_village', label: 'village' }],
   spawnbuilding: [
     { path: 'poi_uuid', target: 'poi_village', label: 'village' },
     {

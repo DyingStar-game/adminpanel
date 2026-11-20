@@ -25,6 +25,12 @@ describe('type profiles', () => {
     );
   });
 
+  it('names a depot further with its village', () => {
+    expect(profileFor('cargo_depot')?.labelSuffix).toBe('poi_uuid');
+    expect(relationFor(profileFor('cargo_depot'), 'poi_uuid')?.target).toBe('poi_village');
+    expect(profileFor('vehicle')?.labelSuffix).toBeUndefined();
+  });
+
   it('orders preferred child types first', () => {
     expect(
       orderChildTypes(profileFor('planet'), ['miningrock', 'box', 'vehicle', 'poi_village']),

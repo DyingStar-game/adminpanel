@@ -29,6 +29,33 @@ describe('MissionsPage (ADR 0024 step O)', () => {
     expect(screen.getByText('1–6 of 6')).toBeInTheDocument();
   });
 
+  it('searches the titles and orders the catalogue, from the URL', async () => {
+    useInProcessBff();
+    const onSearchChange = renderPage({ q: 'survey' });
+
+    const table = await screen.findByRole('table', { name: 'Missions' });
+    expect(await within(table).findByText('The first survey')).toBeInTheDocument();
+    expect(within(table).queryByText('Buy my spare battery')).toBeNull();
+    expect(screen.getByText('1–1 of 1')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Search a title' })).toHaveValue('survey');
+
+    await userEvent.click(screen.getByRole('combobox', { name: 'Order' }));
+    await userEvent.click(await screen.findByRole('option', { name: 'Best paid first' }));
+    expect(onSearchChange).toHaveBeenCalledWith(
+      expect.objectContaining({ q: 'survey', sort: 'rewardHigh', page: 1 }),
+    );
+  });
+
+  it('sends the words typed once the typing pauses, back on the first page', async () => {
+    useInProcessBff();
+    const onSearchChange = renderPage({ page: 2 });
+
+    await userEvent.type(screen.getByRole('textbox', { name: 'Search a title' }), 'ore');
+    await vi.waitFor(() =>
+      expect(onSearchChange).toHaveBeenCalledWith(expect.objectContaining({ q: 'ore', page: 1 })),
+    );
+  });
+
   it('filters by status from the URL, and goes back to the first page on a change', async () => {
     useInProcessBff();
     const onSearchChange = renderPage({ status: 'completed', page: 1 });

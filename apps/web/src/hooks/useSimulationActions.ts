@@ -2,15 +2,21 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   zCreateFlowResponse,
   zForceTickResponse,
+  zImportWorldResponse,
   zUpdateFlowResponse,
   zUpdateVillageResponse,
+  zUpsertMineralSourceResponse,
+  zUpsertTravelRouteResponse,
   zUpsertVillagePolicyResponse,
   zUpsertWarehouseCapacityResponse,
   type PanelFlow,
   type PanelFlowChange,
+  type PanelMineralSource,
+  type PanelRoute,
   type PanelVillagePolicy,
   type PanelVillageUpdate,
   type PanelWarehouseCapacity,
+  type PanelWorldFile,
   zPauseSimulationResponse,
   zResumeSimulationResponse,
 } from '@dyingstar-admin/contracts/universesimulator';
@@ -137,6 +143,50 @@ export function useDeleteFlow() {
   const afterAction = useAfterAction();
   return useMutation({
     mutationFn: (id: string) => apiSend('DELETE', `/api/simulation/flows/${enc(id)}`),
+    onSuccess: afterAction,
+  });
+}
+
+/**
+ * The world (ADR 0025 › The world, `admin` or `supervisor`): a route between two villages, which
+ * the import then leaves alone, and the world file itself.
+ */
+export function useSaveRoute() {
+  const afterAction = useAfterAction();
+  return useMutation({
+    mutationFn: (body: PanelRoute) =>
+      apiSend('PUT', '/api/simulation/travel-routes', { body, schema: zUpsertTravelRouteResponse }),
+    onSuccess: afterAction,
+  });
+}
+
+export function useDeleteRoute() {
+  const afterAction = useAfterAction();
+  return useMutation({
+    mutationFn: (id: string) => apiSend('DELETE', `/api/simulation/travel-routes/${enc(id)}`),
+    onSuccess: afterAction,
+  });
+}
+
+/** Changes a village's mineral source: the size of its mining orders, what is left to mine. */
+export function useSaveMineralSource() {
+  const afterAction = useAfterAction();
+  return useMutation({
+    mutationFn: (body: PanelMineralSource) =>
+      apiSend('PUT', '/api/simulation/mineral-sources', {
+        body,
+        schema: zUpsertMineralSourceResponse,
+      }),
+    onSuccess: afterAction,
+  });
+}
+
+/** Imports a world file; the service keeps it and replays it at each refresh of its world. */
+export function useImportWorld() {
+  const afterAction = useAfterAction();
+  return useMutation({
+    mutationFn: (body: PanelWorldFile) =>
+      apiSend('POST', '/api/simulation/import', { body, schema: zImportWorldResponse }),
     onSuccess: afterAction,
   });
 }

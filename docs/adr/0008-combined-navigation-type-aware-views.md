@@ -92,6 +92,12 @@ Notes from the data:
   (normal state). Relations must handle `""` as "no link"; fixtures must also include an
   occupied vehicle (pilot + seats) so this case is tested.
 - Profiles are declared in code as typed objects (validated by a Zod schema), one file per type.
+- **A label completed by a reference** (proposed 2026-11-20, asked by WarpZone): a profile's
+  `labelSuffix` names a top-level reference whose target completes the item's label where many
+  of the type stand side by side under one name. First use: `cargo_depot`, all named
+  `cargo_depot`, shown `cargo_depot (M0001)` in the hierarchy tree from their `poi_uuid` (their
+  village). The target is read once the row is on screen; until then, and without the
+  reference, the name alone.
 
 ## Open questions
 

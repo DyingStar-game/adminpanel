@@ -97,6 +97,21 @@ export const zMissionCatalogueQuery = zGetApiInternalMissionsQuery.pick({
 });
 export type MissionCatalogueQuery = z.infer<typeof zMissionCatalogueQuery>;
 
+/** The orders the panel offers on the catalogue; `mission` itself only serves the newest first. */
+export const MISSION_SORTS = ['newest', 'oldest', 'title', 'rewardHigh', 'rewardLow'] as const;
+export type MissionSort = (typeof MISSION_SORTS)[number];
+
+/**
+ * The catalogue as the panel asks its BFF for it: `mission`'s filters and page, plus a search in
+ * the titles (`q`) and an order (`sort`), which `mission` does not have: the BFF reads the whole
+ * filtered catalogue then, searches, sorts and cuts the page itself.
+ */
+export const zPanelMissionCatalogueQuery = zMissionCatalogueQuery.extend({
+  q: z.string().trim().min(1).max(100).optional(),
+  sort: z.enum(MISSION_SORTS).optional(),
+});
+export type PanelMissionCatalogueQuery = z.infer<typeof zPanelMissionCatalogueQuery>;
+
 /** An objective row (`db/schema/missions.ts` › `missionObjectives`). */
 export const zMissionObjective = z.object({
   id: z.guid(),

@@ -7,8 +7,8 @@ import { TypeDot } from '@/components/atoms/TypeDot';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useChildrenCounts, useItemsInfinite, type ListFilter } from '@/hooks/queries';
+import { useItemLabel } from '@/hooks/useItemLabel';
 import { cn } from '@/lib/cn';
-import { itemLabel } from '@/lib/itemLabel';
 import { groupNodeId, useExplorerTree } from '@/stores/explorerTree';
 
 /** Items per tree level page ("load more"), as in the mock-up (ADR 0005). */
@@ -85,6 +85,7 @@ function ItemNode({ item, ...props }: NodeProps & { item: Item }) {
   const toggle = useExplorerTree((s) => s.toggle);
   const counts = useChildrenCounts(item.object_uuid, expanded, { live: true });
   const selected = props.selectedId === item.object_uuid;
+  const label = useItemLabel(item);
 
   return (
     <>
@@ -94,11 +95,11 @@ function ItemNode({ item, ...props }: NodeProps & { item: Item }) {
         expanded={expanded}
         onClick={() => props.onSelectItem(item)}
         onToggle={() => toggle(item.object_uuid)}
-        label={itemLabel(item)}
+        label={label}
       >
         <TypeDot objectType={item.object_type} />
         <span className={cn('min-w-0 flex-1 truncate text-xs', selected && 'font-medium')}>
-          {itemLabel(item)}
+          {label}
         </span>
       </Row>
       {expanded &&
