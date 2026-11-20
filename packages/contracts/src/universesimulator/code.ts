@@ -2,6 +2,8 @@ import { z } from 'zod';
 import {
   zFlowInput,
   zGetStockHistoryQuery,
+  zMineralSourceInput,
+  zTravelRouteInput,
   zUpdateFlowBody,
   zVillagePolicy,
   zVillageUpdate,
@@ -77,6 +79,50 @@ export const zPanelFlowChange = zUpdateFlowBody
     message: 'At least one field is required',
   });
 export type PanelFlowChange = z.infer<typeof zPanelFlowChange>;
+
+/** Why a route is refused, by field (message codes the SPA translates). */
+export const ROUTE_ISSUES = {
+  sameVillage: 'sameVillage',
+} as const;
+export type RouteIssue = keyof typeof ROUTE_ISSUES;
+
+/**
+ * A route between two villages as the panel upserts it (`PUT /api/admin/travel-routes`,
+ * `upsert_route`): two different villages of one federation (the service checks the federation),
+ * a distance in metres. A route an admin wrote is no longer managed by the import: it is never
+ * pruned, and replaces the automatic one between the same villages.
+ */
+export const zPanelRoute = zTravelRouteInput.strict().superRefine((route, ctx) => {
+  if (route.fromVillageId === route.toVillageId) {
+    ctx.addIssue({ code: 'custom', path: ['toVillageId'], message: ROUTE_ISSUES.sameVillage });
+  }
+});
+export type PanelRoute = z.input<typeof zPanelRoute>;
+
+/**
+ * A village's mineral source as the panel upserts it (`PUT /api/admin/mineral-sources`,
+ * `upsert_mineral_source`): what is left to mine (whole units from 0, `null` for no end) and the
+ * most one mining order asks for (at least 1). The service writes both each time: a
+ * `remainingUnits` left out would make the source endless, so the panel always sends it.
+ */
+export const zPanelMineralSource = zMineralSourceInput
+  .extend({ remainingUnits: z.int().gte(0).nullable() })
+  .strict();
+export type PanelMineralSource = z.infer<typeof zPanelMineralSource>;
+
+/**
+ * A world file as the panel sends it (`POST /api/admin/import`, the service's `WorldFile`): the
+ * service reads and checks it whole; the panel only refuses what is plainly not one, a JSON
+ * without the federation's code, name and planet.
+ */
+export const zPanelWorldFile = z.looseObject({
+  federation: z.looseObject({
+    code: z.string().trim().min(1),
+    name: z.string().trim().min(1),
+    planetInternalName: z.string().trim().min(1),
+  }),
+});
+export type PanelWorldFile = z.infer<typeof zPanelWorldFile>;
 
 /** `stock_history`: a village (the sum of its warehouses) or one warehouse, not neither. */
 export const zPanelStockHistoryQuery = zGetStockHistoryQuery.refine(

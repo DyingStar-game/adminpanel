@@ -1229,6 +1229,123 @@ export function createUniversesimulatorMock(
       data.flows.splice(index, 1);
       return new HttpResponse(null, { status: 204 });
     }),
+    http.get(`${admin}/travel-routes`, ({ request }) => {
+      seen(request);
+      return listed(data.routes);
+    }),
+    // `upsert_route`: an admin's route, created or replacing the one between the same villages
+    // (in that direction), never across federations; it is no longer the import's (`auto` false).
+    http.put(`${admin}/travel-routes`, async ({ request }) => {
+      seen(request);
+      const body = await bodyOf(request);
+      if (!body || !isNumber(body.distanceM) || (body.distanceM as number) <= 0) {
+        return badRequest('distanceM: a positive number');
+      }
+      const from = data.villages.find((v) => v.id === body.fromVillageId);
+      const to = data.villages.find((v) => v.id === body.toVillageId);
+      if (!from) return badRequest('unknown fromVillageId');
+      if (!to) return badRequest('unknown toVillageId');
+      if (from.federationId !== to.federationId) {
+        return badRequest('a route cannot cross federations');
+      }
+      const distanceM = body.distanceM as number;
+      const written: TravelRoute = {
+        id: crypto.randomUUID(),
+        fromVillageId: from.id,
+        toVillageId: to.id,
+        distanceM,
+        cost: isNumber(body.cost) ? (body.cost as number) : distanceM / 1000,
+        bidirectional: body.bidirectional !== false,
+        active: body.active !== false,
+        auto: false,
+      };
+      const index = data.routes.findIndex(
+        (r) => r.fromVillageId === from.id && r.toVillageId === to.id,
+      );
+      const existing = data.routes[index];
+      const saved = existing ? { ...written, id: existing.id } : written;
+      if (existing) data.routes[index] = saved;
+      else data.routes.push(saved);
+      return HttpResponse.json(saved, { status: 201 });
+    }),
+    http.delete(`${admin}/travel-routes/:id`, ({ request, params }) => {
+      seen(request);
+      wrote(request);
+      const index = data.routes.findIndex((r) => r.id === params.id);
+      if (index < 0) return notFound('route');
+      data.routes.splice(index, 1);
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.get(`${admin}/mineral-sources`, ({ request }) => {
+      seen(request);
+      const village = new URL(request.url).searchParams.get('village');
+      return listed(data.mineralSources.filter((m) => !village || m.villageId === village));
+    }),
+    // `upsert_mineral_source`: one source per village and resource; both values are written each
+    // time, a `remainingUnits` left out making the source endless (NULL).
+    http.put(`${admin}/mineral-sources`, async ({ request }) => {
+      seen(request);
+      const body = await bodyOf(request);
+      if (!body || !isInt(body.maxUnitsPerMission, 1)) {
+        return badRequest('maxUnitsPerMission: a whole number, 1 or more');
+      }
+      if (body.remainingUnits !== undefined && !isInt(body.remainingUnits)) {
+        return badRequest('remainingUnits: a whole number');
+      }
+      if (!isVillage(body.villageId) || !isResource(body.resourceId)) {
+        return invalidReference('mineral source refused by the database');
+      }
+      const existing = data.mineralSources.find(
+        (m) => m.villageId === body.villageId && m.resourceId === body.resourceId,
+      );
+      const saved: MineralSource = {
+        id: existing?.id ?? crypto.randomUUID(),
+        villageId: body.villageId as string,
+        resourceId: body.resourceId as string,
+        remainingUnits: (body.remainingUnits as number | undefined) ?? null,
+        maxUnitsPerMission: body.maxUnitsPerMission as number,
+      };
+      if (existing) Object.assign(existing, saved);
+      else data.mineralSources.push(saved);
+      return HttpResponse.json(saved);
+    }),
+    // `import`: a world file, kept for the tick's replay. The stand-in reads its federation only
+    // (the service refuses a file without its name, code and planet) and reports the world it holds.
+    http.post(`${admin}/import`, async ({ request }) => {
+      seen(request);
+      const body = await bodyOf(request);
+      const federation = body?.federation as Record<string, unknown> | undefined;
+      if (!federation || typeof federation.name !== 'string') {
+        return badRequest('federation.name is required');
+      }
+      if (
+        typeof federation.code !== 'string' ||
+        typeof federation.planetInternalName !== 'string'
+      ) {
+        return badRequest('federation.code and federation.planetInternalName are required');
+      }
+      const first = data.villages[0];
+      if (!first) return badRequest('the world holds no village');
+      return HttpResponse.json({
+        federationId: first.federationId,
+        politicalEntityId: first.politicalEntityId,
+        entitiesCreated: 0,
+        entitiesFound: data.villages.length + 1,
+        resources: data.resources.length,
+        villages: data.villages.length,
+        warehouses: data.warehouses.length,
+        villagesWithoutWarehouse: 0,
+        unattachedWarehouses: [],
+        policiesCreated: 0,
+        flowsCreated: 0,
+        capacities: data.capacities.length,
+        mineralSources: 0,
+        routesCreated: 0,
+        routesRemoved: 0,
+        initialStocksApplied: 0,
+        minted: 0,
+      });
+    }),
   ];
 
   return { handlers, data, tokens, writes };

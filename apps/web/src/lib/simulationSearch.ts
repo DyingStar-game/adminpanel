@@ -10,6 +10,7 @@ export const SIMULATION_TABS = [
   'orders',
   'prices',
   'treasury',
+  'world',
 ] as const;
 export type SimulationTab = (typeof SIMULATION_TABS)[number];
 

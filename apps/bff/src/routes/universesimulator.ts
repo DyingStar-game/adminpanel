@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import {
   zCancelOrderPath,
   zDeleteFlowPath,
+  zDeleteTravelRoutePath,
   zDeleteVillagePolicyPath,
   zDeleteWarehouseCapacityPath,
   zGetDashboardQuery,
@@ -15,15 +16,20 @@ import {
   zListEntitiesQuery,
   zListMintEventsQuery,
   zListOrdersQuery,
+  zListMineralSourcesQuery,
   zListPricesQuery,
+  zListTravelRoutesQuery,
   zListVillagePoliciesQuery,
   zListVillagesQuery,
   zListWarehouseCapacitiesQuery,
   zPanelFlow,
   zPanelFlowChange,
+  zPanelMineralSource,
+  zPanelRoute,
   zPanelStockHistoryQuery,
   zPanelVillagePolicy,
   zPanelVillageUpdate,
+  zPanelWorldFile,
   zPanelWarehouseCapacity,
   zUpdateFlowPath,
   zUpdateVillagePath,
@@ -254,5 +260,30 @@ export function universesimulatorRoutes(
         await simulation.deleteFlow(token(c.var.session), c.req.valid('param').id);
         return c.body(null, 204);
       })
+      // The world (ADR 0025 › World): the routes the planner walks, and the world file itself.
+      .get('/travel-routes', validate('query', fromQuery(zListTravelRoutesQuery)), async (c) =>
+        c.json(await simulation.routes(token(c.var.session), c.req.valid('query'))),
+      )
+      .put('/travel-routes', manage, validate('json', zPanelRoute), async (c) =>
+        c.json(await simulation.saveRoute(token(c.var.session), c.req.valid('json')), 201),
+      )
+      .delete(
+        '/travel-routes/:id',
+        manage,
+        validate('param', zDeleteTravelRoutePath),
+        async (c) => {
+          await simulation.deleteRoute(token(c.var.session), c.req.valid('param').id);
+          return c.body(null, 204);
+        },
+      )
+      .get('/mineral-sources', validate('query', fromQuery(zListMineralSourcesQuery)), async (c) =>
+        c.json(await simulation.mineralSources(token(c.var.session), c.req.valid('query'))),
+      )
+      .put('/mineral-sources', manage, validate('json', zPanelMineralSource), async (c) =>
+        c.json(await simulation.saveMineralSource(token(c.var.session), c.req.valid('json'))),
+      )
+      .post('/import', manage, validate('json', zPanelWorldFile), async (c) =>
+        c.json(await simulation.importWorld(token(c.var.session), c.req.valid('json'))),
+      )
   );
 }

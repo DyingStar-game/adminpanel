@@ -2,6 +2,7 @@ import {
   zCancelOrderResponse,
   zCreateFlowResponse,
   zDeleteFlowResponse,
+  zDeleteTravelRouteResponse,
   zDeleteVillagePolicyResponse,
   zDeleteWarehouseCapacityResponse,
   zForceTickResponse,
@@ -15,11 +16,14 @@ import {
   zGetStockHistoryResponse,
   zGetVillageResponse,
   zGetWarehouseResponse,
+  zImportWorldResponse,
   zListEntitiesResponse,
+  zListMineralSourcesResponse,
   zListMintEventsResponse,
   zListOrdersResponse,
   zListPricesResponse,
   zListResourcesResponse,
+  zListTravelRoutesResponse,
   zListVillagePoliciesResponse,
   zListVillagesResponse,
   zListWarehouseCapacitiesResponse,
@@ -27,13 +31,18 @@ import {
   zResumeSimulationResponse,
   zUpdateFlowResponse,
   zUpdateVillageResponse,
+  zUpsertMineralSourceResponse,
+  zUpsertTravelRouteResponse,
   zUpsertVillagePolicyResponse,
   zUpsertWarehouseCapacityResponse,
   type PanelFlow,
   type PanelFlowChange,
+  type PanelMineralSource,
+  type PanelRoute,
   type PanelVillagePolicy,
   type PanelVillageUpdate,
   type PanelWarehouseCapacity,
+  type PanelWorldFile,
 } from '@dyingstar-admin/contracts/universesimulator';
 import { createUpstream, type Query } from './upstream';
 
@@ -150,6 +159,25 @@ export function createUniversesimulatorClient({
       call('PUT', token, admin(`/flows/${id(flowId)}`), zUpdateFlowResponse, { body }),
     deleteFlow: (token: Token, flowId: string) =>
       call('DELETE', token, admin(`/flows/${id(flowId)}`), zDeleteFlowResponse),
+    /** The routes between villages: the planner's graph (no route, no transport ordered). */
+    routes: (token: Token, query: Query) =>
+      get(token, admin('/travel-routes'), zListTravelRoutesResponse, query),
+    /** Writes a route between two villages; it then stays out of the import's pruning. */
+    saveRoute: (token: Token, body: PanelRoute) =>
+      call('PUT', token, admin('/travel-routes'), zUpsertTravelRouteResponse, { body }),
+    deleteRoute: (token: Token, routeId: string) =>
+      call('DELETE', token, admin(`/travel-routes/${id(routeId)}`), zDeleteTravelRouteResponse),
+    /** Where each village mines: what is left, and the most one mining order asks for. */
+    mineralSources: (token: Token, query: Query) =>
+      get(token, admin('/mineral-sources'), zListMineralSourcesResponse, query),
+    saveMineralSource: (token: Token, body: PanelMineralSource) =>
+      call('PUT', token, admin('/mineral-sources'), zUpsertMineralSourceResponse, {
+        // `null` (no end) is a field left out for the service; it writes NULL then.
+        body: { ...body, remainingUnits: body.remainingUnits ?? undefined },
+      }),
+    /** Imports a world file and keeps it for the tick's replay; answers what it made. */
+    importWorld: (token: Token, body: PanelWorldFile) =>
+      call('POST', token, admin('/import'), zImportWorldResponse, { body }),
   };
 }
 

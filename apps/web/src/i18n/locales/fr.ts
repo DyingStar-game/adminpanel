@@ -627,6 +627,15 @@ export const fr: Translations = {
     allStatuses: 'Tous les statuts',
     allCategories: 'Toutes les catégories',
     allKinds: 'Toutes les origines',
+    search: 'Chercher un titre',
+    sort: {
+      label: 'Ordre',
+      newest: 'Les plus récentes',
+      oldest: 'Les plus anciennes',
+      title: 'Par titre',
+      rewardHigh: 'Les mieux payées',
+      rewardLow: 'Les moins payées',
+    },
     event: 'Événement',
     group: 'Groupe',
     items_one: '{{count}} objet',
@@ -1242,6 +1251,7 @@ export const fr: Translations = {
       orders: 'Transits et missions',
       prices: 'Prix',
       treasury: 'Trésorerie',
+      world: 'Monde',
     },
     tick: {
       state: 'Simulation',
@@ -1421,6 +1431,84 @@ export const fr: Translations = {
       cancelText:
         'Sa mission publiée est annulée et la marchandise réservée est libérée. C’est irréversible.',
       cancelled: 'Commande annulée',
+    },
+    world: {
+      sources: 'Sources minières',
+      sourcesLead:
+        'Où chaque village mine. Le maximum demandé par une commande de minage est la taille des missions proposées aux joueurs ; une source épuisée ne commande plus rien.',
+      noSource: 'Aucun village ne mine.',
+      village: 'Village',
+      resource: 'Ressource',
+      maxPerMission: 'Maximum par commande de minage',
+      maxPerMissionHint:
+        'En {{unit}}. Un camion porte 240 kg de minerai : en dessous, les missions arrivent en miettes.',
+      remaining: 'Reste à miner',
+      remainingHint: 'Vide pour une source sans fin.',
+      noEnd: 'Sans fin',
+      editSource: 'Modifier la source',
+      editSourceOf: 'Modifier la source de {{resource}} à {{village}}',
+      sourceTitle: '{{resource}} miné à {{village}}',
+      sourceHint:
+        'Les prochaines commandes de minage suivent la nouvelle taille ; les missions déjà proposées gardent la leur.',
+      sourceSaved: 'Source de {{resource}} à {{village}} modifiée.',
+      routes: 'Routes entre villages',
+      routesLead:
+        "Le graphe que suit le planificateur pour commander un transport : un village qu'aucune route n'atteint n'en reçoit pas. Les routes automatiques (plus proches voisins) sont refaites à chaque lecture du monde ; une route écrite ici est gardée telle quelle.",
+      noRoute: 'Aucune route : aucun transport ne peut être commandé entre villages.',
+      from: 'De',
+      to: 'À',
+      distance: 'Distance',
+      distanceKm: 'Distance (km)',
+      km: '{{km}} km',
+      origin: 'Origine',
+      automatic: 'Automatique',
+      written: 'Écrite par un admin',
+      addRoute: 'Ajouter une route',
+      routeTitle: 'Une route entre deux villages',
+      routeHint:
+        "Écrite ici, une route n'est plus gérée par l'import : elle n'est jamais retirée, et remplace la route automatique entre les mêmes villages.",
+      routeSummary: '{{from}} vers {{to}}, {{km}} km',
+      routeSaved: 'Route {{from}} vers {{to}} écrite.',
+      deleteRoute: 'Supprimer la route',
+      deleteRouteOf: 'Supprimer la route de {{from}} à {{to}}',
+      deleteRouteTitle: 'Supprimer la route de {{from}} à {{to}} ?',
+      deleteRouteText:
+        'Les transports ne passent plus par là. Une route automatique revient à la prochaine lecture du monde, si la règle la refait.',
+      routeDeleted: 'Route supprimée.',
+      file: 'Fichier monde',
+      fileLead:
+        "Le fichier dont la simulation est bâtie (fédération, ressources, profils des villages). Le service l'importe, le garde, et le rejoue à chaque nouvelle lecture du monde. Il n'ajoute que ce qui manque à un village : ses seuils, flux et capacités déjà présents restent tels quels.",
+      pick: 'Fichier monde (.json)',
+      import: 'Importer',
+      picked: '{{file}} : fédération {{federation}}, planète {{planet}}.',
+      importTitle: 'Importer le monde de {{federation}} ?',
+      importText:
+        'La simulation du jeu en cours est rebâtie depuis ce fichier, et il remplace celui gardé pour les rejeux.',
+      imported_one: 'Monde importé : {{count}} village.',
+      imported_other: 'Monde importé : {{count}} villages.',
+      noVillage:
+        "Le service n'a trouvé aucun village avec un dépôt sur cette planète : rien n'a été changé. Vérifier que la planète nommée est celle de cet environnement.",
+      issues: {
+        notJson: "Ce fichier n'est pas du JSON.",
+        notWorld:
+          "Ce JSON n'est pas un fichier monde : il n'a pas de fédération avec son code, son nom et sa planète (planetInternalName).",
+      },
+      report: {
+        villages: 'Villages',
+        warehouses: 'Entrepôts',
+        routes: 'Routes',
+        routesValue: '{{created}} créées, {{removed}} retirées',
+        profiles: 'Profils ajoutés',
+        profilesValue: '{{policies}} seuils, {{flows}} flux',
+      },
+      errors: {
+        required: 'Requis.',
+        number: 'Un nombre.',
+        positive: 'Plus que 0.',
+        sameVillage: 'Une route relie deux villages différents.',
+        wholeFromOne: 'Un nombre entier, 1 ou plus.',
+        wholeFromZero: 'Un nombre entier, 0 ou plus, ou vide.',
+      },
     },
     config: {
       policies: 'Seuils',

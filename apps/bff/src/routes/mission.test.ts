@@ -55,6 +55,7 @@ describe('mission routes (ADR 0024 step O, reading)', () => {
     const { request, mission } = buildApp();
 
     expect((await request('/api/mission/missions?status=lost')).status).toBe(400);
+    expect((await request('/api/mission/missions?sort=shortest')).status).toBe(400);
     expect((await request('/api/mission/missions?limit=101')).status).toBe(400);
     expect(mission.tokens).toHaveLength(0);
   });

@@ -4,7 +4,7 @@ import {
   isSimulationMission,
   type MissionDetailAsServed,
   type MissionPage,
-  zMissionCatalogueQuery,
+  zPanelMissionCatalogueQuery,
 } from '@dyingstar-admin/contracts/mission';
 import { ErrorCode } from '@dyingstar-admin/schemas';
 import { requirePermission, type Session, type SessionContext } from '../auth/auth';
@@ -12,6 +12,7 @@ import type { InventoryClient } from '../clients/inventory';
 import type { MissionClient } from '../clients/mission';
 import { ApiError } from '../lib/errors';
 import { fromQuery, validate } from '../lib/validate';
+import { missionCataloguePage } from '../services/missionCatalogue';
 
 const IdParams = z.object({ id: z.uuid() });
 
@@ -40,8 +41,9 @@ export function missionRoutes(mission: MissionClient, inventory?: InventoryClien
   return (
     new Hono<SessionContext>()
       .use(requirePermission('mission.read'))
-      .get('/missions', validate('query', fromQuery(zMissionCatalogueQuery)), async (c) =>
-        c.json(await mission.catalogue(c.req.valid('query'))),
+      // A search in the titles and an order, which `mission` does not have, are the BFF's.
+      .get('/missions', validate('query', fromQuery(zPanelMissionCatalogueQuery)), async (c) =>
+        c.json(await missionCataloguePage(mission.catalogue, c.req.valid('query'))),
       )
       .get('/missions/:id', validate('param', IdParams), async (c) => {
         const detail = await mission.detail(c.req.valid('param').id);
