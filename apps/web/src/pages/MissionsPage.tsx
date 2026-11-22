@@ -1,10 +1,17 @@
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { MissionKind, MissionStatus } from '@dyingstar-admin/contracts/mission';
+import {
+  MISSION_SORTS,
+  type MissionKind,
+  type MissionSort,
+  type MissionStatus,
+} from '@dyingstar-admin/contracts/mission';
 import { OptionSelect } from '@/components/molecules/OptionSelect';
 import { Pagination } from '@/components/molecules/Pagination';
 import { ServiceNotice } from '@/components/molecules/ServiceNotice';
 import { MissionsTable } from '@/components/organisms/MissionsTable';
 import { ServicePageLayout } from '@/components/templates/ServicePageLayout';
+import { Input } from '@/components/ui/input';
 import { useMissions } from '@/hooks/useMissions';
 import { missionErrorKey } from '@/lib/missionErrors';
 import { MISSION_CATEGORIES, MISSIONS_PAGE_SIZE, type MissionsSearch } from '@/lib/missionsSearch';
@@ -28,6 +35,20 @@ interface MissionsPageProps {
 /** `mission`'s whole catalogue, every status, filtered and paged (ADR 0024 step O). */
 export function MissionsPage({ search, onSearchChange, onOpenMission }: MissionsPageProps) {
   const { t } = useTranslation();
+  // Typed words, sent once the user pauses (the players' page does the same).
+  const [text, setText] = useState(search.q ?? '');
+  // The URL changed elsewhere (back, a link): show its words (React's "adjust state" pattern).
+  const [shown, setShown] = useState(search.q);
+  if (search.q !== shown) {
+    setShown(search.q);
+    setText(search.q ?? '');
+  }
+  useEffect(() => {
+    const q = text.trim() || undefined;
+    if (q === search.q) return;
+    const timer = setTimeout(() => onSearchChange({ ...search, q, page: 1 }), 300);
+    return () => clearTimeout(timer);
+  }, [text, search, onSearchChange]);
   const missions = useMissions(search);
   /** A filter's select: "all" clears it, any change goes back to the first page. */
   const filter = (
@@ -65,6 +86,22 @@ export function MissionsPage({ search, onSearchChange, onOpenMission }: Missions
           t('missions.columns.kind'),
           KINDS.map((v) => ({ value: v, label: t(`missions.kinds.${v}`) })),
         )}
+        <Input
+          aria-label={t('missions.search')}
+          placeholder={t('missions.search')}
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          className="w-64"
+        />
+        <OptionSelect<MissionSort>
+          label={t('missions.sort.label')}
+          value={search.sort ?? 'newest'}
+          options={MISSION_SORTS.map((v) => ({ value: v, label: t(`missions.sort.${v}`) }))}
+          onChange={(sort) =>
+            onSearchChange({ ...search, sort: sort === 'newest' ? undefined : sort, page: 1 })
+          }
+          className="w-52"
+        />
       </div>
       {missions.isError ? (
         <ServiceNotice message={t(missionErrorKey(missions.error))} />

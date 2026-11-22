@@ -155,6 +155,38 @@ is typed, an incoherent target named on its field, then the changes to confirm
 (`TwoStepDialog`); deletions and the main warehouse change are confirmed. Every simulation view
 is refreshed after a write; the service's refusals are shown as it words them.
 
+### The world (for `simulation.manage`) — proposed 2026-11-20
+
+Asked by WarpZone after nine days of a pre-production world without a single route (its world
+file named the planet of before a purge: the import found no village and pruned every route; the
+panel showed neither the routes nor a way to import). Open question 4 named both as a later step.
+
+- **The world file.** `POST /api/simulation/import` passes a world file (the service's
+  `WorldFile`: federation, resources, village profiles, routes) to `POST /api/admin/import`,
+  which imports it and keeps it for the tick's replay. The panel refuses only what is plainly not
+  one (`zPanelWorldFile`: a federation's `code`, `name` and `planetInternalName`); the service
+  checks the rest and its answer is shown as it is (villages, warehouses, routes made and
+  removed, policies and flows created). The file is read in the browser from a `.json` the person
+  picks; nothing is written by the panel itself. Confirmed like every write: it acts on the live
+  game.
+- **The routes.** `GET /api/simulation/travel-routes` lists the planner's graph (also in the
+  network view). `PUT` writes a route between two villages of one federation (two different
+  villages, a distance over 0: `zPanelRoute`), `DELETE` removes one. A route written here is no
+  longer the import's: it is never pruned, and replaces the automatic one between the same
+  villages. The automatic routes come back at each replay (nearest neighbours), so writing one is
+  for a link the rule does not make.
+- **The mineral sources.** `GET /api/simulation/mineral-sources` lists where each village mines;
+  `PUT` rewrites one (`zPanelMineralSource`: the most one mining order asks for, a whole number
+  from 1, and what is left to mine, a whole number from 0 or `null` for a source without an
+  end). The service writes both values each time, so the panel always sends the one it does not
+  change. The size is the size of the missions players are offered: the pre-production world
+  kept 60 kg, a quarter of a truck, from before its rescale, and only SQL could change it. The
+  next orders follow the new size; the missions already on offer keep theirs.
+- These writes take `simulation.manage` and are recorded (`audit: service-write`), as the
+  configuration's.
+
+Not in this step: resources, a new mineral source, federations, manual orders (open question 4).
+
 ### Inline SVG charts
 
 `molecules/TrendChart` draws one series over time (default size, or `compact` as a sparkline in
@@ -222,3 +254,4 @@ same figures as text.
   village, capacities and the main warehouse per warehouse; the stock policies of the first
   model are gone from the service and from the panel.
 - 2026-10-23: the contract pinned from `develop` (`a863c00`), open question 1 closed.
+- 2026-11-20 (proposed): the world — importing a world file, reading and writing the routes.

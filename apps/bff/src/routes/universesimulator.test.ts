@@ -287,6 +287,98 @@ describe('universesimulator configuration: villages, policies, capacities, flows
     ]);
   });
 
+  it('lists, writes and deletes routes, and imports a world file', async () => {
+    const { request, universesimulator } = buildApp();
+    const routes = async () =>
+      ((await (await request('/api/simulation/travel-routes')).json()) as { items: unknown[] })
+        .items;
+    expect(await routes()).toHaveLength(4);
+
+    const written = await request(
+      '/api/simulation/travel-routes',
+      json('PUT', { fromVillageId: sim.m0002, toVillageId: sim.c0001, distanceM: 31_500 }),
+    );
+    expect(written.status).toBe(201);
+    const route = (await written.json()) as { id: string; auto: boolean; cost: number };
+    // An admin's route: out of the import's hands, its cost the kilometres when none is given.
+    expect(route).toMatchObject({ auto: false, cost: 31.5 });
+    expect(await routes()).toHaveLength(5);
+    expect(
+      (await request(`/api/simulation/travel-routes/${route.id}`, { method: 'DELETE' })).status,
+    ).toBe(204);
+    expect(await routes()).toHaveLength(4);
+
+    const world = {
+      economyScale: 25,
+      federation: { code: 'ARES', name: 'ARES', planetInternalName: 'tarsis_3', elasticity: 0.8 },
+      resources: [],
+    };
+    const imported = await request('/api/simulation/import', json('POST', world));
+    expect(imported.status).toBe(200);
+    expect(await imported.json()).toMatchObject({ villages: 4, routesCreated: 0 });
+    // The file goes as it was read: what the panel does not name is the service's to check.
+    expect(universesimulator.writes.at(-1)).toEqual({ call: 'POST /import', body: world });
+    expect(universesimulator.writes.map((w) => w.call)).toEqual([
+      'PUT /travel-routes',
+      `DELETE /travel-routes/${route.id}`,
+      'POST /import',
+    ]);
+  });
+
+  it("reads the mineral sources and changes one's mission size, keeping what is left", async () => {
+    const { request, universesimulator } = buildApp();
+    const listed = (await (await request('/api/simulation/mineral-sources')).json()) as {
+      items: { villageId: string; resourceId: string; remainingUnits: number | null }[];
+    };
+    const source = listed.items[0];
+    if (!source) throw new Error('no mineral source in the dataset');
+
+    const saved = await request(
+      '/api/simulation/mineral-sources',
+      json('PUT', {
+        villageId: source.villageId,
+        resourceId: source.resourceId,
+        remainingUnits: source.remainingUnits,
+        maxUnitsPerMission: 10_000,
+      }),
+    );
+    expect(saved.status).toBe(200);
+    expect(await saved.json()).toMatchObject({
+      maxUnitsPerMission: 10_000,
+      remainingUnits: source.remainingUnits,
+    });
+    // A mission of nothing, or a remaining amount left out, is refused before the call.
+    const refused = async (body: unknown) =>
+      (await request('/api/simulation/mineral-sources', json('PUT', body))).status;
+    const base = { villageId: source.villageId, resourceId: source.resourceId };
+    expect(await refused({ ...base, remainingUnits: null, maxUnitsPerMission: 0 })).toBe(400);
+    expect(await refused({ ...base, maxUnitsPerMission: 60 })).toBe(400);
+    expect(universesimulator.writes.map((w) => w.call)).toEqual(['PUT /mineral-sources']);
+  });
+
+  it('refuses a route to its own village and what is no world file, before calling', async () => {
+    const { request, universesimulator } = buildApp();
+    const refused = async (path: string, method: string, body: unknown) =>
+      (await request(`/api/simulation${path}`, json(method, body))).status;
+    expect(
+      await refused('/travel-routes', 'PUT', {
+        fromVillageId: sim.m0002,
+        toVillageId: sim.m0002,
+        distanceM: 1_000,
+      }),
+    ).toBe(400);
+    expect(
+      await refused('/travel-routes', 'PUT', {
+        fromVillageId: sim.m0002,
+        toVillageId: sim.f0001,
+        distanceM: 0,
+      }),
+    ).toBe(400);
+    expect(await refused('/import', 'POST', { villages: {} })).toBe(400);
+    expect(await refused('/import', 'POST', { federation: { code: 'ARES' } })).toBe(400);
+    expect(universesimulator.writes).toHaveLength(0);
+  });
+
   it('refuses incoherent or malformed input before calling universesimulator', async () => {
     const { request, universesimulator } = buildApp();
     const status = async (path: string, init: RequestInit) =>

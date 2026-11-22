@@ -618,6 +618,15 @@ export const en = {
     allStatuses: 'All statuses',
     allCategories: 'All categories',
     allKinds: 'All origins',
+    search: 'Search a title',
+    sort: {
+      label: 'Order',
+      newest: 'Newest first',
+      oldest: 'Oldest first',
+      title: 'By title',
+      rewardHigh: 'Best paid first',
+      rewardLow: 'Least paid first',
+    },
     event: 'Event',
     group: 'Group',
     items_one: '{{count}} item',
@@ -1224,6 +1233,7 @@ export const en = {
       orders: 'Transits & missions',
       prices: 'Prices',
       treasury: 'Treasury',
+      world: 'World',
     },
     tick: {
       state: 'Simulation',
@@ -1400,6 +1410,84 @@ export const en = {
       cancelText:
         'Its published mission is cancelled and the goods it holds are released. This cannot be undone.',
       cancelled: 'Order cancelled',
+    },
+    world: {
+      sources: 'Mineral sources',
+      sourcesLead:
+        'Where each village mines. The most one mining order asks for is the size of the missions players are offered; a source with nothing left orders no more.',
+      noSource: 'No village mines.',
+      village: 'Village',
+      resource: 'Resource',
+      maxPerMission: 'Most asked by one mining order',
+      maxPerMissionHint:
+        'In {{unit}}. A truck carries 240 kg of ore: under that, missions come in crumbs.',
+      remaining: 'Left to mine',
+      remainingHint: 'Empty for a source without an end.',
+      noEnd: 'No end',
+      editSource: 'Change the source',
+      editSourceOf: 'Change the source of {{resource}} at {{village}}',
+      sourceTitle: '{{resource}} mined at {{village}}',
+      sourceHint:
+        'The next mining orders follow the new size; the missions already on offer keep theirs.',
+      sourceSaved: 'Source of {{resource}} at {{village}} changed.',
+      routes: 'Routes between villages',
+      routesLead:
+        'The graph the planner walks to order a transport: a village no route reaches gets none. The automatic routes (nearest neighbours) are made again each time the world is read; a route written here is kept as it is.',
+      noRoute: 'No route: no transport can be ordered between villages.',
+      from: 'From',
+      to: 'To',
+      distance: 'Distance',
+      distanceKm: 'Distance (km)',
+      km: '{{km}} km',
+      origin: 'Origin',
+      automatic: 'Automatic',
+      written: 'Written by an admin',
+      addRoute: 'Add a route',
+      routeTitle: 'A route between two villages',
+      routeHint:
+        'Written here, a route is no longer managed by the import: it is never removed, and replaces the automatic one between the same villages.',
+      routeSummary: '{{from}} to {{to}}, {{km}} km',
+      routeSaved: 'Route {{from}} to {{to}} written.',
+      deleteRoute: 'Delete the route',
+      deleteRouteOf: 'Delete the route from {{from}} to {{to}}',
+      deleteRouteTitle: 'Delete the route from {{from}} to {{to}}?',
+      deleteRouteText:
+        'Transports no longer go this way. An automatic route comes back the next time the world is read, if the rule still makes it.',
+      routeDeleted: 'Route deleted.',
+      file: 'World file',
+      fileLead:
+        'The file the simulation is built from (federation, resources, village profiles). The service imports it, keeps it, and replays it every time it reads the world again. It only adds what a village lacks: its thresholds, flows and capacities already there are left as they are.',
+      pick: 'World file (.json)',
+      import: 'Import',
+      picked: '{{file}}: federation {{federation}}, planet {{planet}}.',
+      importTitle: 'Import the world of {{federation}}?',
+      importText:
+        'The simulation of the live game is rebuilt from this file, and the file replaces the one kept for the replays.',
+      imported_one: 'World imported: {{count}} village.',
+      imported_other: 'World imported: {{count}} villages.',
+      noVillage:
+        'The service found no village with a depot on this planet: nothing was changed. Check that the planet named is the one of this environment.',
+      issues: {
+        notJson: 'This file is not JSON.',
+        notWorld:
+          'This JSON is not a world file: it has no federation with its code, name and planet (planetInternalName).',
+      },
+      report: {
+        villages: 'Villages',
+        warehouses: 'Warehouses',
+        routes: 'Routes',
+        routesValue: '{{created}} made, {{removed}} removed',
+        profiles: 'Profiles added',
+        profilesValue: '{{policies}} thresholds, {{flows}} flows',
+      },
+      errors: {
+        required: 'Required.',
+        number: 'A number.',
+        positive: 'More than 0.',
+        sameVillage: 'A route links two different villages.',
+        wholeFromOne: 'A whole number, 1 or more.',
+        wholeFromZero: 'A whole number, 0 or more, or empty.',
+      },
     },
     config: {
       policies: 'Thresholds',
